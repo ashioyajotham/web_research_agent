@@ -31,11 +31,10 @@ async def process_tasks(agent: Agent, tasks: List[str]) -> List[Dict]:
 
 def main(task_file_path: str, output_file_path: str):
     # Verify environment variables are loaded
-    if not os.getenv("GOOGLE_API_KEY") or not os.getenv("GOOGLE_CSE_ID"):
+    if not os.getenv("SERPER_API_KEY"):
         print("\nEnvironment Variable Check:")
-        print(f"GOOGLE_API_KEY: {'✓ Set' if os.getenv('GOOGLE_API_KEY') else '✗ Missing'}")
-        print(f"GOOGLE_CSE_ID: {'✓ Set' if os.getenv('GOOGLE_CSE_ID') else '✗ Missing'}")
-        print("\nPlease ensure your .env file contains the required variables")
+        print(f"SERPER_API_KEY: {'✓ Set' if os.getenv('SERPER_API_KEY') else '✗ Missing'}")
+        print("\nPlease ensure your .env file contains SERPER_API_KEY")
         sys.exit(1)
 
     # Initialize NLTK silently
@@ -48,7 +47,7 @@ def main(task_file_path: str, output_file_path: str):
     from tools.dataset_tool import DatasetTool
     
     tools = {
-        "google_search": GoogleSearchTool(),
+        "google_search": GoogleSearchTool(),  # This now uses Serper API
         "web_scraper": WebScraperTool(),
         "code_analysis": CodeAnalysisTool(),
         "code_generator": CodeGeneratorTool(),
