@@ -1,4 +1,5 @@
 import pandas as pd
+import numpy as np
 import requests
 from pathlib import Path
 from typing import Dict, Any, Optional
@@ -81,28 +82,54 @@ class DatasetTool(BaseTool):
 
     def _analyze_time_series(self, df: pd.DataFrame, params: Dict) -> Dict[str, Any]:
         """Analyze time series data"""
-        # Sort by date if available
-        date_cols = df.select_dtypes(include=['datetime64']).columns
-        if len(date_cols) > 0:
-            df = df.sort_values(date_cols[0])
+        try:
+            # Ensure numeric columns
+            numeric_cols = df.select_dtypes(include=[np.number]).columns
+            df[numeric_cols] = df[numeric_cols].apply(pd.to_numeric, errors='coerce')
             
-        # Handle different aggregation types
-        agg_type = params.get('aggregate', 'max')
-        if agg_type == 'max':
-            result = df.max()
-        elif agg_type == 'min':
-            result = df.min()
-        else:
-            result = df.mean()
+            # Sort by date if available
+            date_cols = df.select_dtypes(include=['datetime64']).columns
+            if len(date_cols) > 0:
+                df = df.sort_values(date_cols[0])
             
-        return {
-            "type": "time_series",
-            "data": result.to_dict(),
-            "metadata": {
-                "rows": len(df),
-                "columns": list(df.columns)
+            # Handle different aggregation types
+            agg_type = params.get('aggregate', 'max')
+            if agg_type == 'max':
+                result = df[numeric_cols].max()
+                max_records = {}
+                for col in numeric_cols:
+                    max_idx = df[col].idxmax()
+                    max_records[col] = {
+                        'value': df.loc[max_idx, col],
+                        'date': df.loc[max_idx, date_cols[0]] if len(date_cols) > 0 else None
+                    }
+                return {
+                    "type": "time_series",
+                    "data": {
+                        "max_values": result.to_dict(),
+                        "max_records": max_records
+                    },
+                    "metadata": {
+                        "rows": len(df),
+                        "columns": list(df.columns)
+                    }
+                }
+            elif agg_type == 'min':
+                result = df.min()
+            else:
+                result = df.mean()
+            
+            return {
+                "type": "time_series",
+                "data": result.to_dict(),
+                "metadata": {
+                    "rows": len(df),
+                    "columns": list(df.columns)
+                }
             }
-        }
+        except Exception as e:
+            logging.error(f"Time series analysis failed: {str(e)}")
+            raise
 
     def _analyze_statistical(self, df: pd.DataFrame, params: Dict) -> Dict[str, Any]:
         """Perform statistical analysis"""

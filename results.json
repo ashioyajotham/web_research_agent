@@ -37,37 +37,37 @@
           "position": 5
         },
         {
+          "title": "Monroe Doctrine (1823) | National Archives",
+          "link": "https://www.archives.gov/milestone-documents/monroe-doctrine",
+          "snippet": "EnlargeDownload Link Citation: Message of President James Monroe at the commencement of the first session of the 18th Congress (The Monroe ...",
+          "date": "May 10, 2022",
+          "position": 6
+        },
+        {
           "title": "U.S.-China Relations for the 2030s: Toward a Realistic Scenario for ...",
           "link": "https://carnegieendowment.org/research/2024/10/us-china-relations-for-the-2030s-toward-a-realistic-scenario-for-coexistence?lang=en",
           "snippet": "It has become difficult to imagine how Washington and Beijing might turn their relationship, which is so crucial to the future of world order, toward calmer ...",
           "date": "Oct 17, 2024",
-          "position": 6
+          "position": 7
         },
         {
           "title": "China\u2013United States relations - Wikipedia",
           "link": "https://en.wikipedia.org/wiki/China%E2%80%93United_States_relations",
           "snippet": "The relationship between the People's Republic of China (PRC) and the United States of America (USA) has been complex and at times tense since the ...",
-          "position": 7
+          "position": 8
         },
         {
           "title": "[PDF] Report of the Impeachment Inquiry of Joseph R. Biden Jr.",
           "link": "https://waysandmeans.house.gov/wp-content/uploads/2024/08/Report-of-the-Impeachment-Inquiry-of-Joseph-R.-Biden-Jr.-President-of-the-United-States.pdf",
           "snippet": "For example, in 2014, Vice President Biden attended a dinner for. Hunter Biden with Russian oligarch Yelena Baturina.4 Following the dinner, ...",
           "date": "May 13, 2024",
-          "position": 8
+          "position": 9
         },
         {
           "title": "[PDF] Israel and Hamas Conflict In Brief: Overview, US Policy, and Options ...",
           "link": "https://crsreports.congress.gov/product/pdf/R/R47828",
           "snippet": "Since October 7, 2023, Israel has been at war with the Palestinian Sunni Islamist group Hamas (a. U.S.-designated foreign terrorist ...",
           "date": "Sep 15, 2024",
-          "position": 9
-        },
-        {
-          "title": "Remarks by Chinese Ambassador to the United States Xie Feng at ...",
-          "link": "https://www.mfa.gov.cn/eng/xw/zwbd/202405/t20240530_11365991.html",
-          "snippet": "Act with a sense of responsibility for history, the people and the world And usher in a brighter future for China-U.S. relations \u2014 Remarks ...",
-          "date": "Jan 17, 2024",
           "position": 10
         }
       ],
@@ -133,10 +133,10 @@
           "position": 4
         },
         {
-          "title": "Statement from NSC Spokesperson Adrienne Watson on the U.S. ...",
-          "link": "https://www.whitehouse.gov/briefing-room/statements-releases/2024/05/13/statement-from-nsc-spokesperson-adrienne-watson-on-the-u-s-prc-talks-on-ai-risk-and-safety/",
-          "snippet": "Special Assistant to the President and Senior Director for Technology and National Security Tarun Chhabra and Department of State Acting ...",
-          "date": "May 13, 2024",
+          "title": "US, China meet in Geneva to discuss AI risks | Reuters",
+          "link": "https://www.reuters.com/technology/us-china-meet-geneva-discuss-ai-risks-2024-05-13/",
+          "snippet": "The U.S. and China will meet in Geneva to discuss artificial intelligence on Tuesday and U.S. officials stressed that Washington's policies ...",
+          "date": "May 14, 2024",
           "position": 5
         },
         {
@@ -147,10 +147,10 @@
           "position": 6
         },
         {
-          "title": "China Is Rapidly Becoming a Leading Innovator in Advanced ...",
-          "link": "https://itif.org/publications/2024/09/16/china-is-rapidly-becoming-a-leading-innovator-in-advanced-industries/",
-          "snippet": "China has reached a new stage in its economic development, with much greater innovation capabilities in its universities and domestic companies.",
-          "date": "Sep 16, 2024",
+          "title": "China and US envoys will hold the first top-level dialogue ... - AP News",
+          "link": "https://apnews.com/article/artificial-intelligence-china-united-states-biden-xi-geneva-a0be57e1fe1cc573118af7fccbf1597e",
+          "snippet": "... Geneva for talks about artificial intelligence ... between U.S. President Joe Biden and Chinese President Xi Jinping in San Francisco.",
+          "date": "May 13, 2024",
           "position": 7
         },
         {
@@ -166,10 +166,10 @@
           "position": 9
         },
         {
-          "title": "China and US envoys will hold the first top-level dialogue ... - AP News",
-          "link": "https://apnews.com/article/artificial-intelligence-china-united-states-biden-xi-geneva-a0be57e1fe1cc573118af7fccbf1597e",
-          "snippet": "... Geneva for talks about artificial intelligence ... between U.S. President Joe Biden and Chinese President Xi Jinping in San Francisco.",
-          "date": "May 13, 2024",
+          "title": "[PDF] 2023 Annual Report to Congress",
+          "link": "https://www.uscc.gov/sites/default/files/2023-11/2023_Annual_Report_to_Congress.pdf",
+          "snippet": "DEAR SENATOR MURRAY AND SPEAKER JOHNSON: On behalf of the U.S.-China Economic and Security Review Com- mission, we are pleased to transmit the ...",
+          "date": "Nov 14, 2023",
           "position": 10
         }
       ],
@@ -184,7 +184,7 @@
   },
   {
     "success": false,
-    "error": "'>=' not supported between instances of 'str' and 'float'"
+    "error": "nan"
   },
   {
     "success": true,
@@ -249,10 +249,10 @@
           "position": 9
         },
         {
-          "title": "[PDF] ING Group Climate Progress Update 2024",
-          "link": "https://www.ingwb.com/binaries/content/assets/insights/news/ing-climate-progress-update-2024.pdf",
-          "snippet": "In 2023, the Scope 1 and 2 financed emissions associated with ING's lending books (excluding Commercial Real Estate) decreased by almost 8 ...",
-          "date": "Sep 19, 2024",
+          "title": "Revised 2023 and Later Model Year Light-Duty Vehicle Greenhouse ...",
+          "link": "https://www.federalregister.gov/documents/2021/12/30/2021-27854/revised-2023-and-later-model-year-light-duty-vehicle-greenhouse-gas-emissions-standards",
+          "snippet": "The final standards will result in significantly greater reductions of GHG emissions over time compared to the proposed standards. EPA projects ...",
+          "date": "Dec 30, 2021",
           "position": 10
         }
       ],
@@ -446,10 +446,10 @@
           "query": "How many countries in Europe"
         },
         {
-          "query": "What are the 44 countries in Europe"
+          "query": "History of European Union PDF"
         },
         {
-          "query": "History of European Union PDF"
+          "query": "What are the 44 countries in Europe"
         },
         {
           "query": "Meaning of Eu in Biology"
@@ -524,10 +524,10 @@
           "position": 9
         },
         {
-          "title": "A Step Closer to CSRD's Non-EU Group Reporting Standards",
-          "link": "https://www.jdsupra.com/legalnews/a-step-closer-to-csrd-s-non-eu-group-6129180/",
-          "snippet": "The Corporate Sustainability Reporting Directive (CSRD) standards for global groups with a significant European footprint took a notable public step forward.",
-          "date": "Nov 12, 2024",
+          "title": "DeloitteESGNow \u2014 Frequently Asked Questions About the E.U. ...",
+          "link": "https://dart.deloitte.com/USDART/home/publications/deloitte/heads-up/2023/csrd-corporate-sustainability-reporting-directive-faqs",
+          "snippet": "Drafted by the European Financial Reporting Advisory Group (EFRAG), the standards provide supplementary guidance for companies within the scope ...",
+          "date": "Aug 17, 2023",
           "position": 10
         }
       ],
@@ -540,9 +540,10 @@
     "output": {
       "results": [
         {
-          "title": "Auto Repair Compliance Assistance Tools - EPA Archives",
-          "link": "https://archive.epa.gov/region02/auto/web/html/tools.html",
-          "snippet": "- This is the section of the Consolidated Screening Checklist for Automotive Repair Facilities Guidebook developed by EPA that concerns the Spill Prevention ...",
+          "title": "Explore the Automotive Trends Data | US EPA",
+          "link": "https://www.epa.gov/automotive-trends/explore-automotive-trends-data",
+          "snippet": "The interactive data tools below provide a way to explore public data from the 2024 EPA Automotive Trends Report.",
+          "date": "Nov 25, 2024",
           "position": 1
         },
         {
@@ -553,10 +554,9 @@
           "position": 2
         },
         {
-          "title": "Explore the Automotive Trends Data | US EPA",
-          "link": "https://www.epa.gov/automotive-trends/explore-automotive-trends-data",
-          "snippet": "The interactive data tools below provide a way to explore public data from the 2024 EPA Automotive Trends Report.",
-          "date": "Nov 25, 2024",
+          "title": "Auto Repair Compliance Assistance Tools - EPA Archives",
+          "link": "https://archive.epa.gov/region02/auto/web/html/tools.html",
+          "snippet": "- This is the section of the Consolidated Screening Checklist for Automotive Repair Facilities Guidebook developed by EPA that concerns the Spill Prevention ...",
           "position": 3
         },
         {
@@ -566,22 +566,21 @@
           "position": 4
         },
         {
+          "title": "National Environmental Policy Act Center",
+          "link": "https://www.afcec.af.mil/Home/Environment/National-Environmental-Policy-Act-Center/",
+          "snippet": "The NEPA Center, located at Joint Base San Antonio-Lackland, Texas at the Air Force Civil Engineer Center, offers a full range of services.",
+          "position": 5
+        },
+        {
           "title": "National Environmental Policy Act (NEPA) Classes of Action",
           "link": "https://www.environment.fhwa.dot.gov/nepa/classes_of_action.aspx",
           "snippet": "NEPA requires Federal agencies to prepare environmental impact statements (EISs) for major Federal actions that significantly affect the quality of the human ...",
-          "position": 5
+          "position": 6
         },
         {
           "title": "Reducing car pollution - Washington State Department of Ecology",
           "link": "https://ecology.wa.gov/issues-and-local-projects/education-training/what-you-can-do/reducing-car-pollution",
           "snippet": "Maintain your vehicle. Vehicle pollutants harm our health and contain greenhouse gases that cause climate change. Burning gasoline and diesel fuel creates ...",
-          "position": 6
-        },
-        {
-          "title": "Environmental Statutes and Executive Orders Relevant to EV ...",
-          "link": "https://www.transportation.gov/rural/ev/toolkit/environmental-statutes-and-executive-orders",
-          "snippet": "This section of the toolkit describes some environmental statutes and executive orders (EOs) that may commonly be relevant to electric vehicle infrastructure.",
-          "date": "May 5, 2023",
           "position": 7
         },
         {
@@ -592,21 +591,24 @@
           "position": 8
         },
         {
-          "title": "Environmental Process Overview",
-          "link": "https://environment.transportation.org/focus-areas/environmental-process/environmental-process-overview/",
-          "snippet": "NEPA directs federal agencies, when planning projects or issuing permits, to conduct environmental reviews to consider the potential impacts on the environment.",
+          "title": "Environmental | Sustainability | Nissan Motor Corporation Global ...",
+          "link": "https://www.nissan-global.com/EN/SUSTAINABILITY/ENVIRONMENT/",
+          "snippet": "Nissan aims to reduce environmental impact through improving technologies and business processes. Driven by Nissan's corporate purpose.",
           "position": 9
         },
         {
-          "title": "National Environmental Policy Act Implementing Regulations ...",
-          "link": "https://www.federalregister.gov/documents/2022/04/20/2022-08288/national-environmental-policy-act-implementing-regulations-revisions",
-          "snippet": "The Council on Environmental Quality (CEQ) issues this final rule to amend certain provisions of its regulations for implementing the ...",
-          "date": "Apr 20, 2022",
+          "title": "Environmental Statutes and Executive Orders Relevant to EV ...",
+          "link": "https://www.transportation.gov/rural/ev/toolkit/environmental-statutes-and-executive-orders",
+          "snippet": "This section of the toolkit describes some environmental statutes and executive orders (EOs) that may commonly be relevant to electric vehicle infrastructure.",
+          "date": "May 5, 2023",
           "position": 10
         }
       ],
       "knowledge_graph": {},
       "related_searches": [
+        {
+          "query": "Car suspension"
+        },
         {
           "query": "How much CO2 do cars emit worldwide"
         },
@@ -617,10 +619,7 @@
           "query": "How do cars pollute the environment"
         },
         {
-          "query": "EPA vehicle emissions standards"
-        },
-        {
-          "query": "EPA cars meaning"
+          "query": "Green vehicle list"
         },
         {
           "query": "How much CO2 do cars emit worldwide percentage"
@@ -630,6 +629,9 @@
         },
         {
           "query": "what are the pros and cons of electric cars?"
+        },
+        {
+          "query": "U.S. automotive trends"
         }
       ]
     }
@@ -738,95 +740,10 @@
     }
   },
   {
-    "success": true,
+    "success": false,
+    "error": "'GoogleSearchTool' object has no attribute 'logger'",
     "output": {
-      "results": [
-        {
-          "title": "The New York Times made more than - Nieman Lab",
-          "link": "https://www.niemanlab.org/2024/02/the-new-york-times-made-more-than-1-billion-from-digital-subscriptions-in-2023/",
-          "snippet": "Missing: \u00e2\u201a\u00ac 1B",
-          "position": 1
-        },
-        {
-          "title": "OpenAI on track to generate more than $1 bln revenue over 12 months",
-          "link": "https://www.reuters.com/technology/openai-track-generate-more-than-1-bln-revenue-over-12-months-information-2023-08-29/",
-          "snippet": "OpenAI is on track to generate more than $1 billion in revenue over the next 12 months from the sale of artificial intelligence software and computing capacity ...",
-          "date": "Aug 30, 2023",
-          "position": 2
-        },
-        {
-          "title": "Highest revenue companies 2023 - Statista",
-          "link": "https://www.statista.com/statistics/263265/top-companies-in-the-world-by-revenue/",
-          "snippet": "With nearly 640 billion U.S. dollars in revenue, Walmart topped the ranking of the hundred largest companies globally, followed by Amazon.",
-          "date": "Jul 4, 2024",
-          "position": 3
-        },
-        {
-          "title": "Which Companies Have Reached $1B Revenue Fastest ... - Raistone",
-          "link": "https://raistone.com/which-companies-have-reached-1b-revenue-fastest-how-raistone-fueled-a-historic-growth-story/",
-          "snippet": "In this blog, we'll detail some of the fastest growing companies in history, including Slack, Jet.com, WeWork, Groupon, and Innovation Refunds.",
-          "date": "Nov 5, 2024",
-          "position": 4
-        },
-        {
-          "title": "Shein's revenue is 'a lot more' than $30 billion annually: exec - CNBC",
-          "link": "https://www.cnbc.com/2024/01/08/sheins-revenue-is-a-lot-more-than-30-billion-annually-exec.html",
-          "snippet": "The outlet reported that Shein had set a target to grow sales by 40% in 2023, which would have brought its revenue above $30 billion. It is ...",
-          "date": "Jan 8, 2024",
-          "position": 5
-        },
-        {
-          "title": "2024 Technology Fast 500 Award Winners | Deloitte US",
-          "link": "https://www2.deloitte.com/us/en/pages/technology-media-and-telecommunications/articles/fast500-winners.html",
-          "snippet": "Past Fast 500 winners include technology pioneers like Google, eBay, and Tesla, who have transformed how each of us live, work, and play.",
-          "position": 6
-        },
-        {
-          "title": "Scientists paid large publishers over $1 billion in four years to have ...",
-          "link": "https://english.elpais.com/science-tech/2023-11-21/scientists-paid-large-publishers-over-1-billion-in-four-years-to-have-their-studies-published-with-open-access.html",
-          "snippet": "A study reveals that academic megajournals 'Scientific Reports' and 'Nature Communications' have cornered the market.",
-          "date": "Nov 21, 2023",
-          "position": 7
-        },
-        {
-          "title": "CoStar Group 2023 Revenue Increased 13%, Apartments.com ...",
-          "link": "https://investors.costargroup.com/news-releases/news-release-details/costar-group-2023-revenue-increased-13-apartmentscom-crosses-1",
-          "snippet": "Net income was $375 million for the year ended December 31, 2023 , compared to $369 million for the year ended December 31, 2022 , and net income was $96 ...",
-          "position": 8
-        },
-        {
-          "title": "NVIDIA Announces Financial Results for First Quarter Fiscal 2024",
-          "link": "https://investor.nvidia.com/news/press-release-details/2023/NVIDIA-Announces-Financial-Results-for-First-Quarter-Fiscal-2024/default.aspx",
-          "snippet": "NVIDIA (NASDAQ: NVDA) today reported revenue for the first quarter ended April 30, 2023, of $7.19 billion, down 13% from a year ago and up 19% from the ...",
-          "date": "May 24, 2023",
-          "position": 9
-        },
-        {
-          "title": "Tax Payments by Undocumented Immigrants \u2013 ITEP",
-          "link": "https://itep.org/undocumented-immigrants-taxes-2024/",
-          "snippet": "We estimate that undocumented immigrants paid $96.7 billion in US taxes in 2022, including $59.4 billion in payments to the federal government and $37.3 ...",
-          "date": "Jul 30, 2024",
-          "position": 10
-        }
-      ],
-      "knowledge_graph": {},
-      "related_searches": [
-        {
-          "query": "New York Times losing subscribers july 2024"
-        },
-        {
-          "query": "They earned more than \u00e2 1b in revenue in 2023 2022"
-        },
-        {
-          "query": "New York Times losing subscribers today"
-        },
-        {
-          "query": "New York Times 2023 revenue"
-        },
-        {
-          "query": "Highest revenue companies 2023"
-        }
-      ]
+      "results": []
     }
   },
   {
@@ -852,48 +769,47 @@
           "position": 3
         },
         {
-          "title": "Holding Company - Defined, How it Works, Pros, Types",
-          "link": "https://corporatefinanceinstitute.com/resources/management/holding-company/",
-          "snippet": "A holding company is a company that doesn't conduct any operations, ventures, or other active tasks for itself. Instead, it exists for the purpose of owning ...",
+          "title": "[PDF] What is a Holding Company Structure and Why is it so Popular?",
+          "link": "https://www.nass.org/sites/default/files/2023-07/issue-paper-CT-Corp-NASS-summer23.pdf",
+          "snippet": "A holding company is a parent company\u2014usually a corporation or LLC \u2014 whose purpose is to buy and control the ownership interests of other companies. The.",
           "position": 4
         },
         {
-          "title": "Holding Company vs. Parent | Holdings, Subsidiaries, & More",
-          "link": "https://wyomingllcattorney.com/Form-a-Wyoming-LLC/Holding-Company-Setup/vs-Parent",
-          "snippet": "A subsidiary is a company that is owned or controlled by another company, usually referred to as its holding company or parent company. A subsidiary company is ...",
+          "title": "Holding Company - Defined, How it Works, Pros, Types",
+          "link": "https://corporatefinanceinstitute.com/resources/management/holding-company/",
+          "snippet": "A holding company is a company that doesn't conduct any operations, ventures, or other active tasks for itself. Instead, it exists for the purpose of owning ...",
           "position": 5
-        },
-        {
-          "title": "Holding company - Wikipedia",
-          "link": "https://en.wikipedia.org/wiki/Holding_company",
-          "snippet": "A holding company is a company whose primary business is holding a controlling interest in the securities of other companies.",
-          "position": 6
         },
         {
           "title": "What is a Holding Company? - CorpNet",
           "link": "https://www.corpnet.com/blog/what-is-a-holding-company/",
           "snippet": "A holding company is a legal entity (corporation or LLC) that retains a controlling interest in one or more companies termed subsidiaries.",
           "date": "May 27, 2023",
+          "position": 6
+        },
+        {
+          "title": "Holding company - Wikipedia",
+          "link": "https://en.wikipedia.org/wiki/Holding_company",
+          "snippet": "A holding company is a company whose primary business is holding a controlling interest in the securities of other companies.",
           "position": 7
+        },
+        {
+          "title": "Holding Company vs. Parent | Holdings, Subsidiaries, & More",
+          "link": "https://wyomingllcattorney.com/Form-a-Wyoming-LLC/Holding-Company-Setup/vs-Parent",
+          "snippet": "A subsidiary is a company that is owned or controlled by another company, usually referred to as its holding company or parent company. A subsidiary company is ...",
+          "position": 8
         },
         {
           "title": "LLC Subsidiary - Northwest Registered Agent",
           "link": "https://www.northwestregisteredagent.com/llc/subsidiary",
           "snippet": "For an LLC to be considered a subsidiary, its holding company must own at least 50% of the business, which is available through membership interest.",
-          "position": 8
+          "position": 9
         },
         {
           "title": "Expert Answers on LLC and Subsidiary Operating Agreements",
           "link": "https://www.justanswer.com/business-law/l3r5k-subsidiary-s-operating-agreement-control.html",
           "snippet": "A subsidiary company is wholly owned, or at least majority owned, by another company, referred to as the \u201cparent\u201d or \u201cholding\u201d company. It is ...",
           "date": "Jan 23, 2023",
-          "position": 9
-        },
-        {
-          "title": "If you buy a parent company, are you owning its sub ... - Quora",
-          "link": "https://www.quora.com/If-you-buy-a-parent-company-are-you-owning-its-sub-company-as-well-or-is-it-another-acquisition",
-          "snippet": "The parent or holding company still owns and controls the subsidiary or daughter company.",
-          "date": "Jan 17, 2023",
           "position": 10
         }
       ],

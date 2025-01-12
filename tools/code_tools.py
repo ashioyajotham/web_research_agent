@@ -2,6 +2,8 @@ import os
 import json
 import ast
 import re
+import math
+import random
 from typing import List, Dict, Any, Optional
 from dataclasses import dataclass
 from .base import BaseTool
@@ -236,34 +238,58 @@ Input should be a JSON object with 'command', 'code', and optional 'language' fi
 class CodeGeneratorTool(BaseTool):
     """Tool for generating code based on requirements"""
     
+    def __init__(self):
+        super().__init__()
+        # Configure model
+        genai.configure(api_key=os.getenv('GEMINI_API_KEY'))
+        self.generation_config = {
+            "temperature": 0.3,  # Lower temperature for more focused code generation
+            "top_p": 0.8,
+            "top_k": 40,
+            "max_output_tokens": 8192,
+        }
+
     async def execute(self, prompt: str) -> Dict[str, Any]:
         """Generate code from prompt"""
         try:
-            # Extract algorithm type and specific requirements
             algorithm_type = self._detect_algorithm_type(prompt)
             template = self._get_algorithm_template(algorithm_type)
             
-            # Enhance prompt with algorithm-specific guidance
-            enhanced_prompt = f"""
+            enhanced_prompt = f"""You are an expert Python programmer. Your task is to generate a complete, production-ready implementation following these requirements:
+
             {template}
-            
+
             Task requirements: {prompt}
-            
-            Please implement this algorithm following these guidelines:
-            - Use clear variable names and comments
-            - Include type hints and docstrings
-            - Implement error handling
-            - Add example usage
+
+            The code must include:
+            1. Type hints for all functions and methods
+            2. Comprehensive error handling
+            3. Clear documentation and comments
+            4. Example usage in a __main__ block
+            5. Unit tests with at least 3 test cases
+
+            Return only the implementation in a code block, no explanations needed.
+            The code must be complete and runnable.
             """
             
-            model = genai.GenerativeModel('gemini-pro')
+            model = genai.GenerativeModel('gemini-pro', generation_config=self.generation_config)
             chat = model.start_chat(history=[])
             response = chat.send_message(enhanced_prompt)
             
-            # Extract code block from response
             code_block = self._extract_code_block(response.text)
             if not code_block:
-                raise ValueError("No code block found in response")
+                # Try again with a more specific prompt
+                response = chat.send_message("Please provide only the Python code implementation in a code block")
+                code_block = self._extract_code_block(response.text)
+                
+            if not code_block:
+                raise ValueError("Could not generate valid code")
+                
+            # Validate the generated code
+            try:
+                ast.parse(code_block)
+            except SyntaxError as e:
+                raise ValueError(f"Generated code has syntax errors: {str(e)}")
                 
             return {
                 "code": code_block,
@@ -296,34 +322,41 @@ class CodeGeneratorTool(BaseTool):
         """Get template for specific algorithm type"""
         templates = {
             'mcts': """
-            Implement a Monte Carlo Tree Search (MCTS) algorithm with these components:
-            1. Node class with:
-                - State management
-                - Visit count and win statistics
-                - Child nodes and unexplored actions
-                - UCT calculation
-            2. Core MCTS functions:
-                - Selection using UCT
-                - Expansion of leaf nodes
-                - Simulation/rollout
-                - Backpropagation of results
-            3. Main search function to run iterations
-            4. Game state interface for:
-                - Legal moves
-                - Game end detection
-                - State copying
-                - Move application
-            """,
-            'minimax': """
-            Implement a Minimax algorithm with:
-            1. Alpha-beta pruning
-            2. Depth-limited search
-            3. State evaluation function
-            4. Move ordering for better pruning
-            """,
-            # Add other algorithm templates as needed
+            Implement a Monte Carlo Tree Search algorithm for Tic-Tac-Toe with:
+
+            Required classes:
+            1. TicTacToeState:
+                - Board representation as List[List[str]]
+                - Methods for moves, legal moves, win check
+                - State copying for simulation
+                - Pretty printing
+
+            2. MCTSNode:
+                - State storage
+                - Parent/children connections
+                - Visit counts and win statistics
+                - UCT calculation with exploration parameter
+                - Methods for selection, expansion, simulation
+
+            3. MCTS:
+                - search() method to find best move
+                - Configurable number of simulations
+                - Progress tracking
+
+            4. Game:
+                - Human vs AI interface
+                - Move validation
+                - Board display
+                - Main game loop
+
+            Include:
+            - Configurable board size (default 3x3)
+            - Customizable exploration constant
+            - Performance statistics
+            - Random seed for reproducibility
+            - Clear win/draw detection
+            """
         }
-        
         return templates.get(algorithm_type, "Implement the requested functionality with:")
 
     def _extract_code_block(self, text: str) -> Optional[str]:
