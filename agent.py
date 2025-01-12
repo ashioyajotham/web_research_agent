@@ -4,10 +4,14 @@ import asyncio
 from typing import List, Dict
 from dotenv import load_dotenv
 import nltk
+import datetime
+import time
+from rich.console import Console
 from enum import Enum
 from agent.core import Agent, AgentConfig
 from tools.base import BaseTool
 from formatters.pretty_output import PrettyFormatter
+from utils.logger import AgentLogger
 
 # Load environment variables
 load_dotenv()
@@ -77,6 +81,61 @@ async def process_tasks(agent: Agent, tasks: List[str]) -> List[Dict]:
         results.append(result)
     return results
 
+class Agent:
+    def __init__(self, tools: Dict[str, BaseTool], config: AgentConfig):
+        self.tools = tools
+        self.config = config
+        self.logger = AgentLogger()
+        
+    async def process_task(self, task: str) -> Dict:
+        self.logger.task_start(task)
+        start_time = time.time()
+        
+        try:
+            if "download" in task.lower() and "dataset" in task.lower():
+                result = await self._handle_dataset_task(task)
+            else:
+                result = await self._process_task(task)
+                
+            time_taken = time.time() - start_time
+            self.logger.task_complete(task, time_taken)
+            return result
+            
+        except Exception as e:
+            self.logger.error(str(e), context=f"Task: {task[:50]}...")
+            return {"success": False, "error": str(e)}
+
+    async def _handle_dataset_task(self, task: str) -> Dict:
+        """Handle tasks involving dataset downloads and processing"""
+        # Extract URL and requirements from task using search tools
+        search_results = await self.tools["google_search"].search(task)
+        dataset_url = self._extract_dataset_url(search_results)
+        
+        if not dataset_url:
+            return {"success": False, "error": "Could not find dataset URL"}
+            
+        try:
+            # Download and process dataset
+            df = await self.tools["dataset"].download_dataset(dataset_url)
+            
+            # Determine analysis type and parameters from task
+            analysis_params = self._extract_analysis_params(task)
+            
+            # Process the dataset
+            result = await self.tools["dataset"].process_dataset(
+                df, 
+                analysis_params["type"],
+                analysis_params["params"]
+            )
+            
+            return {
+                "success": True,
+                "output": result
+            }
+            
+        except Exception as e:
+            return {"success": False, "error": str(e)}
+
 def main(task_file_path: str, output_file_path: str):
     # Initialize NLTK silently
     initialize_nltk()
@@ -107,10 +166,12 @@ def main(task_file_path: str, output_file_path: str):
     )
     
     agent = Agent(tools=tools, config=config)
+    agent.logger.log('INFO', "Agent initialized with tools and config", "Startup")
     
     # Read tasks
     with open(task_file_path, 'r') as f:
         tasks = [line.strip() for line in f.readlines() if line.strip()]
+    agent.logger.log('INFO', f"Loaded {len(tasks)} tasks from {task_file_path}", "Startup")
     
     # Initialize pretty formatter
     formatter = PrettyFormatter()
@@ -131,43 +192,6 @@ def main(task_file_path: str, output_file_path: str):
         json.dump(results, f, indent=2, cls=EnhancedJSONEncoder)
     
     console.print(f"\n[dim]Full results saved to: {output_file_path}[/dim]")
-
-async def process_task(self, task: str) -> Dict:
-    if "download" in task.lower() and "dataset" in task.lower():
-        return await self._handle_dataset_task(task)
-    result = await self._process_task(task)
-    return result
-
-async def _handle_dataset_task(self, task: str) -> Dict:
-    """Handle tasks involving dataset downloads and processing"""
-    # Extract URL and requirements from task using search tools
-    search_results = await self.tools["google_search"].search(task)
-    dataset_url = self._extract_dataset_url(search_results)
-    
-    if not dataset_url:
-        return {"success": False, "error": "Could not find dataset URL"}
-        
-    try:
-        # Download and process dataset
-        df = await self.tools["dataset"].download_dataset(dataset_url)
-        
-        # Determine analysis type and parameters from task
-        analysis_params = self._extract_analysis_params(task)
-        
-        # Process the dataset
-        result = await self.tools["dataset"].process_dataset(
-            df, 
-            analysis_params["type"],
-            analysis_params["params"]
-        )
-        
-        return {
-            "success": True,
-            "output": result
-        }
-        
-    except Exception as e:
-        return {"success": False, "error": str(e)}
 
 if __name__ == "__main__":
     import sys

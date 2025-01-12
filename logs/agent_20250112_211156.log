@@ -1,0 +1,6 @@
+2025-01-12 21:11:56,382 [INFO] Startup: Agent initialized with tools and config
+2025-01-12 21:11:56,382 [INFO] Startup: Loaded 12 tasks from tasks.txt
+2025-01-12 21:11:56,382 [INFO] TaskManager: Starting task: Compile a list of 10 statements made by Joe Biden regarding US-China relations. Each statement must have been made on a separate occasion. Provide a source for each statement.
+2025-01-12 21:11:56,398 [ERROR] Task: Compile a list of 10 statements made by Joe Biden ...: 'Agent' object has no attribute '_process_task'
+2025-01-12 21:11:56,398 [INFO] TaskManager: Starting task: Find the name of the COO of the organization that mediated secret talks between US and Chinese AI companies in Geneva in 2023.
+2025-01-12 21:11:56,398 [ERROR] Task: Find the name of the COO of the organization that ...: 'Agent' object has no attribute '_process_task'

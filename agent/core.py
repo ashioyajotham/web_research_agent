@@ -12,6 +12,7 @@ from .executor import Executor, ExecutionResult
 from .reflection import Evaluator, Learner
 from .utils.prompts import PromptManager
 from tools.base import BaseTool
+from utils.logger import AgentLogger
 
 @dataclass
 class AgentConfig:
@@ -33,6 +34,7 @@ class Agent:
         self.evaluator = Evaluator()
         self.learner = Learner()
         self.prompt_manager = PromptManager()
+        self.logger = AgentLogger()
         
         # Initialize Gemini
         api_key = os.getenv("GEMINI_API_KEY")
@@ -48,22 +50,63 @@ class Agent:
         ])
 
     async def process_task(self, task: str) -> Dict[str, Any]:
-        """Process a single task"""
-        async with asyncio.timeout(self.config.timeout):
+        """Process a task with proper timeout and error handling"""
+        self.logger.task_start(task)
+        
+        try:
+            async with asyncio.timeout(self.config.timeout):
+                return await self._safe_execute_task(task)
+        except asyncio.TimeoutError:
+            self.logger.error(f"Task timed out after {self.config.timeout}s", "Timeout")
+            return {
+                "success": False,
+                "error": f"Task execution timed out after {self.config.timeout} seconds",
+                "partial_results": self.get_partial_results()
+            }
+        except Exception as e:
+            self.logger.error(f"Task failed: {str(e)}", "Error")
+            return {
+                "success": False,
+                "error": str(e)
+            }
+
+    async def _safe_execute_task(self, task: str) -> Dict[str, Any]:
+        """Execute task with retries and cleanup"""
+        max_retries = 3
+        retry_count = 0
+        
+        while retry_count < max_retries:
             try:
-                return await self._execute_task(task)
-            except asyncio.TimeoutError:
-                return {
-                    'success': False,
-                    'error': 'Task execution timed out',
-                    'task': task
-                }
+                result = await self._execute_task(task)
+                return result
+            except asyncio.CancelledError:
+                # Ensure cleanup of any pending operations
+                await self._cleanup_cancelled_task()
+                raise
             except Exception as e:
-                return {
-                    'success': False,
-                    'error': str(e),
-                    'task': task
-                }
+                retry_count += 1
+                if retry_count == max_retries:
+                    raise
+                self.logger.log('WARNING', f"Retry {retry_count}/{max_retries} due to: {str(e)}", "Retry")
+                await asyncio.sleep(1 * retry_count)  # Exponential backoff
+
+    async def _cleanup_cancelled_task(self):
+        """Clean up resources when a task is cancelled"""
+        try:
+            # Cancel any pending subtasks
+            for task in asyncio.all_tasks():
+                if task != asyncio.current_task():
+                    task.cancel()
+            # Wait for cancellation to complete
+            await asyncio.gather(*asyncio.all_tasks() - {asyncio.current_task()},
+                               return_exceptions=True)
+        except Exception as e:
+            self.logger.error(f"Cleanup error: {str(e)}", "Cleanup")
+
+    def get_partial_results(self) -> Dict[str, Any]:
+        """Get any partial results that were obtained before timeout"""
+        # Implement gathering of partial results
+        return {}
 
     async def _execute_task(self, task: str) -> Dict[str, Any]:
         """Execute task with full pipeline"""
