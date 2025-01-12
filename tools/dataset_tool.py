@@ -8,6 +8,8 @@ from utils.logger import AgentLogger
 import io
 import json
 import logging
+import aiohttp
+from io import StringIO
 
 class DatasetTool(BaseTool):
     def __init__(self, cache_dir: str = "./cache/datasets"):
@@ -19,26 +21,60 @@ class DatasetTool(BaseTool):
         """Implement abstract method from BaseTool"""
         return "Downloads and processes datasets from URLs, with support for various data analysis types"
 
-    async def execute(self, url: str, analysis_type: str = "time_series", **params) -> Dict[str, Any]:
-        """Implement abstract method from BaseTool"""
+    async def execute(self, query: Optional[str] = None, url: Optional[str] = None, **kwargs) -> Dict[str, Any]:
+        """Download and process dataset from URL"""
         try:
-            # Download dataset
-            df = await self.download_dataset(url)
-            
-            # Process dataset with provided parameters
-            result = await self.process_dataset(df, analysis_type, params)
-            
-            return {
-                "success": True,
-                "data": result
-            }
+            # Handle missing URL by trying to extract from query
+            if not url and query:
+                # If URL is in the query, try to extract it
+                import re
+                urls = re.findall(r'https?://[^\s<>"]+|www\.[^\s<>"]+', query)
+                if urls:
+                    url = urls[0]
+                    
+            if not url:
+                return {
+                    "success": False,
+                    "error": "No dataset URL provided",
+                    "data": None
+                }
+
+            async with aiohttp.ClientSession() as session:
+                async with session.get(url) as response:
+                    if response.status != 200:
+                        return {
+                            "success": False,
+                            "error": f"Failed to download dataset: {response.status}",
+                            "data": None
+                        }
+                        
+                    content = await response.text()
+                    
+                    # Try to parse as CSV
+                    try:
+                        df = pd.read_csv(StringIO(content))
+                        return {
+                            "success": True,
+                            "data": df.to_dict('records'),
+                            "metadata": {
+                                "rows": len(df),
+                                "columns": list(df.columns)
+                            }
+                        }
+                    except Exception as e:
+                        return {
+                            "success": False,
+                            "error": f"Failed to parse dataset: {str(e)}",
+                            "data": None
+                        }
+                        
         except Exception as e:
-            self.logger.error(f"Dataset operation failed: {str(e)}", "DatasetTool")
             return {
                 "success": False,
-                "error": str(e)
+                "error": str(e),
+                "data": None
             }
-        
+
     async def download_dataset(self, url: str) -> pd.DataFrame:
         self.logger.log('INFO', f"Downloading dataset from {url}", "DatasetTool")
         cache_file = self.cache_dir / f"{hash(url)}.csv"

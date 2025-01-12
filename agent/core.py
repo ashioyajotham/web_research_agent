@@ -53,71 +53,191 @@ class Agent:
         """Process a task with proper timeout and error handling"""
         self.logger.task_start(task)
         start_time = time.time()
+        retry_count = 0
+        max_retries = 3
         
-        try:
-            # Check memory and pattern learning first
-            if self.config.pattern_learning_enabled and self.pattern_learner:
-                similar_patterns = self.memory.retrieve_similar_patterns(task)
-                if similar_patterns:
-                    similar_solutions = [(p["solution"], p["effectiveness"]) for p in similar_patterns]
-                    generalized_solution = self.pattern_learner.generalize_solution(similar_solutions)
-                    if generalized_solution:
-                        result = await self._execute_with_solution(task, generalized_solution)
-                        if result.get("success"):
-                            return self._finalize_result(task, result, time.time() - start_time)
-
-            # If no pattern match or it failed, use planner
-            if self.config.planning_enabled and self.planner:
-                plan = self.planner.create_plan(task, {"previous_attempts": similar_patterns})
-                result = await self.executor.execute_plan(plan, self.model, self.config.max_steps)
-            else:
-                result = await self._execute_basic_task(task)
-
-            # Store results and learn
-            if result.get("success"):
-                self.memory.store_memory(
-                    task_type=self.planner._analyze_task_type(task) if self.planner else "general",
-                    pattern=task,
-                    solution=result,
-                    effectiveness=self._calculate_effectiveness(result)
+        while retry_count < max_retries:
+            try:
+                # Add timeout protection
+                result = await asyncio.wait_for(
+                    self._safe_execute_task(task),
+                    timeout=self.config.timeout
                 )
-                if self.pattern_learner:
-                    self.pattern_learner.add_pattern(task, result)
+                
+                if result.get('success'):
+                    return self._finalize_result(task, result, time.time() - start_time)
+                
+                # If failed but not due to error, try alternative approach
+                if not result.get('error'):
+                    basic_result = await self._execute_basic_task(task)
+                    if (basic_result.get('success')):
+                        return self._finalize_result(task, basic_result, time.time() - start_time)
+                
+                retry_count += 1
+                if retry_count < max_retries:
+                    await asyncio.sleep(1 * retry_count)  # Exponential backoff
+                    continue
+                
+                return self._finalize_result(task, result, time.time() - start_time)
+                
+            except asyncio.TimeoutError:
+                self.logger.error(f"Task timed out after {self.config.timeout}s: {task[:50]}...")
+                return {
+                    "success": False,
+                    "error": f"Task timed out after {self.config.timeout} seconds",
+                    "output": {"results": []},
+                    "confidence": 0.0
+                }
+            except Exception as e:
+                self.logger.error(str(e), f"Task: {task[:50]}...")
+                retry_count += 1
+                if retry_count >= max_retries:
+                    return {
+                        "success": False,
+                        "error": str(e),
+                        "output": {"results": []},
+                        "confidence": 0.0
+                    }
+                await asyncio.sleep(1 * retry_count)  # Exponential backoff
 
-            return self._finalize_result(task, result, time.time() - start_time)
-
-        except Exception as e:
-            self.logger.error(str(e), f"Task: {task[:50]}...")
+    def _finalize_result(self, task: str, result: Dict[str, Any], execution_time: float) -> Dict[str, Any]:
+        """Finalize and validate the result"""
+        if isinstance(result, dict):
+            return {
+                "success": bool(result.get("success", False)),
+                "output": result.get("output", {"results": []}),
+                "confidence": float(result.get("confidence", 0.0)),
+                "execution_time": float(execution_time),
+                "error": result.get("error"),
+                "task": task,
+                "metrics": result.get("metrics", {})
+            }
+        elif isinstance(result, ExecutionResult):
+            return {
+                "success": bool(result.success),
+                "output": result.output or {"results": []},
+                "confidence": float(result.confidence),
+                "execution_time": float(execution_time),
+                "task": task,
+                "metrics": result.execution_metrics or {}
+            }
+        else:
             return {
                 "success": False,
-                "error": str(e),
-                "output": {"results": []}
+                "error": "Invalid result type",
+                "output": {"results": []},
+                "confidence": 0.0,
+                "execution_time": float(execution_time),
+                "task": task
             }
-
-    def _finalize_result(self, task: str, result: Dict, execution_time: float) -> Dict[str, Any]:
-        """Finalize the result with metadata"""
-        return {
-            "success": result.get("success", False),
-            "output": result.get("output", {}),
-            "confidence": result.get("confidence", 0.0),
-            "execution_time": execution_time,
-            "task": task
-        }
 
     async def _execute_with_solution(self, task: str, solution: Dict) -> Dict:
         """Execute task using a generalized solution"""
-        # Implementation specific to solution adaptation
-        pass
+        try:
+            # Adapt the solution to the current task
+            task_type = self.planner._analyze_task_type(task) if self.planner else "research"
+            
+            if task_type == "CODE" and solution.get("code"):
+                # For code tasks, use the generalized solution as a template
+                result = await self.tools["code_generator"].execute(
+                    query=task,
+                    template=solution.get("code")
+                )
+            else:
+                # For other tasks, use the solution's parameters
+                tool_name = solution.get("tool", "google_search")
+                if tool_name in self.tools:
+                    result = await self.tools[tool_name].execute(
+                        query=task,
+                        **solution.get("params", {})
+                    )
+                else:
+                    result = await self._execute_basic_task(task)
+            
+            return {
+                "success": bool(result.get("success", False)),
+                "output": result.get("output", {}),
+                "confidence": float(result.get("confidence", 0.0)),
+                "task": task
+            }
+            
+        except Exception as e:
+            self.logger.error(f"Solution adaptation failed: {str(e)}")
+            return {
+                "success": False,
+                "output": {"results": []},
+                "error": str(e),
+                "task": task
+            }
 
-    async def _execute_basic_task(self, task: str) -> Dict:
+    async def _execute_basic_task(self, task: str) -> Dict[str, Any]:
         """Basic task execution without planning"""
-        # Implementation for basic task processing
-        pass
+        try:
+            # Determine task type and select appropriate tool
+            task_type = self.planner._analyze_task_type(task) if self.planner else "research"
+            
+            if task_type == "CODE":
+                result = await self.tools["code_generator"].execute(query=task)
+            elif task_type == "DATA":
+                result = await self.tools["dataset"].execute(query=task)
+            else:
+                # Default to google search for research tasks
+                result = await self.tools["google_search"].execute(query=task)
+            
+            if isinstance(result, dict) and result.get("success"):
+                return {
+                    "success": True,
+                    "output": result,
+                    "confidence": 0.7,
+                    "execution_time": 0.0,
+                    "task": task
+                }
+            else:
+                return {
+                    "success": False,
+                    "output": {"results": []},
+                    "confidence": 0.0,
+                    "error": "Tool execution failed",
+                    "task": task
+                }
+                
+        except Exception as e:
+            self.logger.error(f"Basic task execution failed: {str(e)}")
+            return {
+                "success": False,
+                "output": {"results": []},
+                "error": str(e),
+                "task": task
+            }
 
     def _calculate_effectiveness(self, result: Dict) -> float:
         """Calculate solution effectiveness"""
-        # Implementation for calculating effectiveness
-        pass
+        try:
+            # Base effectiveness on multiple factors
+            effectiveness = 0.0
+            
+            # Success is the primary factor
+            if result.get("success"):
+                effectiveness += 0.5
+                
+                # Add points for output quality
+                output = result.get("output", {})
+                if isinstance(output, dict):
+                    if "results" in output and output["results"]:
+                        effectiveness += min(len(output["results"]) * 0.1, 0.3)
+                    if "code" in output:
+                        effectiveness += 0.2
+                    if "data" in output:
+                        effectiveness += 0.2
+                
+                # Consider confidence
+                effectiveness *= max(0.1, min(1.0, result.get("confidence", 0.0)))
+            
+            return min(1.0, effectiveness)
+            
+        except Exception as e:
+            self.logger.error(f"Effectiveness calculation failed: {str(e)}")
+            return 0.0
 
     async def _safe_execute_task(self, task: str) -> Dict[str, Any]:
         """Execute task with retries and cleanup"""
@@ -161,38 +281,58 @@ class Agent:
         """Execute task with full pipeline"""
         start_time = time.time()
         
-        # Get relevant past experiences
-        experiences = self.memory.get_relevant_experiences(task)
-        
-        # Create and validate plan if planning is enabled
-        if self.config.planning_enabled and self.planner:
-            plan = self.planner.create_plan(
-                task=task,
-                context={"experiences": experiences}
-            )
-            result = await self.executor.execute_plan(
-                plan=plan,
-                model=self.model,
-                max_steps=self.config.max_steps
-            )
-        else:
-            result = await self._process_task(task)
-        
-        # Replace reflection with direct learning
-        if self.config.learning_enabled and result.get("success"):
-            self.pattern_learner.add_pattern(task, result)
-            self.memory.store_memory(
-                task_type=self.planner._analyze_task_type(task) if self.planner else "general",
-                pattern=task,
-                solution=result,
-                effectiveness=self._calculate_effectiveness(result)
-            )
-        
-        return {
-            'success': result.success,
-            'output': result.output,
-            'confidence': result.confidence,
-            'steps_taken': len(result.steps),
-            'execution_time': time.time() - start_time,
-            'task': task
-        }
+        try:
+            # Get relevant experiences, handle failure gracefully
+            try:
+                experiences = self.memory.get_relevant_experiences(task)
+            except Exception:
+                experiences = []  # Continue without previous experiences if memory fails
+            
+            if self.config.planning_enabled and self.planner:
+                plan = self.planner.create_plan(
+                    task=task,
+                    context={"experiences": experiences}
+                )
+                exec_result = await self.executor.execute_plan(
+                    plan=plan,
+                    model=self.model,
+                    max_steps=self.config.max_steps
+                )
+                
+                # Convert ExecutionResult to dict with proper error handling
+                if isinstance(exec_result, ExecutionResult):
+                    return {
+                        'success': bool(exec_result.success),
+                        'output': exec_result.output or {'results': []},
+                        'confidence': float(exec_result.confidence),
+                        'steps_taken': len(exec_result.steps) if exec_result.steps else 0,
+                        'execution_time': time.time() - start_time,
+                        'task': task,
+                        'execution_metrics': exec_result.execution_metrics or {}
+                    }
+                else:
+                    # Handle unexpected result type
+                    return {
+                        'success': False,
+                        'error': 'Invalid execution result type',
+                        'output': {'results': []},
+                        'confidence': 0.0,
+                        'execution_time': time.time() - start_time,
+                        'task': task
+                    }
+            else:
+                # Direct task execution without planning
+                result = await self._execute_basic_task(task)
+                return self._finalize_result(task, result, time.time() - start_time)
+                
+        except Exception as e:
+            # Update error logging to use proper format
+            self.logger.error(str(e), context=f"Task: {task[:50]}...", exc_info=True)
+            return {
+                "success": False,
+                "error": str(e),
+                "output": {"results": []},
+                'confidence': 0.0,
+                'execution_time': time.time() - start_time,
+                'task': task
+            }

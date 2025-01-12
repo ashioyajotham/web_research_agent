@@ -30,6 +30,14 @@ async def process_tasks(agent: Agent, tasks: List[str]) -> List[Dict]:
     return await asyncio.gather(*[agent.process_task(task) for task in tasks])
 
 def main(task_file_path: str, output_file_path: str):
+    # Verify environment variables are loaded
+    if not os.getenv("GOOGLE_API_KEY") or not os.getenv("GOOGLE_CSE_ID"):
+        print("\nEnvironment Variable Check:")
+        print(f"GOOGLE_API_KEY: {'✓ Set' if os.getenv('GOOGLE_API_KEY') else '✗ Missing'}")
+        print(f"GOOGLE_CSE_ID: {'✓ Set' if os.getenv('GOOGLE_CSE_ID') else '✗ Missing'}")
+        print("\nPlease ensure your .env file contains the required variables")
+        sys.exit(1)
+
     # Initialize NLTK silently
     initialize_nltk()
     

@@ -249,56 +249,46 @@ class CodeGeneratorTool(BaseTool):
             "max_output_tokens": 8192,
         }
 
-    async def execute(self, prompt: str) -> Dict[str, Any]:
-        """Generate code from prompt"""
+    async def execute(self, query: Optional[str] = None, code: Optional[str] = None, **kwargs) -> Dict[str, Any]:
+        """Generate code based on query or modify existing code"""
         try:
-            algorithm_type = self._detect_algorithm_type(prompt)
-            template = self._get_algorithm_template(algorithm_type)
+            prompt = query or kwargs.get('prompt', '')
+            template = code or kwargs.get('template', '')
+            model = kwargs.get('model')
             
-            enhanced_prompt = f"""You are an expert Python programmer. Your task is to generate a complete, production-ready implementation following these requirements:
+            if not model:
+                return {
+                    "success": False,
+                    "error": "Model not provided",
+                    "code": None
+                }
 
-            {template}
-
-            Task requirements: {prompt}
-
-            The code must include:
-            1. Type hints for all functions and methods
-            2. Comprehensive error handling
-            3. Clear documentation and comments
-            4. Example usage in a __main__ block
-            5. Unit tests with at least 3 test cases
-
-            Return only the implementation in a code block, no explanations needed.
-            The code must be complete and runnable.
-            """
+            # Use template if provided
+            if template:
+                prompt = f"Modify this code:\n{template}\n\nBased on this request:\n{prompt}"
             
-            model = genai.GenerativeModel('gemini-pro', generation_config=self.generation_config)
-            chat = model.start_chat(history=[])
-            response = chat.send_message(enhanced_prompt)
+            # Generate response using the model
+            response = await model.generate_content(prompt)
             
-            code_block = self._extract_code_block(response.text)
-            if not code_block:
-                # Try again with a more specific prompt
-                response = chat.send_message("Please provide only the Python code implementation in a code block")
-                code_block = self._extract_code_block(response.text)
-                
-            if not code_block:
-                raise ValueError("Could not generate valid code")
-                
-            # Validate the generated code
-            try:
-                ast.parse(code_block)
-            except SyntaxError as e:
-                raise ValueError(f"Generated code has syntax errors: {str(e)}")
+            if not response.text:
+                return {
+                    "success": False,
+                    "error": "No code generated",
+                    "code": None
+                }
                 
             return {
-                "code": code_block,
-                "language": "python",
-                "type": algorithm_type
+                "success": True,
+                "code": response.text,
+                "confidence": 0.8
             }
             
         except Exception as e:
-            return {"error": str(e)}
+            return {
+                "success": False,
+                "error": str(e),
+                "code": None
+            }
 
     def _detect_algorithm_type(self, prompt: str) -> str:
         """Detect type of algorithm requested"""

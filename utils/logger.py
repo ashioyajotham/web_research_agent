@@ -40,10 +40,10 @@ class AgentLogger:
             self.logger.addHandler(console_handler)
             self.logger.addHandler(file_handler)
     
-    def log(self, level: str, message: str, context: str = "Agent"):
-        """Log a message with context"""
+    def log(self, level: str, message: str, context: str = "Agent", exc_info: bool = False):
+        """Log a message with context and optional exception info"""
         extra = {'context': context}
-        getattr(self.logger, level.lower())(message, extra=extra)
+        getattr(self.logger, level.lower())(message, extra=extra, exc_info=exc_info)
         
     def task_start(self, task: str):
         self.log('INFO', f"Starting task: {task}", "TaskManager")
@@ -54,5 +54,5 @@ class AgentLogger:
     def tool_call(self, tool: str, params: dict):
         self.log('DEBUG', f"Calling tool {tool} with params: {params}", "ToolManager")
         
-    def error(self, error: str, context: str = "Error"):
-        self.log('ERROR', str(error), context)
+    def error(self, error: str, context: str = "Error", exc_info: bool = False):
+        self.log('ERROR', str(error), context, exc_info)

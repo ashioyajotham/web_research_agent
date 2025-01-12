@@ -1,82 +1,71 @@
-import os
-import aiohttp
-import asyncio
 from typing import Dict, Any, Optional
+import aiohttp
+import json
+import os
 from .base import BaseTool
 
 class GoogleSearchTool(BaseTool):
     def __init__(self):
         self.api_key = os.getenv("SERPER_API_KEY")
         if not self.api_key:
-            raise ValueError("SERPER_API_KEY environment variable not set")
+            raise ValueError("Serper API key (SERPER_API_KEY) not found in environment variables")
         self.base_url = "https://google.serper.dev/search"
 
     def get_description(self) -> str:
-        return "Performs web searches using Google Search API"
+        """Implement abstract method from BaseTool"""
+        return "Performs web searches using Serper API and returns structured results"
 
-    async def execute(self, query: str) -> Dict[str, Any]:
-        """Execute search with retry logic"""
-        max_retries = 3
-        retry_count = 0
-        
-        while retry_count < max_retries:
-            try:
-                timeout = aiohttp.ClientTimeout(total=30)
-                async with aiohttp.ClientSession(timeout=timeout) as session:
-                    return await self._do_search(session, query=query)
-            except asyncio.TimeoutError:
-                retry_count += 1
-                if retry_count == max_retries:
-                    raise
-                await asyncio.sleep(1 * retry_count)
-            except aiohttp.ClientError as e:
-                retry_count += 1
-                if retry_count == max_retries:
-                    raise
-                await asyncio.sleep(1 * retry_count)
-            except Exception as e:
-                raise
-
-    async def _do_search(self, session: aiohttp.ClientSession, query: str) -> Dict[str, Any]:
-        """Perform the actual search"""
-        headers = {
-            'X-API-KEY': self.api_key,
-            'Content-Type': 'application/json'
-        }
-        
+    async def execute(self, query: str, **kwargs) -> Dict[str, Any]:
+        """Execute search using Serper API"""
         try:
-            async with session.post(
-                self.base_url,
-                headers=headers,
-                json={"q": query}
-            ) as response:
-                if response.status == 403:
-                    raise ValueError(f"API Key unauthorized. Please check your SERPER_API_KEY")
-                elif response.status != 200:
-                    raise ValueError(f"API request failed with status {response.status}")
-                
-                result = await response.json()
-                
-                # Clean and process results
-                processed_results = []
-                for item in result.get("organic", []):
-                    clean_item = {
-                        "title": item.get("title"),
-                        "link": item.get("link"),
-                        "snippet": item.get("snippet"),
-                        "date": item.get("date"),
-                        "position": item.get("position")
+            headers = {
+                "X-API-KEY": self.api_key,
+                "Content-Type": "application/json"
+            }
+            
+            # Prepare search parameters
+            search_params = {
+                "q": query,
+                "num": kwargs.get('num', 10)
+            }
+            
+            async with aiohttp.ClientSession() as session:
+                async with session.post(
+                    self.base_url,
+                    headers=headers,
+                    json=search_params
+                ) as response:
+                    data = await response.json()
+                    
+                    if 'error' in data:
+                        return {
+                            "success": False,
+                            "error": data.get('error', 'Unknown error'),
+                            "results": []
+                        }
+                    
+                    # Format results
+                    results = []
+                    organic = data.get('organic', [])
+                    for i, item in enumerate(organic):
+                        results.append({
+                            "title": item.get('title', ''),
+                            "link": item.get('link', ''),
+                            "snippet": item.get('snippet', ''),
+                            "date": item.get('date', ''),
+                            "position": i + 1
+                        })
+                    
+                    return {
+                        "success": True,
+                        "results": results,
+                        "knowledge_graph": data.get('knowledgeGraph', {}),
+                        "related_searches": data.get('relatedSearches', [])
                     }
-                    # Remove any None or empty values
-                    clean_item = {k: v for k, v in clean_item.items() if v}
-                    processed_results.append(clean_item)
-                
-                return {
-                    "success": True,
-                    "results": processed_results,
-                    "knowledge_graph": result.get("knowledgeGraph", {}),
-                    "related_searches": result.get("relatedSearches", [])
-                }
+                    
         except Exception as e:
-            self.logger.error(f"Search failed: {str(e)}", "GoogleSearch")
-            raise
+            return {
+                "success": False,
+                "error": str(e),
+                "results": []
+            }
