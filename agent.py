@@ -35,6 +35,27 @@ def initialize_nltk():
             print("If needed, manually download using: nltk.download()")
             return True  # Continue anyway since files might be manually installed
 
+def extract_direct_answer(task: str, results: List[Dict]) -> Dict[str, str]:
+    """Extract a direct answer from search results for direct questions"""
+    answer = "Could not find a definitive answer"
+    source = ""
+    
+    # Extract potential answer and source based on the search results
+    if results and len(results) > 0:
+        top_result = results[0]
+        snippet = top_result.get('snippet', '')
+        link = top_result.get('link', '')
+        
+        # Basic answer extraction - this could be enhanced with more sophisticated NLP
+        if snippet:
+            answer = snippet.split('.')[0]  # Take first sentence
+            source = link
+    
+    return {
+        "answer": answer,
+        "source": source
+    }
+
 def is_direct_question(task: str) -> bool:
     """Check if task is a direct question requiring a single answer"""
     direct_question_starters = [
@@ -49,11 +70,9 @@ async def process_tasks(agent: Agent, tasks: List[str]) -> List[Dict]:
     for task in tasks:
         result = await agent.process_task(task)
         if is_direct_question(task):
-            # Format direct questions with clear answer/source 
-            result["formatted_answer"] = {
-                "answer": "Extract direct answer here",
-                "source": "Primary source URL"
-            }
+            # For direct questions, extract and format a clear answer
+            direct_answer = extract_direct_answer(task, result["output"]["results"])
+            result["formatted_answer"] = direct_answer
         results.append(result)
     return results
 
