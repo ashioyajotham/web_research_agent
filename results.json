@@ -1,0 +1,62 @@
+[
+  {
+    "success": false,
+    "error": "Object of type StepType is not JSON serializable",
+    "task": "Find the most cited academic papers in machine learning from 2023."
+  },
+  {
+    "success": false,
+    "error": "Object of type StepType is not JSON serializable",
+    "task": "Create a Python function that implements the PageRank algorithm."
+  },
+  {
+    "success": false,
+    "error": "division by zero",
+    "task": "What were the major archaeological discoveries announced in 2023?"
+  },
+  {
+    "success": false,
+    "error": "Object of type StepType is not JSON serializable",
+    "task": "Write a React component that implements an infinite scrolling list with virtualization."
+  },
+  {
+    "success": false,
+    "error": "Object of type StepType is not JSON serializable",
+    "task": "Summarize the key findings from the latest IPCC climate report."
+  },
+  {
+    "success": false,
+    "error": "Object of type StepType is not JSON serializable",
+    "task": "Implement a distributed rate limiter in Go with Redis backend."
+  },
+  {
+    "success": false,
+    "error": "division by zero",
+    "task": "What are the current leading theories about dark matter?"
+  },
+  {
+    "success": false,
+    "error": "division by zero",
+    "task": "Create a Python script to detect and prevent SQL injection attacks."
+  },
+  {
+    "success": false,
+    "error": "Object of type StepType is not JSON serializable",
+    "task": "Write a TypeScript implementation of the Observer pattern with generics."
+  },
+  {
+    "success": false,
+    "error": "division by zero",
+    "task": "What were the major developments in space exploration missions in 2023?"
+  },
+  {
+    "success": false,
+    "error": "Object of type StepType is not JSON serializable",
+    "task": "Implement a microservices architecture diagram using PlantUML."
+  },
+  {
+    "success": false,
+    "error": "division by zero",
+    "task": "Create a Kubernetes operator that manages database backups."
+  }
+]

@@ -30,7 +30,17 @@ class Executor:
         else:
             results = await self._execute_sequential(plan.steps[:max_steps])
             
-        success_rate = sum(1 for r in results if r.success) / len(results)
+        # Handle empty results
+        if not results:
+            return ExecutionResult(
+                success=False,
+                output=None,
+                confidence=0.0,
+                success_rate=0.0,
+                steps=[]
+            )
+            
+        success_rate = sum(1 for r in results if r.success) / len(results) if results else 0
         
         return ExecutionResult(
             success=all(r.success for r in results),
@@ -38,17 +48,17 @@ class Executor:
             confidence=plan.confidence,
             success_rate=success_rate,
             steps=[{
-                'type': step.type.value,
+                'type': str(step.type.value),  # Convert enum to string
                 'description': step.description,
                 'result': result.output
             } for step, result in zip(plan.steps, results)]
         )
 
-    async def _execute_parallel(self, steps: List[ExecutionStep]) -> List[StepResult]:
+    async def _execute_parallel(self, steps: List[ExecutionStep]) -> List<StepResult]:
         tasks = [self._execute_step(step) for step in steps]
         return await asyncio.gather(*tasks)
 
-    async def _execute_sequential(self, steps: List[ExecutionStep]) -> List[StepResult]:
+    async def _execute_sequential(self, steps: List[ExecutionStep]) -> List<StepResult]:
         results = []
         for step in steps:
             result = await self._execute_step(step)

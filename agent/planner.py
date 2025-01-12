@@ -1,11 +1,18 @@
 from dataclasses import dataclass
 from typing import List, Dict, Any
 from enum import Enum
+import json
 
 class StepType(Enum):
     RESEARCH = "research"
     CODE = "code"
     ANALYSIS = "analysis"
+
+    def __str__(self):
+        return self.value
+
+    def to_json(self):
+        return self.value
 
 @dataclass
 class ExecutionStep:
