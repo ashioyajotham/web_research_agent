@@ -7,6 +7,7 @@ import nltk
 from enum import Enum
 from agent.core import Agent, AgentConfig
 from tools.base import BaseTool
+from formatters.pretty_output import PrettyFormatter
 
 # Load environment variables
 load_dotenv()
@@ -84,13 +85,15 @@ def main(task_file_path: str, output_file_path: str):
     from tools.google_search import GoogleSearchTool
     from tools.web_scraper import WebScraperTool
     from tools.code_tools import CodeGeneratorTool, CodeAnalysisTool
+    from tools.dataset_tool import DatasetTool
     
     # Initialize tools
     tools = {
         "google_search": GoogleSearchTool(),
         "web_scraper": WebScraperTool(),
         "code_analysis": CodeAnalysisTool(),
-        "code_generator": CodeGeneratorTool()
+        "code_generator": CodeGeneratorTool(),
+        "dataset": DatasetTool()  # Add the dataset tool
     }
     
     # Initialize agent with default config
@@ -109,12 +112,63 @@ def main(task_file_path: str, output_file_path: str):
     with open(task_file_path, 'r') as f:
         tasks = [line.strip() for line in f.readlines() if line.strip()]
     
+    # Initialize pretty formatter
+    formatter = PrettyFormatter()
+    
     # Process tasks and collect results
     results = asyncio.run(process_tasks(agent, tasks))
     
-    # Write results with custom encoder
+    # Pretty print results
+    console = Console()
+    console.print("\n[bold]🤖 Web Research Agent Results[/bold]\n")
+    
+    for task, result in zip(tasks, results):
+        formatter.format_task_result(task, result)
+        console.print("\n" + "-" * 80 + "\n")
+    
+    # Also save JSON results for programmatic access
     with open(output_file_path, 'w') as f:
         json.dump(results, f, indent=2, cls=EnhancedJSONEncoder)
+    
+    console.print(f"\n[dim]Full results saved to: {output_file_path}[/dim]")
+
+async def process_task(self, task: str) -> Dict:
+    if "download" in task.lower() and "dataset" in task.lower():
+        return await self._handle_dataset_task(task)
+    result = await self._process_task(task)
+    return result
+
+async def _handle_dataset_task(self, task: str) -> Dict:
+    """Handle tasks involving dataset downloads and processing"""
+    # Extract URL and requirements from task using search tools
+    search_results = await self.tools["google_search"].search(task)
+    dataset_url = self._extract_dataset_url(search_results)
+    
+    if not dataset_url:
+        return {"success": False, "error": "Could not find dataset URL"}
+        
+    try:
+        # Download and process dataset
+        df = await self.tools["dataset"].download_dataset(dataset_url)
+        
+        # Determine analysis type and parameters from task
+        analysis_params = self._extract_analysis_params(task)
+        
+        # Process the dataset
+        result = await self.tools["dataset"].process_dataset(
+            df, 
+            analysis_params["type"],
+            analysis_params["params"]
+        )
+        
+        return {
+            "success": True,
+            "output": result
+        }
+        
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
 if __name__ == "__main__":
     import sys
     if len(sys.argv) != 3:
