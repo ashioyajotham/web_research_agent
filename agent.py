@@ -47,12 +47,12 @@ def main(task_file_path: str, output_file_path: str):
         "dataset": DatasetTool()
     }
     
-    # Initialize agent with config
+    # Initialize agent with updated config parameters
     config = AgentConfig(
         max_steps=10,
         min_confidence=0.7,
         timeout=300,
-        enable_reflection=True,
+        learning_enabled=True,  # Changed from enable_reflection
         memory_path="agent_memory.db",
         parallel_execution=True,
         planning_enabled=True,
