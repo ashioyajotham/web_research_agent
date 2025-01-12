@@ -1,6 +1,6 @@
 import os
 import aiohttp
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 from .base import BaseTool
 
 class GoogleSearchTool(BaseTool):
@@ -20,10 +20,27 @@ class GoogleSearchTool(BaseTool):
             'Content-Type': 'application/json'
         }
         
-        async with aiohttp.ClientSession() as session:
-            async with session.post(
-                self.base_url,
-                headers=headers,
-                json={"q": query}
-            ) as response:
-                return await response.json()
+        try:
+            async with aiohttp.ClientSession() as session:
+                async with session.post(
+                    self.base_url,
+                    headers=headers,
+                    json={"q": query}
+                ) as response:
+                    if response.status == 403:
+                        raise ValueError(f"API Key unauthorized. Please check your SERPER_API_KEY")
+                    elif response.status != 200:
+                        raise ValueError(f"API request failed with status {response.status}")
+                    
+                    result = await response.json()
+                    return {
+                        "success": True,
+                        "results": result.get("organic", []),
+                        "knowledge_graph": result.get("knowledgeGraph", {}),
+                        "related_searches": result.get("relatedSearches", [])
+                    }
+        except Exception as e:
+            return {
+                "success": False,
+                "error": str(e)
+            }

@@ -36,23 +36,44 @@ class Planner:
         )
 
     def _analyze_task(self, task: str, experiences: List[Any]) -> List[ExecutionStep]:
-        # Simple task analysis and step generation
+        """Analyze task and determine required steps"""
         steps = []
+        task_lower = task.lower()
         
-        if any(keyword in task.lower() for keyword in ['research', 'find', 'search']):
+        # Research/Information tasks
+        if any(keyword in task_lower for keyword in ['what', 'how', 'why', 'find', 'search', 'research', 'summarize']):
             steps.append(ExecutionStep(
                 type=StepType.RESEARCH,
                 description="Perform web research",
                 tool="google_search",
                 params={"query": task}
             ))
-            
-        if any(keyword in task.lower() for keyword in ['code', 'implement', 'function']):
+        
+        # Code generation tasks
+        if any(keyword in task_lower for keyword in ['implement', 'create', 'write', 'generate', 'code', 'function', 'script']):
             steps.append(ExecutionStep(
                 type=StepType.CODE,
-                description="Generate code",
+                description="Generate code implementation",
                 tool="code_generator",
                 params={"prompt": task}
+            ))
+        
+        # Analysis tasks
+        if any(keyword in task_lower for keyword in ['analyze', 'analyse', 'evaluate', 'assess']):
+            steps.append(ExecutionStep(
+                type=StepType.ANALYSIS,
+                description="Perform analysis",
+                tool="code_analysis",
+                params={"code": task}
+            ))
+
+        # If no steps determined, default to research
+        if not steps:
+            steps.append(ExecutionStep(
+                type=StepType.RESEARCH,
+                description="Perform web research",
+                tool="google_search",
+                params={"query": task}
             ))
 
         return steps
