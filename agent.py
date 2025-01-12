@@ -35,9 +35,27 @@ def initialize_nltk():
             print("If needed, manually download using: nltk.download()")
             return True  # Continue anyway since files might be manually installed
 
+def is_direct_question(task: str) -> bool:
+    """Check if task is a direct question requiring a single answer"""
+    direct_question_starters = [
+        "find the", "what is", "who is", "when did", "where is",
+        "how many", "how much", "by what percentage"
+    ]
+    return any(task.lower().startswith(q) for q in direct_question_starters)
+
 async def process_tasks(agent: Agent, tasks: List[str]) -> List[Dict]:
     """Process multiple tasks using the agent"""
-    return await agent.process_tasks(tasks)
+    results = []
+    for task in tasks:
+        result = await agent.process_task(task)
+        if is_direct_question(task):
+            # Format direct questions with clear answer/source 
+            result["formatted_answer"] = {
+                "answer": "Extract direct answer here",
+                "source": "Primary source URL"
+            }
+        results.append(result)
+    return results
 
 def main(task_file_path: str, output_file_path: str):
     # Initialize NLTK silently

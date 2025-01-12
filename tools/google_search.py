@@ -33,9 +33,24 @@ class GoogleSearchTool(BaseTool):
                         raise ValueError(f"API request failed with status {response.status}")
                     
                     result = await response.json()
+                    
+                    # Clean and process results
+                    processed_results = []
+                    for item in result.get("organic", []):
+                        clean_item = {
+                            "title": item.get("title"),
+                            "link": item.get("link"),
+                            "snippet": item.get("snippet"),
+                            "date": item.get("date"),
+                            "position": item.get("position")
+                        }
+                        # Remove any None or empty values
+                        clean_item = {k: v for k, v in clean_item.items() if v}
+                        processed_results.append(clean_item)
+                    
                     return {
                         "success": True,
-                        "results": result.get("organic", []),
+                        "results": processed_results,
                         "knowledge_graph": result.get("knowledgeGraph", {}),
                         "related_searches": result.get("relatedSearches", [])
                     }

@@ -240,39 +240,52 @@ class CodeGeneratorTool(BaseTool):
         """Generate code from prompt"""
         try:
             model = genai.GenerativeModel('gemini-pro')
-            system_prompt = """You are a code generation expert. Generate code that:
-            - Is well-documented
-            - Follows best practices
-            - Includes error handling
-            - Is efficient and maintainable
+            system_prompt = """You are a code generation expert. Your task is to:
+            1. Generate well-documented, efficient code
+            2. Include error handling
+            3. Follow best practices
+            4. Provide only the implementation, no explanations
             
-            Format your response as:
+            Format your response as a code block with the appropriate language:
             ```language
             code here
             ```
-            Include only the code and necessary comments."""
+            """
             
             chat = model.start_chat(history=[])
             chat.send_message(system_prompt)
             response = chat.send_message(prompt)
             
+            # Extract code block from response
+            code_block = self._extract_code_block(response.text)
+            if not code_block:
+                raise ValueError("No code block found in response")
+                
             return {
-                "code": response.text,
-                "language": self._detect_language(prompt),
+                "code": code_block,
+                "language": self._detect_language(prompt, code_block),
                 "type": "code_generation"
             }
         except Exception as e:
             return {
+                "code": None,
                 "error": str(e),
-                "type": "code_generation_error"
+                "type": "code_generation"
             }
+
+    def _extract_code_block(self, text: str) -> Optional[str]:
+        """Extract code block from markdown-style text"""
+        pattern = r"```(?:\w+)?\n([\s\S]*?)\n```"
+        match = re.search(pattern, text)
+        return match.group(1) if match else None
 
     def get_description(self) -> str:
         return "Generates code based on provided requirements using Gemini"
 
-    def _detect_language(self, prompt: str) -> str:
-        """Detect programming language from prompt"""
+    def _detect_language(self, prompt: str, code_block: str) -> str:
+        """Detect programming language from prompt and code block"""
         prompt_lower = prompt.lower()
+        code_block_lower = code_block.lower()
         languages = {
             "python": ["python", ".py", "django", "flask"],
             "javascript": ["javascript", "js", "node", "react"],
@@ -282,7 +295,7 @@ class CodeGeneratorTool(BaseTool):
         }
         
         for lang, keywords in languages.items():
-            if any(kw in prompt_lower for kw in keywords):
+            if any(kw in prompt_lower for kw in keywords) or any(kw in code_block_lower for kw in keywords):
                 return lang
         return "python"  # default
 
