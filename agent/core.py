@@ -6,13 +6,14 @@ import time
 import google.generativeai as genai
 from datetime import datetime
 
-from .memory import Memory, Experience
-from .planner import Planner, ExecutionPlan
 from .executor import Executor, ExecutionResult
-from .reflection import Evaluator, Learner
+from .reflection import Evaluator
 from .utils.prompts import PromptManager
 from tools.base import BaseTool
 from utils.logger import AgentLogger
+from planning.task_planner import TaskPlanner
+from memory.memory_store import MemoryStore
+from learning.pattern_learner import PatternLearner
 
 @dataclass
 class AgentConfig:
@@ -22,18 +23,19 @@ class AgentConfig:
     enable_reflection: bool = True
     memory_path: str = "agent_memory.json"
     parallel_execution: bool = True
+    planning_enabled: bool = True
+    pattern_learning_enabled: bool = True
 
 class Agent:
     def __init__(self, tools: Dict[str, BaseTool], config: Optional[AgentConfig] = None):
         # Initialize components
         self.config = config or AgentConfig()
         self.tools = tools
-        self.memory = Memory(self.config.memory_path)
-        self.planner = Planner()
+        self.memory = MemoryStore(self.config.memory_path)
+        self.planner = TaskPlanner(available_tools=list(tools.keys())) if self.config.planning_enabled else None
+        self.pattern_learner = PatternLearner() if self.config.pattern_learning_enabled else None
         self.executor = Executor(tools, parallel=self.config.parallel_execution)
         self.evaluator = Evaluator()
-        self.learner = Learner()
-        self.prompt_manager = PromptManager()
         self.logger = AgentLogger()
         
         # Initialize Gemini
@@ -52,23 +54,72 @@ class Agent:
     async def process_task(self, task: str) -> Dict[str, Any]:
         """Process a task with proper timeout and error handling"""
         self.logger.task_start(task)
+        start_time = time.time()
         
         try:
-            async with asyncio.timeout(self.config.timeout):
-                return await self._safe_execute_task(task)
-        except asyncio.TimeoutError:
-            self.logger.error(f"Task timed out after {self.config.timeout}s", "Timeout")
-            return {
-                "success": False,
-                "error": f"Task execution timed out after {self.config.timeout} seconds",
-                "partial_results": self.get_partial_results()
-            }
+            # Check memory and pattern learning first
+            if self.config.pattern_learning_enabled and self.pattern_learner:
+                similar_patterns = self.memory.retrieve_similar_patterns(task)
+                if similar_patterns:
+                    similar_solutions = [(p["solution"], p["effectiveness"]) for p in similar_patterns]
+                    generalized_solution = self.pattern_learner.generalize_solution(similar_solutions)
+                    if generalized_solution:
+                        result = await self._execute_with_solution(task, generalized_solution)
+                        if result.get("success"):
+                            return self._finalize_result(task, result, time.time() - start_time)
+
+            # If no pattern match or it failed, use planner
+            if self.config.planning_enabled and self.planner:
+                plan = self.planner.create_plan(task, {"previous_attempts": similar_patterns})
+                result = await self.executor.execute_plan(plan, self.model, self.config.max_steps)
+            else:
+                result = await self._execute_basic_task(task)
+
+            # Store results and learn
+            if result.get("success"):
+                self.memory.store_memory(
+                    task_type=self.planner._analyze_task_type(task) if self.planner else "general",
+                    pattern=task,
+                    solution=result,
+                    effectiveness=self._calculate_effectiveness(result)
+                )
+                if self.pattern_learner:
+                    self.pattern_learner.add_pattern(task, result)
+
+            return self._finalize_result(task, result, time.time() - start_time)
+
         except Exception as e:
-            self.logger.error(f"Task failed: {str(e)}", "Error")
+            self.logger.error(str(e), f"Task: {task[:50]}...")
             return {
                 "success": False,
-                "error": str(e)
+                "error": str(e),
+                "output": {"results": []}
             }
+
+    def _finalize_result(self, task: str, result: Dict, execution_time: float) -> Dict[str, Any]:
+        """Finalize the result with metadata"""
+        return {
+            "success": result.get("success", False),
+            "output": result.get("output", {}),
+            "confidence": result.get("confidence", 0.0),
+            "execution_time": execution_time,
+            "task": task
+        }
+
+    async def _execute_with_solution(self, task: str, solution: Dict) -> Dict:
+        """Execute task using a generalized solution"""
+        # Implementation specific to solution adaptation
+        pass
+
+    async def _execute_basic_task(self, task: str) -> Dict:
+        """Basic task execution without planning"""
+        # Implementation for basic task processing
+        pass
+
+    def _calculate_effectiveness(self, result: Dict) -> float:
+        """Calculate solution effectiveness"""
+        # Implementation for calculating effectiveness
+        pass
 
     async def _safe_execute_task(self, task: str) -> Dict[str, Any]:
         """Execute task with retries and cleanup"""
@@ -115,15 +166,20 @@ class Agent:
         # Get relevant past experiences
         experiences = self.memory.get_relevant_experiences(task)
         
-        # Create and validate plan
-        plan = self.planner.create_plan(task, experiences)
-        
-        # Execute plan
-        result = await self.executor.execute_plan(
-            plan=plan,
-            model=self.model,
-            max_steps=self.config.max_steps
-        )
+        # Create and validate plan if planning is enabled
+        if self.config.planning_enabled and self.planner:
+            plan = self.planner.create_plan(
+                task=task,
+                context={"experiences": experiences}
+            )
+            result = await self.executor.execute_plan(
+                plan=plan,
+                model=self.model,
+                max_steps=self.config.max_steps
+            )
+        else:
+            # Fallback to simple execution
+            result = await self._process_task(task)
         
         # Evaluate and learn
         if self.config.enable_reflection:
