@@ -68,6 +68,19 @@ class PrettyFormatter:
         if output:
             self.console.print("\n[bold cyan]Output:[/bold cyan]")
             
+            # First show specific answer if available
+            if specific_answer := output.get("specific_answer"):
+                answer_panel = Panel(
+                    Text(f"Answer: {specific_answer['value']}\n\n" +
+                         f"Confidence: {specific_answer['confidence']:.2f}\n" +
+                         (f"Source: {specific_answer['source']}\n" if specific_answer['source'] else "") +
+                         (f"Context: {specific_answer['context']}" if specific_answer['context'] else ""),
+                         style="green"),
+                    title="Extracted Answer",
+                    border_style="green"
+                )
+                self.console.print(answer_panel)
+                
             # Handle different output types
             if isinstance(output, dict) and "code" in output:
                 # Direct code object
