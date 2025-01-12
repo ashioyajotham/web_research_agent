@@ -1,0 +1,5 @@
+Compare the performance metrics of the latest NVIDIA and AMD GPUs.
+List major quantum computing breakthroughs in 2023.
+What are the key features of the new Apple M3 chip architecture?
+Analyze the impact of EU AI Act on large language models.
+Track developments in RISC-V adoption by major tech companies.

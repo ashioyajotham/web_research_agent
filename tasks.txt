@@ -1,0 +1,12 @@
+Find the most cited academic papers in machine learning from 2023.
+Create a Python function that implements the PageRank algorithm.
+What were the major archaeological discoveries announced in 2023?
+Write a React component that implements an infinite scrolling list with virtualization.
+Summarize the key findings from the latest IPCC climate report.
+Implement a distributed rate limiter in Go with Redis backend.
+What are the current leading theories about dark matter?
+Create a Python script to detect and prevent SQL injection attacks.
+Write a TypeScript implementation of the Observer pattern with generics.
+What were the major developments in space exploration missions in 2023?
+Implement a microservices architecture diagram using PlantUML.
+Create a Kubernetes operator that manages database backups.
