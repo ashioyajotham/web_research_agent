@@ -7,7 +7,6 @@ import google.generativeai as genai
 from datetime import datetime
 
 from .executor import Executor, ExecutionResult
-from .reflection import Evaluator
 from .utils.prompts import PromptManager
 from tools.base import BaseTool
 from utils.logger import AgentLogger
@@ -20,8 +19,8 @@ class AgentConfig:
     max_steps: int = 10
     min_confidence: float = 0.7
     timeout: int = 300
-    enable_reflection: bool = True
-    memory_path: str = "agent_memory.json"
+    learning_enabled: bool = True
+    memory_path: str = "agent_memory.db"
     parallel_execution: bool = True
     planning_enabled: bool = True
     pattern_learning_enabled: bool = True
@@ -35,7 +34,6 @@ class Agent:
         self.planner = TaskPlanner(available_tools=list(tools.keys())) if self.config.planning_enabled else None
         self.pattern_learner = PatternLearner() if self.config.pattern_learning_enabled else None
         self.executor = Executor(tools, parallel=self.config.parallel_execution)
-        self.evaluator = Evaluator()
         self.logger = AgentLogger()
         
         # Initialize Gemini
@@ -178,76 +176,23 @@ class Agent:
                 max_steps=self.config.max_steps
             )
         else:
-            # Fallback to simple execution
             result = await self._process_task(task)
         
-        # Evaluate and learn
-        if self.config.enable_reflection:
-            evaluation = await self._reflect_on_execution(task, plan, result)
-            await self._learn_from_execution(task, plan, result, evaluation)
-        
-        execution_time = time.time() - start_time
+        # Replace reflection with direct learning
+        if self.config.learning_enabled and result.get("success"):
+            self.pattern_learner.add_pattern(task, result)
+            self.memory.store_memory(
+                task_type=self.planner._analyze_task_type(task) if self.planner else "general",
+                pattern=task,
+                solution=result,
+                effectiveness=self._calculate_effectiveness(result)
+            )
         
         return {
             'success': result.success,
             'output': result.output,
             'confidence': result.confidence,
             'steps_taken': len(result.steps),
-            'execution_time': execution_time,
+            'execution_time': time.time() - start_time,
             'task': task
         }
-
-    async def _reflect_on_execution(self, 
-                                  task: str, 
-                                  plan: ExecutionPlan,
-                                  result: ExecutionResult) -> Dict[str, Any]:
-        """Reflect on task execution"""
-        # Evaluate execution
-        evaluation = self.evaluator.evaluate_execution(
-            task=task,
-            result=result.output,
-            execution_data={
-                'steps': result.steps,
-                'success_rate': result.success_rate,
-                'confidence': result.confidence
-            }
-        )
-        
-        # Convert evaluation to dict for storage
-        evaluation_dict = {
-            'success': evaluation.success,
-            'confidence': evaluation.confidence,
-            'quality_score': evaluation.quality_score,
-            'improvement_areas': evaluation.improvement_areas,
-            'notes': evaluation.notes,
-            'metadata': evaluation.metadata
-        }
-        
-        # Store experience
-        self.memory.store_experience(
-            Experience(
-                task=task,
-                plan=plan,
-                result=result,
-                evaluation=evaluation_dict,
-                timestamp=datetime.now()
-            )
-        )
-        
-        return evaluation_dict
-
-    async def _learn_from_execution(self,
-                                  task: str,
-                                  plan: ExecutionPlan,
-                                  result: ExecutionResult,
-                                  evaluation: Dict[str, Any]) -> None:
-        """Learn from task execution"""
-        self.learner.learn_from_execution(
-            task=task,
-            execution_data={
-                'plan': plan,
-                'steps': result.steps,
-                'success': result.success
-            },
-            evaluation_result=evaluation
-        )
