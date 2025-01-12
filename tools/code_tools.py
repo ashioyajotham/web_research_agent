@@ -10,6 +10,7 @@ from .base import BaseTool
 import subprocess
 import tempfile
 import google.generativeai as genai
+import numpy as np  # Add this import at the top
 
 @dataclass
 class CodeMetrics:
@@ -242,52 +243,71 @@ class CodeGeneratorTool(BaseTool):
         'graph': {
             'keywords': ['graph', 'vertex', 'edge', 'path', 'network', 'pagerank', 'dijkstra'],
             'template': """
+                import numpy as np
+                
                 class Graph:
                     def __init__(self):
                         self.nodes = {}
                         self.edges = {}
                     
                     def add_node(self, node):
-                        pass
-                        
+                        if node not in self.nodes:
+                            self.nodes[node] = len(self.nodes)
+                            
                     def add_edge(self, from_node, to_node, weight=1):
-                        pass
+                        self.add_node(from_node)
+                        self.add_node(to_node)
+                        if from_node not in self.edges:
+                            self.edges[from_node] = {}
+                        self.edges[from_node][to_node] = weight
                         
-                    def process(self):
-                        # Algorithm specific implementation
-                        pass
+                    def get_adjacency_matrix(self):
+                        n = len(self.nodes)
+                        matrix = np.zeros((n, n))
+                        for from_node, edges in self.edges.items():
+                            for to_node, weight in edges.items():
+                                matrix[self.nodes[from_node]][self.nodes[to_node]] = weight
+                        return matrix
             """
         },
-        'tree_search': {
-            'keywords': ['tree', 'search', 'mcts', 'minimax', 'monte carlo', 'alpha beta'],
+        'pagerank': {
+            'keywords': ['pagerank', 'power iteration', 'page rank'],
             'template': """
-                class Node:
-                    def __init__(self):
-                        self.children = []
-                        self.value = 0
+                import numpy as np
+                
+                def pagerank(adjacency_matrix: np.ndarray, damping_factor: float = 0.85, iterations: int = 20) -> np.ndarray:
+                    \"\"\"
+                    Calculate PageRank values using power iteration method.
+                    
+                    Args:
+                        adjacency_matrix: Matrix of web page links
+                        damping_factor: Damping factor (typically 0.85)
+                        iterations: Number of power iterations
                         
-                class Search:
-                    def __init__(self):
-                        self.root = None
+                    Returns:
+                        Array of PageRank values for each page
+                    \"\"\"
+                    n = len(adjacency_matrix)
+                    
+                    # Normalize adjacency matrix
+                    out_degrees = np.sum(adjacency_matrix, axis=1)
+                    transition_matrix = adjacency_matrix / out_degrees[:, np.newaxis]
+                    
+                    # Handle dangling nodes
+                    transition_matrix = np.nan_to_num(transition_matrix, 0)
+                    
+                    # Initialize PageRank values
+                    pagerank_vector = np.ones(n) / n
+                    
+                    # Power iteration
+                    for _ in range(iterations):
+                        pagerank_vector_next = (1 - damping_factor) / n + damping_factor * transition_matrix.T.dot(pagerank_vector)
+                        pagerank_vector = pagerank_vector_next
                         
-                    def search(self):
-                        pass
+                    return pagerank_vector
             """
         },
-        'machine_learning': {
-            'keywords': ['learning', 'train', 'predict', 'model', 'classifier', 'regression'],
-            'template': """
-                class Model:
-                    def __init__(self):
-                        self.parameters = {}
-                        
-                    def train(self, X, y):
-                        pass
-                        
-                    def predict(self, X):
-                        pass
-            """
-        }
+        # ...existing patterns...
     }
 
     def __init__(self):
@@ -356,35 +376,43 @@ class CodeGeneratorTool(BaseTool):
             }
 
     def _detect_algorithm_type(self, prompt: str) -> tuple[str, str]:
-        """Detect algorithm type from prompt"""
+        """Detect algorithm type from prompt with improved PageRank detection"""
         prompt_lower = prompt.lower()
         
+        # Check for PageRank specifically first
+        if any(kw in prompt_lower for kw in self.ALGORITHM_PATTERNS['pagerank']['keywords']):
+            return 'pagerank', self.ALGORITHM_PATTERNS['pagerank']['template']
+            
+        # Then check other algorithms
         for algo_type, pattern in self.ALGORITHM_PATTERNS.items():
-            if any(keyword in prompt_lower for keyword in pattern['keywords']):
+            if algo_type != 'pagerank' and any(keyword in prompt_lower for keyword in pattern['keywords']):
                 return algo_type, pattern['template']
                 
         return 'generic', ''
 
     def _get_algorithm_prompt(self, base_prompt: str, algo_type: str, template: str) -> str:
         """Get enhanced prompt for specific algorithm type"""
-        return f"""
-        Implement the following algorithm:
-        {base_prompt}
+        if algo_type == 'pagerank':
+            return f"""
+            Implement a solution for this PageRank problem:
+            {base_prompt}
+            
+            Use this template and numpy for efficient matrix operations:
+            ```python
+            {template}
+            ```
+            
+            Requirements:
+            1. Create the adjacency matrix for the given graph
+            2. Implement PageRank with the specified damping factor
+            3. Run for the specified number of iterations
+            4. Return the PageRank values for each page
+            5. Include example usage with the given graph
+            
+            Return complete implementation and example usage.
+            """
         
-        Use this structure as a starting point:
-        ```python
-        {template}
-        ```
-        
-        Requirements:
-        1. Clear class and method documentation
-        2. Proper error handling
-        3. Efficient implementation
-        4. Type hints where appropriate
-        5. Unit test examples
-        
-        Return only the implementation code.
-        """
+        # ...existing prompt generation for other algorithm types...
 
     def _analyze_generated_code(self, code: str) -> Dict[str, Any]:
         """Analyze generated code quality"""
