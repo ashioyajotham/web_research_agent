@@ -44,11 +44,6 @@ Evaluate container orchestration solutions
 - Tool Integration: API and service connectors
 - Reflection System: Self-evaluation and learning
 
-Add new capabilities by:
-1. Creating a tool class in tools/ that extends BaseTool
-2. Implementing execute() and get_description()
-3. Registering in agent.py
-
 ## Architecture
 
 The agent uses a modular architecture with several core components:
@@ -75,20 +70,67 @@ graph TD
         T4[Code Generator]
     end
     
-    subgraph Components
-        C1[Reflection System]
+    subgraph Systems
+        S1[Reflection System]
+        S2[Learning System]
     end
+
+    class Task,Results emphasis
+    classDef emphasis fill:#f9f,stroke:#333,stroke-width:4px
 ```
 
+### Component Roles
+
+#### Core Components
+- **Strategic Planner**: Analyzes tasks and creates execution plans
+  - Breaks down complex tasks into steps
+  - Selects appropriate tools for each step
+  - Estimates execution time and confidence
+  
+- **Tool Executor**: Manages tool execution pipeline
+  - Handles parallel/sequential execution
+  - Error handling and recovery
+  - Result aggregation
+
+- **Memory System**: Manages agent's experiences
+  - Stores past executions and results
+  - Retrieves relevant experiences
+  - Helps improve future performance
+
+#### Support Systems
+- **Reflection System**: Self-evaluation capabilities
+  - Analyzes execution success
+  - Identifies improvement areas
+  - Adjusts strategies based on outcomes
+
+- **Learning System**: Improves agent capabilities
+  - Updates execution strategies
+  - Refines tool selection
+  - Optimizes task breakdown
+
+#### Tools & Integration
+- **Google Search**: Web research via Serper API
+- **Web Scraper**: Content extraction from web pages
+- **Code Analysis**: Code understanding and review
+- **Code Generator**: Implementation assistance
+
+### Data Flow
+1. Task received → Planner analyzes and creates execution plan
+2. Planner consults Memory for similar past experiences
+3. Executor runs plan using appropriate tools
+4. Results stored in Memory for future reference
+5. Reflection System evaluates execution
+6. Learning System updates strategies
+
+### File Structure
 ```
 agent/
-  ├── core.py        # Agent core logic
-  ├── planner.py     # Strategic planning
-  ├── executor.py    # Tool execution
-  ├── memory.py      # Experience system
+  ├── core.py        # Main agent orchestration
+  ├── planner.py     # Task analysis & planning
+  ├── executor.py    # Tool execution management
+  ├── memory.py      # Experience persistence
+  ├── reflection/    # Self-evaluation system
   └── utils/         # Shared utilities
-tools/               # Tool implementations
-examples/            # Usage examples
 ```
 
 ## Development
