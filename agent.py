@@ -123,9 +123,13 @@ class Agent:
         start_time = time.time()
         
         try:
-            if "implement" in task.lower():
-                result = await self._handle_implementation_task(task)
-            elif "download" in task.lower() and "dataset" in task.lower():
+            task_lower = task.lower()
+            if "implement" in task_lower or "create" in task_lower or "write" in task_lower:
+                if any(term in task_lower for term in ["algorithm", "function", "class", "code"]):
+                    result = await self._handle_code_task(task)
+                else:
+                    result = await self._process_task(task)
+            elif "download" in task_lower and "dataset" in task_lower:
                 result = await self._handle_dataset_task(task)
             else:
                 result = await self._process_task(task)
@@ -207,6 +211,87 @@ class Agent:
                 "error": str(e),
                 "output": {"results": []}
             }
+
+    async def _handle_code_task(self, task: str) -> Dict:
+        """Handle tasks requiring code implementation"""
+        try:
+            # Extract key requirements and constraints from task
+            requirements = self._extract_code_requirements(task)
+            
+            # Generate code using the code generator tool
+            code_result = await self.tools["code_generator"].execute(
+                prompt=f"""Implement the following with detailed code:
+                Task: {task}
+                Requirements: {requirements}
+                Include:
+                - Comprehensive error handling
+                - Clear documentation
+                - Type hints where applicable
+                - Example usage
+                """
+            )
+            
+            if code_result.get("code"):
+                # Analyze generated code for quality
+                analysis = await self.tools["code_analysis"].execute(
+                    code=code_result["code"],
+                    context=task
+                )
+                
+                return {
+                    "success": True,
+                    "output": {
+                        "code": code_result["code"],
+                        "language": code_result.get("language", "python"),
+                        "analysis": analysis
+                    }
+                }
+            else:
+                return {
+                    "success": False,
+                    "error": "Code generation failed",
+                    "output": {"results": []}
+                }
+                
+        except Exception as e:
+            return {"success": False, "error": str(e)}
+
+    def _extract_code_requirements(self, task: str) -> str:
+        """Extract key requirements from coding task"""
+        requirements = []
+        task_lower = task.lower()
+        
+        # Algorithm type requirements
+        if "mcts" in task_lower or "monte carlo tree search" in task_lower:
+            requirements.extend([
+                "Implement Monte Carlo Tree Search with selection, expansion, simulation, and backpropagation phases",
+                "Include node class with visit counts and value statistics",
+                "Support customizable simulation count and exploration parameter"
+            ])
+        elif "minimax" in task_lower:
+            requirements.extend([
+                "Implement Minimax algorithm with alpha-beta pruning",
+                "Support customizable search depth",
+                "Include evaluation function"
+            ])
+            
+        # Game/problem specific requirements
+        if "tic-tac-toe" in task_lower:
+            requirements.extend([
+                "Implement game state representation",
+                "Include move validation",
+                "Support both human and AI players",
+                "Provide win condition checking"
+            ])
+            
+        # General coding requirements
+        requirements.extend([
+            "Use object-oriented design where appropriate",
+            "Include comprehensive error handling",
+            "Add type hints and documentation"
+        ])
+        
+        return "\n".join(f"- {req}" for req in requirements)
 
     def _extract_dataset_url(self, results: List[Dict]) -> str:
         """Extract dataset URL from search results"""

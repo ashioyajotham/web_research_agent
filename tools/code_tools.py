@@ -239,22 +239,26 @@ class CodeGeneratorTool(BaseTool):
     async def execute(self, prompt: str) -> Dict[str, Any]:
         """Generate code from prompt"""
         try:
-            model = genai.GenerativeModel('gemini-pro')
-            system_prompt = """You are a code generation expert. Your task is to:
-            1. Generate well-documented, efficient code
-            2. Include error handling
-            3. Follow best practices
-            4. Provide only the implementation, no explanations
+            # Extract algorithm type and specific requirements
+            algorithm_type = self._detect_algorithm_type(prompt)
+            template = self._get_algorithm_template(algorithm_type)
             
-            Format your response as a code block with the appropriate language:
-            ```language
-            code here
-            ```
+            # Enhance prompt with algorithm-specific guidance
+            enhanced_prompt = f"""
+            {template}
+            
+            Task requirements: {prompt}
+            
+            Please implement this algorithm following these guidelines:
+            - Use clear variable names and comments
+            - Include type hints and docstrings
+            - Implement error handling
+            - Add example usage
             """
             
+            model = genai.GenerativeModel('gemini-pro')
             chat = model.start_chat(history=[])
-            chat.send_message(system_prompt)
-            response = chat.send_message(prompt)
+            response = chat.send_message(enhanced_prompt)
             
             # Extract code block from response
             code_block = self._extract_code_block(response.text)
@@ -263,15 +267,64 @@ class CodeGeneratorTool(BaseTool):
                 
             return {
                 "code": code_block,
-                "language": self._detect_language(prompt, code_block),
-                "type": "code_generation"
+                "language": "python",
+                "type": algorithm_type
             }
+            
         except Exception as e:
-            return {
-                "code": None,
-                "error": str(e),
-                "type": "code_generation"
-            }
+            return {"error": str(e)}
+
+    def _detect_algorithm_type(self, prompt: str) -> str:
+        """Detect type of algorithm requested"""
+        prompt_lower = prompt.lower()
+        
+        algorithm_patterns = {
+            'mcts': ['mcts', 'monte carlo tree search', 'tree search'],
+            'minimax': ['minimax', 'min-max', 'alpha beta'],
+            'neural_network': ['neural network', 'deep learning', 'nn'],
+            'genetic': ['genetic algorithm', 'evolutionary'],
+            'pathfinding': ['pathfinding', 'a*', 'dijkstra']
+        }
+        
+        for algo_type, patterns in algorithm_patterns.items():
+            if any(pattern in prompt_lower for pattern in patterns):
+                return algo_type
+                
+        return 'general'
+
+    def _get_algorithm_template(self, algorithm_type: str) -> str:
+        """Get template for specific algorithm type"""
+        templates = {
+            'mcts': """
+            Implement a Monte Carlo Tree Search (MCTS) algorithm with these components:
+            1. Node class with:
+                - State management
+                - Visit count and win statistics
+                - Child nodes and unexplored actions
+                - UCT calculation
+            2. Core MCTS functions:
+                - Selection using UCT
+                - Expansion of leaf nodes
+                - Simulation/rollout
+                - Backpropagation of results
+            3. Main search function to run iterations
+            4. Game state interface for:
+                - Legal moves
+                - Game end detection
+                - State copying
+                - Move application
+            """,
+            'minimax': """
+            Implement a Minimax algorithm with:
+            1. Alpha-beta pruning
+            2. Depth-limited search
+            3. State evaluation function
+            4. Move ordering for better pruning
+            """,
+            # Add other algorithm templates as needed
+        }
+        
+        return templates.get(algorithm_type, "Implement the requested functionality with:")
 
     def _extract_code_block(self, text: str) -> Optional[str]:
         """Extract code block from markdown-style text"""
