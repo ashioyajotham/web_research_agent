@@ -15,3 +15,9 @@ Compile a list of companies satisfying the following criteria:
 - They are not a subsidiary of another company, except if the parent company is a holding company
 
 Implement a MCTS search algorithm to find the best move in a game of Tic-Tac-Toe. The algorithm should be able to play against a human player. The game should be played on a 3x3 board.
+
+Create a model that can predict the fuel efficiency of a car based on its attributes. Train the model on the provided dataset and evaluate its performance. The model should be able to predict the fuel efficiency in miles per gallon (mpg) of a car.
+
+Do a sort of the companies in the list you compiled in task 5 by the total greenhouse gas emissions from their automotive operations in 2023. Provide the name of the company with the highest emissions.
+
+Let us solve a page rank problem. Consider the following web pages and their links: A -> B, A -> C, B -> C, C -> A. Calculate the page rank of each page after 20 iterations of the power iteration method. Assume a damping factor of 0.85. Provide the page rank of each page after 20 iterations.

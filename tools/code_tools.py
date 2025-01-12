@@ -238,49 +238,114 @@ Input should be a JSON object with 'command', 'code', and optional 'language' fi
 class CodeGeneratorTool(BaseTool):
     """Tool for generating code based on requirements"""
     
+    ALGORITHM_PATTERNS = {
+        'graph': {
+            'keywords': ['graph', 'vertex', 'edge', 'path', 'network', 'pagerank', 'dijkstra'],
+            'template': """
+                class Graph:
+                    def __init__(self):
+                        self.nodes = {}
+                        self.edges = {}
+                    
+                    def add_node(self, node):
+                        pass
+                        
+                    def add_edge(self, from_node, to_node, weight=1):
+                        pass
+                        
+                    def process(self):
+                        # Algorithm specific implementation
+                        pass
+            """
+        },
+        'tree_search': {
+            'keywords': ['tree', 'search', 'mcts', 'minimax', 'monte carlo', 'alpha beta'],
+            'template': """
+                class Node:
+                    def __init__(self):
+                        self.children = []
+                        self.value = 0
+                        
+                class Search:
+                    def __init__(self):
+                        self.root = None
+                        
+                    def search(self):
+                        pass
+            """
+        },
+        'machine_learning': {
+            'keywords': ['learning', 'train', 'predict', 'model', 'classifier', 'regression'],
+            'template': """
+                class Model:
+                    def __init__(self):
+                        self.parameters = {}
+                        
+                    def train(self, X, y):
+                        pass
+                        
+                    def predict(self, X):
+                        pass
+            """
+        }
+    }
+
     def __init__(self):
         super().__init__()
-        # Configure model
         genai.configure(api_key=os.getenv('GEMINI_API_KEY'))
-        self.generation_config = {
-            "temperature": 0.3,  # Lower temperature for more focused code generation
-            "top_p": 0.8,
-            "top_k": 40,
-            "max_output_tokens": 8192,
-        }
+        self.model = genai.GenerativeModel('gemini-pro',
+            generation_config={
+                "temperature": 0.3,
+                "top_p": 0.8,
+                "top_k": 40,
+                "max_output_tokens": 8192,
+            }
+        )
 
-    async def execute(self, query: Optional[str] = None, code: Optional[str] = None, **kwargs) -> Dict[str, Any]:
-        """Generate code based on query or modify existing code"""
+    async def execute(self, query: Optional[str] = None, **kwargs) -> Dict[str, Any]:
+        """Generate code based on query with algorithm awareness"""
         try:
             prompt = query or kwargs.get('prompt', '')
-            template = code or kwargs.get('template', '')
-            model = kwargs.get('model')
+            template = kwargs.get('template', '')
             
-            if not model:
-                return {
-                    "success": False,
-                    "error": "Model not provided",
-                    "code": None
-                }
-
-            # Use template if provided
+            # Detect algorithm type and get appropriate template
+            algo_type, algo_template = self._detect_algorithm_type(prompt)
+            
             if template:
                 prompt = f"Modify this code:\n{template}\n\nBased on this request:\n{prompt}"
+            elif algo_template:
+                prompt = self._get_algorithm_prompt(prompt, algo_type, algo_template)
             
-            # Generate response using the model
-            response = await model.generate_content(prompt)
+            # Generate response
+            response = self.model.generate_content(prompt)
             
             if not response.text:
                 return {
-                    "success": False,
+                    "success": False, 
                     "error": "No code generated",
                     "code": None
                 }
                 
+            code = self._extract_code_block(response.text)
+            if not code:
+                return {
+                    "success": False,
+                    "error": "Could not extract valid code from response",
+                    "code": None
+                }
+                
+            # Verify code quality
+            analysis = self._analyze_generated_code(code)
+            
             return {
                 "success": True,
-                "code": response.text,
-                "confidence": 0.8
+                "code": code,
+                "confidence": analysis['confidence'],
+                "metadata": {
+                    "algorithm_type": algo_type,
+                    "complexity": analysis['complexity'],
+                    "quality_score": analysis['quality_score']
+                }
             }
             
         except Exception as e:
@@ -290,90 +355,81 @@ class CodeGeneratorTool(BaseTool):
                 "code": None
             }
 
-    def _detect_algorithm_type(self, prompt: str) -> str:
-        """Detect type of algorithm requested"""
+    def _detect_algorithm_type(self, prompt: str) -> tuple[str, str]:
+        """Detect algorithm type from prompt"""
         prompt_lower = prompt.lower()
         
-        algorithm_patterns = {
-            'mcts': ['mcts', 'monte carlo tree search', 'tree search'],
-            'minimax': ['minimax', 'min-max', 'alpha beta'],
-            'neural_network': ['neural network', 'deep learning', 'nn'],
-            'genetic': ['genetic algorithm', 'evolutionary'],
-            'pathfinding': ['pathfinding', 'a*', 'dijkstra']
-        }
-        
-        for algo_type, patterns in algorithm_patterns.items():
-            if any(pattern in prompt_lower for pattern in patterns):
-                return algo_type
+        for algo_type, pattern in self.ALGORITHM_PATTERNS.items():
+            if any(keyword in prompt_lower for keyword in pattern['keywords']):
+                return algo_type, pattern['template']
                 
-        return 'general'
+        return 'generic', ''
 
-    def _get_algorithm_template(self, algorithm_type: str) -> str:
-        """Get template for specific algorithm type"""
-        templates = {
-            'mcts': """
-            Implement a Monte Carlo Tree Search algorithm for Tic-Tac-Toe with:
+    def _get_algorithm_prompt(self, base_prompt: str, algo_type: str, template: str) -> str:
+        """Get enhanced prompt for specific algorithm type"""
+        return f"""
+        Implement the following algorithm:
+        {base_prompt}
+        
+        Use this structure as a starting point:
+        ```python
+        {template}
+        ```
+        
+        Requirements:
+        1. Clear class and method documentation
+        2. Proper error handling
+        3. Efficient implementation
+        4. Type hints where appropriate
+        5. Unit test examples
+        
+        Return only the implementation code.
+        """
 
-            Required classes:
-            1. TicTacToeState:
-                - Board representation as List[List[str]]
-                - Methods for moves, legal moves, win check
-                - State copying for simulation
-                - Pretty printing
-
-            2. MCTSNode:
-                - State storage
-                - Parent/children connections
-                - Visit counts and win statistics
-                - UCT calculation with exploration parameter
-                - Methods for selection, expansion, simulation
-
-            3. MCTS:
-                - search() method to find best move
-                - Configurable number of simulations
-                - Progress tracking
-
-            4. Game:
-                - Human vs AI interface
-                - Move validation
-                - Board display
-                - Main game loop
-
-            Include:
-            - Configurable board size (default 3x3)
-            - Customizable exploration constant
-            - Performance statistics
-            - Random seed for reproducibility
-            - Clear win/draw detection
-            """
-        }
-        return templates.get(algorithm_type, "Implement the requested functionality with:")
+    def _analyze_generated_code(self, code: str) -> Dict[str, Any]:
+        """Analyze generated code quality"""
+        try:
+            tree = ast.parse(code)
+            
+            # Calculate metrics
+            complexity = sum(1 for node in ast.walk(tree) 
+                if isinstance(node, (ast.If, ast.For, ast.While, ast.FunctionDef)))
+            
+            has_docstrings = any(isinstance(node, ast.Expr) and 
+                isinstance(node.value, ast.Str) for node in ast.walk(tree))
+            
+            has_type_hints = any(isinstance(node, ast.AnnAssign) for node in ast.walk(tree))
+            
+            # Calculate quality score
+            quality_score = 0.7  # Base score
+            if has_docstrings: quality_score += 0.1
+            if has_type_hints: quality_score += 0.1
+            if complexity < 10: quality_score += 0.1
+            
+            return {
+                'complexity': complexity,
+                'quality_score': quality_score,
+                'confidence': quality_score
+            }
+            
+        except Exception:
+            return {
+                'complexity': -1,
+                'quality_score': 0.5,
+                'confidence': 0.5
+            }
 
     def _extract_code_block(self, text: str) -> Optional[str]:
-        """Extract code block from markdown-style text"""
-        pattern = r"```(?:\w+)?\n([\s\S]*?)\n```"
+        """Extract code block from Gemini response"""
+        import re
+        pattern = r"```(?:python)?\n([\s\S]*?)\n```"
         match = re.search(pattern, text)
-        return match.group(1) if match else None
+        if match:
+            return match.group(1).strip()
+        return text.strip()  # Return full text if no code block found
 
     def get_description(self) -> str:
-        return "Generates code based on provided requirements using Gemini"
-
-    def _detect_language(self, prompt: str, code_block: str) -> str:
-        """Detect programming language from prompt and code block"""
-        prompt_lower = prompt.lower()
-        code_block_lower = code_block.lower()
-        languages = {
-            "python": ["python", ".py", "django", "flask"],
-            "javascript": ["javascript", "js", "node", "react"],
-            "typescript": ["typescript", "ts", "angular"],
-            "java": ["java", "spring", "android"],
-            "go": ["golang", "go "],
-        }
-        
-        for lang, keywords in languages.items():
-            if any(kw in prompt_lower for kw in keywords) or any(kw in code_block_lower for kw in keywords):
-                return lang
-        return "python"  # default
+        return "Generates code based on requirements, with special handling for algorithms like MCTS"
 
 class CodeAnalysisTool(BaseTool):
     """Tool for analyzing code and providing insights"""

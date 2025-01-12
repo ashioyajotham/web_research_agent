@@ -69,7 +69,16 @@ class PrettyFormatter:
             self.console.print("\n[bold cyan]Output:[/bold cyan]")
             
             # Handle different output types
-            if "code" in output:
+            if isinstance(output, dict) and "code" in output:
+                # Direct code object
+                code = output["code"]
+                if isinstance(code, dict):
+                    code = code.get("code", "")  # Extract code from nested structure
+                if isinstance(code, str):
+                    syntax = Syntax(code, "python", theme="monokai", line_numbers=True)
+                    self.console.print(Panel(syntax, title="Generated Code", border_style="green"))
+            
+            elif "code" in output:
                 # Code output
                 code = output["code"]
                 if isinstance(code, str):

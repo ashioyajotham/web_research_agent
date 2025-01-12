@@ -173,33 +173,68 @@ class Agent:
     async def _execute_basic_task(self, task: str) -> Dict[str, Any]:
         """Basic task execution without planning"""
         try:
-            # Determine task type and select appropriate tool
-            task_type = self.planner._analyze_task_type(task) if self.planner else "research"
+            # Improve task type detection
+            task_lower = task.lower()
+            if any(kw in task_lower for kw in ['implement', 'code', 'algorithm', 'program']):
+                task_type = "CODE"
+            elif any(kw in task_lower for kw in ['dataset', 'data', 'extract', 'analyze']):
+                task_type = "DATA"
+            else:
+                task_type = "RESEARCH"
             
             if task_type == "CODE":
                 result = await self.tools["code_generator"].execute(query=task)
+                if result.get("success"):
+                    return {
+                        "success": True,
+                        "output": {
+                            "code": result.get("code"),
+                            "results": [result]
+                        },
+                        "confidence": 0.8,
+                        "execution_time": 0.0,
+                        "task": task
+                    }
             elif task_type == "DATA":
                 result = await self.tools["dataset"].execute(query=task)
+                if result.get("success"):
+                    return {
+                        "success": True,
+                        "output": {
+                            "data": result.get("data"),
+                            "results": [result]
+                        },
+                        "confidence": 0.7,
+                        "execution_time": 0.0,
+                        "task": task
+                    }
             else:
-                # Default to google search for research tasks
-                result = await self.tools["google_search"].execute(query=task)
-            
-            if isinstance(result, dict) and result.get("success"):
-                return {
-                    "success": True,
-                    "output": result,
-                    "confidence": 0.7,
-                    "execution_time": 0.0,
-                    "task": task
-                }
-            else:
-                return {
-                    "success": False,
-                    "output": {"results": []},
-                    "confidence": 0.0,
-                    "error": "Tool execution failed",
-                    "task": task
-                }
+                # Use web scraper to augment search results
+                search_result = await self.tools["google_search"].execute(query=task)
+                if search_result.get("success") and search_result.get("results"):
+                    # Get additional content from top results
+                    for item in search_result["results"][:3]:
+                        try:
+                            content = await self.tools["web_scraper"].execute(url=item["link"])
+                            if content and isinstance(content, str):
+                                item["content"] = content[:1000]  # Limit content length
+                        except:
+                            continue
+                    return {
+                        "success": True,
+                        "output": search_result,
+                        "confidence": 0.7,
+                        "execution_time": 0.0,
+                        "task": task
+                    }
+
+            return {
+                "success": False,
+                "output": {"results": []},
+                "confidence": 0.0,
+                "error": "Task execution failed",
+                "task": task
+            }
                 
         except Exception as e:
             self.logger.error(f"Basic task execution failed: {str(e)}")
