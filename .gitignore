@@ -39,5 +39,6 @@ data/
 *.log
 agent_memory.db
 agent_learning.json
+logs
 
 
