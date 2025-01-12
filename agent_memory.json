@@ -1,1 +1,695 @@
-[{"task": "Find the most cited academic papers in machine learning from 2023.", "plan": {"steps": [{"type": 
+[
+  {
+    "task": "What were the major archaeological discoveries announced in 2023?",
+    "plan": {
+      "steps": [],
+      "estimated_time": 0,
+      "confidence": 0.0
+    },
+    "result": {
+      "success": false,
+      "output": null,
+      "confidence": 0.0,
+      "success_rate": 0.0,
+      "steps": []
+    },
+    "evaluation": {
+      "success": false,
+      "performance_score": 0.3333333333333333,
+      "areas_for_improvement": [
+        "confidence",
+        "success_rate"
+      ],
+      "metrics": {
+        "execution_time": 0.0,
+        "tool_usage_counts": {},
+        "steps_taken": 0,
+        "success_rate": 0.0,
+        "average_confidence": 0.0
+      },
+      "suggestions": {
+        "confidence": {
+          "description": "Confidence improvement needed",
+          "recommendations": [
+            "Implement cross-verification of results",
+            "Use multiple sources for critical information",
+            "Add fact-checking steps for important claims"
+          ]
+        },
+        "success_rate": {
+          "description": "Success rate improvement needed",
+          "recommendations": [
+            "Implement better error handling",
+            "Add fallback strategies for failed steps",
+            "Improve task decomposition"
+          ]
+        }
+      }
+    },
+    "timestamp": "2025-01-12T18:17:49.298355"
+  },
+  {
+    "task": "What are the current leading theories about dark matter?",
+    "plan": {
+      "steps": [],
+      "estimated_time": 0,
+      "confidence": 0.0
+    },
+    "result": {
+      "success": false,
+      "output": null,
+      "confidence": 0.0,
+      "success_rate": 0.0,
+      "steps": []
+    },
+    "evaluation": {
+      "success": false,
+      "performance_score": 0.3333333333333333,
+      "areas_for_improvement": [
+        "confidence",
+        "success_rate"
+      ],
+      "metrics": {
+        "execution_time": 0.0,
+        "tool_usage_counts": {},
+        "steps_taken": 0,
+        "success_rate": 0.0,
+        "average_confidence": 0.0
+      },
+      "suggestions": {
+        "confidence": {
+          "description": "Confidence improvement needed",
+          "recommendations": [
+            "Implement cross-verification of results",
+            "Use multiple sources for critical information",
+            "Add fact-checking steps for important claims"
+          ]
+        },
+        "success_rate": {
+          "description": "Success rate improvement needed",
+          "recommendations": [
+            "Implement better error handling",
+            "Add fallback strategies for failed steps",
+            "Improve task decomposition"
+          ]
+        }
+      }
+    },
+    "timestamp": "2025-01-12T18:17:49.298355"
+  },
+  {
+    "task": "Create a Python script to detect and prevent SQL injection attacks.",
+    "plan": {
+      "steps": [],
+      "estimated_time": 0,
+      "confidence": 0.0
+    },
+    "result": {
+      "success": false,
+      "output": null,
+      "confidence": 0.0,
+      "success_rate": 0.0,
+      "steps": []
+    },
+    "evaluation": {
+      "success": false,
+      "performance_score": 0.3333333333333333,
+      "areas_for_improvement": [
+        "confidence",
+        "success_rate"
+      ],
+      "metrics": {
+        "execution_time": 0.0,
+        "tool_usage_counts": {},
+        "steps_taken": 0,
+        "success_rate": 0.0,
+        "average_confidence": 0.0
+      },
+      "suggestions": {
+        "confidence": {
+          "description": "Confidence improvement needed",
+          "recommendations": [
+            "Implement cross-verification of results",
+            "Use multiple sources for critical information",
+            "Add fact-checking steps for important claims"
+          ]
+        },
+        "success_rate": {
+          "description": "Success rate improvement needed",
+          "recommendations": [
+            "Implement better error handling",
+            "Add fallback strategies for failed steps",
+            "Improve task decomposition"
+          ]
+        }
+      }
+    },
+    "timestamp": "2025-01-12T18:17:49.305947"
+  },
+  {
+    "task": "What were the major developments in space exploration missions in 2023?",
+    "plan": {
+      "steps": [],
+      "estimated_time": 0,
+      "confidence": 0.0
+    },
+    "result": {
+      "success": false,
+      "output": null,
+      "confidence": 0.0,
+      "success_rate": 0.0,
+      "steps": []
+    },
+    "evaluation": {
+      "success": false,
+      "performance_score": 0.3333333333333333,
+      "areas_for_improvement": [
+        "confidence",
+        "success_rate"
+      ],
+      "metrics": {
+        "execution_time": 0.0,
+        "tool_usage_counts": {},
+        "steps_taken": 0,
+        "success_rate": 0.0,
+        "average_confidence": 0.0
+      },
+      "suggestions": {
+        "confidence": {
+          "description": "Confidence improvement needed",
+          "recommendations": [
+            "Implement cross-verification of results",
+            "Use multiple sources for critical information",
+            "Add fact-checking steps for important claims"
+          ]
+        },
+        "success_rate": {
+          "description": "Success rate improvement needed",
+          "recommendations": [
+            "Implement better error handling",
+            "Add fallback strategies for failed steps",
+            "Improve task decomposition"
+          ]
+        }
+      }
+    },
+    "timestamp": "2025-01-12T18:17:49.310164"
+  },
+  {
+    "task": "Create a Kubernetes operator that manages database backups.",
+    "plan": {
+      "steps": [],
+      "estimated_time": 0,
+      "confidence": 0.0
+    },
+    "result": {
+      "success": false,
+      "output": null,
+      "confidence": 0.0,
+      "success_rate": 0.0,
+      "steps": []
+    },
+    "evaluation": {
+      "success": false,
+      "performance_score": 0.3333333333333333,
+      "areas_for_improvement": [
+        "confidence",
+        "success_rate"
+      ],
+      "metrics": {
+        "execution_time": 0.0,
+        "tool_usage_counts": {},
+        "steps_taken": 0,
+        "success_rate": 0.0,
+        "average_confidence": 0.0
+      },
+      "suggestions": {
+        "confidence": {
+          "description": "Confidence improvement needed",
+          "recommendations": [
+            "Implement cross-verification of results",
+            "Use multiple sources for critical information",
+            "Add fact-checking steps for important claims"
+          ]
+        },
+        "success_rate": {
+          "description": "Success rate improvement needed",
+          "recommendations": [
+            "Implement better error handling",
+            "Add fallback strategies for failed steps",
+            "Improve task decomposition"
+          ]
+        }
+      }
+    },
+    "timestamp": "2025-01-12T18:17:49.314054"
+  },
+  {
+    "task": "Find the most cited academic papers in machine learning from 2023.",
+    "plan": {
+      "steps": [
+        {
+          "type": "research",
+          "description": "Perform web research",
+          "tool": "google_search",
+          "params": {
+            "query": "Find the most cited academic papers in machine learning from 2023."
+          }
+        }
+      ],
+      "estimated_time": 30,
+      "confidence": 0.8
+    },
+    "result": {
+      "success": false,
+      "output": null,
+      "confidence": 0.8,
+      "success_rate": 0.0,
+      "steps": [
+        {
+          "type": "research",
+          "description": "Perform web research",
+          "result": null
+        }
+      ]
+    },
+    "evaluation": {
+      "success": false,
+      "performance_score": 0.3333333333333333,
+      "areas_for_improvement": [
+        "confidence",
+        "success_rate"
+      ],
+      "metrics": {
+        "execution_time": 0.0,
+        "tool_usage_counts": {},
+        "steps_taken": 1,
+        "success_rate": 0.0,
+        "average_confidence": 0.0
+      },
+      "suggestions": {
+        "confidence": {
+          "description": "Confidence improvement needed",
+          "recommendations": [
+            "Implement cross-verification of results",
+            "Use multiple sources for critical information",
+            "Add fact-checking steps for important claims"
+          ]
+        },
+        "success_rate": {
+          "description": "Success rate improvement needed",
+          "recommendations": [
+            "Implement better error handling",
+            "Add fallback strategies for failed steps",
+            "Improve task decomposition"
+          ]
+        }
+      }
+    },
+    "timestamp": "2025-01-12T18:17:51.601656"
+  },
+  {
+    "task": "Create a Python function that implements the PageRank algorithm.",
+    "plan": {
+      "steps": [
+        {
+          "type": "code",
+          "description": "Generate code",
+          "tool": "code_generator",
+          "params": {
+            "prompt": "Create a Python function that implements the PageRank algorithm."
+          }
+        }
+      ],
+      "estimated_time": 20,
+      "confidence": 0.8
+    },
+    "result": {
+      "success": false,
+      "output": null,
+      "confidence": 0.8,
+      "success_rate": 0.0,
+      "steps": [
+        {
+          "type": "code",
+          "description": "Generate code",
+          "result": null
+        }
+      ]
+    },
+    "evaluation": {
+      "success": false,
+      "performance_score": 0.3333333333333333,
+      "areas_for_improvement": [
+        "confidence",
+        "success_rate"
+      ],
+      "metrics": {
+        "execution_time": 0.0,
+        "tool_usage_counts": {},
+        "steps_taken": 1,
+        "success_rate": 0.0,
+        "average_confidence": 0.0
+      },
+      "suggestions": {
+        "confidence": {
+          "description": "Confidence improvement needed",
+          "recommendations": [
+            "Implement cross-verification of results",
+            "Use multiple sources for critical information",
+            "Add fact-checking steps for important claims"
+          ]
+        },
+        "success_rate": {
+          "description": "Success rate improvement needed",
+          "recommendations": [
+            "Implement better error handling",
+            "Add fallback strategies for failed steps",
+            "Improve task decomposition"
+          ]
+        }
+      }
+    },
+    "timestamp": "2025-01-12T18:17:51.616807"
+  },
+  {
+    "task": "Write a React component that implements an infinite scrolling list with virtualization.",
+    "plan": {
+      "steps": [
+        {
+          "type": "code",
+          "description": "Generate code",
+          "tool": "code_generator",
+          "params": {
+            "prompt": "Write a React component that implements an infinite scrolling list with virtualization."
+          }
+        }
+      ],
+      "estimated_time": 20,
+      "confidence": 0.8
+    },
+    "result": {
+      "success": false,
+      "output": null,
+      "confidence": 0.8,
+      "success_rate": 0.0,
+      "steps": [
+        {
+          "type": "code",
+          "description": "Generate code",
+          "result": null
+        }
+      ]
+    },
+    "evaluation": {
+      "success": false,
+      "performance_score": 0.3333333333333333,
+      "areas_for_improvement": [
+        "confidence",
+        "success_rate"
+      ],
+      "metrics": {
+        "execution_time": 0.0,
+        "tool_usage_counts": {},
+        "steps_taken": 1,
+        "success_rate": 0.0,
+        "average_confidence": 0.0
+      },
+      "suggestions": {
+        "confidence": {
+          "description": "Confidence improvement needed",
+          "recommendations": [
+            "Implement cross-verification of results",
+            "Use multiple sources for critical information",
+            "Add fact-checking steps for important claims"
+          ]
+        },
+        "success_rate": {
+          "description": "Success rate improvement needed",
+          "recommendations": [
+            "Implement better error handling",
+            "Add fallback strategies for failed steps",
+            "Improve task decomposition"
+          ]
+        }
+      }
+    },
+    "timestamp": "2025-01-12T18:17:51.632414"
+  },
+  {
+    "task": "Summarize the key findings from the latest IPCC climate report.",
+    "plan": {
+      "steps": [
+        {
+          "type": "research",
+          "description": "Perform web research",
+          "tool": "google_search",
+          "params": {
+            "query": "Summarize the key findings from the latest IPCC climate report."
+          }
+        }
+      ],
+      "estimated_time": 30,
+      "confidence": 0.8
+    },
+    "result": {
+      "success": false,
+      "output": null,
+      "confidence": 0.8,
+      "success_rate": 0.0,
+      "steps": [
+        {
+          "type": "research",
+          "description": "Perform web research",
+          "result": null
+        }
+      ]
+    },
+    "evaluation": {
+      "success": false,
+      "performance_score": 0.3333333333333333,
+      "areas_for_improvement": [
+        "confidence",
+        "success_rate"
+      ],
+      "metrics": {
+        "execution_time": 0.0,
+        "tool_usage_counts": {},
+        "steps_taken": 1,
+        "success_rate": 0.0,
+        "average_confidence": 0.0
+      },
+      "suggestions": {
+        "confidence": {
+          "description": "Confidence improvement needed",
+          "recommendations": [
+            "Implement cross-verification of results",
+            "Use multiple sources for critical information",
+            "Add fact-checking steps for important claims"
+          ]
+        },
+        "success_rate": {
+          "description": "Success rate improvement needed",
+          "recommendations": [
+            "Implement better error handling",
+            "Add fallback strategies for failed steps",
+            "Improve task decomposition"
+          ]
+        }
+      }
+    },
+    "timestamp": "2025-01-12T18:17:51.632414"
+  },
+  {
+    "task": "Implement a distributed rate limiter in Go with Redis backend.",
+    "plan": {
+      "steps": [
+        {
+          "type": "code",
+          "description": "Generate code",
+          "tool": "code_generator",
+          "params": {
+            "prompt": "Implement a distributed rate limiter in Go with Redis backend."
+          }
+        }
+      ],
+      "estimated_time": 20,
+      "confidence": 0.8
+    },
+    "result": {
+      "success": false,
+      "output": null,
+      "confidence": 0.8,
+      "success_rate": 0.0,
+      "steps": [
+        {
+          "type": "code",
+          "description": "Generate code",
+          "result": null
+        }
+      ]
+    },
+    "evaluation": {
+      "success": false,
+      "performance_score": 0.3333333333333333,
+      "areas_for_improvement": [
+        "confidence",
+        "success_rate"
+      ],
+      "metrics": {
+        "execution_time": 0.0,
+        "tool_usage_counts": {},
+        "steps_taken": 1,
+        "success_rate": 0.0,
+        "average_confidence": 0.0
+      },
+      "suggestions": {
+        "confidence": {
+          "description": "Confidence improvement needed",
+          "recommendations": [
+            "Implement cross-verification of results",
+            "Use multiple sources for critical information",
+            "Add fact-checking steps for important claims"
+          ]
+        },
+        "success_rate": {
+          "description": "Success rate improvement needed",
+          "recommendations": [
+            "Implement better error handling",
+            "Add fallback strategies for failed steps",
+            "Improve task decomposition"
+          ]
+        }
+      }
+    },
+    "timestamp": "2025-01-12T18:17:51.647985"
+  },
+  {
+    "task": "Write a TypeScript implementation of the Observer pattern with generics.",
+    "plan": {
+      "steps": [
+        {
+          "type": "code",
+          "description": "Generate code",
+          "tool": "code_generator",
+          "params": {
+            "prompt": "Write a TypeScript implementation of the Observer pattern with generics."
+          }
+        }
+      ],
+      "estimated_time": 20,
+      "confidence": 0.8
+    },
+    "result": {
+      "success": false,
+      "output": null,
+      "confidence": 0.8,
+      "success_rate": 0.0,
+      "steps": [
+        {
+          "type": "code",
+          "description": "Generate code",
+          "result": null
+        }
+      ]
+    },
+    "evaluation": {
+      "success": false,
+      "performance_score": 0.3333333333333333,
+      "areas_for_improvement": [
+        "confidence",
+        "success_rate"
+      ],
+      "metrics": {
+        "execution_time": 0.0,
+        "tool_usage_counts": {},
+        "steps_taken": 1,
+        "success_rate": 0.0,
+        "average_confidence": 0.0
+      },
+      "suggestions": {
+        "confidence": {
+          "description": "Confidence improvement needed",
+          "recommendations": [
+            "Implement cross-verification of results",
+            "Use multiple sources for critical information",
+            "Add fact-checking steps for important claims"
+          ]
+        },
+        "success_rate": {
+          "description": "Success rate improvement needed",
+          "recommendations": [
+            "Implement better error handling",
+            "Add fallback strategies for failed steps",
+            "Improve task decomposition"
+          ]
+        }
+      }
+    },
+    "timestamp": "2025-01-12T18:17:51.647985"
+  },
+  {
+    "task": "Implement a microservices architecture diagram using PlantUML.",
+    "plan": {
+      "steps": [
+        {
+          "type": "code",
+          "description": "Generate code",
+          "tool": "code_generator",
+          "params": {
+            "prompt": "Implement a microservices architecture diagram using PlantUML."
+          }
+        }
+      ],
+      "estimated_time": 20,
+      "confidence": 0.8
+    },
+    "result": {
+      "success": false,
+      "output": null,
+      "confidence": 0.8,
+      "success_rate": 0.0,
+      "steps": [
+        {
+          "type": "code",
+          "description": "Generate code",
+          "result": null
+        }
+      ]
+    },
+    "evaluation": {
+      "success": false,
+      "performance_score": 0.3333333333333333,
+      "areas_for_improvement": [
+        "confidence",
+        "success_rate"
+      ],
+      "metrics": {
+        "execution_time": 0.0,
+        "tool_usage_counts": {},
+        "steps_taken": 1,
+        "success_rate": 0.0,
+        "average_confidence": 0.0
+      },
+      "suggestions": {
+        "confidence": {
+          "description": "Confidence improvement needed",
+          "recommendations": [
+            "Implement cross-verification of results",
+            "Use multiple sources for critical information",
+            "Add fact-checking steps for important claims"
+          ]
+        },
+        "success_rate": {
+          "description": "Success rate improvement needed",
+          "recommendations": [
+            "Implement better error handling",
+            "Add fallback strategies for failed steps",
+            "Improve task decomposition"
+          ]
+        }
+      }
+    },
+    "timestamp": "2025-01-12T18:17:51.663602"
+  }
+]

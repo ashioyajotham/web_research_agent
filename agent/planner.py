@@ -3,15 +3,12 @@ from typing import List, Dict, Any
 from enum import Enum
 import json
 
-class StepType(Enum):
+class StepType(str, Enum):  # Make it inherit from str
     RESEARCH = "research"
     CODE = "code"
     ANALYSIS = "analysis"
 
     def __str__(self):
-        return self.value
-
-    def to_json(self):
         return self.value
 
 @dataclass

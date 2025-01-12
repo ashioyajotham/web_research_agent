@@ -3,17 +3,39 @@ import json
 import asyncio
 from typing import List, Dict
 from dotenv import load_dotenv
+import nltk
+from enum import Enum
 from agent.core import Agent, AgentConfig
 from tools.base import BaseTool
 
 # Load environment variables
 load_dotenv()
 
+class EnhancedJSONEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, Enum):
+            return obj.value
+        return super().default(obj)
+
+def initialize_nltk():
+    """Initialize NLTK with required data"""
+    try:
+        # Download all required NLTK data
+        nltk.download(['punkt', 'averaged_perceptron_tagger', 'stopwords'], quiet=True)
+        return True
+    except Exception as e:
+        print(f"Warning: Failed to download NLTK data: {e}")
+        return False
+
 async def process_tasks(agent: Agent, tasks: List[str]) -> List[Dict]:
     """Process multiple tasks using the agent"""
     return await agent.process_tasks(tasks)
 
 def main(task_file_path: str, output_file_path: str):
+    # Initialize NLTK
+    if not initialize_nltk():
+        print("Warning: NLTK initialization failed, some features may not work properly")
+    
     # Import tools here to avoid circular imports
     from tools.google_search import GoogleSearchTool
     from tools.web_scraper import WebScraperTool
@@ -45,9 +67,9 @@ def main(task_file_path: str, output_file_path: str):
     # Process tasks and collect results
     results = asyncio.run(process_tasks(agent, tasks))
     
-    # Write results
+    # Write results with custom encoder
     with open(output_file_path, 'w') as f:
-        json.dump(results, f, indent=2)
+        json.dump(results, f, indent=2, cls=EnhancedJSONEncoder)
 
 if __name__ == "__main__":
     import sys

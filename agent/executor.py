@@ -54,11 +54,11 @@ class Executor:
             } for step, result in zip(plan.steps, results)]
         )
 
-    async def _execute_parallel(self, steps: List[ExecutionStep]) -> List<StepResult]:
+    async def _execute_parallel(self, steps: List[ExecutionStep]) -> List[StepResult]:
         tasks = [self._execute_step(step) for step in steps]
         return await asyncio.gather(*tasks)
 
-    async def _execute_sequential(self, steps: List[ExecutionStep]) -> List<StepResult]:
+    async def _execute_sequential(self, steps: List[ExecutionStep]) -> List[StepResult]:
         results = []
         for step in steps:
             result = await self._execute_step(step)

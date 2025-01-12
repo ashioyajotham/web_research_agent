@@ -20,8 +20,21 @@ class Memory:
         try:
             with open(self.storage_path, 'r') as f:
                 data = json.load(f)
-                return [Experience(**exp) for exp in data]
+                experiences = []
+                for exp in data:
+                    # Convert timestamp string back to datetime
+                    exp['timestamp'] = datetime.fromisoformat(exp['timestamp'])
+                    experiences.append(Experience(**exp))
+                return experiences
         except FileNotFoundError:
+            # Create empty file if it doesn't exist
+            with open(self.storage_path, 'w') as f:
+                json.dump([], f)
+            return []
+        except json.JSONDecodeError:
+            # Handle corrupted file by creating new empty file
+            with open(self.storage_path, 'w') as f:
+                json.dump([], f)
             return []
 
     def store_experience(self, experience: Experience):
@@ -39,7 +52,13 @@ class Memory:
 
     def _save_experiences(self):
         with open(self.storage_path, 'w') as f:
-            json.dump([asdict(exp) for exp in self.experiences], f)
+            # Convert experiences to dict and datetime to ISO format string
+            experiences_data = []
+            for exp in self.experiences:
+                exp_dict = asdict(exp)
+                exp_dict['timestamp'] = exp_dict['timestamp'].isoformat()
+                experiences_data.append(exp_dict)
+            json.dump(experiences_data, f, indent=2)
 
     def _calculate_similarity(self, task1: str, task2: str) -> float:
         # Simple word overlap similarity
