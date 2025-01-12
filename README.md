@@ -1,99 +1,101 @@
 # Web Research Agent
 
-An AI-powered agent that can perform web research, code analysis, and code generation tasks using Google's Gemini and various tools.
+An autonomous research agent that performs web research, code analysis, and task automation using Gemini for reasoning and various APIs for interactions.
 
-## Setup
+## Quick Start
 
-1. Create a .env file with your API keys:
-```
-SERPER_API_KEY=your_serper_api_key
-GEMINI_API_KEY=your_gemini_api_key
-```
-
-2. Install dependencies:
+1. Install dependencies:
 ```bash
 pip install -r requirements.txt
 ```
 
-## Usage
+2. Configure environment:
+```bash
+# .env file
+SERPER_API_KEY=your_key
+GEMINI_API_KEY=your_key
+```
 
-Run the agent with a task file:
+3. Run agent:
 ```bash
 python agent.py tasks.txt results.json
 ```
 
-Each line in tasks.txt should contain one task. Tasks can include:
-- Research queries
-- Code generation requests
-- Technical analysis tasks
-- Architecture design tasks
+## Task Types
 
-Results will be written to results.json.
+The agent can handle:
+- Information gathering and synthesis
+- Code implementation and analysis
+- Technical evaluation
+- System architecture design
 
-## Example Tasks
-
-Research tasks:
+Example tasks:
 ```
-Find the most cited academic papers in machine learning from 2023.
-What were the major archaeological discoveries announced in 2023?
-```
-
-Coding tasks:
-```
-Create a Python function that implements the PageRank algorithm.
-Write a React component that implements infinite scrolling.
+Research quantum computing advances in 2023
+Design a rate limiter implementation
+Analyze microservices communication patterns
+Evaluate container orchestration solutions
 ```
 
-## Adding New Tools
+## Agent Components
 
-1. Create a new tool class in tools/ that inherits from BaseTool
-2. Implement the execute() and get_description() methods
-3. Add the tool to the tools registry in agent.py
+- Strategic Planner: Task breakdown and execution planning
+- Memory System: Experience storage and retrieval
+- Tool Integration: API and service connectors
+- Reflection System: Self-evaluation and learning
 
-## Project Structure
+Add new capabilities by:
+1. Creating a tool class in tools/ that extends BaseTool
+2. Implementing execute() and get_description()
+3. Registering in agent.py
 
-```plaintext
-web_research_agent/
-├── agent/
-│   ├── __init__.py
-│   ├── core.py           # Core agent functionality
-│   ├── planner.py        # Strategic planning
-│   ├── memory.py         # Experience management
-│   ├── executor.py       # Task execution
-│   ├── strategy/
-│   │   ├── __init__.py
-│   │   ├── base.py       # Base strategy interface
-│   │   ├── research.py   # Research strategies
-│   │   └── coding.py     # Coding strategies
-│   ├── reflection/
-│   │   ├── __init__.py
-│   │   ├── evaluator.py  # Self-evaluation
-│   │   └── learner.py    # Learning from experience
-│   └── utils/
-│       ├── __init__.py
-│       └── prompts.py     # Prompt templates
-├── tools/
-│   ├── __init__.py
-│   ├── base.py
-│   ├── google_search.py
-│   ├── web_scraper.py
-│   └── code_tools.py
-├── examples/
-│   ├── tasks/
-│   │   ├── market_research.txt
-│   │   ├── tech_analysis.txt
-│   │   └── environmental_data.txt
-│   ├── market_research.py
-│   ├── tech_analyzer.py
-│   └── sustainability_tracker.py
-├── tests/
-│   ├── __init__.py
-│   ├── test_agent.py
-│   ├── test_planner.py
-│   └── test_tools.py
-├── .env
-├── requirements.txt
-├── README.md
-├── agent.py
-└── tasks.txt
+## Architecture
+
+The agent uses a modular architecture with several core components:
+
+```mermaid
+graph TD
+    Task[Task Input] --> Planner
+    Planner --> Executor
+    Memory -->|Past Experiences| Planner
+    Executor -->|Uses| Tools
+    Executor --> Results[Task Results]
+    Results -->|Stored In| Memory
+    
+    subgraph Agent Core
+        Planner[Strategic Planner]
+        Executor[Tool Executor]
+        Memory[Experience Memory]
+    end
+    
+    subgraph Tools
+        T1[Google Search]
+        T2[Web Scraper]
+        T3[Code Analysis]
+        T4[Code Generator]
+    end
+    
+    subgraph Components
+        C1[Reflection System]
+    end
 ```
+
+```
+agent/
+  ├── core.py        # Agent core logic
+  ├── planner.py     # Strategic planning
+  ├── executor.py    # Tool execution
+  ├── memory.py      # Experience system
+  └── utils/         # Shared utilities
+tools/               # Tool implementations
+examples/            # Usage examples
+```
+
+## Development
+
+Run tests:
+```bash
+pytest
+```
+
+See examples/ directory for sample usage patterns.
