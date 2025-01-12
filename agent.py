@@ -44,21 +44,44 @@ def extract_direct_answer(task: str, results: List[Dict]) -> Dict[str, str]:
     """Extract a direct answer from search results for direct questions"""
     answer = "Could not find a definitive answer"
     source = ""
+    context = ""
     
-    # Extract potential answer and source based on the search results
-    if results and len(results) > 0:
+    if not results:
+        return {"answer": answer, "source": source, "context": context}
+    
+    # Enhance pattern matching for specific question types
+    task_lower = task.lower()
+    if "coo" in task_lower or "chief operating officer" in task_lower:
+        # Look for executive names and titles
+        for result in results:
+            snippet = result.get('snippet', '')
+            if any(term in snippet.lower() for term in ['coo', 'chief operating', 'executive', 'leader']):
+                answer = snippet
+                source = result.get('link', '')
+                context = f"From {result.get('title', '')}"
+                break
+                
+    elif "percentage" in task_lower or "reduce" in task_lower:
+        # Look for percentage changes and numerical values
+        for result in results:
+            snippet = result.get('snippet', '')
+            if any(term in snippet.lower() for term in ['%', 'percent', 'reduction', 'decreased by']):
+                answer = snippet
+                source = result.get('link', '')
+                context = f"From {result.get('title', '')}"
+                break
+    
+    else:
+        # Default extraction for other questions
         top_result = results[0]
-        snippet = top_result.get('snippet', '')
-        link = top_result.get('link', '')
-        
-        # Basic answer extraction - this could be enhanced with more sophisticated NLP
-        if snippet:
-            answer = snippet.split('.')[0]  # Take first sentence
-            source = link
+        answer = top_result.get('snippet', '').split('.')[0]
+        source = top_result.get('link', '')
+        context = f"From {top_result.get('title', '')}"
     
     return {
         "answer": answer,
-        "source": source
+        "source": source,
+        "context": context
     }
 
 def is_direct_question(task: str) -> bool:
@@ -73,12 +96,20 @@ async def process_tasks(agent: Agent, tasks: List[str]) -> List[Dict]:
     """Process multiple tasks using the agent"""
     results = []
     for task in tasks:
-        result = await agent.process_task(task)
-        if is_direct_question(task):
-            # For direct questions, extract and format a clear answer
-            direct_answer = extract_direct_answer(task, result["output"]["results"])
-            result["formatted_answer"] = direct_answer
-        results.append(result)
+        try:
+            result = await agent.process_task(task)
+            if is_direct_question(task) and result.get("success", False):
+                # For direct questions, extract and format a clear answer
+                direct_answer = extract_direct_answer(task, result.get("output", {}).get("results", []))
+                result["formatted_answer"] = direct_answer
+            results.append(result)
+        except Exception as e:
+            results.append({
+                "success": False,
+                "error": str(e),
+                "output": {"results": []},
+                "task": task
+            })
     return results
 
 class Agent:
@@ -92,7 +123,9 @@ class Agent:
         start_time = time.time()
         
         try:
-            if "download" in task.lower() and "dataset" in task.lower():
+            if "implement" in task.lower():
+                result = await self._handle_implementation_task(task)
+            elif "download" in task.lower() and "dataset" in task.lower():
                 result = await self._handle_dataset_task(task)
             else:
                 result = await self._process_task(task)
@@ -102,19 +135,29 @@ class Agent:
             return result
             
         except Exception as e:
-            self.logger.error(str(e), context=f"Task: {task[:50]}...")
-            return {"success": False, "error": str(e)}
+            error_msg = str(e)
+            self.logger.error(error_msg, context=f"Task: {task[:50]}...")
+            return {
+                "success": False,
+                "error": error_msg,
+                "output": {"results": []}  # Ensure output.results exists even on error
+            }
 
     async def _handle_dataset_task(self, task: str) -> Dict:
         """Handle tasks involving dataset downloads and processing"""
-        # Extract URL and requirements from task using search tools
-        search_results = await self.tools["google_search"].search(task)
-        dataset_url = self._extract_dataset_url(search_results)
-        
-        if not dataset_url:
-            return {"success": False, "error": "Could not find dataset URL"}
-            
         try:
+            # Use execute() instead of search()
+            search_results = await self.tools["google_search"].execute(query=task)
+            
+            if not search_results.get("success", False):
+                return {"success": False, "error": "Search failed"}
+                
+            results = search_results.get("results", [])
+            dataset_url = self._extract_dataset_url(results)
+            
+            if not dataset_url:
+                return {"success": False, "error": "Could not find dataset URL"}
+                
             # Download and process dataset
             df = await self.tools["dataset"].download_dataset(dataset_url)
             
@@ -132,9 +175,87 @@ class Agent:
                 "success": True,
                 "output": result
             }
-            
+                
         except Exception as e:
             return {"success": False, "error": str(e)}
+
+    async def _process_task(self, task: str) -> Dict:
+        """Process a regular (non-dataset) task"""
+        try:
+            # Use Google Search as default tool for general tasks
+            search_results = await self.tools["google_search"].execute(query=task)
+            
+            if search_results.get("success", False):
+                return {
+                    "success": True,
+                    "output": {
+                        "results": search_results.get("results", []),
+                        "knowledge_graph": search_results.get("knowledge_graph", {}),
+                        "related_searches": search_results.get("related_searches", [])
+                    }
+                }
+            else:
+                return {
+                    "success": False,
+                    "error": "Search failed",
+                    "output": {"results": []}
+                }
+                
+        except Exception as e:
+            return {
+                "success": False,
+                "error": str(e),
+                "output": {"results": []}
+            }
+
+    def _extract_dataset_url(self, results: List[Dict]) -> str:
+        """Extract dataset URL from search results"""
+        dataset_keywords = ['dataset', 'data', 'csv', 'json', 'api']
+        file_extensions = ['.csv', '.json', '.xlsx', '.zip', '.tar.gz']
+        
+        for result in results:
+            url = result.get('link', '')
+            title = result.get('title', '').lower()
+            snippet = result.get('snippet', '').lower()
+            
+            # Check if URL directly points to a dataset file
+            if any(url.endswith(ext) for ext in file_extensions):
+                return url
+                
+            # Check if title/snippet suggests this is a dataset
+            if any(keyword in title or keyword in snippet for keyword in dataset_keywords):
+                return url
+                
+        return ''
+
+    def _extract_analysis_params(self, task: str) -> Dict:
+        """Extract analysis parameters from task description"""
+        params = {
+            "type": "time_series",  # Default analysis type
+            "params": {}
+        }
+        
+        task_lower = task.lower()
+        
+        # Detect time series analysis
+        if any(term in task_lower for term in ['over time', 'trend', 'changes']):
+            params["type"] = "time_series"
+            
+        # Detect statistical analysis
+        elif any(term in task_lower for term in ['average', 'mean', 'median', 'correlation']):
+            params["type"] = "statistical"
+            
+        # Detect comparative analysis
+        elif any(term in task_lower for term in ['compare', 'difference', 'versus']):
+            params["type"] = "comparative"
+            
+        # Extract specific parameters based on task
+        if 'maximum' in task_lower or 'max' in task_lower:
+            params["params"]["aggregate"] = "max"
+        elif 'minimum' in task_lower or 'min' in task_lower:
+            params["params"]["aggregate"] = "min"
+            
+        return params
 
 def main(task_file_path: str, output_file_path: str):
     # Initialize NLTK silently
