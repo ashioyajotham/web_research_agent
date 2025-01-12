@@ -114,18 +114,28 @@ class Agent:
             }
         )
         
+        # Convert evaluation to dict for storage
+        evaluation_dict = {
+            'success': evaluation.success,
+            'confidence': evaluation.confidence,
+            'quality_score': evaluation.quality_score,
+            'improvement_areas': evaluation.improvement_areas,
+            'notes': evaluation.notes,
+            'metadata': evaluation.metadata
+        }
+        
         # Store experience
         self.memory.store_experience(
             Experience(
                 task=task,
                 plan=plan,
                 result=result,
-                evaluation=evaluation,
+                evaluation=evaluation_dict,
                 timestamp=datetime.now()
             )
         )
         
-        return evaluation
+        return evaluation_dict
 
     async def _learn_from_execution(self,
                                   task: str,

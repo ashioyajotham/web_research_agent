@@ -1384,5 +1384,2962 @@
       }
     },
     "timestamp": "2025-01-12T18:22:41.459123"
+  },
+  {
+    "task": "What were the major archaeological discoveries announced in 2023?",
+    "plan": {
+      "steps": [],
+      "estimated_time": 0,
+      "confidence": 0.0
+    },
+    "result": {
+      "success": false,
+      "output": null,
+      "confidence": 0.0,
+      "success_rate": 0.0,
+      "steps": []
+    },
+    "evaluation": {
+      "success": false,
+      "performance_score": 0.3333333333333333,
+      "areas_for_improvement": [
+        "confidence",
+        "success_rate"
+      ],
+      "metrics": {
+        "execution_time": 0.0,
+        "tool_usage_counts": {},
+        "steps_taken": 0,
+        "success_rate": 0.0,
+        "average_confidence": 0.0
+      },
+      "suggestions": {
+        "confidence": {
+          "description": "Confidence improvement needed",
+          "recommendations": [
+            "Implement cross-verification of results",
+            "Use multiple sources for critical information",
+            "Add fact-checking steps for important claims"
+          ]
+        },
+        "success_rate": {
+          "description": "Success rate improvement needed",
+          "recommendations": [
+            "Implement better error handling",
+            "Add fallback strategies for failed steps",
+            "Improve task decomposition"
+          ]
+        }
+      }
+    },
+    "timestamp": "2025-01-12T18:50:40.328499"
+  },
+  {
+    "task": "What are the current leading theories about dark matter?",
+    "plan": {
+      "steps": [],
+      "estimated_time": 0,
+      "confidence": 0.0
+    },
+    "result": {
+      "success": false,
+      "output": null,
+      "confidence": 0.0,
+      "success_rate": 0.0,
+      "steps": []
+    },
+    "evaluation": {
+      "success": false,
+      "performance_score": 0.3333333333333333,
+      "areas_for_improvement": [
+        "confidence",
+        "success_rate"
+      ],
+      "metrics": {
+        "execution_time": 0.0,
+        "tool_usage_counts": {},
+        "steps_taken": 0,
+        "success_rate": 0.0,
+        "average_confidence": 0.0
+      },
+      "suggestions": {
+        "confidence": {
+          "description": "Confidence improvement needed",
+          "recommendations": [
+            "Implement cross-verification of results",
+            "Use multiple sources for critical information",
+            "Add fact-checking steps for important claims"
+          ]
+        },
+        "success_rate": {
+          "description": "Success rate improvement needed",
+          "recommendations": [
+            "Implement better error handling",
+            "Add fallback strategies for failed steps",
+            "Improve task decomposition"
+          ]
+        }
+      }
+    },
+    "timestamp": "2025-01-12T18:50:43.767233"
+  },
+  {
+    "task": "Create a Python script to detect and prevent SQL injection attacks.",
+    "plan": {
+      "steps": [],
+      "estimated_time": 0,
+      "confidence": 0.0
+    },
+    "result": {
+      "success": false,
+      "output": null,
+      "confidence": 0.0,
+      "success_rate": 0.0,
+      "steps": []
+    },
+    "evaluation": {
+      "success": false,
+      "performance_score": 0.3333333333333333,
+      "areas_for_improvement": [
+        "confidence",
+        "success_rate"
+      ],
+      "metrics": {
+        "execution_time": 0.0,
+        "tool_usage_counts": {},
+        "steps_taken": 0,
+        "success_rate": 0.0,
+        "average_confidence": 0.0
+      },
+      "suggestions": {
+        "confidence": {
+          "description": "Confidence improvement needed",
+          "recommendations": [
+            "Implement cross-verification of results",
+            "Use multiple sources for critical information",
+            "Add fact-checking steps for important claims"
+          ]
+        },
+        "success_rate": {
+          "description": "Success rate improvement needed",
+          "recommendations": [
+            "Implement better error handling",
+            "Add fallback strategies for failed steps",
+            "Improve task decomposition"
+          ]
+        }
+      }
+    },
+    "timestamp": "2025-01-12T18:50:43.799333"
+  },
+  {
+    "task": "What were the major developments in space exploration missions in 2023?",
+    "plan": {
+      "steps": [],
+      "estimated_time": 0,
+      "confidence": 0.0
+    },
+    "result": {
+      "success": false,
+      "output": null,
+      "confidence": 0.0,
+      "success_rate": 0.0,
+      "steps": []
+    },
+    "evaluation": {
+      "success": false,
+      "performance_score": 0.3333333333333333,
+      "areas_for_improvement": [
+        "confidence",
+        "success_rate"
+      ],
+      "metrics": {
+        "execution_time": 0.0,
+        "tool_usage_counts": {},
+        "steps_taken": 0,
+        "success_rate": 0.0,
+        "average_confidence": 0.0
+      },
+      "suggestions": {
+        "confidence": {
+          "description": "Confidence improvement needed",
+          "recommendations": [
+            "Implement cross-verification of results",
+            "Use multiple sources for critical information",
+            "Add fact-checking steps for important claims"
+          ]
+        },
+        "success_rate": {
+          "description": "Success rate improvement needed",
+          "recommendations": [
+            "Implement better error handling",
+            "Add fallback strategies for failed steps",
+            "Improve task decomposition"
+          ]
+        }
+      }
+    },
+    "timestamp": "2025-01-12T18:50:43.799333"
+  },
+  {
+    "task": "Create a Kubernetes operator that manages database backups.",
+    "plan": {
+      "steps": [],
+      "estimated_time": 0,
+      "confidence": 0.0
+    },
+    "result": {
+      "success": false,
+      "output": null,
+      "confidence": 0.0,
+      "success_rate": 0.0,
+      "steps": []
+    },
+    "evaluation": {
+      "success": false,
+      "performance_score": 0.3333333333333333,
+      "areas_for_improvement": [
+        "confidence",
+        "success_rate"
+      ],
+      "metrics": {
+        "execution_time": 0.0,
+        "tool_usage_counts": {},
+        "steps_taken": 0,
+        "success_rate": 0.0,
+        "average_confidence": 0.0
+      },
+      "suggestions": {
+        "confidence": {
+          "description": "Confidence improvement needed",
+          "recommendations": [
+            "Implement cross-verification of results",
+            "Use multiple sources for critical information",
+            "Add fact-checking steps for important claims"
+          ]
+        },
+        "success_rate": {
+          "description": "Success rate improvement needed",
+          "recommendations": [
+            "Implement better error handling",
+            "Add fallback strategies for failed steps",
+            "Improve task decomposition"
+          ]
+        }
+      }
+    },
+    "timestamp": "2025-01-12T18:50:43.817941"
+  },
+  {
+    "task": "Find the most cited academic papers in machine learning from 2023.",
+    "plan": {
+      "steps": [
+        {
+          "type": "research",
+          "description": "Perform web research",
+          "tool": "google_search",
+          "params": {
+            "query": "Find the most cited academic papers in machine learning from 2023."
+          }
+        }
+      ],
+      "estimated_time": 30,
+      "confidence": 0.8
+    },
+    "result": {
+      "success": false,
+      "output": null,
+      "confidence": 0.8,
+      "success_rate": 0.0,
+      "steps": [
+        {
+          "type": "research",
+          "description": "Perform web research",
+          "result": null
+        }
+      ]
+    },
+    "evaluation": {
+      "success": false,
+      "performance_score": 0.3333333333333333,
+      "areas_for_improvement": [
+        "confidence",
+        "success_rate"
+      ],
+      "metrics": {
+        "execution_time": 0.0,
+        "tool_usage_counts": {},
+        "steps_taken": 1,
+        "success_rate": 0.0,
+        "average_confidence": 0.0
+      },
+      "suggestions": {
+        "confidence": {
+          "description": "Confidence improvement needed",
+          "recommendations": [
+            "Implement cross-verification of results",
+            "Use multiple sources for critical information",
+            "Add fact-checking steps for important claims"
+          ]
+        },
+        "success_rate": {
+          "description": "Success rate improvement needed",
+          "recommendations": [
+            "Implement better error handling",
+            "Add fallback strategies for failed steps",
+            "Improve task decomposition"
+          ]
+        }
+      }
+    },
+    "timestamp": "2025-01-12T18:50:45.413831"
+  },
+  {
+    "task": "Create a Python function that implements the PageRank algorithm.",
+    "plan": {
+      "steps": [
+        {
+          "type": "code",
+          "description": "Generate code",
+          "tool": "code_generator",
+          "params": {
+            "prompt": "Create a Python function that implements the PageRank algorithm."
+          }
+        }
+      ],
+      "estimated_time": 20,
+      "confidence": 0.8
+    },
+    "result": {
+      "success": false,
+      "output": null,
+      "confidence": 0.8,
+      "success_rate": 0.0,
+      "steps": [
+        {
+          "type": "code",
+          "description": "Generate code",
+          "result": null
+        }
+      ]
+    },
+    "evaluation": {
+      "success": false,
+      "performance_score": 0.3333333333333333,
+      "areas_for_improvement": [
+        "confidence",
+        "success_rate"
+      ],
+      "metrics": {
+        "execution_time": 0.0,
+        "tool_usage_counts": {},
+        "steps_taken": 1,
+        "success_rate": 0.0,
+        "average_confidence": 0.0
+      },
+      "suggestions": {
+        "confidence": {
+          "description": "Confidence improvement needed",
+          "recommendations": [
+            "Implement cross-verification of results",
+            "Use multiple sources for critical information",
+            "Add fact-checking steps for important claims"
+          ]
+        },
+        "success_rate": {
+          "description": "Success rate improvement needed",
+          "recommendations": [
+            "Implement better error handling",
+            "Add fallback strategies for failed steps",
+            "Improve task decomposition"
+          ]
+        }
+      }
+    },
+    "timestamp": "2025-01-12T18:50:45.432928"
+  },
+  {
+    "task": "Write a React component that implements an infinite scrolling list with virtualization.",
+    "plan": {
+      "steps": [
+        {
+          "type": "code",
+          "description": "Generate code",
+          "tool": "code_generator",
+          "params": {
+            "prompt": "Write a React component that implements an infinite scrolling list with virtualization."
+          }
+        }
+      ],
+      "estimated_time": 20,
+      "confidence": 0.8
+    },
+    "result": {
+      "success": false,
+      "output": null,
+      "confidence": 0.8,
+      "success_rate": 0.0,
+      "steps": [
+        {
+          "type": "code",
+          "description": "Generate code",
+          "result": null
+        }
+      ]
+    },
+    "evaluation": {
+      "success": false,
+      "performance_score": 0.3333333333333333,
+      "areas_for_improvement": [
+        "confidence",
+        "success_rate"
+      ],
+      "metrics": {
+        "execution_time": 0.0,
+        "tool_usage_counts": {},
+        "steps_taken": 1,
+        "success_rate": 0.0,
+        "average_confidence": 0.0
+      },
+      "suggestions": {
+        "confidence": {
+          "description": "Confidence improvement needed",
+          "recommendations": [
+            "Implement cross-verification of results",
+            "Use multiple sources for critical information",
+            "Add fact-checking steps for important claims"
+          ]
+        },
+        "success_rate": {
+          "description": "Success rate improvement needed",
+          "recommendations": [
+            "Implement better error handling",
+            "Add fallback strategies for failed steps",
+            "Improve task decomposition"
+          ]
+        }
+      }
+    },
+    "timestamp": "2025-01-12T18:50:45.449593"
+  },
+  {
+    "task": "Summarize the key findings from the latest IPCC climate report.",
+    "plan": {
+      "steps": [
+        {
+          "type": "research",
+          "description": "Perform web research",
+          "tool": "google_search",
+          "params": {
+            "query": "Summarize the key findings from the latest IPCC climate report."
+          }
+        }
+      ],
+      "estimated_time": 30,
+      "confidence": 0.8
+    },
+    "result": {
+      "success": false,
+      "output": null,
+      "confidence": 0.8,
+      "success_rate": 0.0,
+      "steps": [
+        {
+          "type": "research",
+          "description": "Perform web research",
+          "result": null
+        }
+      ]
+    },
+    "evaluation": {
+      "success": false,
+      "performance_score": 0.3333333333333333,
+      "areas_for_improvement": [
+        "confidence",
+        "success_rate"
+      ],
+      "metrics": {
+        "execution_time": 0.0,
+        "tool_usage_counts": {},
+        "steps_taken": 1,
+        "success_rate": 0.0,
+        "average_confidence": 0.0
+      },
+      "suggestions": {
+        "confidence": {
+          "description": "Confidence improvement needed",
+          "recommendations": [
+            "Implement cross-verification of results",
+            "Use multiple sources for critical information",
+            "Add fact-checking steps for important claims"
+          ]
+        },
+        "success_rate": {
+          "description": "Success rate improvement needed",
+          "recommendations": [
+            "Implement better error handling",
+            "Add fallback strategies for failed steps",
+            "Improve task decomposition"
+          ]
+        }
+      }
+    },
+    "timestamp": "2025-01-12T18:50:45.475971"
+  },
+  {
+    "task": "Implement a distributed rate limiter in Go with Redis backend.",
+    "plan": {
+      "steps": [
+        {
+          "type": "code",
+          "description": "Generate code",
+          "tool": "code_generator",
+          "params": {
+            "prompt": "Implement a distributed rate limiter in Go with Redis backend."
+          }
+        }
+      ],
+      "estimated_time": 20,
+      "confidence": 0.8
+    },
+    "result": {
+      "success": false,
+      "output": null,
+      "confidence": 0.8,
+      "success_rate": 0.0,
+      "steps": [
+        {
+          "type": "code",
+          "description": "Generate code",
+          "result": null
+        }
+      ]
+    },
+    "evaluation": {
+      "success": false,
+      "performance_score": 0.3333333333333333,
+      "areas_for_improvement": [
+        "confidence",
+        "success_rate"
+      ],
+      "metrics": {
+        "execution_time": 0.0,
+        "tool_usage_counts": {},
+        "steps_taken": 1,
+        "success_rate": 0.0,
+        "average_confidence": 0.0
+      },
+      "suggestions": {
+        "confidence": {
+          "description": "Confidence improvement needed",
+          "recommendations": [
+            "Implement cross-verification of results",
+            "Use multiple sources for critical information",
+            "Add fact-checking steps for important claims"
+          ]
+        },
+        "success_rate": {
+          "description": "Success rate improvement needed",
+          "recommendations": [
+            "Implement better error handling",
+            "Add fallback strategies for failed steps",
+            "Improve task decomposition"
+          ]
+        }
+      }
+    },
+    "timestamp": "2025-01-12T18:50:45.480452"
+  },
+  {
+    "task": "Write a TypeScript implementation of the Observer pattern with generics.",
+    "plan": {
+      "steps": [
+        {
+          "type": "code",
+          "description": "Generate code",
+          "tool": "code_generator",
+          "params": {
+            "prompt": "Write a TypeScript implementation of the Observer pattern with generics."
+          }
+        }
+      ],
+      "estimated_time": 20,
+      "confidence": 0.8
+    },
+    "result": {
+      "success": false,
+      "output": null,
+      "confidence": 0.8,
+      "success_rate": 0.0,
+      "steps": [
+        {
+          "type": "code",
+          "description": "Generate code",
+          "result": null
+        }
+      ]
+    },
+    "evaluation": {
+      "success": false,
+      "performance_score": 0.3333333333333333,
+      "areas_for_improvement": [
+        "confidence",
+        "success_rate"
+      ],
+      "metrics": {
+        "execution_time": 0.0,
+        "tool_usage_counts": {},
+        "steps_taken": 1,
+        "success_rate": 0.0,
+        "average_confidence": 0.0
+      },
+      "suggestions": {
+        "confidence": {
+          "description": "Confidence improvement needed",
+          "recommendations": [
+            "Implement cross-verification of results",
+            "Use multiple sources for critical information",
+            "Add fact-checking steps for important claims"
+          ]
+        },
+        "success_rate": {
+          "description": "Success rate improvement needed",
+          "recommendations": [
+            "Implement better error handling",
+            "Add fallback strategies for failed steps",
+            "Improve task decomposition"
+          ]
+        }
+      }
+    },
+    "timestamp": "2025-01-12T18:50:45.496526"
+  },
+  {
+    "task": "Implement a microservices architecture diagram using PlantUML.",
+    "plan": {
+      "steps": [
+        {
+          "type": "code",
+          "description": "Generate code",
+          "tool": "code_generator",
+          "params": {
+            "prompt": "Implement a microservices architecture diagram using PlantUML."
+          }
+        }
+      ],
+      "estimated_time": 20,
+      "confidence": 0.8
+    },
+    "result": {
+      "success": false,
+      "output": null,
+      "confidence": 0.8,
+      "success_rate": 0.0,
+      "steps": [
+        {
+          "type": "code",
+          "description": "Generate code",
+          "result": null
+        }
+      ]
+    },
+    "evaluation": {
+      "success": false,
+      "performance_score": 0.3333333333333333,
+      "areas_for_improvement": [
+        "confidence",
+        "success_rate"
+      ],
+      "metrics": {
+        "execution_time": 0.0,
+        "tool_usage_counts": {},
+        "steps_taken": 1,
+        "success_rate": 0.0,
+        "average_confidence": 0.0
+      },
+      "suggestions": {
+        "confidence": {
+          "description": "Confidence improvement needed",
+          "recommendations": [
+            "Implement cross-verification of results",
+            "Use multiple sources for critical information",
+            "Add fact-checking steps for important claims"
+          ]
+        },
+        "success_rate": {
+          "description": "Success rate improvement needed",
+          "recommendations": [
+            "Implement better error handling",
+            "Add fallback strategies for failed steps",
+            "Improve task decomposition"
+          ]
+        }
+      }
+    },
+    "timestamp": "2025-01-12T18:50:45.501251"
+  },
+  {
+    "task": "What were the major archaeological discoveries announced in 2023?",
+    "plan": {
+      "steps": [],
+      "estimated_time": 0,
+      "confidence": 0.0
+    },
+    "result": {
+      "success": false,
+      "output": null,
+      "confidence": 0.0,
+      "success_rate": 0.0,
+      "steps": []
+    },
+    "evaluation": {
+      "success": false,
+      "confidence": 0.0,
+      "quality_score": 0.0,
+      "improvement_areas": [
+        "Increase step success rate",
+        "Improve confidence level"
+      ],
+      "notes": "No results generated",
+      "metadata": {
+        "steps": [],
+        "success_rate": 0.0,
+        "confidence": 0.0
+      }
+    },
+    "timestamp": "2025-01-12T18:54:04.529207"
+  },
+  {
+    "task": "What are the current leading theories about dark matter?",
+    "plan": {
+      "steps": [],
+      "estimated_time": 0,
+      "confidence": 0.0
+    },
+    "result": {
+      "success": false,
+      "output": null,
+      "confidence": 0.0,
+      "success_rate": 0.0,
+      "steps": []
+    },
+    "evaluation": {
+      "success": false,
+      "confidence": 0.0,
+      "quality_score": 0.0,
+      "improvement_areas": [
+        "Increase step success rate",
+        "Improve confidence level"
+      ],
+      "notes": "No results generated",
+      "metadata": {
+        "steps": [],
+        "success_rate": 0.0,
+        "confidence": 0.0
+      }
+    },
+    "timestamp": "2025-01-12T18:54:07.786109"
+  },
+  {
+    "task": "Create a Python script to detect and prevent SQL injection attacks.",
+    "plan": {
+      "steps": [],
+      "estimated_time": 0,
+      "confidence": 0.0
+    },
+    "result": {
+      "success": false,
+      "output": null,
+      "confidence": 0.0,
+      "success_rate": 0.0,
+      "steps": []
+    },
+    "evaluation": {
+      "success": false,
+      "confidence": 0.0,
+      "quality_score": 0.0,
+      "improvement_areas": [
+        "Increase step success rate",
+        "Improve confidence level"
+      ],
+      "notes": "No results generated",
+      "metadata": {
+        "steps": [],
+        "success_rate": 0.0,
+        "confidence": 0.0
+      }
+    },
+    "timestamp": "2025-01-12T18:54:07.801737"
+  },
+  {
+    "task": "What were the major developments in space exploration missions in 2023?",
+    "plan": {
+      "steps": [],
+      "estimated_time": 0,
+      "confidence": 0.0
+    },
+    "result": {
+      "success": false,
+      "output": null,
+      "confidence": 0.0,
+      "success_rate": 0.0,
+      "steps": []
+    },
+    "evaluation": {
+      "success": false,
+      "confidence": 0.0,
+      "quality_score": 0.0,
+      "improvement_areas": [
+        "Increase step success rate",
+        "Improve confidence level"
+      ],
+      "notes": "No results generated",
+      "metadata": {
+        "steps": [],
+        "success_rate": 0.0,
+        "confidence": 0.0
+      }
+    },
+    "timestamp": "2025-01-12T18:54:07.817670"
+  },
+  {
+    "task": "Create a Kubernetes operator that manages database backups.",
+    "plan": {
+      "steps": [],
+      "estimated_time": 0,
+      "confidence": 0.0
+    },
+    "result": {
+      "success": false,
+      "output": null,
+      "confidence": 0.0,
+      "success_rate": 0.0,
+      "steps": []
+    },
+    "evaluation": {
+      "success": false,
+      "confidence": 0.0,
+      "quality_score": 0.0,
+      "improvement_areas": [
+        "Increase step success rate",
+        "Improve confidence level"
+      ],
+      "notes": "No results generated",
+      "metadata": {
+        "steps": [],
+        "success_rate": 0.0,
+        "confidence": 0.0
+      }
+    },
+    "timestamp": "2025-01-12T18:54:07.848536"
+  },
+  {
+    "task": "Find the most cited academic papers in machine learning from 2023.",
+    "plan": {
+      "steps": [
+        {
+          "type": "research",
+          "description": "Perform web research",
+          "tool": "google_search",
+          "params": {
+            "query": "Find the most cited academic papers in machine learning from 2023."
+          }
+        }
+      ],
+      "estimated_time": 30,
+      "confidence": 0.8
+    },
+    "result": {
+      "success": false,
+      "output": null,
+      "confidence": 0.8,
+      "success_rate": 0.0,
+      "steps": [
+        {
+          "type": "research",
+          "description": "Perform web research",
+          "result": null
+        }
+      ]
+    },
+    "evaluation": {
+      "success": false,
+      "confidence": 0.8,
+      "quality_score": 0.0,
+      "improvement_areas": [
+        "Increase step success rate"
+      ],
+      "notes": "No results generated",
+      "metadata": {
+        "steps": [
+          {
+            "type": "research",
+            "description": "Perform web research",
+            "result": null
+          }
+        ],
+        "success_rate": 0.0,
+        "confidence": 0.8
+      }
+    },
+    "timestamp": "2025-01-12T18:54:10.647954"
+  },
+  {
+    "task": "Create a Python function that implements the PageRank algorithm.",
+    "plan": {
+      "steps": [
+        {
+          "type": "code",
+          "description": "Generate code",
+          "tool": "code_generator",
+          "params": {
+            "prompt": "Create a Python function that implements the PageRank algorithm."
+          }
+        }
+      ],
+      "estimated_time": 20,
+      "confidence": 0.8
+    },
+    "result": {
+      "success": false,
+      "output": null,
+      "confidence": 0.8,
+      "success_rate": 0.0,
+      "steps": [
+        {
+          "type": "code",
+          "description": "Generate code",
+          "result": null
+        }
+      ]
+    },
+    "evaluation": {
+      "success": false,
+      "confidence": 0.8,
+      "quality_score": 0.0,
+      "improvement_areas": [
+        "Increase step success rate"
+      ],
+      "notes": "No results generated",
+      "metadata": {
+        "steps": [
+          {
+            "type": "code",
+            "description": "Generate code",
+            "result": null
+          }
+        ],
+        "success_rate": 0.0,
+        "confidence": 0.8
+      }
+    },
+    "timestamp": "2025-01-12T18:54:10.678721"
+  },
+  {
+    "task": "Write a React component that implements an infinite scrolling list with virtualization.",
+    "plan": {
+      "steps": [
+        {
+          "type": "code",
+          "description": "Generate code",
+          "tool": "code_generator",
+          "params": {
+            "prompt": "Write a React component that implements an infinite scrolling list with virtualization."
+          }
+        }
+      ],
+      "estimated_time": 20,
+      "confidence": 0.8
+    },
+    "result": {
+      "success": false,
+      "output": null,
+      "confidence": 0.8,
+      "success_rate": 0.0,
+      "steps": [
+        {
+          "type": "code",
+          "description": "Generate code",
+          "result": null
+        }
+      ]
+    },
+    "evaluation": {
+      "success": false,
+      "confidence": 0.8,
+      "quality_score": 0.0,
+      "improvement_areas": [
+        "Increase step success rate"
+      ],
+      "notes": "No results generated",
+      "metadata": {
+        "steps": [
+          {
+            "type": "code",
+            "description": "Generate code",
+            "result": null
+          }
+        ],
+        "success_rate": 0.0,
+        "confidence": 0.8
+      }
+    },
+    "timestamp": "2025-01-12T18:54:10.709916"
+  },
+  {
+    "task": "Summarize the key findings from the latest IPCC climate report.",
+    "plan": {
+      "steps": [
+        {
+          "type": "research",
+          "description": "Perform web research",
+          "tool": "google_search",
+          "params": {
+            "query": "Summarize the key findings from the latest IPCC climate report."
+          }
+        }
+      ],
+      "estimated_time": 30,
+      "confidence": 0.8
+    },
+    "result": {
+      "success": false,
+      "output": null,
+      "confidence": 0.8,
+      "success_rate": 0.0,
+      "steps": [
+        {
+          "type": "research",
+          "description": "Perform web research",
+          "result": null
+        }
+      ]
+    },
+    "evaluation": {
+      "success": false,
+      "confidence": 0.8,
+      "quality_score": 0.0,
+      "improvement_areas": [
+        "Increase step success rate"
+      ],
+      "notes": "No results generated",
+      "metadata": {
+        "steps": [
+          {
+            "type": "research",
+            "description": "Perform web research",
+            "result": null
+          }
+        ],
+        "success_rate": 0.0,
+        "confidence": 0.8
+      }
+    },
+    "timestamp": "2025-01-12T18:54:10.725536"
+  },
+  {
+    "task": "Implement a distributed rate limiter in Go with Redis backend.",
+    "plan": {
+      "steps": [
+        {
+          "type": "code",
+          "description": "Generate code",
+          "tool": "code_generator",
+          "params": {
+            "prompt": "Implement a distributed rate limiter in Go with Redis backend."
+          }
+        }
+      ],
+      "estimated_time": 20,
+      "confidence": 0.8
+    },
+    "result": {
+      "success": false,
+      "output": null,
+      "confidence": 0.8,
+      "success_rate": 0.0,
+      "steps": [
+        {
+          "type": "code",
+          "description": "Generate code",
+          "result": null
+        }
+      ]
+    },
+    "evaluation": {
+      "success": false,
+      "confidence": 0.8,
+      "quality_score": 0.0,
+      "improvement_areas": [
+        "Increase step success rate"
+      ],
+      "notes": "No results generated",
+      "metadata": {
+        "steps": [
+          {
+            "type": "code",
+            "description": "Generate code",
+            "result": null
+          }
+        ],
+        "success_rate": 0.0,
+        "confidence": 0.8
+      }
+    },
+    "timestamp": "2025-01-12T18:54:10.741414"
+  },
+  {
+    "task": "Write a TypeScript implementation of the Observer pattern with generics.",
+    "plan": {
+      "steps": [
+        {
+          "type": "code",
+          "description": "Generate code",
+          "tool": "code_generator",
+          "params": {
+            "prompt": "Write a TypeScript implementation of the Observer pattern with generics."
+          }
+        }
+      ],
+      "estimated_time": 20,
+      "confidence": 0.8
+    },
+    "result": {
+      "success": false,
+      "output": null,
+      "confidence": 0.8,
+      "success_rate": 0.0,
+      "steps": [
+        {
+          "type": "code",
+          "description": "Generate code",
+          "result": null
+        }
+      ]
+    },
+    "evaluation": {
+      "success": false,
+      "confidence": 0.8,
+      "quality_score": 0.0,
+      "improvement_areas": [
+        "Increase step success rate"
+      ],
+      "notes": "No results generated",
+      "metadata": {
+        "steps": [
+          {
+            "type": "code",
+            "description": "Generate code",
+            "result": null
+          }
+        ],
+        "success_rate": 0.0,
+        "confidence": 0.8
+      }
+    },
+    "timestamp": "2025-01-12T18:54:10.757041"
+  },
+  {
+    "task": "Implement a microservices architecture diagram using PlantUML.",
+    "plan": {
+      "steps": [
+        {
+          "type": "code",
+          "description": "Generate code",
+          "tool": "code_generator",
+          "params": {
+            "prompt": "Implement a microservices architecture diagram using PlantUML."
+          }
+        }
+      ],
+      "estimated_time": 20,
+      "confidence": 0.8
+    },
+    "result": {
+      "success": false,
+      "output": null,
+      "confidence": 0.8,
+      "success_rate": 0.0,
+      "steps": [
+        {
+          "type": "code",
+          "description": "Generate code",
+          "result": null
+        }
+      ]
+    },
+    "evaluation": {
+      "success": false,
+      "confidence": 0.8,
+      "quality_score": 0.0,
+      "improvement_areas": [
+        "Increase step success rate"
+      ],
+      "notes": "No results generated",
+      "metadata": {
+        "steps": [
+          {
+            "type": "code",
+            "description": "Generate code",
+            "result": null
+          }
+        ],
+        "success_rate": 0.0,
+        "confidence": 0.8
+      }
+    },
+    "timestamp": "2025-01-12T18:54:10.772662"
+  },
+  {
+    "task": "What were the major archaeological discoveries announced in 2023?",
+    "plan": {
+      "steps": [],
+      "estimated_time": 0,
+      "confidence": 0.0
+    },
+    "result": {
+      "success": false,
+      "output": null,
+      "confidence": 0.0,
+      "success_rate": 0,
+      "steps": []
+    },
+    "evaluation": {
+      "success": false,
+      "confidence": 0.0,
+      "quality_score": 0.0,
+      "improvement_areas": [
+        "Increase step success rate",
+        "Improve confidence level"
+      ],
+      "notes": "No results generated",
+      "metadata": {
+        "steps": [],
+        "success_rate": 0,
+        "confidence": 0.0
+      }
+    },
+    "timestamp": "2025-01-12T18:56:40.292197"
+  },
+  {
+    "task": "What are the current leading theories about dark matter?",
+    "plan": {
+      "steps": [],
+      "estimated_time": 0,
+      "confidence": 0.0
+    },
+    "result": {
+      "success": false,
+      "output": null,
+      "confidence": 0.0,
+      "success_rate": 0,
+      "steps": []
+    },
+    "evaluation": {
+      "success": false,
+      "confidence": 0.0,
+      "quality_score": 0.0,
+      "improvement_areas": [
+        "Increase step success rate",
+        "Improve confidence level"
+      ],
+      "notes": "No results generated",
+      "metadata": {
+        "steps": [],
+        "success_rate": 0,
+        "confidence": 0.0
+      }
+    },
+    "timestamp": "2025-01-12T18:56:43.726486"
+  },
+  {
+    "task": "Create a Python script to detect and prevent SQL injection attacks.",
+    "plan": {
+      "steps": [],
+      "estimated_time": 0,
+      "confidence": 0.0
+    },
+    "result": {
+      "success": false,
+      "output": null,
+      "confidence": 0.0,
+      "success_rate": 0,
+      "steps": []
+    },
+    "evaluation": {
+      "success": false,
+      "confidence": 0.0,
+      "quality_score": 0.0,
+      "improvement_areas": [
+        "Increase step success rate",
+        "Improve confidence level"
+      ],
+      "notes": "No results generated",
+      "metadata": {
+        "steps": [],
+        "success_rate": 0,
+        "confidence": 0.0
+      }
+    },
+    "timestamp": "2025-01-12T18:56:43.749119"
+  },
+  {
+    "task": "What were the major developments in space exploration missions in 2023?",
+    "plan": {
+      "steps": [],
+      "estimated_time": 0,
+      "confidence": 0.0
+    },
+    "result": {
+      "success": false,
+      "output": null,
+      "confidence": 0.0,
+      "success_rate": 0,
+      "steps": []
+    },
+    "evaluation": {
+      "success": false,
+      "confidence": 0.0,
+      "quality_score": 0.0,
+      "improvement_areas": [
+        "Increase step success rate",
+        "Improve confidence level"
+      ],
+      "notes": "No results generated",
+      "metadata": {
+        "steps": [],
+        "success_rate": 0,
+        "confidence": 0.0
+      }
+    },
+    "timestamp": "2025-01-12T18:56:43.781397"
+  },
+  {
+    "task": "Create a Kubernetes operator that manages database backups.",
+    "plan": {
+      "steps": [],
+      "estimated_time": 0,
+      "confidence": 0.0
+    },
+    "result": {
+      "success": false,
+      "output": null,
+      "confidence": 0.0,
+      "success_rate": 0,
+      "steps": []
+    },
+    "evaluation": {
+      "success": false,
+      "confidence": 0.0,
+      "quality_score": 0.0,
+      "improvement_areas": [
+        "Increase step success rate",
+        "Improve confidence level"
+      ],
+      "notes": "No results generated",
+      "metadata": {
+        "steps": [],
+        "success_rate": 0,
+        "confidence": 0.0
+      }
+    },
+    "timestamp": "2025-01-12T18:56:43.812484"
+  },
+  {
+    "task": "Find the most cited academic papers in machine learning from 2023.",
+    "plan": {
+      "steps": [
+        {
+          "type": "research",
+          "description": "Perform web research",
+          "tool": "google_search",
+          "params": {
+            "query": "Find the most cited academic papers in machine learning from 2023."
+          }
+        }
+      ],
+      "estimated_time": 30,
+      "confidence": 0.8
+    },
+    "result": {
+      "success": false,
+      "output": null,
+      "confidence": 0.0,
+      "success_rate": 0.0,
+      "steps": [
+        {
+          "type": "research",
+          "description": "Perform web research",
+          "tool": "google_search",
+          "success": false,
+          "error": "object str can't be used in 'await' expression",
+          "result": null
+        }
+      ]
+    },
+    "evaluation": {
+      "success": false,
+      "confidence": 0.0,
+      "quality_score": 0.0,
+      "improvement_areas": [
+        "Increase step success rate",
+        "Improve confidence level"
+      ],
+      "notes": "No results generated",
+      "metadata": {
+        "steps": [
+          {
+            "type": "research",
+            "description": "Perform web research",
+            "tool": "google_search",
+            "success": false,
+            "error": "object str can't be used in 'await' expression",
+            "result": null
+          }
+        ],
+        "success_rate": 0.0,
+        "confidence": 0.0
+      }
+    },
+    "timestamp": "2025-01-12T18:56:47.568507"
+  },
+  {
+    "task": "Create a Python function that implements the PageRank algorithm.",
+    "plan": {
+      "steps": [
+        {
+          "type": "code",
+          "description": "Generate code",
+          "tool": "code_generator",
+          "params": {
+            "prompt": "Create a Python function that implements the PageRank algorithm."
+          }
+        }
+      ],
+      "estimated_time": 20,
+      "confidence": 0.8
+    },
+    "result": {
+      "success": false,
+      "output": null,
+      "confidence": 0.0,
+      "success_rate": 0.0,
+      "steps": [
+        {
+          "type": "code",
+          "description": "Generate code",
+          "tool": "code_generator",
+          "success": false,
+          "error": "\"Tool 'code_generator' not found\"",
+          "result": null
+        }
+      ]
+    },
+    "evaluation": {
+      "success": false,
+      "confidence": 0.0,
+      "quality_score": 0.0,
+      "improvement_areas": [
+        "Increase step success rate",
+        "Improve confidence level"
+      ],
+      "notes": "No results generated",
+      "metadata": {
+        "steps": [
+          {
+            "type": "code",
+            "description": "Generate code",
+            "tool": "code_generator",
+            "success": false,
+            "error": "\"Tool 'code_generator' not found\"",
+            "result": null
+          }
+        ],
+        "success_rate": 0.0,
+        "confidence": 0.0
+      }
+    },
+    "timestamp": "2025-01-12T18:56:47.594126"
+  },
+  {
+    "task": "Write a React component that implements an infinite scrolling list with virtualization.",
+    "plan": {
+      "steps": [
+        {
+          "type": "code",
+          "description": "Generate code",
+          "tool": "code_generator",
+          "params": {
+            "prompt": "Write a React component that implements an infinite scrolling list with virtualization."
+          }
+        }
+      ],
+      "estimated_time": 20,
+      "confidence": 0.8
+    },
+    "result": {
+      "success": false,
+      "output": null,
+      "confidence": 0.0,
+      "success_rate": 0.0,
+      "steps": [
+        {
+          "type": "code",
+          "description": "Generate code",
+          "tool": "code_generator",
+          "success": false,
+          "error": "\"Tool 'code_generator' not found\"",
+          "result": null
+        }
+      ]
+    },
+    "evaluation": {
+      "success": false,
+      "confidence": 0.0,
+      "quality_score": 0.0,
+      "improvement_areas": [
+        "Increase step success rate",
+        "Improve confidence level"
+      ],
+      "notes": "No results generated",
+      "metadata": {
+        "steps": [
+          {
+            "type": "code",
+            "description": "Generate code",
+            "tool": "code_generator",
+            "success": false,
+            "error": "\"Tool 'code_generator' not found\"",
+            "result": null
+          }
+        ],
+        "success_rate": 0.0,
+        "confidence": 0.0
+      }
+    },
+    "timestamp": "2025-01-12T18:56:47.628956"
+  },
+  {
+    "task": "Summarize the key findings from the latest IPCC climate report.",
+    "plan": {
+      "steps": [
+        {
+          "type": "research",
+          "description": "Perform web research",
+          "tool": "google_search",
+          "params": {
+            "query": "Summarize the key findings from the latest IPCC climate report."
+          }
+        }
+      ],
+      "estimated_time": 30,
+      "confidence": 0.8
+    },
+    "result": {
+      "success": false,
+      "output": null,
+      "confidence": 0.0,
+      "success_rate": 0.0,
+      "steps": [
+        {
+          "type": "research",
+          "description": "Perform web research",
+          "tool": "google_search",
+          "success": false,
+          "error": "object str can't be used in 'await' expression",
+          "result": null
+        }
+      ]
+    },
+    "evaluation": {
+      "success": false,
+      "confidence": 0.0,
+      "quality_score": 0.0,
+      "improvement_areas": [
+        "Increase step success rate",
+        "Improve confidence level"
+      ],
+      "notes": "No results generated",
+      "metadata": {
+        "steps": [
+          {
+            "type": "research",
+            "description": "Perform web research",
+            "tool": "google_search",
+            "success": false,
+            "error": "object str can't be used in 'await' expression",
+            "result": null
+          }
+        ],
+        "success_rate": 0.0,
+        "confidence": 0.0
+      }
+    },
+    "timestamp": "2025-01-12T18:56:47.653269"
+  },
+  {
+    "task": "Implement a distributed rate limiter in Go with Redis backend.",
+    "plan": {
+      "steps": [
+        {
+          "type": "code",
+          "description": "Generate code",
+          "tool": "code_generator",
+          "params": {
+            "prompt": "Implement a distributed rate limiter in Go with Redis backend."
+          }
+        }
+      ],
+      "estimated_time": 20,
+      "confidence": 0.8
+    },
+    "result": {
+      "success": false,
+      "output": null,
+      "confidence": 0.0,
+      "success_rate": 0.0,
+      "steps": [
+        {
+          "type": "code",
+          "description": "Generate code",
+          "tool": "code_generator",
+          "success": false,
+          "error": "\"Tool 'code_generator' not found\"",
+          "result": null
+        }
+      ]
+    },
+    "evaluation": {
+      "success": false,
+      "confidence": 0.0,
+      "quality_score": 0.0,
+      "improvement_areas": [
+        "Increase step success rate",
+        "Improve confidence level"
+      ],
+      "notes": "No results generated",
+      "metadata": {
+        "steps": [
+          {
+            "type": "code",
+            "description": "Generate code",
+            "tool": "code_generator",
+            "success": false,
+            "error": "\"Tool 'code_generator' not found\"",
+            "result": null
+          }
+        ],
+        "success_rate": 0.0,
+        "confidence": 0.0
+      }
+    },
+    "timestamp": "2025-01-12T18:56:47.693424"
+  },
+  {
+    "task": "Write a TypeScript implementation of the Observer pattern with generics.",
+    "plan": {
+      "steps": [
+        {
+          "type": "code",
+          "description": "Generate code",
+          "tool": "code_generator",
+          "params": {
+            "prompt": "Write a TypeScript implementation of the Observer pattern with generics."
+          }
+        }
+      ],
+      "estimated_time": 20,
+      "confidence": 0.8
+    },
+    "result": {
+      "success": false,
+      "output": null,
+      "confidence": 0.0,
+      "success_rate": 0.0,
+      "steps": [
+        {
+          "type": "code",
+          "description": "Generate code",
+          "tool": "code_generator",
+          "success": false,
+          "error": "\"Tool 'code_generator' not found\"",
+          "result": null
+        }
+      ]
+    },
+    "evaluation": {
+      "success": false,
+      "confidence": 0.0,
+      "quality_score": 0.0,
+      "improvement_areas": [
+        "Increase step success rate",
+        "Improve confidence level"
+      ],
+      "notes": "No results generated",
+      "metadata": {
+        "steps": [
+          {
+            "type": "code",
+            "description": "Generate code",
+            "tool": "code_generator",
+            "success": false,
+            "error": "\"Tool 'code_generator' not found\"",
+            "result": null
+          }
+        ],
+        "success_rate": 0.0,
+        "confidence": 0.0
+      }
+    },
+    "timestamp": "2025-01-12T18:56:47.717901"
+  },
+  {
+    "task": "Implement a microservices architecture diagram using PlantUML.",
+    "plan": {
+      "steps": [
+        {
+          "type": "code",
+          "description": "Generate code",
+          "tool": "code_generator",
+          "params": {
+            "prompt": "Implement a microservices architecture diagram using PlantUML."
+          }
+        }
+      ],
+      "estimated_time": 20,
+      "confidence": 0.8
+    },
+    "result": {
+      "success": false,
+      "output": null,
+      "confidence": 0.0,
+      "success_rate": 0.0,
+      "steps": [
+        {
+          "type": "code",
+          "description": "Generate code",
+          "tool": "code_generator",
+          "success": false,
+          "error": "\"Tool 'code_generator' not found\"",
+          "result": null
+        }
+      ]
+    },
+    "evaluation": {
+      "success": false,
+      "confidence": 0.0,
+      "quality_score": 0.0,
+      "improvement_areas": [
+        "Increase step success rate",
+        "Improve confidence level"
+      ],
+      "notes": "No results generated",
+      "metadata": {
+        "steps": [
+          {
+            "type": "code",
+            "description": "Generate code",
+            "tool": "code_generator",
+            "success": false,
+            "error": "\"Tool 'code_generator' not found\"",
+            "result": null
+          }
+        ],
+        "success_rate": 0.0,
+        "confidence": 0.0
+      }
+    },
+    "timestamp": "2025-01-12T18:56:47.747451"
+  },
+  {
+    "task": "What were the major archaeological discoveries announced in 2023?",
+    "plan": {
+      "steps": [],
+      "estimated_time": 0,
+      "confidence": 0.0
+    },
+    "result": {
+      "success": false,
+      "output": null,
+      "confidence": 0.0,
+      "success_rate": 0,
+      "steps": []
+    },
+    "evaluation": {
+      "success": false,
+      "confidence": 0.0,
+      "quality_score": 0.0,
+      "improvement_areas": [
+        "Increase step success rate",
+        "Improve confidence level"
+      ],
+      "notes": "No results generated",
+      "metadata": {
+        "steps": [],
+        "success_rate": 0,
+        "confidence": 0.0
+      }
+    },
+    "timestamp": "2025-01-12T18:59:28.716528"
+  },
+  {
+    "task": "What are the current leading theories about dark matter?",
+    "plan": {
+      "steps": [],
+      "estimated_time": 0,
+      "confidence": 0.0
+    },
+    "result": {
+      "success": false,
+      "output": null,
+      "confidence": 0.0,
+      "success_rate": 0,
+      "steps": []
+    },
+    "evaluation": {
+      "success": false,
+      "confidence": 0.0,
+      "quality_score": 0.0,
+      "improvement_areas": [
+        "Increase step success rate",
+        "Improve confidence level"
+      ],
+      "notes": "No results generated",
+      "metadata": {
+        "steps": [],
+        "success_rate": 0,
+        "confidence": 0.0
+      }
+    },
+    "timestamp": "2025-01-12T18:59:32.015344"
+  },
+  {
+    "task": "Create a Python script to detect and prevent SQL injection attacks.",
+    "plan": {
+      "steps": [],
+      "estimated_time": 0,
+      "confidence": 0.0
+    },
+    "result": {
+      "success": false,
+      "output": null,
+      "confidence": 0.0,
+      "success_rate": 0,
+      "steps": []
+    },
+    "evaluation": {
+      "success": false,
+      "confidence": 0.0,
+      "quality_score": 0.0,
+      "improvement_areas": [
+        "Increase step success rate",
+        "Improve confidence level"
+      ],
+      "notes": "No results generated",
+      "metadata": {
+        "steps": [],
+        "success_rate": 0,
+        "confidence": 0.0
+      }
+    },
+    "timestamp": "2025-01-12T18:59:32.052504"
+  },
+  {
+    "task": "What were the major developments in space exploration missions in 2023?",
+    "plan": {
+      "steps": [],
+      "estimated_time": 0,
+      "confidence": 0.0
+    },
+    "result": {
+      "success": false,
+      "output": null,
+      "confidence": 0.0,
+      "success_rate": 0,
+      "steps": []
+    },
+    "evaluation": {
+      "success": false,
+      "confidence": 0.0,
+      "quality_score": 0.0,
+      "improvement_areas": [
+        "Increase step success rate",
+        "Improve confidence level"
+      ],
+      "notes": "No results generated",
+      "metadata": {
+        "steps": [],
+        "success_rate": 0,
+        "confidence": 0.0
+      }
+    },
+    "timestamp": "2025-01-12T18:59:32.076056"
+  },
+  {
+    "task": "Create a Kubernetes operator that manages database backups.",
+    "plan": {
+      "steps": [],
+      "estimated_time": 0,
+      "confidence": 0.0
+    },
+    "result": {
+      "success": false,
+      "output": null,
+      "confidence": 0.0,
+      "success_rate": 0,
+      "steps": []
+    },
+    "evaluation": {
+      "success": false,
+      "confidence": 0.0,
+      "quality_score": 0.0,
+      "improvement_areas": [
+        "Increase step success rate",
+        "Improve confidence level"
+      ],
+      "notes": "No results generated",
+      "metadata": {
+        "steps": [],
+        "success_rate": 0,
+        "confidence": 0.0
+      }
+    },
+    "timestamp": "2025-01-12T18:59:32.103428"
+  },
+  {
+    "task": "Create a Python function that implements the PageRank algorithm.",
+    "plan": {
+      "steps": [
+        {
+          "type": "code",
+          "description": "Generate code",
+          "tool": "code_generator",
+          "params": {
+            "prompt": "Create a Python function that implements the PageRank algorithm."
+          }
+        }
+      ],
+      "estimated_time": 20,
+      "confidence": 0.8
+    },
+    "result": {
+      "success": false,
+      "output": null,
+      "confidence": 0.0,
+      "success_rate": 0.0,
+      "steps": [
+        {
+          "type": "code",
+          "description": "Generate code",
+          "tool": "code_generator",
+          "success": false,
+          "error": "\"Tool 'code_generator' not found\"",
+          "result": null
+        }
+      ]
+    },
+    "evaluation": {
+      "success": false,
+      "confidence": 0.0,
+      "quality_score": 0.0,
+      "improvement_areas": [
+        "Increase step success rate",
+        "Improve confidence level"
+      ],
+      "notes": "No results generated",
+      "metadata": {
+        "steps": [
+          {
+            "type": "code",
+            "description": "Generate code",
+            "tool": "code_generator",
+            "success": false,
+            "error": "\"Tool 'code_generator' not found\"",
+            "result": null
+          }
+        ],
+        "success_rate": 0.0,
+        "confidence": 0.0
+      }
+    },
+    "timestamp": "2025-01-12T18:59:32.159858"
+  },
+  {
+    "task": "Write a React component that implements an infinite scrolling list with virtualization.",
+    "plan": {
+      "steps": [
+        {
+          "type": "code",
+          "description": "Generate code",
+          "tool": "code_generator",
+          "params": {
+            "prompt": "Write a React component that implements an infinite scrolling list with virtualization."
+          }
+        }
+      ],
+      "estimated_time": 20,
+      "confidence": 0.8
+    },
+    "result": {
+      "success": false,
+      "output": null,
+      "confidence": 0.0,
+      "success_rate": 0.0,
+      "steps": [
+        {
+          "type": "code",
+          "description": "Generate code",
+          "tool": "code_generator",
+          "success": false,
+          "error": "\"Tool 'code_generator' not found\"",
+          "result": null
+        }
+      ]
+    },
+    "evaluation": {
+      "success": false,
+      "confidence": 0.0,
+      "quality_score": 0.0,
+      "improvement_areas": [
+        "Increase step success rate",
+        "Improve confidence level"
+      ],
+      "notes": "No results generated",
+      "metadata": {
+        "steps": [
+          {
+            "type": "code",
+            "description": "Generate code",
+            "tool": "code_generator",
+            "success": false,
+            "error": "\"Tool 'code_generator' not found\"",
+            "result": null
+          }
+        ],
+        "success_rate": 0.0,
+        "confidence": 0.0
+      }
+    },
+    "timestamp": "2025-01-12T18:59:32.186759"
+  },
+  {
+    "task": "Implement a distributed rate limiter in Go with Redis backend.",
+    "plan": {
+      "steps": [
+        {
+          "type": "code",
+          "description": "Generate code",
+          "tool": "code_generator",
+          "params": {
+            "prompt": "Implement a distributed rate limiter in Go with Redis backend."
+          }
+        }
+      ],
+      "estimated_time": 20,
+      "confidence": 0.8
+    },
+    "result": {
+      "success": false,
+      "output": null,
+      "confidence": 0.0,
+      "success_rate": 0.0,
+      "steps": [
+        {
+          "type": "code",
+          "description": "Generate code",
+          "tool": "code_generator",
+          "success": false,
+          "error": "\"Tool 'code_generator' not found\"",
+          "result": null
+        }
+      ]
+    },
+    "evaluation": {
+      "success": false,
+      "confidence": 0.0,
+      "quality_score": 0.0,
+      "improvement_areas": [
+        "Increase step success rate",
+        "Improve confidence level"
+      ],
+      "notes": "No results generated",
+      "metadata": {
+        "steps": [
+          {
+            "type": "code",
+            "description": "Generate code",
+            "tool": "code_generator",
+            "success": false,
+            "error": "\"Tool 'code_generator' not found\"",
+            "result": null
+          }
+        ],
+        "success_rate": 0.0,
+        "confidence": 0.0
+      }
+    },
+    "timestamp": "2025-01-12T18:59:32.214111"
+  },
+  {
+    "task": "Write a TypeScript implementation of the Observer pattern with generics.",
+    "plan": {
+      "steps": [
+        {
+          "type": "code",
+          "description": "Generate code",
+          "tool": "code_generator",
+          "params": {
+            "prompt": "Write a TypeScript implementation of the Observer pattern with generics."
+          }
+        }
+      ],
+      "estimated_time": 20,
+      "confidence": 0.8
+    },
+    "result": {
+      "success": false,
+      "output": null,
+      "confidence": 0.0,
+      "success_rate": 0.0,
+      "steps": [
+        {
+          "type": "code",
+          "description": "Generate code",
+          "tool": "code_generator",
+          "success": false,
+          "error": "\"Tool 'code_generator' not found\"",
+          "result": null
+        }
+      ]
+    },
+    "evaluation": {
+      "success": false,
+      "confidence": 0.0,
+      "quality_score": 0.0,
+      "improvement_areas": [
+        "Increase step success rate",
+        "Improve confidence level"
+      ],
+      "notes": "No results generated",
+      "metadata": {
+        "steps": [
+          {
+            "type": "code",
+            "description": "Generate code",
+            "tool": "code_generator",
+            "success": false,
+            "error": "\"Tool 'code_generator' not found\"",
+            "result": null
+          }
+        ],
+        "success_rate": 0.0,
+        "confidence": 0.0
+      }
+    },
+    "timestamp": "2025-01-12T18:59:32.242241"
+  },
+  {
+    "task": "Implement a microservices architecture diagram using PlantUML.",
+    "plan": {
+      "steps": [
+        {
+          "type": "code",
+          "description": "Generate code",
+          "tool": "code_generator",
+          "params": {
+            "prompt": "Implement a microservices architecture diagram using PlantUML."
+          }
+        }
+      ],
+      "estimated_time": 20,
+      "confidence": 0.8
+    },
+    "result": {
+      "success": false,
+      "output": null,
+      "confidence": 0.0,
+      "success_rate": 0.0,
+      "steps": [
+        {
+          "type": "code",
+          "description": "Generate code",
+          "tool": "code_generator",
+          "success": false,
+          "error": "\"Tool 'code_generator' not found\"",
+          "result": null
+        }
+      ]
+    },
+    "evaluation": {
+      "success": false,
+      "confidence": 0.0,
+      "quality_score": 0.0,
+      "improvement_areas": [
+        "Increase step success rate",
+        "Improve confidence level"
+      ],
+      "notes": "No results generated",
+      "metadata": {
+        "steps": [
+          {
+            "type": "code",
+            "description": "Generate code",
+            "tool": "code_generator",
+            "success": false,
+            "error": "\"Tool 'code_generator' not found\"",
+            "result": null
+          }
+        ],
+        "success_rate": 0.0,
+        "confidence": 0.0
+      }
+    },
+    "timestamp": "2025-01-12T18:59:32.257922"
+  },
+  {
+    "task": "Find the most cited academic papers in machine learning from 2023.",
+    "plan": {
+      "steps": [
+        {
+          "type": "research",
+          "description": "Perform web research",
+          "tool": "google_search",
+          "params": {
+            "query": "Find the most cited academic papers in machine learning from 2023."
+          }
+        }
+      ],
+      "estimated_time": 30,
+      "confidence": 0.8
+    },
+    "result": {
+      "success": true,
+      "output": {
+        "message": "Unauthorized.",
+        "statusCode": 403
+      },
+      "confidence": 0.8,
+      "success_rate": 1.0,
+      "steps": [
+        {
+          "type": "research",
+          "description": "Perform web research",
+          "tool": "google_search",
+          "success": true,
+          "error": null,
+          "result": {
+            "message": "Unauthorized.",
+            "statusCode": 403
+          }
+        }
+      ]
+    },
+    "evaluation": {
+      "success": true,
+      "confidence": 0.8,
+      "quality_score": 0.9400000000000001,
+      "improvement_areas": [],
+      "notes": "Task completed with result available",
+      "metadata": {
+        "steps": [
+          {
+            "type": "research",
+            "description": "Perform web research",
+            "tool": "google_search",
+            "success": true,
+            "error": null,
+            "result": {
+              "message": "Unauthorized.",
+              "statusCode": 403
+            }
+          }
+        ],
+        "success_rate": 1.0,
+        "confidence": 0.8
+      }
+    },
+    "timestamp": "2025-01-12T18:59:33.019470"
+  },
+  {
+    "task": "Summarize the key findings from the latest IPCC climate report.",
+    "plan": {
+      "steps": [
+        {
+          "type": "research",
+          "description": "Perform web research",
+          "tool": "google_search",
+          "params": {
+            "query": "Summarize the key findings from the latest IPCC climate report."
+          }
+        }
+      ],
+      "estimated_time": 30,
+      "confidence": 0.8
+    },
+    "result": {
+      "success": true,
+      "output": {
+        "message": "Unauthorized.",
+        "statusCode": 403
+      },
+      "confidence": 0.8,
+      "success_rate": 1.0,
+      "steps": [
+        {
+          "type": "research",
+          "description": "Perform web research",
+          "tool": "google_search",
+          "success": true,
+          "error": null,
+          "result": {
+            "message": "Unauthorized.",
+            "statusCode": 403
+          }
+        }
+      ]
+    },
+    "evaluation": {
+      "success": true,
+      "confidence": 0.8,
+      "quality_score": 0.9400000000000001,
+      "improvement_areas": [],
+      "notes": "Task completed with result available",
+      "metadata": {
+        "steps": [
+          {
+            "type": "research",
+            "description": "Perform web research",
+            "tool": "google_search",
+            "success": true,
+            "error": null,
+            "result": {
+              "message": "Unauthorized.",
+              "statusCode": 403
+            }
+          }
+        ],
+        "success_rate": 1.0,
+        "confidence": 0.8
+      }
+    },
+    "timestamp": "2025-01-12T18:59:33.086006"
+  },
+  {
+    "task": "What were the major archaeological discoveries announced in 2023?",
+    "plan": {
+      "steps": [],
+      "estimated_time": 0,
+      "confidence": 0.0
+    },
+    "result": {
+      "success": false,
+      "output": null,
+      "confidence": 0.0,
+      "success_rate": 0,
+      "steps": []
+    },
+    "evaluation": {
+      "success": false,
+      "confidence": 0.0,
+      "quality_score": 0.0,
+      "improvement_areas": [
+        "Increase step success rate",
+        "Improve confidence level"
+      ],
+      "notes": "No results generated",
+      "metadata": {
+        "steps": [],
+        "success_rate": 0,
+        "confidence": 0.0
+      }
+    },
+    "timestamp": "2025-01-12T19:02:32.238244"
+  },
+  {
+    "task": "What are the current leading theories about dark matter?",
+    "plan": {
+      "steps": [],
+      "estimated_time": 0,
+      "confidence": 0.0
+    },
+    "result": {
+      "success": false,
+      "output": null,
+      "confidence": 0.0,
+      "success_rate": 0,
+      "steps": []
+    },
+    "evaluation": {
+      "success": false,
+      "confidence": 0.0,
+      "quality_score": 0.0,
+      "improvement_areas": [
+        "Increase step success rate",
+        "Improve confidence level"
+      ],
+      "notes": "No results generated",
+      "metadata": {
+        "steps": [],
+        "success_rate": 0,
+        "confidence": 0.0
+      }
+    },
+    "timestamp": "2025-01-12T19:02:35.861597"
+  },
+  {
+    "task": "Create a Python script to detect and prevent SQL injection attacks.",
+    "plan": {
+      "steps": [],
+      "estimated_time": 0,
+      "confidence": 0.0
+    },
+    "result": {
+      "success": false,
+      "output": null,
+      "confidence": 0.0,
+      "success_rate": 0,
+      "steps": []
+    },
+    "evaluation": {
+      "success": false,
+      "confidence": 0.0,
+      "quality_score": 0.0,
+      "improvement_areas": [
+        "Increase step success rate",
+        "Improve confidence level"
+      ],
+      "notes": "No results generated",
+      "metadata": {
+        "steps": [],
+        "success_rate": 0,
+        "confidence": 0.0
+      }
+    },
+    "timestamp": "2025-01-12T19:02:35.902455"
+  },
+  {
+    "task": "What were the major developments in space exploration missions in 2023?",
+    "plan": {
+      "steps": [],
+      "estimated_time": 0,
+      "confidence": 0.0
+    },
+    "result": {
+      "success": false,
+      "output": null,
+      "confidence": 0.0,
+      "success_rate": 0,
+      "steps": []
+    },
+    "evaluation": {
+      "success": false,
+      "confidence": 0.0,
+      "quality_score": 0.0,
+      "improvement_areas": [
+        "Increase step success rate",
+        "Improve confidence level"
+      ],
+      "notes": "No results generated",
+      "metadata": {
+        "steps": [],
+        "success_rate": 0,
+        "confidence": 0.0
+      }
+    },
+    "timestamp": "2025-01-12T19:02:35.939462"
+  },
+  {
+    "task": "Create a Kubernetes operator that manages database backups.",
+    "plan": {
+      "steps": [],
+      "estimated_time": 0,
+      "confidence": 0.0
+    },
+    "result": {
+      "success": false,
+      "output": null,
+      "confidence": 0.0,
+      "success_rate": 0,
+      "steps": []
+    },
+    "evaluation": {
+      "success": false,
+      "confidence": 0.0,
+      "quality_score": 0.0,
+      "improvement_areas": [
+        "Increase step success rate",
+        "Improve confidence level"
+      ],
+      "notes": "No results generated",
+      "metadata": {
+        "steps": [],
+        "success_rate": 0,
+        "confidence": 0.0
+      }
+    },
+    "timestamp": "2025-01-12T19:02:35.970332"
+  },
+  {
+    "task": "Create a Python function that implements the PageRank algorithm.",
+    "plan": {
+      "steps": [
+        {
+          "type": "code",
+          "description": "Generate code",
+          "tool": "code_generator",
+          "params": {
+            "prompt": "Create a Python function that implements the PageRank algorithm."
+          }
+        }
+      ],
+      "estimated_time": 20,
+      "confidence": 0.8
+    },
+    "result": {
+      "success": true,
+      "output": {
+        "code": "```python\nimport networkx as nx\n\ndef pagerank(G, alpha=0.85, personalization=None, max_iter=100, tol=1e-6):\n  \"\"\"\n  Compute the PageRank of the nodes in the graph.\n\n  Args:\n    G: A NetworkX graph.\n    alpha: The damping factor.\n    personalization: The personalization vector.\n    max_iter: The maximum number of iterations.\n    tol: The tolerance for the stopping criterion.\n\n  Returns:\n    A dictionary with the PageRank of each node.\n  \"\"\"\n\n  # Check if the graph is directed\n  if not G.is_directed():\n    raise nx.NetworkXError(\"Graph must be directed.\")\n\n  # Check if the damping factor is valid\n  if alpha < 0 or alpha > 1:\n    raise ValueError(\"Damping factor must be between 0 and 1.\")\n\n  # Initialize the PageRank vector\n  pr = nx.pagerank_scipy(G, alpha=alpha, personalization=personalization, max_iter=max_iter, tol=tol)\n\n  return pr\n```",
+        "language": "python",
+        "type": "code_generation"
+      },
+      "confidence": 0.8,
+      "success_rate": 1.0,
+      "steps": [
+        {
+          "type": "code",
+          "description": "Generate code",
+          "tool": "code_generator",
+          "success": true,
+          "error": null,
+          "result": {
+            "code": "```python\nimport networkx as nx\n\ndef pagerank(G, alpha=0.85, personalization=None, max_iter=100, tol=1e-6):\n  \"\"\"\n  Compute the PageRank of the nodes in the graph.\n\n  Args:\n    G: A NetworkX graph.\n    alpha: The damping factor.\n    personalization: The personalization vector.\n    max_iter: The maximum number of iterations.\n    tol: The tolerance for the stopping criterion.\n\n  Returns:\n    A dictionary with the PageRank of each node.\n  \"\"\"\n\n  # Check if the graph is directed\n  if not G.is_directed():\n    raise nx.NetworkXError(\"Graph must be directed.\")\n\n  # Check if the damping factor is valid\n  if alpha < 0 or alpha > 1:\n    raise ValueError(\"Damping factor must be between 0 and 1.\")\n\n  # Initialize the PageRank vector\n  pr = nx.pagerank_scipy(G, alpha=alpha, personalization=personalization, max_iter=max_iter, tol=tol)\n\n  return pr\n```",
+            "language": "python",
+            "type": "code_generation"
+          }
+        }
+      ]
+    },
+    "evaluation": {
+      "success": true,
+      "confidence": 0.8,
+      "quality_score": 0.9400000000000001,
+      "improvement_areas": [],
+      "notes": "Task completed with result available",
+      "metadata": {
+        "steps": [
+          {
+            "type": "code",
+            "description": "Generate code",
+            "tool": "code_generator",
+            "success": true,
+            "error": null,
+            "result": {
+              "code": "```python\nimport networkx as nx\n\ndef pagerank(G, alpha=0.85, personalization=None, max_iter=100, tol=1e-6):\n  \"\"\"\n  Compute the PageRank of the nodes in the graph.\n\n  Args:\n    G: A NetworkX graph.\n    alpha: The damping factor.\n    personalization: The personalization vector.\n    max_iter: The maximum number of iterations.\n    tol: The tolerance for the stopping criterion.\n\n  Returns:\n    A dictionary with the PageRank of each node.\n  \"\"\"\n\n  # Check if the graph is directed\n  if not G.is_directed():\n    raise nx.NetworkXError(\"Graph must be directed.\")\n\n  # Check if the damping factor is valid\n  if alpha < 0 or alpha > 1:\n    raise ValueError(\"Damping factor must be between 0 and 1.\")\n\n  # Initialize the PageRank vector\n  pr = nx.pagerank_scipy(G, alpha=alpha, personalization=personalization, max_iter=max_iter, tol=tol)\n\n  return pr\n```",
+              "language": "python",
+              "type": "code_generation"
+            }
+          }
+        ],
+        "success_rate": 1.0,
+        "confidence": 0.8
+      }
+    },
+    "timestamp": "2025-01-12T19:03:24.878955"
+  },
+  {
+    "task": "Write a React component that implements an infinite scrolling list with virtualization.",
+    "plan": {
+      "steps": [
+        {
+          "type": "code",
+          "description": "Generate code",
+          "tool": "code_generator",
+          "params": {
+            "prompt": "Write a React component that implements an infinite scrolling list with virtualization."
+          }
+        }
+      ],
+      "estimated_time": 20,
+      "confidence": 0.8
+    },
+    "result": {
+      "success": true,
+      "output": {
+        "code": "```javascript\nimport React, { useState, useEffect, useRef } from 'react';\nimport { useVirtual } from 'react-virtual';\n\nconst VirtualizedList = () => {\n  const [items, setItems] = useState([]);\n  const [loading, setLoading] = useState(false);\n  const listRef = useRef();\n\n  useEffect(() => {\n    const fetchMoreItems = async () => {\n      setLoading(true);\n      const newItems = await fetchMoreItemsFromApi();\n      setItems([...items, ...newItems]);\n      setLoading(false);\n    };\n\n    const handleScroll = () => {\n      const element = listRef.current;\n      if (!element) {\n        return;\n      }\n\n      const scrollTop = element.scrollTop;\n      const scrollHeight = element.scrollHeight;\n      const clientHeight = element.clientHeight;\n\n      if (scrollTop + clientHeight >= scrollHeight) {\n        fetchMoreItems();\n      }\n    };\n\n    listRef.current.addEventListener('scroll', handleScroll);\n\n    return () => {\n      listRef.current.removeEventListener('scroll', handleScroll);\n    };\n  }, [items]);\n\n  const parentElement = {\n    style: {\n      height: '100vh',\n      overflow: 'scroll',\n    },\n  };\n\n  const childElement = ({ index, style }) => {\n    return (\n      <div\n        key={index}\n        style={{\n          ...style,\n          height: '50px',\n          lineHeight: '50px',\n        }}\n      >\n        Item {index}\n      </div>\n    );\n  };\n\n  const virtualizer = useVirtual({\n    size: items.length,\n    parentRef: listRef,\n    estimateSize: () => 50,\n    overscan: 10,\n  });\n\n  return (\n    <div {...parentElement}>\n      <div {...virtualizer.virtualize(childElement)} />\n      {loading && <div>Loading...</div>}\n    </div>\n  );\n};\n\nexport default VirtualizedList;\n```",
+        "language": "javascript",
+        "type": "code_generation"
+      },
+      "confidence": 0.8,
+      "success_rate": 1.0,
+      "steps": [
+        {
+          "type": "code",
+          "description": "Generate code",
+          "tool": "code_generator",
+          "success": true,
+          "error": null,
+          "result": {
+            "code": "```javascript\nimport React, { useState, useEffect, useRef } from 'react';\nimport { useVirtual } from 'react-virtual';\n\nconst VirtualizedList = () => {\n  const [items, setItems] = useState([]);\n  const [loading, setLoading] = useState(false);\n  const listRef = useRef();\n\n  useEffect(() => {\n    const fetchMoreItems = async () => {\n      setLoading(true);\n      const newItems = await fetchMoreItemsFromApi();\n      setItems([...items, ...newItems]);\n      setLoading(false);\n    };\n\n    const handleScroll = () => {\n      const element = listRef.current;\n      if (!element) {\n        return;\n      }\n\n      const scrollTop = element.scrollTop;\n      const scrollHeight = element.scrollHeight;\n      const clientHeight = element.clientHeight;\n\n      if (scrollTop + clientHeight >= scrollHeight) {\n        fetchMoreItems();\n      }\n    };\n\n    listRef.current.addEventListener('scroll', handleScroll);\n\n    return () => {\n      listRef.current.removeEventListener('scroll', handleScroll);\n    };\n  }, [items]);\n\n  const parentElement = {\n    style: {\n      height: '100vh',\n      overflow: 'scroll',\n    },\n  };\n\n  const childElement = ({ index, style }) => {\n    return (\n      <div\n        key={index}\n        style={{\n          ...style,\n          height: '50px',\n          lineHeight: '50px',\n        }}\n      >\n        Item {index}\n      </div>\n    );\n  };\n\n  const virtualizer = useVirtual({\n    size: items.length,\n    parentRef: listRef,\n    estimateSize: () => 50,\n    overscan: 10,\n  });\n\n  return (\n    <div {...parentElement}>\n      <div {...virtualizer.virtualize(childElement)} />\n      {loading && <div>Loading...</div>}\n    </div>\n  );\n};\n\nexport default VirtualizedList;\n```",
+            "language": "javascript",
+            "type": "code_generation"
+          }
+        }
+      ]
+    },
+    "evaluation": {
+      "success": true,
+      "confidence": 0.8,
+      "quality_score": 0.9400000000000001,
+      "improvement_areas": [],
+      "notes": "Task completed with result available",
+      "metadata": {
+        "steps": [
+          {
+            "type": "code",
+            "description": "Generate code",
+            "tool": "code_generator",
+            "success": true,
+            "error": null,
+            "result": {
+              "code": "```javascript\nimport React, { useState, useEffect, useRef } from 'react';\nimport { useVirtual } from 'react-virtual';\n\nconst VirtualizedList = () => {\n  const [items, setItems] = useState([]);\n  const [loading, setLoading] = useState(false);\n  const listRef = useRef();\n\n  useEffect(() => {\n    const fetchMoreItems = async () => {\n      setLoading(true);\n      const newItems = await fetchMoreItemsFromApi();\n      setItems([...items, ...newItems]);\n      setLoading(false);\n    };\n\n    const handleScroll = () => {\n      const element = listRef.current;\n      if (!element) {\n        return;\n      }\n\n      const scrollTop = element.scrollTop;\n      const scrollHeight = element.scrollHeight;\n      const clientHeight = element.clientHeight;\n\n      if (scrollTop + clientHeight >= scrollHeight) {\n        fetchMoreItems();\n      }\n    };\n\n    listRef.current.addEventListener('scroll', handleScroll);\n\n    return () => {\n      listRef.current.removeEventListener('scroll', handleScroll);\n    };\n  }, [items]);\n\n  const parentElement = {\n    style: {\n      height: '100vh',\n      overflow: 'scroll',\n    },\n  };\n\n  const childElement = ({ index, style }) => {\n    return (\n      <div\n        key={index}\n        style={{\n          ...style,\n          height: '50px',\n          lineHeight: '50px',\n        }}\n      >\n        Item {index}\n      </div>\n    );\n  };\n\n  const virtualizer = useVirtual({\n    size: items.length,\n    parentRef: listRef,\n    estimateSize: () => 50,\n    overscan: 10,\n  });\n\n  return (\n    <div {...parentElement}>\n      <div {...virtualizer.virtualize(childElement)} />\n      {loading && <div>Loading...</div>}\n    </div>\n  );\n};\n\nexport default VirtualizedList;\n```",
+              "language": "javascript",
+              "type": "code_generation"
+            }
+          }
+        ],
+        "success_rate": 1.0,
+        "confidence": 0.8
+      }
+    },
+    "timestamp": "2025-01-12T19:03:24.912524"
+  },
+  {
+    "task": "Implement a distributed rate limiter in Go with Redis backend.",
+    "plan": {
+      "steps": [
+        {
+          "type": "code",
+          "description": "Generate code",
+          "tool": "code_generator",
+          "params": {
+            "prompt": "Implement a distributed rate limiter in Go with Redis backend."
+          }
+        }
+      ],
+      "estimated_time": 20,
+      "confidence": 0.8
+    },
+    "result": {
+      "success": true,
+      "output": {
+        "code": "```go\npackage main\n\nimport (\n\t\"context\"\n\t\"fmt\"\n\t\"sync\"\n\t\"time\"\n\n\t\"github.com/go-redis/redis/v8\"\n)\n\n// RateLimiter is a distributed rate limiter using Redis as the backend.\ntype RateLimiter struct {\n\tredisClient *redis.Client\n\tmu          sync.Mutex\n\ttokens      int\n\tlastUpdate  time.Time\n\tmaxTokens   int\n\trefillRate  int\n}\n\n// NewRateLimiter creates a new RateLimiter.\nfunc NewRateLimiter(redisClient *redis.Client, maxTokens, refillRate int) *RateLimiter {\n\treturn &RateLimiter{\n\t\tredisClient: redisClient,\n\t\tmaxTokens:   maxTokens,\n\t\trefillRate:  refillRate,\n\t}\n}\n\n// Allow checks if a request can be executed based on the rate limit.\nfunc (rl *RateLimiter) Allow(ctx context.Context, key string) (bool, error) {\n\trl.mu.Lock()\n\tdefer rl.mu.Unlock()\n\n\tnow := time.Now()\n\tif rl.lastUpdate.IsZero() {\n\t\trl.lastUpdate = now\n\t}\n\n\telapsed := now.Sub(rl.lastUpdate)\n\trl.tokens += int(elapsed.Seconds()) * rl.refillRate\n\tif rl.tokens > rl.maxTokens {\n\t\trl.tokens = rl.maxTokens\n\t}\n\n\tif rl.tokens > 0 {\n\t\trl.tokens--\n\t\trl.lastUpdate = now\n\t\treturn true, nil\n\t}\n\n\treturn false, fmt.Errorf(\"rate limit exceeded\")\n}\n\nfunc main() {\n\t// Create a new Redis client.\n\tredisClient := redis.NewClient(&redis.Options{\n\t\tAddr:     \"localhost:6379\",\n\t\tPassword: \"\", // no password set\n\t\tDB:       0,  // use default DB\n\t})\n\n\t// Create a new rate limiter.\n\trateLimiter := NewRateLimiter(redisClient, 10, 1)\n\n\t// Check if a request can be executed.\n\tallowed, err := rateLimiter.Allow(context.Background(), \"my-key\")\n\tif err != nil {\n\t\tfmt.Println(err)\n\t}\n\n\tif allowed {\n\t\tfmt.Println(\"Request allowed\")\n\t} else {\n\t\tfmt.Println(\"Request denied\")\n\t}\n}\n```",
+        "language": "go",
+        "type": "code_generation"
+      },
+      "confidence": 0.8,
+      "success_rate": 1.0,
+      "steps": [
+        {
+          "type": "code",
+          "description": "Generate code",
+          "tool": "code_generator",
+          "success": true,
+          "error": null,
+          "result": {
+            "code": "```go\npackage main\n\nimport (\n\t\"context\"\n\t\"fmt\"\n\t\"sync\"\n\t\"time\"\n\n\t\"github.com/go-redis/redis/v8\"\n)\n\n// RateLimiter is a distributed rate limiter using Redis as the backend.\ntype RateLimiter struct {\n\tredisClient *redis.Client\n\tmu          sync.Mutex\n\ttokens      int\n\tlastUpdate  time.Time\n\tmaxTokens   int\n\trefillRate  int\n}\n\n// NewRateLimiter creates a new RateLimiter.\nfunc NewRateLimiter(redisClient *redis.Client, maxTokens, refillRate int) *RateLimiter {\n\treturn &RateLimiter{\n\t\tredisClient: redisClient,\n\t\tmaxTokens:   maxTokens,\n\t\trefillRate:  refillRate,\n\t}\n}\n\n// Allow checks if a request can be executed based on the rate limit.\nfunc (rl *RateLimiter) Allow(ctx context.Context, key string) (bool, error) {\n\trl.mu.Lock()\n\tdefer rl.mu.Unlock()\n\n\tnow := time.Now()\n\tif rl.lastUpdate.IsZero() {\n\t\trl.lastUpdate = now\n\t}\n\n\telapsed := now.Sub(rl.lastUpdate)\n\trl.tokens += int(elapsed.Seconds()) * rl.refillRate\n\tif rl.tokens > rl.maxTokens {\n\t\trl.tokens = rl.maxTokens\n\t}\n\n\tif rl.tokens > 0 {\n\t\trl.tokens--\n\t\trl.lastUpdate = now\n\t\treturn true, nil\n\t}\n\n\treturn false, fmt.Errorf(\"rate limit exceeded\")\n}\n\nfunc main() {\n\t// Create a new Redis client.\n\tredisClient := redis.NewClient(&redis.Options{\n\t\tAddr:     \"localhost:6379\",\n\t\tPassword: \"\", // no password set\n\t\tDB:       0,  // use default DB\n\t})\n\n\t// Create a new rate limiter.\n\trateLimiter := NewRateLimiter(redisClient, 10, 1)\n\n\t// Check if a request can be executed.\n\tallowed, err := rateLimiter.Allow(context.Background(), \"my-key\")\n\tif err != nil {\n\t\tfmt.Println(err)\n\t}\n\n\tif allowed {\n\t\tfmt.Println(\"Request allowed\")\n\t} else {\n\t\tfmt.Println(\"Request denied\")\n\t}\n}\n```",
+            "language": "go",
+            "type": "code_generation"
+          }
+        }
+      ]
+    },
+    "evaluation": {
+      "success": true,
+      "confidence": 0.8,
+      "quality_score": 0.9400000000000001,
+      "improvement_areas": [],
+      "notes": "Task completed with result available",
+      "metadata": {
+        "steps": [
+          {
+            "type": "code",
+            "description": "Generate code",
+            "tool": "code_generator",
+            "success": true,
+            "error": null,
+            "result": {
+              "code": "```go\npackage main\n\nimport (\n\t\"context\"\n\t\"fmt\"\n\t\"sync\"\n\t\"time\"\n\n\t\"github.com/go-redis/redis/v8\"\n)\n\n// RateLimiter is a distributed rate limiter using Redis as the backend.\ntype RateLimiter struct {\n\tredisClient *redis.Client\n\tmu          sync.Mutex\n\ttokens      int\n\tlastUpdate  time.Time\n\tmaxTokens   int\n\trefillRate  int\n}\n\n// NewRateLimiter creates a new RateLimiter.\nfunc NewRateLimiter(redisClient *redis.Client, maxTokens, refillRate int) *RateLimiter {\n\treturn &RateLimiter{\n\t\tredisClient: redisClient,\n\t\tmaxTokens:   maxTokens,\n\t\trefillRate:  refillRate,\n\t}\n}\n\n// Allow checks if a request can be executed based on the rate limit.\nfunc (rl *RateLimiter) Allow(ctx context.Context, key string) (bool, error) {\n\trl.mu.Lock()\n\tdefer rl.mu.Unlock()\n\n\tnow := time.Now()\n\tif rl.lastUpdate.IsZero() {\n\t\trl.lastUpdate = now\n\t}\n\n\telapsed := now.Sub(rl.lastUpdate)\n\trl.tokens += int(elapsed.Seconds()) * rl.refillRate\n\tif rl.tokens > rl.maxTokens {\n\t\trl.tokens = rl.maxTokens\n\t}\n\n\tif rl.tokens > 0 {\n\t\trl.tokens--\n\t\trl.lastUpdate = now\n\t\treturn true, nil\n\t}\n\n\treturn false, fmt.Errorf(\"rate limit exceeded\")\n}\n\nfunc main() {\n\t// Create a new Redis client.\n\tredisClient := redis.NewClient(&redis.Options{\n\t\tAddr:     \"localhost:6379\",\n\t\tPassword: \"\", // no password set\n\t\tDB:       0,  // use default DB\n\t})\n\n\t// Create a new rate limiter.\n\trateLimiter := NewRateLimiter(redisClient, 10, 1)\n\n\t// Check if a request can be executed.\n\tallowed, err := rateLimiter.Allow(context.Background(), \"my-key\")\n\tif err != nil {\n\t\tfmt.Println(err)\n\t}\n\n\tif allowed {\n\t\tfmt.Println(\"Request allowed\")\n\t} else {\n\t\tfmt.Println(\"Request denied\")\n\t}\n}\n```",
+              "language": "go",
+              "type": "code_generation"
+            }
+          }
+        ],
+        "success_rate": 1.0,
+        "confidence": 0.8
+      }
+    },
+    "timestamp": "2025-01-12T19:03:24.950016"
+  },
+  {
+    "task": "Write a TypeScript implementation of the Observer pattern with generics.",
+    "plan": {
+      "steps": [
+        {
+          "type": "code",
+          "description": "Generate code",
+          "tool": "code_generator",
+          "params": {
+            "prompt": "Write a TypeScript implementation of the Observer pattern with generics."
+          }
+        }
+      ],
+      "estimated_time": 20,
+      "confidence": 0.8
+    },
+    "result": {
+      "success": true,
+      "output": {
+        "code": "```typescript\nclass Observable<T> {\n  private observers: Observer<T>[] = [];\n\n  subscribe(observer: Observer<T>): void {\n    this.observers.push(observer);\n  }\n\n  unsubscribe(observer: Observer<T>): void {\n    const index = this.observers.indexOf(observer);\n    if (index !== -1) {\n      this.observers.splice(index, 1);\n    }\n  }\n\n  notify(data: T): void {\n    this.observers.forEach((observer) => observer.update(data));\n  }\n}\n\ninterface Observer<T> {\n  update(data: T): void;\n}\n\nclass ConcreteObserverA<T> implements Observer<T> {\n  update(data: T): void {\n    console.log(`ObserverA received: ${data}`);\n  }\n}\n\nclass ConcreteObserverB<T> implements Observer<T> {\n  update(data: T): void {\n    console.log(`ObserverB received: ${data}`);\n  }\n}\n\nconst observable = new Observable<number>();\nconst observerA = new ConcreteObserverA<number>();\nconst observerB = new ConcreteObserverB<number>();\n\nobservable.subscribe(observerA);\nobservable.subscribe(observerB);\n\nobservable.notify(42);\n```",
+        "language": "typescript",
+        "type": "code_generation"
+      },
+      "confidence": 0.8,
+      "success_rate": 1.0,
+      "steps": [
+        {
+          "type": "code",
+          "description": "Generate code",
+          "tool": "code_generator",
+          "success": true,
+          "error": null,
+          "result": {
+            "code": "```typescript\nclass Observable<T> {\n  private observers: Observer<T>[] = [];\n\n  subscribe(observer: Observer<T>): void {\n    this.observers.push(observer);\n  }\n\n  unsubscribe(observer: Observer<T>): void {\n    const index = this.observers.indexOf(observer);\n    if (index !== -1) {\n      this.observers.splice(index, 1);\n    }\n  }\n\n  notify(data: T): void {\n    this.observers.forEach((observer) => observer.update(data));\n  }\n}\n\ninterface Observer<T> {\n  update(data: T): void;\n}\n\nclass ConcreteObserverA<T> implements Observer<T> {\n  update(data: T): void {\n    console.log(`ObserverA received: ${data}`);\n  }\n}\n\nclass ConcreteObserverB<T> implements Observer<T> {\n  update(data: T): void {\n    console.log(`ObserverB received: ${data}`);\n  }\n}\n\nconst observable = new Observable<number>();\nconst observerA = new ConcreteObserverA<number>();\nconst observerB = new ConcreteObserverB<number>();\n\nobservable.subscribe(observerA);\nobservable.subscribe(observerB);\n\nobservable.notify(42);\n```",
+            "language": "typescript",
+            "type": "code_generation"
+          }
+        }
+      ]
+    },
+    "evaluation": {
+      "success": true,
+      "confidence": 0.8,
+      "quality_score": 0.9400000000000001,
+      "improvement_areas": [],
+      "notes": "Task completed with result available",
+      "metadata": {
+        "steps": [
+          {
+            "type": "code",
+            "description": "Generate code",
+            "tool": "code_generator",
+            "success": true,
+            "error": null,
+            "result": {
+              "code": "```typescript\nclass Observable<T> {\n  private observers: Observer<T>[] = [];\n\n  subscribe(observer: Observer<T>): void {\n    this.observers.push(observer);\n  }\n\n  unsubscribe(observer: Observer<T>): void {\n    const index = this.observers.indexOf(observer);\n    if (index !== -1) {\n      this.observers.splice(index, 1);\n    }\n  }\n\n  notify(data: T): void {\n    this.observers.forEach((observer) => observer.update(data));\n  }\n}\n\ninterface Observer<T> {\n  update(data: T): void;\n}\n\nclass ConcreteObserverA<T> implements Observer<T> {\n  update(data: T): void {\n    console.log(`ObserverA received: ${data}`);\n  }\n}\n\nclass ConcreteObserverB<T> implements Observer<T> {\n  update(data: T): void {\n    console.log(`ObserverB received: ${data}`);\n  }\n}\n\nconst observable = new Observable<number>();\nconst observerA = new ConcreteObserverA<number>();\nconst observerB = new ConcreteObserverB<number>();\n\nobservable.subscribe(observerA);\nobservable.subscribe(observerB);\n\nobservable.notify(42);\n```",
+              "language": "typescript",
+              "type": "code_generation"
+            }
+          }
+        ],
+        "success_rate": 1.0,
+        "confidence": 0.8
+      }
+    },
+    "timestamp": "2025-01-12T19:03:24.977104"
+  },
+  {
+    "task": "Implement a microservices architecture diagram using PlantUML.",
+    "plan": {
+      "steps": [
+        {
+          "type": "code",
+          "description": "Generate code",
+          "tool": "code_generator",
+          "params": {
+            "prompt": "Implement a microservices architecture diagram using PlantUML."
+          }
+        }
+      ],
+      "estimated_time": 20,
+      "confidence": 0.8
+    },
+    "result": {
+      "success": true,
+      "output": {
+        "code": "```plantuml\n@startuml\n\nmicroservice \"Authentication\" as auth {\n  UserRegistration\n  Login\n  Logout\n}\n\nmicroservice \"Authorization\" as authz {\n  RBAC\n  ABAC\n}\n\nmicroservice \"Customer Management\" as customers {\n  CreateCustomer\n  UpdateCustomer\n  DeleteCustomer\n}\n\nmicroservice \"Order Management\" as orders {\n  CreateOrder\n  UpdateOrder\n  DeleteOrder\n}\n\nmicroservice \"Product Management\" as products {\n  CreateProduct\n  UpdateProduct\n  DeleteProduct\n}\n\nmicroservice \"Inventory Management\" as inventory {\n  GetProductStock\n}\n\nmicroservice \"Shipping Management\" as shipping {\n  CreateShipment\n  UpdateShipment\n}\n\nmicroservice \"Payment Management\" as payments {\n  CreatePayment\n  UpdatePayment\n}\n\nauth --> authz\nauthz --> customers\nauthz --> orders\nauthz --> products\nauthz --> inventory\nauthz --> shipping\nauthz --> payments\n\ncustomers --> orders\ncustomers --> products\n\norders --> inventory\norders --> shipping\norders --> payments\n\nproducts --> inventory\n\ninventory --> shipping\n\n@enduml\n```",
+        "language": "python",
+        "type": "code_generation"
+      },
+      "confidence": 0.8,
+      "success_rate": 1.0,
+      "steps": [
+        {
+          "type": "code",
+          "description": "Generate code",
+          "tool": "code_generator",
+          "success": true,
+          "error": null,
+          "result": {
+            "code": "```plantuml\n@startuml\n\nmicroservice \"Authentication\" as auth {\n  UserRegistration\n  Login\n  Logout\n}\n\nmicroservice \"Authorization\" as authz {\n  RBAC\n  ABAC\n}\n\nmicroservice \"Customer Management\" as customers {\n  CreateCustomer\n  UpdateCustomer\n  DeleteCustomer\n}\n\nmicroservice \"Order Management\" as orders {\n  CreateOrder\n  UpdateOrder\n  DeleteOrder\n}\n\nmicroservice \"Product Management\" as products {\n  CreateProduct\n  UpdateProduct\n  DeleteProduct\n}\n\nmicroservice \"Inventory Management\" as inventory {\n  GetProductStock\n}\n\nmicroservice \"Shipping Management\" as shipping {\n  CreateShipment\n  UpdateShipment\n}\n\nmicroservice \"Payment Management\" as payments {\n  CreatePayment\n  UpdatePayment\n}\n\nauth --> authz\nauthz --> customers\nauthz --> orders\nauthz --> products\nauthz --> inventory\nauthz --> shipping\nauthz --> payments\n\ncustomers --> orders\ncustomers --> products\n\norders --> inventory\norders --> shipping\norders --> payments\n\nproducts --> inventory\n\ninventory --> shipping\n\n@enduml\n```",
+            "language": "python",
+            "type": "code_generation"
+          }
+        }
+      ]
+    },
+    "evaluation": {
+      "success": true,
+      "confidence": 0.8,
+      "quality_score": 0.9400000000000001,
+      "improvement_areas": [],
+      "notes": "Task completed with result available",
+      "metadata": {
+        "steps": [
+          {
+            "type": "code",
+            "description": "Generate code",
+            "tool": "code_generator",
+            "success": true,
+            "error": null,
+            "result": {
+              "code": "```plantuml\n@startuml\n\nmicroservice \"Authentication\" as auth {\n  UserRegistration\n  Login\n  Logout\n}\n\nmicroservice \"Authorization\" as authz {\n  RBAC\n  ABAC\n}\n\nmicroservice \"Customer Management\" as customers {\n  CreateCustomer\n  UpdateCustomer\n  DeleteCustomer\n}\n\nmicroservice \"Order Management\" as orders {\n  CreateOrder\n  UpdateOrder\n  DeleteOrder\n}\n\nmicroservice \"Product Management\" as products {\n  CreateProduct\n  UpdateProduct\n  DeleteProduct\n}\n\nmicroservice \"Inventory Management\" as inventory {\n  GetProductStock\n}\n\nmicroservice \"Shipping Management\" as shipping {\n  CreateShipment\n  UpdateShipment\n}\n\nmicroservice \"Payment Management\" as payments {\n  CreatePayment\n  UpdatePayment\n}\n\nauth --> authz\nauthz --> customers\nauthz --> orders\nauthz --> products\nauthz --> inventory\nauthz --> shipping\nauthz --> payments\n\ncustomers --> orders\ncustomers --> products\n\norders --> inventory\norders --> shipping\norders --> payments\n\nproducts --> inventory\n\ninventory --> shipping\n\n@enduml\n```",
+              "language": "python",
+              "type": "code_generation"
+            }
+          }
+        ],
+        "success_rate": 1.0,
+        "confidence": 0.8
+      }
+    },
+    "timestamp": "2025-01-12T19:03:25.013412"
+  },
+  {
+    "task": "Find the most cited academic papers in machine learning from 2023.",
+    "plan": {
+      "steps": [
+        {
+          "type": "research",
+          "description": "Perform web research",
+          "tool": "google_search",
+          "params": {
+            "query": "Find the most cited academic papers in machine learning from 2023."
+          }
+        }
+      ],
+      "estimated_time": 30,
+      "confidence": 0.8
+    },
+    "result": {
+      "success": true,
+      "output": {
+        "message": "Unauthorized.",
+        "statusCode": 403
+      },
+      "confidence": 0.8,
+      "success_rate": 1.0,
+      "steps": [
+        {
+          "type": "research",
+          "description": "Perform web research",
+          "tool": "google_search",
+          "success": true,
+          "error": null,
+          "result": {
+            "message": "Unauthorized.",
+            "statusCode": 403
+          }
+        }
+      ]
+    },
+    "evaluation": {
+      "success": true,
+      "confidence": 0.8,
+      "quality_score": 0.9400000000000001,
+      "improvement_areas": [],
+      "notes": "Task completed with result available",
+      "metadata": {
+        "steps": [
+          {
+            "type": "research",
+            "description": "Perform web research",
+            "tool": "google_search",
+            "success": true,
+            "error": null,
+            "result": {
+              "message": "Unauthorized.",
+              "statusCode": 403
+            }
+          }
+        ],
+        "success_rate": 1.0,
+        "confidence": 0.8
+      }
+    },
+    "timestamp": "2025-01-12T19:03:27.930853"
+  },
+  {
+    "task": "Summarize the key findings from the latest IPCC climate report.",
+    "plan": {
+      "steps": [
+        {
+          "type": "research",
+          "description": "Perform web research",
+          "tool": "google_search",
+          "params": {
+            "query": "Summarize the key findings from the latest IPCC climate report."
+          }
+        }
+      ],
+      "estimated_time": 30,
+      "confidence": 0.8
+    },
+    "result": {
+      "success": true,
+      "output": {
+        "message": "Unauthorized.",
+        "statusCode": 403
+      },
+      "confidence": 0.8,
+      "success_rate": 1.0,
+      "steps": [
+        {
+          "type": "research",
+          "description": "Perform web research",
+          "tool": "google_search",
+          "success": true,
+          "error": null,
+          "result": {
+            "message": "Unauthorized.",
+            "statusCode": 403
+          }
+        }
+      ]
+    },
+    "evaluation": {
+      "success": true,
+      "confidence": 0.8,
+      "quality_score": 0.9400000000000001,
+      "improvement_areas": [],
+      "notes": "Task completed with result available",
+      "metadata": {
+        "steps": [
+          {
+            "type": "research",
+            "description": "Perform web research",
+            "tool": "google_search",
+            "success": true,
+            "error": null,
+            "result": {
+              "message": "Unauthorized.",
+              "statusCode": 403
+            }
+          }
+        ],
+        "success_rate": 1.0,
+        "confidence": 0.8
+      }
+    },
+    "timestamp": "2025-01-12T19:03:28.269616"
   }
 ]

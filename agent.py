@@ -20,32 +20,40 @@ class EnhancedJSONEncoder(json.JSONEncoder):
 def initialize_nltk():
     """Initialize NLTK with required data"""
     try:
-        # Download all required NLTK data
-        nltk.download(['punkt', 'averaged_perceptron_tagger', 'stopwords'], quiet=True)
+        # Check if required data exists first
+        nltk.data.find('tokenizers/punkt')
+        nltk.data.find('taggers/averaged_perceptron_tagger')
+        nltk.data.find('corpora/stopwords')
         return True
-    except Exception as e:
-        print(f"Warning: Failed to download NLTK data: {e}")
-        return False
+    except LookupError:
+        # Only download if not found
+        try:
+            nltk.download(['punkt', 'averaged_perceptron_tagger', 'stopwords'], quiet=True)
+            return True
+        except Exception as e:
+            print(f"Note: NLTK data not automatically downloaded: {e}")
+            print("If needed, manually download using: nltk.download()")
+            return True  # Continue anyway since files might be manually installed
 
 async def process_tasks(agent: Agent, tasks: List[str]) -> List[Dict]:
     """Process multiple tasks using the agent"""
     return await agent.process_tasks(tasks)
 
 def main(task_file_path: str, output_file_path: str):
-    # Initialize NLTK
-    if not initialize_nltk():
-        print("Warning: NLTK initialization failed, some features may not work properly")
+    # Initialize NLTK silently
+    initialize_nltk()
     
     # Import tools here to avoid circular imports
     from tools.google_search import GoogleSearchTool
     from tools.web_scraper import WebScraperTool
-    from tools.code_tools import CodeAnalysisTool
+    from tools.code_tools import CodeGeneratorTool, CodeAnalysisTool
     
     # Initialize tools
     tools = {
         "google_search": GoogleSearchTool(),
         "web_scraper": WebScraperTool(),
-        "code_analysis": CodeAnalysisTool()
+        "code_analysis": CodeAnalysisTool(),
+        "code_generator": CodeGeneratorTool()
     }
     
     # Initialize agent with default config
@@ -70,7 +78,6 @@ def main(task_file_path: str, output_file_path: str):
     # Write results with custom encoder
     with open(output_file_path, 'w') as f:
         json.dump(results, f, indent=2, cls=EnhancedJSONEncoder)
-
 if __name__ == "__main__":
     import sys
     if len(sys.argv) != 3:

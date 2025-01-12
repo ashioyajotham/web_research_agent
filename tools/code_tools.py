@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from .base import BaseTool
 import subprocess
 import tempfile
+import google.generativeai as genai
 
 @dataclass
 class CodeMetrics:
@@ -231,3 +232,106 @@ class CodeAnalysisTool(BaseTool):
 - Calculate code metrics
 - Suggest refactoring improvements
 Input should be a JSON object with 'command', 'code', and optional 'language' fields."""
+
+class CodeGeneratorTool(BaseTool):
+    """Tool for generating code based on requirements"""
+    
+    async def execute(self, prompt: str) -> Dict[str, Any]:
+        """Generate code from prompt"""
+        try:
+            model = genai.GenerativeModel('gemini-pro')
+            system_prompt = """You are a code generation expert. Generate code that:
+            - Is well-documented
+            - Follows best practices
+            - Includes error handling
+            - Is efficient and maintainable
+            
+            Format your response as:
+            ```language
+            code here
+            ```
+            Include only the code and necessary comments."""
+            
+            chat = model.start_chat(history=[])
+            chat.send_message(system_prompt)
+            response = chat.send_message(prompt)
+            
+            return {
+                "code": response.text,
+                "language": self._detect_language(prompt),
+                "type": "code_generation"
+            }
+        except Exception as e:
+            return {
+                "error": str(e),
+                "type": "code_generation_error"
+            }
+
+    def get_description(self) -> str:
+        return "Generates code based on provided requirements using Gemini"
+
+    def _detect_language(self, prompt: str) -> str:
+        """Detect programming language from prompt"""
+        prompt_lower = prompt.lower()
+        languages = {
+            "python": ["python", ".py", "django", "flask"],
+            "javascript": ["javascript", "js", "node", "react"],
+            "typescript": ["typescript", "ts", "angular"],
+            "java": ["java", "spring", "android"],
+            "go": ["golang", "go "],
+        }
+        
+        for lang, keywords in languages.items():
+            if any(kw in prompt_lower for kw in keywords):
+                return lang
+        return "python"  # default
+
+class CodeAnalysisTool(BaseTool):
+    """Tool for analyzing code and providing insights"""
+    
+    async def execute(self, code: str, context: Optional[str] = None) -> Dict[str, Any]:
+        """Analyze code and provide insights"""
+        try:
+            model = genai.GenerativeModel('gemini-pro')
+            system_prompt = """Analyze the provided code and provide insights on:
+            - Code quality
+            - Potential improvements
+            - Best practices adherence
+            - Security considerations
+            Format as structured JSON with these categories."""
+            
+            chat = model.start_chat(history=[])
+            chat.send_message(system_prompt)
+            
+            analysis_prompt = f"Code to analyze:\n```\n{code}\n```"
+            if context:
+                analysis_prompt += f"\nContext: {context}"
+                
+            response = chat.send_message(analysis_prompt)
+            
+            return {
+                "analysis": response.text,
+                "type": "code_analysis",
+                "language": self._detect_language(code)
+            }
+        except Exception as e:
+            return {
+                "error": str(e),
+                "type": "code_analysis_error"
+            }
+
+    def get_description(self) -> str:
+        return "Analyzes code and provides insights using Gemini"
+
+    def _detect_language(self, code: str) -> str:
+        """Detect programming language from code"""
+        # Simple detection based on common patterns
+        if "def " in code or "import " in code:
+            return "python"
+        if "function" in code or "const" in code:
+            return "javascript"
+        if "public class" in code:
+            return "java"
+        if "package main" in code:
+            return "go"
+        return "unknown"

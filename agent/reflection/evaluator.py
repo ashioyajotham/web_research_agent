@@ -13,10 +13,17 @@ class ExecutionMetrics:
 @dataclass
 class EvaluationResult:
     success: bool
-    performance_score: float
-    areas_for_improvement: List[str]
-    metrics: ExecutionMetrics
-    suggestions: Dict[str, Any]
+    confidence: float
+    quality_score: float
+    improvement_areas: list[str]
+    notes: str
+    metadata: Dict[str, Any]
+
+    def get(self, key: str, default: Any = None) -> Any:
+        """Get value from metadata or main fields"""
+        if hasattr(self, key):
+            return getattr(self, key)
+        return self.metadata.get(key, default)
 
 class Evaluator:
     def __init__(self):
@@ -28,19 +35,19 @@ class Evaluator:
 
     def evaluate_execution(self, 
                          task: str,
-                         result: str,
+                         result: Any,
                          execution_data: Dict[str, Any]) -> EvaluationResult:
         """Evaluate the execution of a task"""
-        metrics = self._calculate_metrics(execution_data)
-        performance_score = self._calculate_performance_score(metrics)
-        improvements = self._identify_improvements(metrics, execution_data)
+        success = execution_data.get('success_rate', 0) > 0.5
+        confidence = execution_data.get('confidence', 0.0)
         
         return EvaluationResult(
-            success=metrics.success_rate >= self.performance_thresholds['success_rate'],
-            performance_score=performance_score,
-            areas_for_improvement=improvements,
-            metrics=metrics,
-            suggestions=self._generate_suggestions(improvements, metrics)
+            success=success,
+            confidence=confidence,
+            quality_score=self._calculate_quality(result, execution_data),
+            improvement_areas=self._identify_improvements(execution_data),
+            notes=self._generate_notes(task, result),
+            metadata=execution_data
         )
 
     def _calculate_metrics(self, execution_data: Dict[str, Any]) -> ExecutionMetrics:
@@ -76,44 +83,20 @@ class Evaluator:
         threshold = self.performance_thresholds['execution_time']
         return max(0.0, min(1.0, 1.0 - (execution_time / threshold)))
 
-    def _identify_improvements(self, 
-                            metrics: ExecutionMetrics, 
-                            execution_data: Dict[str, Any]) -> List[str]:
-        """Identify areas needing improvement"""
+    def _identify_improvements(self, execution_data: Dict[str, Any]) -> list[str]:
+        """Identify areas for improvement"""
         improvements = []
-        
-        if metrics.execution_time > self.performance_thresholds['execution_time']:
-            improvements.append("execution_time")
-            
-        if metrics.average_confidence < self.performance_thresholds['confidence']:
-            improvements.append("confidence")
-            
-        if metrics.success_rate < self.performance_thresholds['success_rate']:
-            improvements.append("success_rate")
-            
-        if metrics.steps_taken > 10:
-            improvements.append("steps_optimization")
-            
+        if execution_data.get('success_rate', 0) < 1.0:
+            improvements.append("Increase step success rate")
+        if execution_data.get('confidence', 0) < 0.8:
+            improvements.append("Improve confidence level")
         return improvements
 
-    def _generate_suggestions(self, 
-                           improvements: List[str], 
-                           metrics: ExecutionMetrics) -> Dict[str, Any]:
-        """Generate improvement suggestions"""
-        suggestions = {}
-        
-        improvement_strategies = {
-            "execution_time": self._suggest_time_optimization,
-            "confidence": self._suggest_confidence_improvement,
-            "success_rate": self._suggest_success_improvement,
-            "steps_optimization": self._suggest_steps_optimization
-        }
-        
-        for improvement in improvements:
-            if improvement in improvement_strategies:
-                suggestions[improvement] = improvement_strategies[improvement](metrics)
-                
-        return suggestions
+    def _generate_notes(self, task: str, result: Any) -> str:
+        """Generate evaluation notes"""
+        if not result:
+            return "No results generated"
+        return f"Task completed with result available"
 
     def _suggest_time_optimization(self, metrics: ExecutionMetrics) -> Dict[str, Any]:
         """Suggest ways to optimize execution time"""
@@ -165,3 +148,36 @@ class Evaluator:
                 "Use more efficient search strategies"
             ]
         }
+
+    def _calculate_quality(self, result: Any, execution_data: Dict[str, Any]) -> float:
+        """Calculate quality score based on multiple factors"""
+        if not result:
+            return 0.0
+
+        # Calculate base metrics
+        metrics = self._calculate_metrics(execution_data)
+        
+        # Calculate component scores
+        execution_score = self._normalize_time_score(metrics.execution_time)
+        success_score = metrics.success_rate
+        confidence_score = metrics.average_confidence if metrics.average_confidence else execution_data.get('confidence', 0.0)
+        
+        # Tool diversity bonus (reward using multiple tools appropriately)
+        tool_diversity = len(metrics.tool_usage_counts) / max(len(execution_data.get('steps', [])), 1)
+        
+        # Combine scores with weights
+        weights = {
+            'execution': 0.2,
+            'success': 0.4,
+            'confidence': 0.3,
+            'diversity': 0.1
+        }
+        
+        quality_score = (
+            execution_score * weights['execution'] +
+            success_score * weights['success'] +
+            confidence_score * weights['confidence'] +
+            tool_diversity * weights['diversity']
+        )
+        
+        return min(1.0, max(0.0, quality_score))
