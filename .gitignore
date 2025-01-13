@@ -30,6 +30,7 @@ ENV/
 .vscode/
 *.swp
 *.swo
+.dist
 
 # Project specific
 .env
@@ -38,7 +39,4 @@ data/
 *.db
 *.log
 agent_memory.db
-agent_learning.json
-logs
-
-
+logs/
