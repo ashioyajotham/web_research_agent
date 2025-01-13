@@ -29,7 +29,9 @@ class PrettyFormatter:
 
             # Handle different output types
             if isinstance(output, dict):
-                if 'content' in output:
+                if 'chronological_summary' in output:
+                    self._format_research_results(output)
+                elif 'content' in output:
                     self._format_blog_content(output['content'])
                 elif 'direct_answer' in output:
                     self._format_direct_answer(output)
@@ -289,3 +291,60 @@ class PrettyFormatter:
             title="Knowledge Graph",
             border_style="cyan"
         ))
+
+    def _format_research_results(self, output: Dict[str, Any]) -> None:
+        """Format research results with timeline and developments"""
+        # Display summary if available
+        if 'summary' in output:
+            self.console.print("\n[bold]Research Summary:[/bold]")
+            self.console.print(output['summary'])
+
+        # Display latest developments
+        if 'latest_developments' in output and output['latest_developments']:
+            self.console.print("\n[bold]Latest Developments:[/bold]")
+            table = Table(show_header=True, header_style="bold magenta")
+            table.add_column("Date")
+            table.add_column("Development")
+            table.add_column("Source")
+            
+            for dev in output['latest_developments']:
+                table.add_row(
+                    dev.get('date', 'N/A'),
+                    dev.get('event', ''),
+                    dev.get('source', '')
+                )
+            self.console.print(table)
+
+        # Display chronological timeline
+        if 'chronological_summary' in output and output['chronological_summary'].get('years'):
+            self.console.print("\n[bold]Chronological Timeline:[/bold]")
+            for year_data in output['chronological_summary']['years']:
+                year = year_data['year']
+                self.console.print(f"\n[bold blue]{year}[/bold blue]")
+                
+                for quarter_data in year_data['quarters']:
+                    quarter = quarter_data['quarter']
+                    self.console.print(f"\n[bold cyan]{quarter}[/bold cyan]")
+                    
+                    events = quarter_data.get('events', [])
+                    if events:
+                        for event in events:
+                            self.console.print(
+                                f"[dim]{event.get('date', '')}:[/dim] {event.get('event', '')}"
+                            )
+
+        # Display major milestones
+        if 'major_milestones' in output and output['major_milestones']:
+            self.console.print("\n[bold]Major Milestones:[/bold]")
+            for milestone in output['major_milestones']:
+                self.console.print(
+                    f"• [dim]{milestone.get('date', '')}:[/dim] {milestone.get('event', '')}"
+                )
+
+        # Display sources
+        if 'sources' in output and output['sources']:
+            self.console.print("\n[bold]Sources:[/bold]")
+            for i, source in enumerate(output['sources'], 1):
+                self.console.print(f"{i}. {source.get('title', '')}")
+                if 'url' in source:
+                    self.console.print(f"   [dim]{source['url']}[/dim]")
