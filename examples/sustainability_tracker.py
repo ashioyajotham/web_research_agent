@@ -1,12 +1,16 @@
 import sys
 import os
+import asyncio
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from agent import Agent
+from agent.core import Agent, AgentConfig, AgentLogger
 from tools.google_search import GoogleSearchTool
 from tools.web_scraper import WebScraperTool
 
-def run_sustainability_analysis():
+from dotenv import load_dotenv
+load_dotenv()
+
+async def run_sustainability_analysis():
     tools = {
         "google_search": GoogleSearchTool(),
         "web_scraper": WebScraperTool()
@@ -19,11 +23,11 @@ def run_sustainability_analysis():
         tasks = f.readlines()
         
     for task in tasks:
-        result = agent.process_task(task.strip())
+        result = await agent.process_task(task.strip())
         print(f"\nSustainability Analysis Task: {task.strip()}")
-        print(f"Environmental Data: {result.result}")
-        print(f"Confidence: {result.confidence}")
+        print(f"Environmental Data: {result.get('findings', 'No data available')}")
+        print(f"Status: {result.get('status', 'Unknown')}")
         print("-" * 80)
 
 if __name__ == "__main__":
-    run_sustainability_analysis()
+    asyncio.run(run_sustainability_analysis())

@@ -1,14 +1,22 @@
 import sys
 import os
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+import asyncio
+from pathlib import Path
 
-from agent import Agent
+# Add project root to Python path
+project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, project_root)
+
+from agent.core import Agent, AgentConfig
 from tools.google_search import GoogleSearchTool
 from tools.web_scraper import WebScraperTool
 from tools.code_tools import CodeAnalysisTool
 
-def run_tech_analysis():
-    # Initialize tools with focus on technical analysis
+from dotenv import load_dotenv
+load_dotenv()
+
+async def run_tech_analysis():
+    # Initialize tools
     tools = {
         "google_search": GoogleSearchTool(),
         "web_scraper": WebScraperTool(),
@@ -16,17 +24,35 @@ def run_tech_analysis():
     }
     
     agent = Agent(tools)
-    task_file = os.path.join(os.path.dirname(__file__), "tasks/tech_analysis.txt")
+    task_file = Path(__file__).parent / "tasks" / "tech_analysis.txt"
     
-    with open(task_file, 'r') as f:
-        tasks = f.readlines()
+    try:
+        with open(task_file, 'r') as f:
+            tasks = [task.strip() for task in f.readlines() if task.strip()]
         
-    for task in tasks:
-        result = agent.process_task(task.strip())
-        print(f"\nTechnology Analysis Task: {task.strip()}")
-        print(f"Findings: {result.result}")
-        print(f"Confidence: {result.confidence}")
-        print("-" * 80)
+        results = []
+        for task in tasks:
+            result = await agent.process_task(task)
+            results.append(result)
+            
+        return results
+            
+    except FileNotFoundError:
+        print(f"Error: Task file not found at {task_file}")
+        return []
+    except Exception as e:
+        print(f"Error during analysis: {e}")
+        return []
 
 if __name__ == "__main__":
-    run_tech_analysis()
+    results = asyncio.run(run_tech_analysis())
+    
+    for result in results:
+        print("\nTask Analysis:")
+        print("-" * 50)
+        print(f"Task: {result.get('task', 'Unknown')}")
+        print(f"Status: {result.get('status', 'Error')}")
+        if 'findings' in result:
+            print(f"Findings: {result['findings']}")
+        if 'error' in result:
+            print(f"Error: {result['error']}")
