@@ -276,6 +276,23 @@ class Executor:
         
         if task_type == TaskType.FACTUAL_QUERY:
             # For factual queries, focus on direct answer
+            for output in successful_outputs:
+                if isinstance(output, dict) and output.get("direct_answer"):
+                    return {
+                        "direct_answer": output["direct_answer"],
+                        "results": output.get("results", [])
+                    }
+                    
+        elif task_type == TaskType.RESEARCH:
+            # Combine research results
+            all_results = []
+            for output in successful_outputs:
+                if isinstance(output, dict) and "results" in output:
+                    all_results.extend(output["results"])
+            return {"results": all_results}
+            
+        if task_type == TaskType.FACTUAL_QUERY:
+            # For factual queries, focus on direct answer
             direct_answers = [out.get("direct_answer") for out in successful_outputs if isinstance(out, dict)]
             if direct_answers:
                 return {

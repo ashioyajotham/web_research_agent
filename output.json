@@ -2,19 +2,85 @@
   {
     "success": true,
     "output": {
-      "results": [],
-      "direct_answer": " ($432.0 billion)"
+      "direct_answer": "Wikipedia Elon Musk (CEO of Tesla)",
+      "results": [
+        {
+          "title": "The World's Billionaires - Wikipedia",
+          "link": "https://en.wikipedia.org/wiki/The_World%27s_Billionaires",
+          "snippet": "Bill Gates was named the richest man in the world by Forbes' annual list of the world's billionaires. This was the 16th time that the founder of Microsoft ...",
+          "date": "",
+          "position": 1
+        },
+        {
+          "title": "The 10 Richest People in the World - Investopedia",
+          "link": "https://www.investopedia.com/articles/investing/012715/5-richest-people-world.asp",
+          "snippet": "Elon Musk, CEO of Tesla, is the richest person in the world with a net worth of $432 billion. After Musk is Jeff Bezos, founder of Amazon. Other billionaires ...",
+          "date": "",
+          "position": 2
+        },
+        {
+          "title": "Forbes Real Time Billionaires List - The World's Richest People",
+          "link": "https://www.forbes.com/real-time-billionaires/",
+          "snippet": "THE REAL-TIME BILLIONAIRES LIST ; 1. Elon Musk. Tesla, SpaceX ; 2. Jeff Bezos. Amazon ; 3. Mark Zuckerberg. Facebook.",
+          "date": "",
+          "position": 3
+        },
+        {
+          "title": "World's 10 Richest People: List Of The Wealthiest Billionaires",
+          "link": "https://www.bankrate.com/investing/worlds-richest-people/",
+          "snippet": "The world's 10 wealthiest individuals \u00b7 1. Elon Musk: $437 billion \u00b7 2. Jeff Bezos: $243 billion \u00b7 3. Mark Zuckerberg: $214 billion \u00b7 4. Larry ...",
+          "date": "7 days ago",
+          "position": 4
+        },
+        {
+          "title": "Bloomberg Billionaires Index",
+          "link": "https://www.bloomberg.com/billionaires/",
+          "snippet": "1. Elon Musk. $426B ; 2. Jeff Bezos. $238B ; 3. Mark Zuckerberg. $218B ; 4. Larry Ellison. $181B ; 5. Bernard Arnault. $177B.",
+          "date": "",
+          "position": 5
+        },
+        {
+          "title": "The world's 10 richest people got a record $64 billion richer ... - CNN",
+          "link": "https://www.cnn.com/2024/11/07/investing/billionaires-net-worth-trump-win/index.html",
+          "snippet": "The biggest gainer was Elon Musk, the world's richest person and one of Trump's most outspoken and dedicated supporters, whose wealth jumped $26.5 billion to $ ...",
+          "date": "Nov 7, 2024",
+          "position": 6
+        },
+        {
+          "title": "Bloomberg Billionaires Index - Wikipedia",
+          "link": "https://en.wikipedia.org/wiki/Bloomberg_Billionaires_Index",
+          "snippet": "... wealthiest person in the world. On May 31, 2023, Elon Musk once again became the wealthiest man on Earth as Tesla's share price rose, while the share price ...",
+          "date": "",
+          "position": 7
+        },
+        {
+          "title": "The richest person who ever lived - BBC",
+          "link": "https://www.bbc.com/reel/video/p09dcbl0/the-richest-person-who-ever-lived",
+          "snippet": "Mansa Musa ruled over the Mali empire in the 14th Century, and his incredible access to gold made him arguably the richest human to have ever lived.",
+          "date": "3 days ago",
+          "position": 8
+        },
+        {
+          "title": "Forbes Daily Briefing: The Top 10 Richest People In The World ...",
+          "link": "https://www.facebook.com/forbes/videos/forbes-daily-briefing-the-top-10-richest-people-in-the-world-september-2024/408796715176583/",
+          "snippet": "Elon Musk remains at No. 1. But the ups and downs of tech stocks shuffled the ranks of others among the world's top 10 richest.",
+          "date": "Sep 5, 2024",
+          "position": 9
+        }
+      ]
     },
-    "confidence": 0.95,
-    "execution_time": 1736771303.629438,
-    "error": null,
-    "task": "who is the richest man in the world",
-    "metrics": {}
+    "confidence": 0.9
   },
   {
     "success": true,
     "output": {
-      "results": [
+      "summary": "Latest developments found from multiple sources",
+      "key_findings": [
+        "Jan. 9, 2025 \u2014 Researchers have recently achieved a significant breakthrough in the development of next-generation carbon-based quantum materials, opening new ...",
+        "A team led by the U.S. Department of Energy's (DOE) Argonne National Laboratory has achieved a major milestone toward future quantum computing.",
+        "All the latest science news on quantum computing from Phys.org. Find the latest news, advancements, and breakthroughs."
+      ],
+      "detailed_results": [
         {
           "title": "Quantum Computers News - ScienceDaily",
           "link": "https://www.sciencedaily.com/news/computers_math/quantum_computers/",
@@ -87,64 +153,97 @@
         }
       ]
     },
-    "confidence": 0.806,
-    "execution_time": 1736771303.018569,
-    "error": null,
-    "task": "research the latest developments in quantum computing",
-    "metrics": {}
+    "confidence": 0.8
   },
   {
     "success": true,
     "output": {
-      "code": {
-        "success": true,
-        "code": "class Node:\n    def __init__(self, data):\n        self.data = data\n        self.left = None\n        self.right = None\n\n\nclass BinarySearchTree:\n    def __init__(self):\n        self.root = None\n\n    def insert(self, data):\n        if self.root is None:\n            self.root = Node(data)\n        else:\n            self._insert(data, self.root)\n\n    def _insert(self, data, curr_node):\n        if data < curr_node.data:\n            if curr_node.left is None:\n                curr_node.left = Node(data)\n            else:\n                self._insert(data, curr_node.left)\n        elif data > curr_node.data:\n            if curr_node.right is None:\n                curr_node.right = Node(data)\n            else:\n                self._insert(data, curr_node.right)\n        else:\n            print(\"Value already exists in the tree.\")\n\n    def search(self, data):\n        if self.root is None:\n            return False\n        else:\n            return self._search(data, self.root)\n\n    def _search(self, data, curr_node):\n        if data == curr_node.data:\n            return True\n        elif data < curr_node.data:\n            if curr_node.left is None:\n                return False\n            else:\n                return self._search(data, curr_node.left)\n        else:\n            if curr_node.right is None:\n                return False\n            else:\n                return self._search(data, curr_node.right)\n\n    def delete(self, data):\n        if self.root is None:\n            return\n        else:\n            self._delete(data, self.root)\n\n    def _delete(self, data, curr_node):\n        if data < curr_node.data:\n            if curr_node.left is None:\n                return\n            else:\n                self._delete(data, curr_node.left)\n        elif data > curr_node.data:\n            if curr_node.right is None:\n                return\n            else:\n                self._delete(data, curr_node.right)\n        else:\n            if curr_node.left is None and curr_node.right is None:\n                if curr_node == self.root:\n                    self.root = None\n                else:\n                    if curr_node.parent.left == curr_node:\n                        curr_node.parent.left = None\n                    else:\n                        curr_node.parent.right = None\n            elif curr_node.left is None:\n                if curr_node == self.root:\n                    self.root = curr_node.right\n                else:\n                    if curr_node.parent.left == curr_node:\n                        curr_node.parent.left = curr_node.right\n                    else:\n                        curr_node.parent.right = curr_node.right\n            elif curr_node.right is None:\n                if curr_node == self.root:\n                    self.root = curr_node.left\n                else:\n                    if curr_node.parent.left == curr_node:\n                        curr_node.parent.left = curr_node.left\n                    else:\n                        curr_node.parent.right = curr_node.left\n            else:\n                predecessor = self._get_predecessor(curr_node.left)\n                curr_node.data = predecessor.data\n                self._delete(predecessor.data, curr_node.left)\n\n    def _get_predecessor(self, node):\n        if node.right is None:\n            return node\n        else:\n            return self._get_predecessor(node.right)\n\n    def print_tree(self):\n        if self.root is None:\n            print(\"Tree is empty.\")\n        else:\n            self._print_tree(self.root)\n\n    def _print_tree(self, curr_node):\n        if curr_node is not None:\n            self._print_tree(curr_node.left)\n            print(curr_node.data)\n            self._print_tree(curr_node.right)",
-        "confidence": 0.7,
-        "metadata": {
-          "algorithm_type": "generic",
-          "complexity": 38,
-          "quality_score": 0.7
-        }
-      },
-      "results": [
+      "summary": "Latest developments found from multiple sources",
+      "key_findings": [
+        "A Binary search tree is a binary tree where the values of the left sub-tree are less than the root node and the values of the right sub-tree are greater than ...",
+        "Here is a quick example of a binary insert: class Node: def __init__(self, val): self.l_child = None self.r_child = None self.data = val",
+        "Implementing a B-tree in Python \u00b7 Step 1 - BSTNode Class \u00b7 Step 2 - Insert \u00b7 Step 3 - Get Min and Get Max \u00b7 Step 4 - Delete \u00b7 Step 5 - ..."
+      ],
+      "detailed_results": [
         {
-          "success": true,
-          "code": "class Node:\n    def __init__(self, data):\n        self.data = data\n        self.left = None\n        self.right = None\n\n\nclass BinarySearchTree:\n    def __init__(self):\n        self.root = None\n\n    def insert(self, data):\n        if self.root is None:\n            self.root = Node(data)\n        else:\n            self._insert(data, self.root)\n\n    def _insert(self, data, curr_node):\n        if data < curr_node.data:\n            if curr_node.left is None:\n                curr_node.left = Node(data)\n            else:\n                self._insert(data, curr_node.left)\n        elif data > curr_node.data:\n            if curr_node.right is None:\n                curr_node.right = Node(data)\n            else:\n                self._insert(data, curr_node.right)\n        else:\n            print(\"Value already exists in the tree.\")\n\n    def search(self, data):\n        if self.root is None:\n            return False\n        else:\n            return self._search(data, self.root)\n\n    def _search(self, data, curr_node):\n        if data == curr_node.data:\n            return True\n        elif data < curr_node.data:\n            if curr_node.left is None:\n                return False\n            else:\n                return self._search(data, curr_node.left)\n        else:\n            if curr_node.right is None:\n                return False\n            else:\n                return self._search(data, curr_node.right)\n\n    def delete(self, data):\n        if self.root is None:\n            return\n        else:\n            self._delete(data, self.root)\n\n    def _delete(self, data, curr_node):\n        if data < curr_node.data:\n            if curr_node.left is None:\n                return\n            else:\n                self._delete(data, curr_node.left)\n        elif data > curr_node.data:\n            if curr_node.right is None:\n                return\n            else:\n                self._delete(data, curr_node.right)\n        else:\n            if curr_node.left is None and curr_node.right is None:\n                if curr_node == self.root:\n                    self.root = None\n                else:\n                    if curr_node.parent.left == curr_node:\n                        curr_node.parent.left = None\n                    else:\n                        curr_node.parent.right = None\n            elif curr_node.left is None:\n                if curr_node == self.root:\n                    self.root = curr_node.right\n                else:\n                    if curr_node.parent.left == curr_node:\n                        curr_node.parent.left = curr_node.right\n                    else:\n                        curr_node.parent.right = curr_node.right\n            elif curr_node.right is None:\n                if curr_node == self.root:\n                    self.root = curr_node.left\n                else:\n                    if curr_node.parent.left == curr_node:\n                        curr_node.parent.left = curr_node.left\n                    else:\n                        curr_node.parent.right = curr_node.left\n            else:\n                predecessor = self._get_predecessor(curr_node.left)\n                curr_node.data = predecessor.data\n                self._delete(predecessor.data, curr_node.left)\n\n    def _get_predecessor(self, node):\n        if node.right is None:\n            return node\n        else:\n            return self._get_predecessor(node.right)\n\n    def print_tree(self):\n        if self.root is None:\n            print(\"Tree is empty.\")\n        else:\n            self._print_tree(self.root)\n\n    def _print_tree(self, curr_node):\n        if curr_node is not None:\n            self._print_tree(curr_node.left)\n            print(curr_node.data)\n            self._print_tree(curr_node.right)",
-          "confidence": 0.7,
-          "metadata": {
-            "algorithm_type": "generic",
-            "complexity": 38,
-            "quality_score": 0.7
-          }
+          "title": "Binary Search Tree In Python - GeeksforGeeks",
+          "link": "https://www.geeksforgeeks.org/binary-search-tree-in-python/",
+          "snippet": "A Binary search tree is a binary tree where the values of the left sub-tree are less than the root node and the values of the right sub-tree are greater than ...",
+          "date": "Apr 8, 2024",
+          "position": 1
+        },
+        {
+          "title": "How to implement a binary search tree in Python? - Stack Overflow",
+          "link": "https://stackoverflow.com/questions/5444394/how-to-implement-a-binary-search-tree-in-python",
+          "snippet": "Here is a quick example of a binary insert: class Node: def __init__(self, val): self.l_child = None self.r_child = None self.data = val",
+          "date": "Mar 26, 2011",
+          "position": 2
+        },
+        {
+          "title": "Writing a Binary Search Tree in Python With Examples - Boot.dev Blog",
+          "link": "https://blog.boot.dev/computer-science/binary-search-tree-in-python/",
+          "snippet": "Implementing a B-tree in Python \u00b7 Step 1 - BSTNode Class \u00b7 Step 2 - Insert \u00b7 Step 3 - Get Min and Get Max \u00b7 Step 4 - Delete \u00b7 Step 5 - ...",
+          "date": "Oct 1, 2022",
+          "position": 3
+        },
+        {
+          "title": "Writing a Binary Search Tree algorithm: proper __str__(self) method ...",
+          "link": "https://discuss.python.org/t/writing-a-binary-search-tree-algorithm-proper-str-self-method-needed/51839",
+          "snippet": "I'm learning algorithm design. Some time ago I completed a binary search algorithm. I am now exploring Binary Search Trees. I have a Python code snippet.",
+          "date": "Apr 24, 2024",
+          "position": 4
+        },
+        {
+          "title": "Binary Search Tree in Python - YouTube",
+          "link": "https://www.youtube.com/watch?v=DlWxqU3LLpY&pp=ygUSI2JpbmFyeXRyZWVleGFtcGxl",
+          "snippet": "Today we learn how to implement binary search trees in Python. \u25fe\u25fe\u25fe\u25fe\u25fe\u25fe\u25fe\u25fe\u25fe\u25fe\u25fe\u25fe\u25fe\u25fe\u25fe\u25fe\u25fe Programming Books & Merch The Python Bible Book: ...",
+          "date": "Feb 10, 2022",
+          "position": 5
+        },
+        {
+          "title": "Searching in Binary Search Tree (BST) - GeeksforGeeks",
+          "link": "https://www.geeksforgeeks.org/binary-search-tree-set-1-search-and-insertion/",
+          "snippet": "Given a BST, the task is to search a node in this BST. For searching a value in BST, consider it as a sorted array.",
+          "date": "Sep 25, 2024",
+          "position": 6
+        },
+        {
+          "title": "Binary Search Tree Python - Scaler Topics",
+          "link": "https://www.scaler.com/topics/binary-search-tree-python/",
+          "snippet": "In this, we try to insert a new key value in an existing Binary Search Tree while retaining its properties and all the existing keys and values.",
+          "date": "May 3, 2023",
+          "position": 7
+        },
+        {
+          "title": "6.14. Search Tree Implementation - Runestone Academy",
+          "link": "https://runestone.academy/ns/books/published/pythonds3/Trees/SearchTreeImplementation.html",
+          "snippet": "To implement the binary search tree, we will use the nodes and references approach similar to the one we used to implement the linked list and the expression ...",
+          "date": "",
+          "position": 8
+        },
+        {
+          "title": "Where's Python's damn binary search tree? - Reddit",
+          "link": "https://www.reddit.com/r/Python/comments/9allgh/wheres_pythons_damn_binary_search_tree/",
+          "snippet": "The optimal solution seems to be a self-balancing binary search tree. But self-balancing binary search trees (or B-trees, similarly) are just way too much work.",
+          "date": "Aug 27, 2018",
+          "position": 9
+        },
+        {
+          "title": "Binary Search Tree(BST) - Programiz",
+          "link": "https://www.programiz.com/dsa/binary-search-tree",
+          "snippet": "A binary search tree is a data structure that quickly allows us to maintain a sorted list of numbers. Also, you will find working examples of Binary Search ...",
+          "date": "",
+          "position": 10
         }
       ]
     },
-    "confidence": 0.606,
-    "execution_time": 1736771300.1498315,
-    "error": null,
-    "task": "implement a binary search tree in Python",
-    "metrics": {}
+    "confidence": 0.8
   },
   {
-    "success": true,
+    "success": false,
+    "error": "Content generation tool not available",
     "output": {
-      "data": {
-        "success": false,
-        "error": "No dataset URL provided",
-        "data": null
-      },
-      "results": [
-        {
-          "success": false,
-          "error": "No dataset URL provided",
-          "data": null
-        }
-      ]
-    },
-    "confidence": 0.594,
-    "execution_time": 1736771300.1498315,
-    "error": null,
-    "task": "write a blog post about Python data structures",
-    "metrics": {}
+      "message": "Please use a content generation tool for this task"
+    }
   }
 ]
