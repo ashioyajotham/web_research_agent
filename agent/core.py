@@ -298,14 +298,21 @@ class Agent:
             
             results = search_result.get('results', [])
             
-            # Extract direct answer without source prefixes
-            direct_answer = self._construct_direct_answer(task, {}, results)  # Pass empty entities dict
+            # Process through answer processor first
+            processed_answer = self.answer_processor.extract_direct_answer(task, results)
+            direct_answer = None
             
-            # Remove source prefixes from direct answer
+            if processed_answer and processed_answer.get('answer'):
+                direct_answer = processed_answer['answer']
+            else:
+                # Fallback to basic extraction
+                direct_answer = self._construct_direct_answer(task, results)
+            
+            # Clean up the answer by removing prefixes and normalizing
             if direct_answer and isinstance(direct_answer, str):
-                # Remove source prefixes like "Wikipedia", "According to", etc.
+                # Remove unwanted prefixes
                 direct_answer = re.sub(
-                    r'^(?:(?:According to|From|Source:|Wikipedia:?|Reuters:?)\s*)+',
+                    r'^(?:(?:The|A|An)\s+)?(?:Richest\s+People\s+)?(?:According to|From|Source:|Wikipedia:?|Reuters:?)\s*',
                     '',
                     direct_answer
                 ).strip()
@@ -326,6 +333,25 @@ class Agent:
                 "error": str(e),
                 "output": {"results": []}
             }
+
+    def _construct_direct_answer(self, query: str, results: List[Dict[str, str]]) -> Optional[str]:
+        """Construct a direct answer with proper context"""
+        if not results:
+            return None
+            
+        all_text = " ".join(r.get("snippet", "") for r in results)
+        
+        # Handle "who is richest" type queries
+        if 'richest' in query.lower() and 'world' in query.lower():
+            pattern = r'([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)\s*(?:is|remains|became)\s+(?:the\s+)?(?:world\'?s?\s+)?richest\s+(?:person|man|individual)[^.]*?(?:\$(\d+(?:\.\d+)?)\s*(billion|trillion))?'
+            matches = re.findall(pattern, all_text)
+            if matches:
+                for name, amount, scale in matches:
+                    if amount and scale:
+                        return f"{name.strip()} (${amount} {scale})"
+                    return name.strip()
+
+        return None
 
     async def _handle_research(self, task: str) -> Dict[str, Any]:
         """Handle research tasks with chronological organization"""
@@ -441,32 +467,6 @@ class Agent:
         """Extract named entities and relationships from results"""
         # Add entity extraction logic here
         # ...existing code...
-
-    def _construct_direct_answer(self, query: str, entities: Dict[str, Any], results: List[Dict[str, str]]) -> Optional[str]:
-        """Construct a direct answer with proper context"""
-        if not results:
-            return None
-
-        # Process through answer processor
-        processed_answer = self.answer_processor.extract_direct_answer(query, results)
-        
-        if processed_answer and processed_answer.get('answer'):
-            return processed_answer['answer']
-            
-        # Fallback to basic extraction for person queries
-        all_text = " ".join(r.get("snippet", "") for r in results)
-        
-        # Handle "who is richest" type queries
-        if 'richest' in query.lower() and 'world' in query.lower():
-            pattern = r'([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)\s*(?:is|remains|became)\s+(?:the\s+)?(?:world\'?s?\s+)?richest\s+(?:person|man|individual)[^.]*?(?:\$(\d+(?:\.\d+)?)\s*(billion|trillion))?'
-            matches = re.findall(pattern, all_text)
-            if matches:
-                for name, amount, scale in matches:
-                    if amount and scale:
-                        return f"{name.strip()} (${amount} {scale})"
-                    return name.strip()
-
-        return None
 
     async def _execute_with_solution(self, task: str, solution: Dict) -> Dict:
         try:
@@ -633,11 +633,28 @@ class Agent:
         start_time = time.time()
         
         try:
-            try:
-                experiences = self.memory.get_relevant_experiences(task)
-            except Exception:
-                experiences = []
+            # Get relevant experiences with error handling
+            experiences = []
+            if self.config.learning_enabled:
+                try:
+                    experiences = self.memory.get_relevant_experiences(task)
+                except Exception as e:
+                    self.logger.warning(f"Memory retrieval failed: {str(e)}")
             
+            # Try pattern matching first if enabled
+            if self.config.pattern_learning_enabled and self.pattern_learner:
+                try:
+                    similar_patterns = self.pattern_learner.find_similar_patterns(task)
+                    if similar_patterns:
+                        solution = self.pattern_learner.generalize_solution(similar_patterns)
+                        if solution:
+                            result = await self._execute_with_solution(task, solution)
+                            if result.get('success'):
+                                return result
+                except Exception as e:
+                    self.logger.warning(f"Pattern matching failed: {str(e)}")
+            
+            # Proceed with normal execution
             if self.config.planning_enabled and self.planner:
                 plan = self.planner.create_plan(
                     task=task,
@@ -649,28 +666,23 @@ class Agent:
                     max_steps=self.config.max_steps
                 )
                 
-                if isinstance(exec_result, ExecutionResult):
-                    return {
-                        'success': bool(exec_result.success),
-                        'output': exec_result.output or {'results': []},
-                        'confidence': float(exec_result.confidence),
-                        'steps_taken': len(exec_result.steps) if exec_result.steps else 0,
-                        'execution_time': time.time() - start_time,
-                        'task': task,
-                        'execution_metrics': exec_result.execution_metrics or {}
-                    }
-                else:
-                    return {
-                        'success': False,
-                        'error': 'Invalid execution result type',
-                        'output': {'results': []},
-                        'confidence': 0.0,
-                        'execution_time': time.time() - start_time,
-                        'task': task
-                    }
+                result = self._format_execution_result(exec_result, task, start_time)
             else:
                 result = await self._execute_basic_task(task)
-                return self._finalize_result(task, result, time.time() - start_time)
+                result = self._finalize_result(task, result, time.time() - start_time)
+            
+            # Store successful results for learning
+            if result.get('success') and self.config.learning_enabled:
+                try:
+                    self.pattern_learner.add_pattern(
+                        task=task,
+                        solution=result.get('output', {}),
+                        performance=self._calculate_effectiveness(result)
+                    )
+                except Exception as e:
+                    self.logger.warning(f"Learning storage failed: {str(e)}")
+            
+            return result
                 
         except Exception as e:
             self.logger.error(str(e), context=f"Task: {task[:50]}...", exc_info=True)
@@ -678,6 +690,38 @@ class Agent:
                 "success": False,
                 "error": str(e),
                 "output": {"results": []},
+                'confidence': 0.0,
+                'execution_time': time.time() - start_time,
+                'task': task
+            }
+
+    def _format_execution_result(self, exec_result: ExecutionResult, task: str, start_time: float) -> Dict[str, Any]:
+        """Format execution result with proper error handling"""
+        try:
+            if isinstance(exec_result, ExecutionResult):
+                return {
+                    'success': bool(exec_result.success),
+                    'output': exec_result.output or {'results': []},
+                    'confidence': float(exec_result.confidence),
+                    'steps_taken': len(exec_result.steps) if exec_result.steps else 0,
+                    'execution_time': time.time() - start_time,
+                    'task': task,
+                    'execution_metrics': exec_result.execution_metrics or {}
+                }
+            else:
+                return {
+                    'success': False,
+                    'error': 'Invalid execution result type',
+                    'output': {'results': []},
+                    'confidence': 0.0,
+                    'execution_time': time.time() - start_time,
+                    'task': task
+                }
+        except Exception as e:
+            return {
+                'success': False,
+                'error': str(e),
+                'output': {'results': []},
                 'confidence': 0.0,
                 'execution_time': time.time() - start_time,
                 'task': task

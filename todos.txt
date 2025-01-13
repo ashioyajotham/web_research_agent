@@ -5,3 +5,17 @@
 2. Implement result validation
 3. Add specialized handlers for different research types (people, events, technical topics)
 4. Improve source filtering and citation handling
+Add output formatting to strip source citations
+
+
+Integration Updates Needed:
+Update agent/core.py to:
+Initialize embedding models
+Track and store performance metrics
+Use enhanced memory retrieval
+Utilize optimized planning
+Update configuration to include:
+Embedding model selection
+Performance thresholds
+Memory retention policies
+Planning optimization parameters

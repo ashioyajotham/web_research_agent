@@ -4,6 +4,8 @@ from enum import Enum
 import nltk
 from nltk.tokenize import word_tokenize
 from nltk.tag import pos_tag
+from datetime import datetime
+import networkx as nx
 
 class TaskType(str, Enum):
     RESEARCH = "research"
@@ -15,24 +17,23 @@ class TaskType(str, Enum):
 @dataclass
 class PlanStep:
     id: str
-    type: TaskType
-    description: str
     tool: str
-    params: Dict[str, Any]
-    dependencies: List[str] = None
-    estimated_time: float = 0.0
-    confidence: float = 0.0
+    params: Dict
+    dependencies: List[str]
+    estimated_time: float
+    priority: int
 
 @dataclass
 class TaskPlan:
     steps: List[PlanStep]
     estimated_time: float
-    confidence: float
     metadata: Dict[str, Any]
 
 class TaskPlanner:
     def __init__(self, available_tools: List[str]):
         self.available_tools = available_tools
+        self.execution_history = []
+        self.tool_performance = {}
         self._initialize_nltk()
 
     def _initialize_nltk(self):
@@ -43,38 +44,29 @@ class TaskPlanner:
             nltk.download(['punkt', 'averaged_perceptron_tagger'], quiet=True)
 
     def create_plan(self, task: str, context: Optional[Dict] = None) -> TaskPlan:
-        """Create a sophisticated execution plan for a given task"""
-        # Analyze task complexity and type
-        task_type = self._analyze_task_type(task)
-        subtasks = self._decompose_task(task, task_type)
+        """Create an optimized execution plan"""
+        # Analyze task requirements
+        requirements = self._analyze_requirements(task)
         
-        # Generate steps for each subtask
-        steps = []
-        total_time = 0
-        min_confidence = 1.0
+        # Build dependency graph
+        graph = self._build_dependency_graph(requirements)
         
-        for i, subtask in enumerate(subtasks):
-            step = self._create_step(
-                step_id=f"step_{i+1}",
-                subtask=subtask,
-                task_type=task_type,
-                context=context
-            )
-            steps.append(step)
-            total_time += step.estimated_time
-            min_confidence = min(min_confidence, step.confidence)
-
-        # Add dependencies between steps
-        self._add_step_dependencies(steps)
+        # Optimize step ordering
+        ordered_steps = self._optimize_step_order(graph)
+        
+        # Assign tools and parameters
+        steps = self._assign_tools(ordered_steps, context)
+        
+        # Calculate estimated completion time
+        total_time = sum(step.estimated_time for step in steps)
         
         return TaskPlan(
             steps=steps,
             estimated_time=total_time,
-            confidence=min_confidence,
             metadata={
-                "task_type": task_type,
-                "complexity": self._calculate_complexity(task),
-                "required_tools": self._get_required_tools(steps)
+                'task_type': self._analyze_task_type(task),
+                'complexity': len(steps),
+                'created_at': datetime.now()
             }
         )
 
@@ -208,3 +200,37 @@ class TaskPlanner:
     def _get_required_tools(self, steps: List[PlanStep]) -> List[str]:
         """Get list of unique tools required for the plan"""
         return list(set(step.tool for step in steps))
+
+    def _optimize_step_order(self, graph: nx.DiGraph) -> List[str]:
+        """Optimize step ordering using topological sort and historical performance"""
+        # Get basic topological order
+        basic_order = list(nx.topological_sort(graph))
+        
+        # Consider tool performance history
+        weighted_order = []
+        for step in basic_order:
+            tool = graph.nodes[step].get('tool')
+            if tool in self.tool_performance:
+                weight = self.tool_performance[tool].get('success_rate', 0.5)
+                weighted_order.append((step, weight))
+            else:
+                weighted_order.append((step, 0.5))
+                
+        # Sort by weight while preserving dependencies
+        return self._weighted_topological_sort(graph, weighted_order)
+        
+    def update_tool_performance(self, tool: str, execution_time: float, success: bool):
+        """Track tool performance for future optimization"""
+        if tool not in self.tool_performance:
+            self.tool_performance[tool] = {
+                'executions': 0,
+                'successes': 0,
+                'avg_time': 0.0
+            }
+            
+        stats = self.tool_performance[tool]
+        stats['executions'] += 1
+        if success:
+            stats['successes'] += 1
+        stats['avg_time'] = (stats['avg_time'] * (stats['executions'] - 1) + execution_time) / stats['executions']
+        stats['success_rate'] = stats['successes'] / stats['executions']
