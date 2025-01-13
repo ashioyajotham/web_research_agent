@@ -1,82 +1,102 @@
 # Web Research Agent
 
+An intelligent agent system for automated web research, data analysis, and code generation using LLMs. Built with Python, this agent can process natural language queries, perform targeted web searches, analyze data, and generate code solutions.
+
+
 ## Architecture Overview
+
+The Web Research Agent is an advanced AI-powered research assistant that combines web search capabilities, content analysis, and code generation. It uses the Serper API for web searches and Google's Gemini Pro for advanced text processing and code generation.
 
 ### Core Components
 - **Agent Core (`agent/core.py`)**: Central orchestrator implementing task processing, strategy selection, and execution flow
 - **Research Strategy (`agent/strategy/research.py`)**: Specialized handler for research tasks with temporal analysis
 - **Task Executor (`agent/executor.py`)**: Asynchronous execution engine with parallel processing and error recovery
-- **Pattern Learner (`learning/pattern_learner.py`)**: ML-based pattern recognition for task optimization
+- **Pattern Learner (`learning/pattern_learner.py`)**: ML-based pattern recognition for task optimization especially repeated tasks
 
-### System Architecture
+## Project Structure
+
 ```
 web_research_agent/
 ├── agent/
-│   ├── core.py           # Main agent implementation
-│   ├── executor.py       # Task execution engine
+│   ├── core.py             # Main agent implementation
+│   ├── executor.py         # Async task execution engine
 │   └── strategy/
-│       ├── base.py       # Strategy interface
-│       └── research.py   # Research task handler
+│       ├── base.py         # Base strategy interface
+│       └── research.py     # Research task handler
 ├── tools/
-│   ├── google_search.py  # Search integration
-│   ├── web_scraper.py   # Content extraction
-│   ├── code_tools.py    # Code generation
-│   └── dataset_tool.py  # Data analysis
+│   ├── base.py            # Base tool interface
+│   ├── google_search.py   # Serper API integration
+│   ├── web_scraper.py     # Web content extraction
+│   ├── code_tools.py      # Code generation/analysis
+│   ├── dataset_tool.py    # Data processing
+│   └── content_tools.py   # Content generation
 ├── learning/
-│   └── pattern_learner.py # ML-based optimization
-└── formatters/
-    └── pretty_output.py  # Result formatting
+│   └── pattern_learner.py # Pattern recognition
+├── memory/
+│   └── memory_store.py    # Experience storage
+├── planning/
+│   └── task_planner.py    # Task planning system
+└── utils/
+    ├── logger.py          # Logging utilities
+    └── prompts.py         # System prompts
 ```
 
-## Key Features
+## Architecture
 
-### 1. Advanced Task Processing
-- Task type detection using regex patterns
-- Specialized handlers for different query types
-- Configurable confidence thresholds
-- Multi-step execution pipeline
-
-### 2. Research Capabilities
-```python
-class ResearchStrategy:
-    - Temporal analysis
-    - Source credibility scoring
-    - Cross-reference validation
-    - Entity extraction
-    - Chronological organization
+```mermaid
+graph TB
+    User[User Input] --> Agent[Agent Core]
+    Agent --> Planner[Task Planner]
+    Agent --> Memory[Memory Store]
+    
+    Planner --> Executor[Task Executor]
+    Executor --> Tools[Tools]
+    
+    subgraph Tools
+        Search[Serper Search]
+        Scraper[Web Scraper]
+        Code[Code Generator]
+        Data[Data Analyzer]
+    end
+    
+    Memory --> PatternLearner[Pattern Learner]
+    PatternLearner --> Agent
+    
+    Tools --> Results[Results]
+    Results --> Formatter[Output Formatter]
 ```
 
-### 3. Error Handling & Recovery
-- Retry mechanism with exponential backoff
-- Partial result preservation
-- Graceful degradation
-- Exception tracking and logging
+## How It Works
 
-### 4. Data Processing
-- JSON serialization with datetime handling
-- Source deduplication
-- Result validation
-- Data normalization
+1. **Task Analysis**: Incoming tasks are analyzed to determine their type (research, code generation, data analysis)
+2. **Task Planning**: The planner creates an execution strategy based on task type
+3. **Tool Selection**: Appropriate tools are selected for the task
+4. **Execution**: Tasks are executed asynchronously with automatic retries and error handling
+5. **Pattern Learning**: Successful solutions are stored for future optimization
 
-## Performance Metrics
+## Features
 
-### Effectiveness Measures
-1. **Task Success Rate**: 85-95% for structured queries
-2. **Response Time**: 
-   - Direct questions: 2-3 seconds
-   - Research tasks: 5-10 seconds
-   - Code generation: 3-5 seconds
-3. **Accuracy**:
-   - Factual queries: ~90%
-   - Research synthesis: ~85%
-   - Code generation: ~88%
+### Task Types
+- Direct questions (who, what, when, where)
+- Research tasks (analyze, investigate, compare)
+- Code generation (implement, create, program)
+- Content creation (write articles, summaries)
+- Data analysis tasks
 
-### Memory Usage
-- Base memory footprint: ~100MB
-- Peak usage during parallel processing: ~250MB
-- Cache size limit: 500MB
+### Advanced Capabilities
+- Async task processing
+- Pattern-based learning
+- Source credibility scoring
+- Entity extraction
+- Chronological organization
 
 ## Configuration
+
+### Environment Variables
+```
+SERPER_API_KEY=your_serper_api_key
+GEMINI_API_KEY=your_gemini_api_key
+```
 
 ### Agent Configuration
 ```python
@@ -91,100 +111,49 @@ AgentConfig(
 )
 ```
 
-### API Requirements
-```plaintext
-Required Environment Variables:
-- SERPER_API_KEY: Google Search API key
-- GEMINI_API_KEY: Google Gemini API key
-```
+## Performance Metrics
 
-## Key Components
+- **Task Success Rate**: 85-95%
+- **Response Times**:
+  - Direct questions: 2-3s
+  - Research tasks: 5-10s
+  - Code generation: 3-5s
+- **Memory Usage**: Base ~100MB, Peak ~250MB
 
-### 1. Pattern Learner
+## Usage
+
 ```python
-Features:
-- TF-IDF vectorization
-- Cosine similarity matching
-- Pattern generalization
-- Solution adaptation
-```
+from agent.core import Agent, AgentConfig
+from tools.google_search import GoogleSearchTool
+from tools.web_scraper import WebScraperTool
 
-### 2. Task Executor
-```python
-Capabilities:
-- Parallel execution
-- Dependency resolution
-- Progress tracking
-- Resource management
-```
+# Initialize tools
+tools = {
+    "google_search": GoogleSearchTool(),
+    "web_scraper": WebScraperTool()
+}
 
-### 3. Research Strategy
-```python
-Analysis Features:
-- Timeline extraction
-- Source credibility scoring
-- Cross-reference validation
-- Entity recognition
-```
+# Create agent
+agent = Agent(tools)
 
-## Usage Examples
-
-### Direct Questions
-```python
-result = await agent.process_task("who is the richest man in the world")
-# Returns structured answer with confidence score
-```
-
-### Research Tasks
-```python
+# Process task
 result = await agent.process_task("research quantum computing developments")
-# Returns chronological summary with sources
 ```
-
-### Code Generation
-```python
-result = await agent.process_task("implement a binary search tree")
-# Returns implemented code with documentation
-```
-
-## Performance Optimization
-
-### Caching Strategy
-- In-memory result caching
-- Pattern-based solution reuse
-- Source credibility caching
-- Entity relationship caching
-
-### Parallel Processing
-- Async task execution
-- Concurrent API calls
-- Parallel data processing
-- Resource pooling
 
 ## Error Handling
 
-### Recovery Mechanisms
-1. Automatic retry with backoff
-2. Fallback strategies
-3. Partial result preservation
-4. Exception tracking
-
-### Validation
-1. Input sanitization
-2. Result verification
-3. Source credibility checks
-4. Data consistency checks
+- Automatic retry mechanism
+- Graceful degradation
+- Result validation
+- Exception tracking and logging
 
 ## Future Improvements
 
-### Planned Features
 1. Enhanced ML-based pattern recognition
-2. Improved source verification
-3. Extended API support
-4. Advanced caching strategies
+2. Extended API integrations
+3. Advanced caching strategies
+4. Improved source verification
 
-### Optimization Goals
-1. Reduced API calls
-2. Improved accuracy
-3. Faster processing
-4. Better memory management
+## License
+
+MIT License
