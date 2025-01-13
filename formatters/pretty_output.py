@@ -66,72 +66,77 @@ class PrettyFormatter:
         # Output handling
         output = result.get("output", {})
         if output:
-            self.console.print("\n[bold cyan]Output:[/bold cyan]")
-            
-            # First show specific answer if available
-            if specific_answer := output.get("specific_answer"):
-                answer_panel = Panel(
-                    Text(f"Answer: {specific_answer['value']}\n\n" +
-                         f"Confidence: {specific_answer['confidence']:.2f}\n" +
-                         (f"Source: {specific_answer['source']}\n" if specific_answer['source'] else "") +
-                         (f"Context: {specific_answer['context']}" if specific_answer['context'] else ""),
-                         style="green"),
-                    title="Extracted Answer",
-                    border_style="green"
-                )
-                self.console.print(answer_panel)
-                
-            # Handle different output types
-            if isinstance(output, dict) and "code" in output:
-                # Direct code object
-                code = output["code"]
-                if isinstance(code, dict):
-                    code = code.get("code", "")  # Extract code from nested structure
-                if isinstance(code, str):
-                    syntax = Syntax(code, "python", theme="monokai", line_numbers=True)
-                    self.console.print(Panel(syntax, title="Generated Code", border_style="green"))
-            
-            elif "code" in output:
-                # Code output
-                code = output["code"]
-                if isinstance(code, str):
-                    syntax = Syntax(code, "python", theme="monokai", line_numbers=True)
-                    self.console.print(Panel(syntax, title="Generated Code", border_style="green"))
-            
-            elif "data" in output:
-                # Data analysis output
-                data_panel = Panel(
-                    Text(str(output["data"]), style="white"),
-                    title="Data Analysis Results",
-                    border_style="cyan"
-                )
-                self.console.print(data_panel)
-            
-            elif "results" in output:
-                # Search/research results
-                if output["results"]:
-                    results_table = Table(show_header=True, header_style="bold magenta")
-                    results_table.add_column("Result", style="white", width=80)
-                    results_table.add_column("Source", style="dim blue")
+            if direct_answer := output.get("direct_answer"):
+                self.console.print("\n[bold green]Answer:[/bold green]", direct_answer)
+                if metadata := output.get("metadata"):
+                    self.console.print("\n[dim]Additional Information:[/dim]")
+                    for key, value in metadata.items():
+                        self.console.print(f"[dim]{key}:[/dim] {value}")
+            else:
+                # First show specific answer if available
+                if specific_answer := output.get("specific_answer"):
+                    answer_panel = Panel(
+                        Text(f"Answer: {specific_answer['value']}\n\n" +
+                             f"Confidence: {specific_answer['confidence']:.2f}\n" +
+                             (f"Source: {specific_answer['source']}\n" if specific_answer['source'] else "") +
+                             (f"Context: {specific_answer['context']}" if specific_answer['context'] else ""),
+                             style="green"),
+                        title="Extracted Answer",
+                        border_style="green"
+                    )
+                    self.console.print(answer_panel)
                     
-                    for item in output["results"]:
-                        if isinstance(item, dict):
-                            title = item.get("title", "No Title")
-                            link = item.get("link", "No Source")
-                            snippet = item.get("snippet", "No Content")
-                            results_table.add_row(f"{title}\n{snippet}", link)
-                        else:
-                            results_table.add_row(str(item), "N/A")
-                            
-                    self.console.print(results_table)
-                else:
-                    self.console.print("[yellow]No results found[/yellow]")
-            
-            # Additional metadata if present
-            if metadata := output.get("metadata"):
-                self.console.print("\n[bold cyan]Metadata:[/bold cyan]")
-                for key, value in metadata.items():
-                    self.console.print(f"[dim]{key}:[/dim] {value}")
+                # Handle different output types
+                if isinstance(output, dict) and "code" in output:
+                    # Direct code object
+                    code = output["code"]
+                    if isinstance(code, dict):
+                        code = code.get("code", "")  # Extract code from nested structure
+                    if isinstance(code, str):
+                        syntax = Syntax(code, "python", theme="monokai", line_numbers=True)
+                        self.console.print(Panel(syntax, title="Generated Code", border_style="green"))
+                
+                elif "code" in output:
+                    # Code output
+                    code = output["code"]
+                    if isinstance(code, str):
+                        syntax = Syntax(code, "python", theme="monokai", line_numbers=True)
+                        self.console.print(Panel(syntax, title="Generated Code", border_style="green"))
+                
+                elif "data" in output:
+                    # Data analysis output
+                    data_panel = Panel(
+                        Text(str(output["data"]), style="white"),
+                        title="Data Analysis Results",
+                        border_style="cyan"
+                    )
+                    self.console.print(data_panel)
+                
+                elif "results" in output:
+                    # Search/research results
+                    if output["results"]:
+                        results_table = Table(show_header=True, header_style="bold magenta")
+                        results_table.add_column("Result", style="white", width=80)
+                        results_table.add_column("Source", style="dim blue")
+                        
+                        for item in output["results"]:
+                            if isinstance(item, dict):
+                                title = item.get("title", "No Title")
+                                link = item.get("link", "No Source")
+                                snippet = item.get("snippet", "No Content")
+                                results_table.add_row(f"{title}\n{snippet}", link)
+                            else:
+                                results_table.add_row(str(item), "N/A")
+                                
+                        self.console.print(results_table)
+                    else:
+                        self.console.print("[yellow]No results found[/yellow]")
+                
+                # Additional metadata if present
+                if metadata := output.get("metadata"):
+                    self.console.print("\n[bold cyan]Metadata:[/bold cyan]")
+                    for key, value in metadata.items():
+                        self.console.print(f"[dim]{key}:[/dim] {value}")
 
         # Execution metrics if present
         if metrics := result.get("execution_metrics"):

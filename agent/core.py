@@ -5,6 +5,9 @@ import asyncio
 import time
 import google.generativeai as genai
 from datetime import datetime
+import re
+from collections import Counter
+from enum import Enum, auto
 
 from .executor import Executor, ExecutionResult
 from .utils.prompts import PromptManager
@@ -16,7 +19,7 @@ from learning.pattern_learner import PatternLearner
 
 @dataclass
 class AgentConfig:
-    max_steps: int = 10
+    max_steps: int = 5
     min_confidence: float = 0.7
     timeout: int = 300
     learning_enabled: bool = True
@@ -24,10 +27,98 @@ class AgentConfig:
     parallel_execution: bool = True
     planning_enabled: bool = True
     pattern_learning_enabled: bool = True
+    extraction_patterns: Dict[str, List[str]] = None
+
+    def __post_init__(self):
+        if self.extraction_patterns is None:
+            self.extraction_patterns = {
+                'numerical': [
+                    r'(\d+\.?\d*)%',
+                    r'\$?\s*(\d+\.?\d*)\s*(?:billion|million|trillion)',
+                    r'(\d+\.?\d*)\s*(?:percent|points?)'
+                ],
+                'date_bounded': [
+                    r'(?:in|during|for)\s*(?:20\d{2})',
+                    r'(?:as of|since|until)\s*(?:20\d{2})'
+                ],
+                'comparison': [
+                    r'(?:increased|decreased|grew|fell)\s*(?:by|to)\s*(\d+\.?\d*)',
+                    r'(?:higher|lower|more|less)\s*than\s*(\d+\.?\d*)'
+                ],
+                'entity': [
+                    r'([A-Z][A-Za-z0-9]+(?:\s+[A-Z][A-Za-z0-9]+)*)'
+                ]
+            }
+
+class AnswerProcessor:
+    def __init__(self, config: AgentConfig):
+        self.config = config
+        self.query_patterns = {
+            'person_query': r'^who\s+(?:is|was|are|were)',
+            'factual_query': r'^(?:what|when|where|why|how)',
+            'quantity_query': r'(?:how\s+(?:much|many)|what\s+(?:amount|percentage|number))',
+        }
+        self.answer_extractors = {
+            'person_query': self._extract_person_answer,
+            'factual_query': self._extract_factual_answer,
+            'quantity_query': self._extract_quantity_answer
+        }
+
+    def extract_direct_answer(self, query: str, results: List[Dict[str, str]]) -> Dict[str, Any]:
+        query_type = self._detect_query_type(query.lower())
+        extractor = self.answer_extractors.get(query_type)
+        
+        if extractor:
+            return extractor(query, results)
+        return {"answer": None, "confidence": 0.0}
+
+    def _detect_query_type(self, query: str) -> str:
+        for qtype, pattern in self.query_patterns.items():
+            if re.search(pattern, query):
+                return qtype
+        return 'general'
+
+    def _extract_person_answer(self, query: str, results: List[Dict[str, str]]) -> Dict[str, Any]:
+        """Extract person-related answers with context"""
+        all_text = " ".join(r.get("snippet", "") + " " + r.get("title", "") for r in results)
+        
+        # Enhanced patterns for person extraction
+        patterns = [
+            r'([A-Z][a-z]+(?:\s+[A-Z][a-z]+)+)(?:\s+is\s+(?:the|a)\s+)?([^,.]+)',
+            r'([A-Z][a-z]+(?:\s+[A-Z][a-z]+)+)(?:\s*,\s*([^,.]+))',
+        ]
+        
+        best_match = None
+        max_confidence = 0.0
+        
+        for pattern in patterns:
+            matches = re.findall(pattern, all_text)
+            if matches:
+                # Count occurrences to find most mentioned
+                counter = Counter(matches)
+                candidate = counter.most_common(1)[0][0]
+                confidence = min(0.5 + (counter[candidate] / len(matches)) * 0.5, 0.95)
+                
+                if confidence > max_confidence:
+                    name, context = candidate
+                    best_match = f"{name.strip()} ({context.strip()})"
+                    max_confidence = confidence
+        
+        return {
+            "answer": best_match,
+            "confidence": max_confidence,
+            "type": "person"
+        }
+
+class TaskType(Enum):
+    FACTUAL_QUERY = "factual_query"  # Direct questions
+    RESEARCH = "research"  # Research tasks
+    CODE = "code"  # Code generation
+    CONTENT = "content"  # Blog/article writing
+    DATA_ANALYSIS = "data_analysis"  # Data processing
 
 class Agent:
     def __init__(self, tools: Dict[str, BaseTool], config: Optional[AgentConfig] = None):
-        # Initialize components
         self.config = config or AgentConfig()
         self.tools = tools
         self.memory = MemoryStore(self.config.memory_path)
@@ -35,116 +126,133 @@ class Agent:
         self.pattern_learner = PatternLearner() if self.config.pattern_learning_enabled else None
         self.executor = Executor(tools, parallel=self.config.parallel_execution)
         self.logger = AgentLogger()
+        self.answer_processor = AnswerProcessor(self.config)
         
-        # Initialize Gemini
         api_key = os.getenv("GEMINI_API_KEY")
         if not api_key:
             raise ValueError("GEMINI_API_KEY environment variable not set")
         genai.configure(api_key=api_key)
         self.model = genai.GenerativeModel('gemini-pro')
+        
+        self.task_patterns = {
+            TaskType.FACTUAL_QUERY: r'^(?:who|what|when|where|why|how)\s+(?:is|are|was|were|do|does|did)',
+            TaskType.RESEARCH: r'(?:research|analyze|investigate|compare|study|find|search)',
+            TaskType.CODE: r'(?:implement|code|program|create\s+a\s+program|write\s+code)',
+            TaskType.CONTENT: r'(?:write|create|compose|draft)\s+(?:a|an)\s+(?:blog|article|post|essay)',
+            TaskType.DATA_ANALYSIS: r'(?:data|dataset|database|analyze\s+data)'
+        }
 
     async def process_tasks(self, tasks: List[str]) -> List[Dict[str, Any]]:
-        """Process multiple tasks in parallel"""
         return await asyncio.gather(*[
             self.process_task(task) for task in tasks
         ])
 
     async def process_task(self, task: str) -> Dict[str, Any]:
-        """Process a task with proper timeout and error handling"""
-        self.logger.task_start(task)
-        start_time = time.time()
-        retry_count = 0
-        max_retries = 3
-        
-        while retry_count < max_retries:
-            try:
-                # Add timeout protection
-                result = await asyncio.wait_for(
-                    self._safe_execute_task(task),
-                    timeout=self.config.timeout
-                )
+        try:
+            task_type = self._detect_task_type(task)
+            
+            if task_type == TaskType.FACTUAL_QUERY:
+                return await self._handle_direct_question(task)
+            elif task_type == TaskType.RESEARCH:
+                return await self._handle_research(task)
+            elif task_type == TaskType.CODE:
+                return await self._handle_code_generation(task)
+            elif task_type == TaskType.CONTENT:
+                return await self._handle_content_creation(task)
+            else:
+                return await self._handle_data_task(task)
                 
-                if result.get('success'):
-                    return self._finalize_result(task, result, time.time() - start_time)
-                
-                # If failed but not due to error, try alternative approach
-                if not result.get('error'):
-                    basic_result = await self._execute_basic_task(task)
-                    if (basic_result.get('success')):
-                        return self._finalize_result(task, basic_result, time.time() - start_time)
-                
-                retry_count += 1
-                if retry_count < max_retries:
-                    await asyncio.sleep(1 * retry_count)  # Exponential backoff
-                    continue
-                
-                return self._finalize_result(task, result, time.time() - start_time)
-                
-            except asyncio.TimeoutError:
-                self.logger.error(f"Task timed out after {self.config.timeout}s: {task[:50]}...")
-                return {
-                    "success": False,
-                    "error": f"Task timed out after {self.config.timeout} seconds",
-                    "output": {"results": []},
-                    "confidence": 0.0
-                }
-            except Exception as e:
-                self.logger.error(str(e), f"Task: {task[:50]}...")
-                retry_count += 1
-                if retry_count >= max_retries:
-                    return {
-                        "success": False,
-                        "error": str(e),
-                        "output": {"results": []},
-                        "confidence": 0.0
-                    }
-                await asyncio.sleep(1 * retry_count)  # Exponential backoff
-
-    def _finalize_result(self, task: str, result: Dict[str, Any], execution_time: float) -> Dict[str, Any]:
-        """Finalize and validate the result"""
-        if isinstance(result, dict):
-            return {
-                "success": bool(result.get("success", False)),
-                "output": result.get("output", {"results": []}),
-                "confidence": float(result.get("confidence", 0.0)),
-                "execution_time": float(execution_time),
-                "error": result.get("error"),
-                "task": task,
-                "metrics": result.get("metrics", {})
-            }
-        elif isinstance(result, ExecutionResult):
-            return {
-                "success": bool(result.success),
-                "output": result.output or {"results": []},
-                "confidence": float(result.confidence),
-                "execution_time": float(execution_time),
-                "task": task,
-                "metrics": result.execution_metrics or {}
-            }
-        else:
+        except Exception as e:
             return {
                 "success": False,
-                "error": "Invalid result type",
-                "output": {"results": []},
-                "confidence": 0.0,
-                "execution_time": float(execution_time),
+                "error": str(e),
                 "task": task
             }
 
+    def _detect_task_type(self, task: str) -> TaskType:
+        task_lower = task.lower()
+        for task_type, pattern in self.task_patterns.items():
+            if re.search(pattern, task_lower):
+                return task_type
+        return TaskType.RESEARCH  # Default to research
+
+    async def _handle_direct_question(self, task: str) -> Dict[str, Any]:
+        """Handle direct questions with entity extraction"""
+        search_results = await self.tools["google_search"].execute(task)
+        
+        # Extract entities and relationships
+        entities = self._extract_entities(search_results)
+        
+        # Construct direct answer with context
+        answer = self._construct_direct_answer(task, entities, search_results)
+        
+        return {
+            "success": True,
+            "output": {
+                "direct_answer": answer,
+                "results": search_results
+            }
+        }
+
+    async def _handle_research(self, task: str) -> Dict[str, Any]:
+        """Handle research tasks with organized results"""
+        search_results = await self.tools["google_search"].execute(task)
+        processed_results = self._process_research_results(search_results)
+        
+        return {
+            "success": True,
+            "output": {
+                "summary": processed_results["summary"],
+                "key_findings": processed_results["key_findings"],
+                "results": processed_results["detailed_results"]
+            }
+        }
+
+    async def _handle_content_creation(self, task: str) -> Dict[str, Any]:
+        """Handle content creation tasks"""
+        if "content_generator" not in self.tools:
+            return {
+                "success": False,
+                "error": "Content generation tool not available",
+                "output": {"message": "Please use a content generation tool for this task"}
+            }
+            
+        # Generate content using appropriate tool
+        content = await self.tools["content_generator"].execute(task)
+        
+        return {
+            "success": True,
+            "output": {
+                "content": content,
+                "type": "article"
+            }
+        }
+
+    def _extract_entities(self, results: List[Dict[str, str]]) -> Dict[str, Any]:
+        """Extract named entities and relationships from results"""
+        # Add entity extraction logic here
+        # ...existing code...
+
+    def _construct_direct_answer(self, query: str, entities: Dict[str, Any], results: List[Dict[str, str]]) -> str:
+        """Construct a direct answer with proper context"""
+        # Add answer construction logic here
+        # ...existing code...
+
+    def _process_research_results(self, results: List[Dict[str, str]]) -> Dict[str, Any]:
+        """Process and organize research results"""
+        # Add research processing logic here
+        # ...existing code...
+
     async def _execute_with_solution(self, task: str, solution: Dict) -> Dict:
-        """Execute task using a generalized solution"""
         try:
-            # Adapt the solution to the current task
             task_type = self.planner._analyze_task_type(task) if self.planner else "research"
             
             if task_type == "CODE" and solution.get("code"):
-                # For code tasks, use the generalized solution as a template
                 result = await self.tools["code_generator"].execute(
                     query=task,
                     template=solution.get("code")
                 )
             else:
-                # For other tasks, use the solution's parameters
                 tool_name = solution.get("tool", "google_search")
                 if tool_name in self.tools:
                     result = await self.tools[tool_name].execute(
@@ -171,9 +279,7 @@ class Agent:
             }
 
     async def _execute_basic_task(self, task: str) -> Dict[str, Any]:
-        """Basic task execution without planning"""
         try:
-            # Improve task type detection
             task_lower = task.lower()
             if any(kw in task_lower for kw in ['implement', 'code', 'algorithm', 'program']):
                 task_type = "CODE"
@@ -209,15 +315,13 @@ class Agent:
                         "task": task
                     }
             else:
-                # Use web scraper to augment search results
                 search_result = await self.tools["google_search"].execute(query=task)
                 if search_result.get("success") and search_result.get("results"):
-                    # Get additional content from top results
                     for item in search_result["results"][:3]:
                         try:
                             content = await self.tools["web_scraper"].execute(url=item["link"])
                             if content and isinstance(content, str):
-                                item["content"] = content[:1000]  # Limit content length
+                                item["content"] = content[:1000]
                         except:
                             continue
                     return {
@@ -246,16 +350,12 @@ class Agent:
             }
 
     def _calculate_effectiveness(self, result: Dict) -> float:
-        """Calculate solution effectiveness"""
         try:
-            # Base effectiveness on multiple factors
             effectiveness = 0.0
             
-            # Success is the primary factor
             if result.get("success"):
                 effectiveness += 0.5
                 
-                # Add points for output quality
                 output = result.get("output", {})
                 if isinstance(output, dict):
                     if "results" in output and output["results"]:
@@ -265,7 +365,6 @@ class Agent:
                     if "data" in output:
                         effectiveness += 0.2
                 
-                # Consider confidence
                 effectiveness *= max(0.1, min(1.0, result.get("confidence", 0.0)))
             
             return min(1.0, effectiveness)
@@ -275,7 +374,6 @@ class Agent:
             return 0.0
 
     async def _safe_execute_task(self, task: str) -> Dict[str, Any]:
-        """Execute task with retries and cleanup"""
         max_retries = 3
         retry_count = 0
         
@@ -284,7 +382,6 @@ class Agent:
                 result = await self._execute_task(task)
                 return result
             except asyncio.CancelledError:
-                # Ensure cleanup of any pending operations
                 await self._cleanup_cancelled_task()
                 raise
             except Exception as e:
@@ -292,36 +389,29 @@ class Agent:
                 if retry_count == max_retries:
                     raise
                 self.logger.log('WARNING', f"Retry {retry_count}/{max_retries} due to: {str(e)}", "Retry")
-                await asyncio.sleep(1 * retry_count)  # Exponential backoff
+                await asyncio.sleep(1 * retry_count)
 
     async def _cleanup_cancelled_task(self):
-        """Clean up resources when a task is cancelled"""
         try:
-            # Cancel any pending subtasks
             for task in asyncio.all_tasks():
                 if task != asyncio.current_task():
                     task.cancel()
-            # Wait for cancellation to complete
             await asyncio.gather(*asyncio.all_tasks() - {asyncio.current_task()},
                                return_exceptions=True)
         except Exception as e:
             self.logger.error(f"Cleanup error: {str(e)}", "Cleanup")
 
     def get_partial_results(self) -> Dict[str, Any]:
-        """Get any partial results that were obtained before timeout"""
-        # Implement gathering of partial results
         return {}
 
     async def _execute_task(self, task: str) -> Dict[str, Any]:
-        """Execute task with full pipeline"""
         start_time = time.time()
         
         try:
-            # Get relevant experiences, handle failure gracefully
             try:
                 experiences = self.memory.get_relevant_experiences(task)
             except Exception:
-                experiences = []  # Continue without previous experiences if memory fails
+                experiences = []
             
             if self.config.planning_enabled and self.planner:
                 plan = self.planner.create_plan(
@@ -334,7 +424,6 @@ class Agent:
                     max_steps=self.config.max_steps
                 )
                 
-                # Convert ExecutionResult to dict with proper error handling
                 if isinstance(exec_result, ExecutionResult):
                     return {
                         'success': bool(exec_result.success),
@@ -346,7 +435,6 @@ class Agent:
                         'execution_metrics': exec_result.execution_metrics or {}
                     }
                 else:
-                    # Handle unexpected result type
                     return {
                         'success': False,
                         'error': 'Invalid execution result type',
@@ -356,12 +444,10 @@ class Agent:
                         'task': task
                     }
             else:
-                # Direct task execution without planning
                 result = await self._execute_basic_task(task)
                 return self._finalize_result(task, result, time.time() - start_time)
                 
         except Exception as e:
-            # Update error logging to use proper format
             self.logger.error(str(e), context=f"Task: {task[:50]}...", exc_info=True)
             return {
                 "success": False,

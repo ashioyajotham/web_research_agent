@@ -268,18 +268,33 @@ class Executor:
         return partial_results if partial_results else None
 
     def _combine_results(self, results: List[StepResult], task_type: Optional[TaskType] = None) -> Dict[str, Any]:
-        """Combine results with better output formatting"""
+        """Combine results with improved task-specific formatting"""
         if not results:
             return {"results": []}
             
-        # Collect all successful outputs
-        successful_outputs = [
-            r.output for r in results 
-            if r.success and r.output is not None
-        ]
+        successful_outputs = [r.output for r in results if r.success and r.output]
         
-        if not successful_outputs:
-            return {"results": []}
+        if task_type == TaskType.FACTUAL_QUERY:
+            # For factual queries, focus on direct answer
+            direct_answers = [out.get("direct_answer") for out in successful_outputs if isinstance(out, dict)]
+            if direct_answers:
+                return {
+                    "direct_answer": direct_answers[0],
+                    "supporting_info": direct_answers[1:],
+                    "results": successful_outputs
+                }
+                
+        elif task_type == TaskType.CONTENT:
+            # For content tasks, combine text content
+            content_parts = []
+            for output in successful_outputs:
+                if isinstance(output, dict) and "content" in output:
+                    content_parts.append(output["content"])
+            return {
+                "content": "\n\n".join(content_parts),
+                "type": "article",
+                "results": successful_outputs
+            }
             
         # Handle different result types
         if task_type == TaskType.CODE:
