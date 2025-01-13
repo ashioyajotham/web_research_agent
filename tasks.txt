@@ -1,4 +1,1 @@
-who is the richest man in the world
-research the latest developments in quantum computing
-implement a binary search tree in Python
-write a blog post about Python data structures
+life is ...
