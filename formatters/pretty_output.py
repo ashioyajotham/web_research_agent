@@ -50,22 +50,26 @@ class PrettyFormatter:
             if not content_str:
                 return
 
-            # Clean up markdown formatting
-            content_str = self._clean_markdown(content_str)
-            
-            # Add syntax highlighting
-            content_str = self._highlight_code_blocks(content_str)
+            # Extract metadata if available
+            metadata = None
+            if isinstance(content, dict):
+                if 'content' in content and isinstance(content['content'], dict):
+                    metadata = content['content'].get('metadata')
+                else:
+                    metadata = content.get('metadata')
 
             # Format metadata if available
-            if isinstance(content, dict) and 'metadata' in content:
-                self._format_metadata(content['metadata'])
+            if metadata:
+                self._format_metadata(metadata)
 
-            # Display content in panel
+            # Display content
+            self.console.print("\n")  # Add spacing
             self.console.print(Panel(
                 Markdown(content_str),
-                title=f"Generated Content ({content.get('type', 'article')})",
+                title=f"Generated Content",
                 border_style="green",
-                padding=(1, 2)
+                padding=(1, 2),
+                expand=True
             ))
 
         except Exception as e:
@@ -84,26 +88,29 @@ class PrettyFormatter:
         return re.sub(pattern, replace_code_block, content, flags=re.DOTALL)
 
     def _format_metadata(self, metadata: Dict[str, Any]) -> None:
-        """Format content metadata"""
-        meta_table = Table(show_header=False, box=None)
+        """Format content metadata with improved layout"""
+        meta_table = Table(show_header=False, box=None, padding=(0, 2))
         meta_table.add_column("Key", style="bold blue")
         meta_table.add_column("Value", style="dim")
 
         for key, value in metadata.items():
-            if key != "generated_at":  # Handle timestamp separately
-                meta_table.add_row(key.replace("_", " ").title(), str(value))
+            if key not in ["generated_at", "format"]:  # Skip technical metadata
+                formatted_key = key.replace("_", " ").title()
+                meta_table.add_row(formatted_key, str(value))
 
+        self.console.print("\n[bold]Metadata:[/bold]")
         self.console.print(meta_table)
 
     def _extract_content_string(self, content: Any) -> str:
-        """Extract and clean content string"""
+        """Extract and clean content string with improved nested dict handling"""
         try:
+            # Handle nested content structure
             if isinstance(content, dict):
-                content_str = content.get('content', '')
-                if not content_str:
-                    content_str = (content.get('text', '') or 
-                                 content.get('body', '') or 
-                                 content.get('article', ''))
+                # Check for nested content structure
+                if 'content' in content and isinstance(content['content'], dict):
+                    content_str = content['content'].get('content', '')
+                else:
+                    content_str = content.get('content', '')
             elif isinstance(content, str):
                 content_str = content
             else:
@@ -113,16 +120,32 @@ class PrettyFormatter:
                 self.console.print("[yellow]No content to display[/yellow]")
                 return ''
 
-            # Clean up escaped newlines and spaces
-            content_str = content_str.replace('\\n', '\n')
-            content_str = content_str.replace('\\t', '\t')
-            content_str = content_str.strip()
-
-            return content_str
+            # Clean up content
+            return self._clean_content(content_str)
 
         except Exception as e:
             self.console.print(f"[red]Error extracting content: {str(e)}[/red]")
             return str(content)
+
+    def _clean_content(self, content: str) -> str:
+        """Clean up content formatting"""
+        # Replace escaped characters
+        content = content.replace('\\n', '\n')
+        content = content.replace('\\t', '\t')
+        content = content.replace("\\'", "'")
+        content = content.replace('\\"', '"')
+        
+        # Clean up code blocks
+        content = re.sub(r'```python\n', '\n```python\n', content)
+        content = re.sub(r'\n```\n', '\n```\n\n', content)
+        
+        # Clean up headers
+        content = re.sub(r'(\n#{1,6})\s+', r'\1 ', content)
+        
+        # Clean up lists
+        content = re.sub(r'(\n-)\s+', r'\1 ', content)
+        
+        return content.strip()
 
     def _clean_markdown(self, text: str) -> str:
         """Clean up markdown formatting"""

@@ -32,6 +32,24 @@ class ResearchStrategy(Strategy):
             'business': ['market', 'industry', 'adoption', 'commercial'],
             'impact': ['effect', 'influence', 'change', 'revolution']
         }
+        
+        # Add research-specific keywords
+        self.research_topics = {
+            'quantum': ['quantum', 'qubit', 'superposition', 'entanglement', 'quantum computing'],
+            'technology': ['technology', 'innovation', 'development', 'breakthrough'],
+            'scientific': ['research', 'science', 'discovery', 'experiment']
+        }
+        
+        # Add minimum results threshold
+        self.min_results = 5
+        
+        # Add search phases
+        self.search_phases = [
+            self._initial_broad_search,
+            self._recent_news_search,
+            self._specific_detail_search,
+            self._organization_search
+        ]
 
     def can_handle(self, task: str) -> float:
         task_lower = task.lower()
@@ -44,71 +62,261 @@ class ResearchStrategy(Strategy):
     async def execute(self, task: str, context: Dict[str, Any]) -> StrategyResult:
         try:
             if not context or 'tools' not in context:
-                return StrategyResult(success=False, error="Missing required tools in context")
+                return StrategyResult(success=False, error="Missing required tools")
 
-            # Step 1: Initial broad search
-            search_results = await context['tools']['google_search'].execute(task)
-            if not search_results or not search_results.get('success'):
-                return StrategyResult(success=False, error="Search failed")
+            # Execute all search phases
+            all_events = []
+            for phase_func in self.search_phases:
+                phase_events = await phase_func(task, context['tools'])
+                if phase_events:
+                    all_events.extend(phase_events)
+                
+                # Check if we have enough results
+                if len(all_events) >= self.min_results:
+                    break
+
+            # If still not enough results, try alternative searches
+            if len(all_events) < self.min_results:
+                additional_events = await self._try_alternative_searches(task, context['tools'])
+                all_events.extend(additional_events)
+
+            # Deduplicate and sort events
+            unique_events = self._deduplicate_events(all_events)
             
-            # Step 2: Extract and validate findings
-            events = self._extract_chronological_events(search_results)
-            if not events:
+            if not unique_events:
                 return StrategyResult(
-                    success=True,
-                    output={
-                        "summary": "No relevant timeline events found",
-                        "timeline": {},
-                        "major_milestones": [],
-                        "latest_developments": [],
-                        "sources": []
-                    },
-                    confidence=0.5
+                    success=False,
+                    error="No relevant information found",
+                    output={"message": "Could not find relevant research data"}
                 )
+
+            # Process and organize findings
+            credibility_scores = self._analyze_source_credibility(unique_events)
+            categorized_findings = self._categorize_findings(unique_events)
+            validated_events = self._cross_reference_findings(unique_events)
             
-            # Step 3: Source credibility analysis
-            credibility_scores = self._analyze_source_credibility(events)
-            
-            # Step 4: Topic categorization
-            categorized_findings = self._categorize_findings(events)
-            
-            # Step 5: Cross-reference and validate
-            validated_events = self._cross_reference_findings(events)
-            
-            # Step 6: Generate synthesis
+            # Generate final output
             synthesis = self._generate_research_synthesis(
                 validated_events, 
                 categorized_findings,
                 credibility_scores
             )
-            
-            output = {
-                "summary": synthesis['overview'],
-                "timeline": self._group_events(validated_events),
-                "major_milestones": self._extract_major_milestones(validated_events),
-                "latest_developments": synthesis['latest'],
-                "key_findings": synthesis['key_points'],
-                "categories": categorized_findings,
-                "credibility": {
-                    'overall_score': sum(credibility_scores.values()) / len(credibility_scores),
-                    'source_scores': credibility_scores
-                },
-                "sources": self._format_sources(validated_events)
-            }
 
             return StrategyResult(
                 success=True,
-                output=output,
-                confidence=synthesis['confidence'],
-                metadata={
-                    'categories': list(categorized_findings.keys()),
-                    'timeline_range': f"{validated_events[0]['date']} - {validated_events[-1]['date']}"
-                    if validated_events else None
-                }
+                output={
+                    "summary": synthesis['overview'],
+                    "timeline": self._group_events(validated_events),
+                    "major_milestones": self._extract_major_milestones(validated_events),
+                    "latest_developments": synthesis['latest'][:5],  # Ensure top 5 latest
+                    "key_findings": synthesis['key_points'],
+                    "sources": self._format_sources(validated_events)
+                },
+                confidence=synthesis['confidence']
             )
 
         except Exception as e:
             return StrategyResult(success=False, error=str(e))
+
+    async def _perform_research(self, task: str, tools: Dict[str, Any]) -> Dict[str, Any]:
+        """Perform initial research with specific focus"""
+        # Extract topic keywords
+        topic_type = self._detect_topic_type(task.lower())
+        keywords = self.research_topics.get(topic_type, [])
+        
+        # Create focused search query
+        search_query = f"{task} latest developments {' OR '.join(keywords)}"
+        
+        return await tools['google_search'].execute(search_query)
+
+    async def _perform_fallback_search(self, task: str, tools: Dict[str, Any]) -> Dict[str, Any]:
+        """Perform broader search as fallback"""
+        # Try different query formulations
+        queries = [
+            f"latest news about {task}",
+            f"recent developments in {task}",
+            f"current research {task}",
+            f"{task} new findings 2023 2024"
+        ]
+        
+        for query in queries:
+            result = await tools['google_search'].execute(query)
+            if result.get('success') and result.get('results'):
+                return result
+                
+        return {"success": False, "error": "No results found"}
+
+    async def _try_alternative_searches(self, task: str, tools: Dict[str, Any]) -> List[Dict]:
+        """Try different search approaches"""
+        events = []
+        
+        # Try different time periods
+        time_queries = [
+            f"{task} in 2024",
+            f"{task} in 2023",
+            f"recent {task} developments",
+            f"latest {task} research"
+        ]
+        
+        for query in time_queries:
+            result = await tools['google_search'].execute(query)
+            if result.get('success') and result.get('results'):
+                new_events = self._extract_chronological_events(result)
+                events.extend(new_events)
+                
+        return events
+
+    async def _initial_broad_search(self, task: str, tools: Dict[str, Any]) -> List[Dict]:
+        """Perform initial broad search"""
+        queries = [
+            f"{task}",
+            f"latest {task}",
+            f"recent {task} developments",
+            f"{task} breakthroughs 2024",
+            f"{task} advancements"
+        ]
+        
+        all_results = []
+        for query in queries:
+            result = await tools['google_search'].execute(query)
+            if result.get('success') and result.get('results'):
+                events = self._extract_chronological_events(result)
+                all_results.extend(events)
+        
+        return all_results
+
+    async def _recent_news_search(self, task: str, tools: Dict[str, Any]) -> List[Dict]:
+        """Search recent news and developments"""
+        current_year = datetime.now().year
+        queries = [
+            f"{task} news {current_year}",
+            f"{task} research {current_year}",
+            f"new {task} developments {current_year}",
+            f"{task} breakthrough {current_year}",
+            f"latest {task} research papers"
+        ]
+        
+        events = []
+        for query in queries:
+            result = await tools['google_search'].execute(query)
+            if result.get('success'):
+                extracted = self._extract_chronological_events(result)
+                events.extend(extracted)
+        
+        return events
+
+    async def _specific_detail_search(self, task: str, tools: Dict[str, Any]) -> List[Dict]:
+        """Search for specific details and achievements"""
+        # Extract key terms for specific searches
+        key_terms = self._extract_key_terms(task)
+        
+        queries = [
+            *[f"{term} in {task}" for term in key_terms],
+            f"{task} major achievements",
+            f"{task} key developments",
+            f"{task} research progress",
+            f"{task} technological advances"
+        ]
+        
+        events = []
+        for query in queries:
+            result = await tools['google_search'].execute(query)
+            if result.get('success'):
+                extracted = self._extract_chronological_events(result)
+                events.extend(extracted)
+        
+        return events
+
+    async def _organization_search(self, task: str, tools: Dict[str, Any]) -> List[Dict]:
+        """Search for organizational and institutional developments"""
+        queries = [
+            f"leading {task} companies",
+            f"{task} research institutions",
+            f"{task} industry leaders",
+            f"{task} research labs",
+            f"{task} university research"
+        ]
+        
+        events = []
+        for query in queries:
+            result = await tools['google_search'].execute(query)
+            if result.get('success'):
+                extracted = self._extract_chronological_events(result)
+                events.extend(extracted)
+        
+        return events
+
+    def _extract_key_terms(self, task: str) -> List[str]:
+        """Extract key terms from task for specific searches"""
+        # Get topic-specific terms
+        topic_type = self._detect_topic_type(task.lower())
+        base_terms = self.research_topics.get(topic_type, [])
+        
+        # Add general research terms
+        research_terms = [
+            'breakthrough', 'innovation', 'discovery',
+            'progress', 'development', 'achievement'
+        ]
+        
+        return list(set(base_terms + research_terms))
+
+    def _deduplicate_events(self, events: List[Dict]) -> List[Dict]:
+        """Remove duplicate events while preserving the best source"""
+        event_map = {}
+        
+        for event in events:
+            key = self._generate_event_key(event['event'])
+            if key not in event_map or self._is_better_source(event, event_map[key]):
+                event_map[key] = event
+                
+        return sorted(
+            event_map.values(),
+            key=lambda x: x.get('parsed_date', datetime.min),
+            reverse=True  # Most recent first
+        )
+
+    def _is_better_source(self, new_event: Dict, existing_event: Dict) -> bool:
+        """Determine if new source is better than existing"""
+        # Prefer more recent dates
+        new_date = new_event.get('parsed_date', datetime.min)
+        existing_date = existing_event.get('parsed_date', datetime.min)
+        if new_date > existing_date:
+            return True
+            
+        # Check source credibility
+        new_score = self._calculate_source_score(new_event)
+        existing_score = self._calculate_source_score(existing_event)
+        
+        return new_score > existing_score
+
+    def _calculate_source_score(self, event: Dict) -> float:
+        """Calculate a source credibility score"""
+        score = 0.5  # Base score
+        url = event.get('url', '').lower()
+        
+        # Check domain credibility
+        for category, keywords in self.source_credibility.items():
+            if any(kw in url for kw in keywords):
+                score += 0.1
+                break
+        
+        # Prefer sources with dates
+        if event.get('date'):
+            score += 0.1
+            
+        # Prefer sources with longer descriptions
+        event_text = event.get('event', '')
+        if len(event_text) > 100:
+            score += 0.1
+            
+        return min(score, 1.0)
+
+    def _detect_topic_type(self, task: str) -> str:
+        """Detect research topic type"""
+        for topic, keywords in self.research_topics.items():
+            if any(kw in task for kw in keywords):
+                return topic
+        return 'general'
 
     def _extract_chronological_events(self, search_results: Dict[str, Any]) -> List[Dict[str, Any]]:
         """Extract dated events from search results with better error handling"""
