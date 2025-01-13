@@ -6,6 +6,7 @@ from dotenv import load_dotenv
 import nltk
 from rich.console import Console
 from enum import Enum
+from datetime import datetime
 
 from agent.core import Agent, AgentConfig
 from tools.base import BaseTool
@@ -17,7 +18,9 @@ load_dotenv()
 
 class EnhancedJSONEncoder(json.JSONEncoder):
     def default(self, obj):
-        if isinstance(obj, Enum):
+        if isinstance(obj, datetime):
+            return obj.isoformat()
+        elif isinstance(obj, Enum):
             return obj.value
         return super().default(obj)
 

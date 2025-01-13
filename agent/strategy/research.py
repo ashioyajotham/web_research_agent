@@ -43,11 +43,28 @@ class ResearchStrategy(Strategy):
 
     async def execute(self, task: str, context: Dict[str, Any]) -> StrategyResult:
         try:
+            if not context or 'tools' not in context:
+                return StrategyResult(success=False, error="Missing required tools in context")
+
             # Step 1: Initial broad search
             search_results = await context['tools']['google_search'].execute(task)
+            if not search_results or not search_results.get('success'):
+                return StrategyResult(success=False, error="Search failed")
             
             # Step 2: Extract and validate findings
             events = self._extract_chronological_events(search_results)
+            if not events:
+                return StrategyResult(
+                    success=True,
+                    output={
+                        "summary": "No relevant timeline events found",
+                        "timeline": {},
+                        "major_milestones": [],
+                        "latest_developments": [],
+                        "sources": []
+                    },
+                    confidence=0.5
+                )
             
             # Step 3: Source credibility analysis
             credibility_scores = self._analyze_source_credibility(events)
@@ -93,17 +110,96 @@ class ResearchStrategy(Strategy):
         except Exception as e:
             return StrategyResult(success=False, error=str(e))
 
-    def _parse_date(self, date_str: str) -> datetime:
-        """Parse various date formats"""
+    def _extract_chronological_events(self, search_results: Dict[str, Any]) -> List[Dict[str, Any]]:
+        """Extract dated events from search results with better error handling"""
         try:
-            return parser.parse(date_str, fuzzy=True)
-        except:
+            events = []
+            results = search_results.get('results', [])
+            
+            if not results:
+                return []
+
+            for result in results:
+                snippet = result.get('snippet', '')
+                title = result.get('title', '')
+                date = result.get('date', '')
+                url = result.get('link', '')
+                
+                # Extract dates and associated events
+                date_event_pairs = []
+                
+                # Try explicit date from result
+                if date:
+                    date_event_pairs.append((date, snippet))
+                
+                # Extract dates from content
+                for pattern in self.timeline_patterns:
+                    matches = re.finditer(pattern, snippet)
+                    for match in matches:
+                        date_str = match.group('date')
+                        event_text = match.group('event').strip()
+                        if date_str and event_text:
+                            date_event_pairs.append((date_str, event_text))
+                
+                # Add events with dates
+                for date_str, event_text in date_event_pairs:
+                    try:
+                        parsed_date = self._parse_date(date_str)
+                        if parsed_date != datetime.min:  # Valid date
+                            events.append({
+                                'date': date_str,
+                                'event': event_text,
+                                'source': title,
+                                'url': url,
+                                'parsed_date': parsed_date  # For sorting
+                            })
+                    except Exception:
+                        continue
+            
+            # Sort by date
+            return sorted(events, key=lambda x: x.get('parsed_date', datetime.min))
+            
+        except Exception:
+            return []
+
+    def _parse_date(self, date_str: str) -> datetime:
+        """Parse various date formats with better handling"""
+        try:
+            # Add more date format patterns if needed
+            date_patterns = [
+                r'(\d{4})',  # Year only
+                r'([A-Za-z]+\s+\d{4})',  # Month Year
+                r'([A-Za-z]+\s+\d{1,2},?\s+\d{4})',  # Month Day, Year
+            ]
+            
+            # Try direct parsing first
+            try:
+                return parser.parse(date_str, fuzzy=True)
+            except:
+                pass
+            
+            # Try patterns
+            for pattern in date_patterns:
+                match = re.search(pattern, date_str)
+                if match:
+                    try:
+                        return parser.parse(match.group(1), fuzzy=True)
+                    except:
+                        continue
+                        
+            return datetime.min
+            
+        except Exception:
             return datetime.min
 
     def _group_events(self, events: List[Dict]) -> Dict[str, List[Dict]]:
-        """Group events by year and quarter"""
+        """Group events by year and quarter with datetime handling"""
         grouped = {}
         for event in events:
+            # Convert datetime to string in the event dict
+            if 'parsed_date' in event and isinstance(event['parsed_date'], datetime):
+                event['parsed_date'] = event['parsed_date'].isoformat()
+            
             date = self._parse_date(event['date'])
             year = str(date.year)
             quarter = f"Q{(date.month-1)//3 + 1}"
@@ -192,9 +288,167 @@ class ResearchStrategy(Strategy):
                 
         return sorted(validated, key=lambda x: self._parse_date(x['date']))
 
-    def _generate_research_synthesis(self, 
-                                  events: List[Dict],
-                                  categories: Dict[str, List[Dict]],
-                                  credibility: Dict[str, float]) -> Dict[str, Any]:
+    def _generate_research_synthesis(self, events: List[Dict], categories: Dict[str, List[Dict]], credibility: Dict[str, float]) -> Dict[str, Any]:
         """Generate comprehensive research synthesis"""
-        # ...implementation of synthesis generation...
+        try:
+            if not events:
+                return {
+                    'overview': "No relevant research findings available",
+                    'latest': [],
+                    'key_points': [],
+                    'confidence': 0.5
+                }
+            
+            # Sort events by date for latest developments
+            sorted_events = sorted(events, key=lambda x: x.get('parsed_date', datetime.min), reverse=True)
+            latest_events = sorted_events[:5]  # Get 5 most recent events
+            
+            # Generate key points from categorized findings
+            key_points = []
+            for category, cat_events in categories.items():
+                if cat_events:
+                    # Get the most significant event for each category
+                    significant_event = max(cat_events, 
+                                         key=lambda x: x.get('confirmation_count', 1))
+                    key_points.append({
+                        'category': category,
+                        'point': significant_event['event']
+                    })
+            
+            # Calculate overall confidence based on source credibility
+            avg_credibility = sum(credibility.values()) / len(credibility) if credibility else 0.5
+            confidence = min(0.9, avg_credibility + 0.1 * len(key_points))
+            
+            return {
+                'overview': self._generate_overview(events, categories),
+                'latest': latest_events,
+                'key_points': key_points,
+                'confidence': confidence
+            }
+            
+        except Exception as e:
+            return {
+                'overview': "Error generating research synthesis",
+                'latest': [],
+                'key_points': [],
+                'confidence': 0.0
+            }
+
+    def _generate_overview(self, events: List[Dict], categories: Dict[str, List[Dict]]) -> str:
+        """Generate a concise overview of the research findings"""
+        try:
+            if not events:
+                return "No significant findings to report."
+            
+            # Get date range
+            dates = [e.get('parsed_date') for e in events if e.get('parsed_date')]
+            if dates:
+                date_range = f"From {min(dates).year} to {max(dates).year}"
+            else:
+                date_range = "Recent period"
+            
+            # Count significant developments by category
+            category_counts = {cat: len(events) for cat, events in categories.items() if events}
+            main_categories = sorted(category_counts.items(), key=lambda x: x[1], reverse=True)[:3]
+            
+            overview = f"{date_range}, research shows significant developments in "
+            overview += ", ".join(cat for cat, _ in main_categories) if main_categories else "various areas"
+            
+            return overview
+            
+        except Exception:
+            return "Research findings overview not available."
+
+    def _format_sources(self, events: List[Dict]) -> List[Dict]:
+        """Format source information from events with proper datetime handling"""
+        try:
+            if not events:
+                return []
+            
+            # Deduplicate sources while preserving order
+            seen_sources = set()
+            unique_sources = []
+            
+            for event in events:
+                source_key = (event.get('source', ''), event.get('url', ''))
+                if source_key not in seen_sources and event.get('source'):
+                    seen_sources.add(source_key)
+                    
+                    # Convert datetime to string if present
+                    date = event.get('date', '')
+                    if isinstance(date, datetime):
+                        date = date.isoformat()
+                    
+                    unique_sources.append({
+                        'title': event['source'],
+                        'url': event.get('url', ''),
+                        'date': date
+                    })
+            
+            return unique_sources
+            
+        except Exception:
+            return []
+
+    def _generate_event_key(self, event_text: str) -> str:
+        """Generate a normalized key for event comparison"""
+        # Remove common filler words and normalize text
+        filler_words = {'the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for'}
+        normalized = ' '.join(
+            word.lower() for word in event_text.split() 
+            if word.lower() not in filler_words
+        )
+        
+        # Extract key phrases based on patterns
+        key_patterns = [
+            r'(?:announced|launched|released|introduced|developed)\s+([^.]+)',
+            r'(?:breakthrough|achievement|milestone)\s+in\s+([^.]+)',
+            r'(?:first|new|novel)\s+([^.]+)',
+        ]
+        
+        for pattern in key_patterns:
+            match = re.search(pattern, normalized)
+            if match:
+                return match.group(1).strip()
+        
+        # Fallback: use first N significant words
+        words = normalized.split()
+        return ' '.join(words[:5]) if words else normalized
+
+    def _handle_person_query(self, snippet: str) -> Dict[str, Any]:
+        """Specialized handler for person-related queries"""
+        patterns = [
+            r'([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)\s*(?:\(([^)]+)\))?',  # Name with optional title
+            r'([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)\s*,\s*([^,]+)'  # Name with description
+        ]
+        
+        for pattern in re.finditer(patterns[0], snippet):
+            name, title = pattern.groups()
+            if title:
+                return {'name': name.strip(), 'title': title.strip()}
+        
+        for pattern in re.finditer(patterns[1], snippet):
+            name, desc = pattern.groups()
+            return {'name': name.strip(), 'description': desc.strip()}
+            
+        return None
+
+    def _extract_direct_answer(self, query: str, results: List[Dict[str, str]]) -> str:
+        """Extract clean direct answers without source prefixes"""
+        query_lower = query.lower()
+        
+        # Handle "who is richest" type queries
+        if any(term in query_lower for term in ['richest', 'wealthiest']):
+            for result in results:
+                snippet = result.get('snippet', '')
+                matches = re.search(
+                    r'([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)\s*(?:is|remains|became)\s+(?:the\s+)?(?:world\'?s?\s+)?richest',
+                    snippet
+                )
+                if matches:
+                    person_info = self._handle_person_query(snippet)
+                    if person_info:
+                        return f"{person_info['name']} ({person_info.get('title', person_info.get('description', ''))})"
+                    return matches.group(1).strip()
+        
+        return None

@@ -83,9 +83,11 @@ class AnswerProcessor:
         """Extract person-related answers with context"""
         all_text = " ".join(r.get("snippet", "") + " " + r.get("title", "") for r in results)
         
-        # Enhanced patterns for person extraction
+        # Refined patterns for person extraction - remove prefix phrases
         patterns = [
-            r'([A-Z][a-z]+(?:\s+[A-Z][a-z]+)+)(?:\s+is\s+(?:the|a)\s+)?([^,.]+)',
+            # Direct mention pattern
+            r'([A-Z][a-z]+(?:\s+[A-Z][a-z]+)+)(?:\s+is\s+(?:the|a)\s+)?([^,.]+?)(?:\s*[,.]|$)',
+            # Context pattern
             r'([A-Z][a-z]+(?:\s+[A-Z][a-z]+)+)(?:\s*,\s*([^,.]+))',
         ]
         
@@ -102,7 +104,9 @@ class AnswerProcessor:
                 
                 if confidence > max_confidence:
                     name, context = candidate
-                    best_match = f"{name.strip()} ({context.strip()})"
+                    # Remove any prefix phrases like "Richest People" or "The person"
+                    name = re.sub(r'^(?:(?:The|A|An)\s+)?(?:Person|People|Man|Woman|Individual)\s+', '', name.strip())
+                    best_match = f"{name} ({context.strip()})"
                     max_confidence = confidence
         
         return {
@@ -282,7 +286,7 @@ class Agent:
         return TaskType.RESEARCH  # Default to research
 
     async def _handle_direct_question(self, task: str) -> Dict[str, Any]:
-        """Handle direct questions with entity extraction"""
+        """Handle direct questions with cleaner answer extraction"""
         try:
             search_result = await self.tools["google_search"].execute(task)
             if not search_result.get('success'):
@@ -292,17 +296,25 @@ class Agent:
                     "output": {"results": []}
                 }
             
-            # Extract entities and relationships
-            entities = self._extract_entities(search_result.get('results', []))
+            results = search_result.get('results', [])
             
-            # Get direct answer
-            direct_answer = self._construct_direct_answer(task, entities, search_result)
+            # Extract direct answer without source prefixes
+            direct_answer = self._construct_direct_answer(task, {}, results)  # Pass empty entities dict
+            
+            # Remove source prefixes from direct answer
+            if direct_answer and isinstance(direct_answer, str):
+                # Remove source prefixes like "Wikipedia", "According to", etc.
+                direct_answer = re.sub(
+                    r'^(?:(?:According to|From|Source:|Wikipedia:?|Reuters:?)\s*)+',
+                    '',
+                    direct_answer
+                ).strip()
             
             return {
                 "success": True,
                 "output": {
                     "direct_answer": direct_answer,
-                    "results": search_result.get('results', [])
+                    "results": results
                 },
                 "confidence": 0.9 if direct_answer else 0.5
             }
@@ -430,23 +442,19 @@ class Agent:
         # Add entity extraction logic here
         # ...existing code...
 
-    def _construct_direct_answer(self, query: str, entities: Dict[str, Any], results: Dict[str, Any]) -> Optional[str]:
+    def _construct_direct_answer(self, query: str, entities: Dict[str, Any], results: List[Dict[str, str]]) -> Optional[str]:
         """Construct a direct answer with proper context"""
-        if not results or not isinstance(results, dict) or 'results' not in results:
-            return None
-            
-        search_results = results.get('results', [])
-        if not search_results:
+        if not results:
             return None
 
         # Process through answer processor
-        processed_answer = self.answer_processor.extract_direct_answer(query, search_results)
+        processed_answer = self.answer_processor.extract_direct_answer(query, results)
         
-        if processed_answer and processed_answer['answer']:
+        if processed_answer and processed_answer.get('answer'):
             return processed_answer['answer']
             
         # Fallback to basic extraction for person queries
-        all_text = " ".join(r.get("snippet", "") for r in search_results)
+        all_text = " ".join(r.get("snippet", "") for r in results)
         
         # Handle "who is richest" type queries
         if 'richest' in query.lower() and 'world' in query.lower():

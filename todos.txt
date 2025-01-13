@@ -1,1 +1,7 @@
 > Answer extraction (factual queries get direct answers)
+# Next Steps
+
+1. Add more sophisticated pattern matching for research tasks
+2. Implement result validation
+3. Add specialized handlers for different research types (people, events, technical topics)
+4. Improve source filtering and citation handling
