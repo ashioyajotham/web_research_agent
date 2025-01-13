@@ -45,13 +45,15 @@ def main(task_file_path: str, output_file_path: str):
     from tools.web_scraper import WebScraperTool
     from tools.code_tools import CodeGeneratorTool, CodeAnalysisTool
     from tools.dataset_tool import DatasetTool
+    from tools.content_tools import ContentGeneratorTool
     
     tools = {
         "google_search": GoogleSearchTool(),  # This now uses Serper API
         "web_scraper": WebScraperTool(),
         "code_analysis": CodeAnalysisTool(),
         "code_generator": CodeGeneratorTool(),
-        "dataset": DatasetTool()
+        "dataset": DatasetTool(),
+        "content_generator": ContentGeneratorTool()  # Add content generator
     }
     
     # Initialize agent with updated config parameters
@@ -95,5 +97,6 @@ if __name__ == "__main__":
     if len(sys.argv) != 3:
         print("Usage: python agent.py <task_file_path> <output_file_path>")
         sys.exit(1)
+    
     
     main(sys.argv[1], sys.argv[2])

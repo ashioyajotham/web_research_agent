@@ -54,17 +54,17 @@
           "position": 7
         },
         {
-          "title": "The richest person who ever lived - BBC",
-          "link": "https://www.bbc.com/reel/video/p09dcbl0/the-richest-person-who-ever-lived",
-          "snippet": "Mansa Musa ruled over the Mali empire in the 14th Century, and his incredible access to gold made him arguably the richest human to have ever lived.",
-          "date": "3 days ago",
-          "position": 8
-        },
-        {
           "title": "Forbes Daily Briefing: The Top 10 Richest People In The World ...",
           "link": "https://www.facebook.com/forbes/videos/forbes-daily-briefing-the-top-10-richest-people-in-the-world-september-2024/408796715176583/",
           "snippet": "Elon Musk remains at No. 1. But the ups and downs of tech stocks shuffled the ranks of others among the world's top 10 richest.",
           "date": "Sep 5, 2024",
+          "position": 8
+        },
+        {
+          "title": "The richest person who ever lived - BBC",
+          "link": "https://www.bbc.com/reel/video/p09dcbl0/the-richest-person-who-ever-lived",
+          "snippet": "Mansa Musa ruled over the Mali empire in the 14th Century, and his incredible access to gold made him arguably the richest human to have ever lived.",
+          "date": "3 days ago",
           "position": 9
         }
       ]
@@ -74,11 +74,43 @@
   {
     "success": true,
     "output": {
-      "summary": "Latest developments found from multiple sources",
+      "summary": "**1. Overview**\n\nQuantum computing is rapidly evolving, with significant advances being made in materials and technology.\n\n**2. Key Developments**\n\n* Jan. 9, 2025: Breakthrough achieved in carbon-based quantum materials.\n* U.S. Department of Energy's (DOE) Argonne National Laboratory has achieved a milestone towards quantum computing.\n\n**3. Current State**\n\n2023 witnessed significant breakthroughs in quantum computing. Cutting-edge research is ongoing, with new advancements reported regularly on Phys.org.\n\n**4. Future Implications**\n\nThe continued development of quantum computing promises to transform technology and revolutionize problem-solving. The latest breakthroughs pave the way for advancements such as next-generation carbon-based quantum materials and the potential for practical quantum computing applications.",
       "key_findings": [
         "Jan. 9, 2025 \u2014 Researchers have recently achieved a significant breakthrough in the development of next-generation carbon-based quantum materials, opening new ...",
         "A team led by the U.S. Department of Energy's (DOE) Argonne National Laboratory has achieved a major milestone toward future quantum computing.",
-        "All the latest science news on quantum computing from Phys.org. Find the latest news, advancements, and breakthroughs."
+        "All the latest science news on quantum computing from Phys.org. Find the latest news, advancements, and breakthroughs.",
+        "2023 was a landmark year for quantum computing, with innovative breakthroughs promising to reshape our technological landscape and revolutionize how we solve ...",
+        "Jan. 9, 2025 \u2014 Researchers have recently achieved a significant breakthrough in the development of next-generation carbon-based quantum materials, ..."
+      ],
+      "latest_developments": [
+        {
+          "title": "The latest developments in quantum science and technology ...",
+          "link": "https://pme.uchicago.edu/news/world-quantum-day-2024-latest-developments-quantum-science-and-technology",
+          "snippet": "A team led by the U.S. Department of Energy's (DOE) Argonne National Laboratory has achieved a major milestone toward future quantum computing.",
+          "date": "Apr 12, 2024",
+          "position": 2
+        },
+        {
+          "title": "Breakthroughs in Quantum Computing - Wevolver",
+          "link": "https://www.wevolver.com/article/breakthroughs-in-quantum-computing",
+          "snippet": "2023 was a landmark year for quantum computing, with innovative breakthroughs promising to reshape our technological landscape and revolutionize how we solve ...",
+          "date": "Aug 19, 2024",
+          "position": 4
+        },
+        {
+          "title": "Quantum Computing: Breakthroughs, Challenges & What's Ahead",
+          "link": "https://microtime.com/quantum-computing-in-2024-breakthroughs-challenges-and-what-lies-ahead/",
+          "snippet": "In 2024, researchers have made notable advancements in error correction techniques, which are essential for stabilizing qubits and reducing the ...",
+          "date": "Sep 5, 2024",
+          "position": 6
+        }
+      ],
+      "sources": [
+        "Quantum Computers News - ScienceDaily",
+        "The latest developments in quantum science and technology ...",
+        "Quantum Computing - latest research news and features - Phys.org",
+        "Breakthroughs in Quantum Computing - Wevolver",
+        "Quantum Computing News - ScienceDaily"
       ],
       "detailed_results": [
         {
@@ -117,17 +149,17 @@
           "position": 5
         },
         {
-          "title": "Quantum computing | Massachusetts Institute of Technology",
-          "link": "https://news.mit.edu/topic/quantum-computing",
-          "snippet": "A new quantum-system-on-chip enables the efficient control of a large array of qubits, moving toward practical quantum computing.",
-          "date": "",
-          "position": 6
-        },
-        {
           "title": "Quantum Computing: Breakthroughs, Challenges & What's Ahead",
           "link": "https://microtime.com/quantum-computing-in-2024-breakthroughs-challenges-and-what-lies-ahead/",
           "snippet": "In 2024, researchers have made notable advancements in error correction techniques, which are essential for stabilizing qubits and reducing the ...",
           "date": "Sep 5, 2024",
+          "position": 6
+        },
+        {
+          "title": "Quantum computing | Massachusetts Institute of Technology",
+          "link": "https://news.mit.edu/topic/quantum-computing",
+          "snippet": "A new quantum-system-on-chip enables the efficient control of a large array of qubits, moving toward practical quantum computing.",
+          "date": "",
           "position": 7
         },
         {
@@ -158,92 +190,28 @@
   {
     "success": true,
     "output": {
-      "summary": "Latest developments found from multiple sources",
-      "key_findings": [
-        "A Binary search tree is a binary tree where the values of the left sub-tree are less than the root node and the values of the right sub-tree are greater than ...",
-        "Here is a quick example of a binary insert: class Node: def __init__(self, val): self.l_child = None self.r_child = None self.data = val",
-        "Implementing a B-tree in Python \u00b7 Step 1 - BSTNode Class \u00b7 Step 2 - Insert \u00b7 Step 3 - Get Min and Get Max \u00b7 Step 4 - Delete \u00b7 Step 5 - ..."
-      ],
-      "detailed_results": [
-        {
-          "title": "Binary Search Tree In Python - GeeksforGeeks",
-          "link": "https://www.geeksforgeeks.org/binary-search-tree-in-python/",
-          "snippet": "A Binary search tree is a binary tree where the values of the left sub-tree are less than the root node and the values of the right sub-tree are greater than ...",
-          "date": "Apr 8, 2024",
-          "position": 1
-        },
-        {
-          "title": "How to implement a binary search tree in Python? - Stack Overflow",
-          "link": "https://stackoverflow.com/questions/5444394/how-to-implement-a-binary-search-tree-in-python",
-          "snippet": "Here is a quick example of a binary insert: class Node: def __init__(self, val): self.l_child = None self.r_child = None self.data = val",
-          "date": "Mar 26, 2011",
-          "position": 2
-        },
-        {
-          "title": "Writing a Binary Search Tree in Python With Examples - Boot.dev Blog",
-          "link": "https://blog.boot.dev/computer-science/binary-search-tree-in-python/",
-          "snippet": "Implementing a B-tree in Python \u00b7 Step 1 - BSTNode Class \u00b7 Step 2 - Insert \u00b7 Step 3 - Get Min and Get Max \u00b7 Step 4 - Delete \u00b7 Step 5 - ...",
-          "date": "Oct 1, 2022",
-          "position": 3
-        },
-        {
-          "title": "Writing a Binary Search Tree algorithm: proper __str__(self) method ...",
-          "link": "https://discuss.python.org/t/writing-a-binary-search-tree-algorithm-proper-str-self-method-needed/51839",
-          "snippet": "I'm learning algorithm design. Some time ago I completed a binary search algorithm. I am now exploring Binary Search Trees. I have a Python code snippet.",
-          "date": "Apr 24, 2024",
-          "position": 4
-        },
-        {
-          "title": "Binary Search Tree in Python - YouTube",
-          "link": "https://www.youtube.com/watch?v=DlWxqU3LLpY&pp=ygUSI2JpbmFyeXRyZWVleGFtcGxl",
-          "snippet": "Today we learn how to implement binary search trees in Python. \u25fe\u25fe\u25fe\u25fe\u25fe\u25fe\u25fe\u25fe\u25fe\u25fe\u25fe\u25fe\u25fe\u25fe\u25fe\u25fe\u25fe Programming Books & Merch The Python Bible Book: ...",
-          "date": "Feb 10, 2022",
-          "position": 5
-        },
-        {
-          "title": "Searching in Binary Search Tree (BST) - GeeksforGeeks",
-          "link": "https://www.geeksforgeeks.org/binary-search-tree-set-1-search-and-insertion/",
-          "snippet": "Given a BST, the task is to search a node in this BST. For searching a value in BST, consider it as a sorted array.",
-          "date": "Sep 25, 2024",
-          "position": 6
-        },
-        {
-          "title": "Binary Search Tree Python - Scaler Topics",
-          "link": "https://www.scaler.com/topics/binary-search-tree-python/",
-          "snippet": "In this, we try to insert a new key value in an existing Binary Search Tree while retaining its properties and all the existing keys and values.",
-          "date": "May 3, 2023",
-          "position": 7
-        },
-        {
-          "title": "6.14. Search Tree Implementation - Runestone Academy",
-          "link": "https://runestone.academy/ns/books/published/pythonds3/Trees/SearchTreeImplementation.html",
-          "snippet": "To implement the binary search tree, we will use the nodes and references approach similar to the one we used to implement the linked list and the expression ...",
-          "date": "",
-          "position": 8
-        },
-        {
-          "title": "Where's Python's damn binary search tree? - Reddit",
-          "link": "https://www.reddit.com/r/Python/comments/9allgh/wheres_pythons_damn_binary_search_tree/",
-          "snippet": "The optimal solution seems to be a self-balancing binary search tree. But self-balancing binary search trees (or B-trees, similarly) are just way too much work.",
-          "date": "Aug 27, 2018",
-          "position": 9
-        },
-        {
-          "title": "Binary Search Tree(BST) - Programiz",
-          "link": "https://www.programiz.com/dsa/binary-search-tree",
-          "snippet": "A binary search tree is a data structure that quickly allows us to maintain a sorted list of numbers. Also, you will find working examples of Binary Search ...",
-          "date": "",
-          "position": 10
-        }
-      ]
+      "code": "```python\nclass Node:\n    \"\"\"\n    A node in a binary search tree.\n\n    Attributes:\n        value: The value of the node.\n        left: The left child of the node.\n        right: The right child of the node.\n    \"\"\"\n\n    def __init__(self, value: int) -> None:\n        \"\"\"\n        Initializes a new node.\n\n        Args:\n            value: The value of the node.\n        \"\"\"\n        self.value = value\n        self.left = None\n        self.right = None\n\n\nclass BinarySearchTree:\n    \"\"\"\n    A binary search tree.\n\n    Attributes:\n        root: The root node of the tree.\n    \"\"\"\n\n    def __init__(self) -> None:\n        \"\"\"\n        Initializes a new binary search tree.\n        \"\"\"\n        self.root = None\n\n    def insert(self, value: int) -> None:\n        \"\"\"\n        Inserts a new value into the tree.\n\n        Args:\n            value: The value to insert.\n        \"\"\"\n        if self.root is None:\n            self.root = Node(value)\n        else:\n            self._insert(value, self.root)\n\n    def _insert(self, value: int, node: Node) -> None:\n        \"\"\"\n        Inserts a new value into the tree, starting at the specified node.\n\n        Args:\n            value: The value to insert.\n            node: The node to start at.\n        \"\"\"\n        if value < node.value:\n            if node.left is None:\n                node.left = Node(value)\n            else:\n                self._insert(value, node.left)\n        else:\n            if node.right is None:\n                node.right = Node(value)\n            else:\n                self._insert(value, node.right)\n\n    def search(self, value: int) -> bool:\n        \"\"\"\n        Searches for a value in the tree.\n\n        Args:\n            value: The value to search for.\n\n        Returns:\n            True if the value is found, False otherwise.\n        \"\"\"\n        if self.root is None:\n            return False\n        else:\n            return self._search(value, self.root)\n\n    def _search(self, value: int, node: Node) -> bool:\n        \"\"\"\n        Searches for a value in the tree, starting at the specified node.\n\n        Args:\n            value: The value to search for.\n            node: The node to start at.\n\n        Returns:\n            True if the value is found, False otherwise.\n        \"\"\"\n        if value == node.value:\n            return True\n        elif value < node.value:\n            if node.left is None:\n                return False\n            else:\n                return self._search(value, node.left)\n        else:\n            if node.right is None:\n                return False\n            else:\n                return self._search(value, node.right)\n\n    def delete(self, value: int) -> None:\n        \"\"\"\n        Deletes a value from the tree.\n\n        Args:\n            value: The value to delete.\n        \"\"\"\n        if self.root is None:\n            return\n\n        self.root = self._delete(value, self.root)\n\n    def _delete(self, value: int, node: Node) -> Node:\n        \"\"\"\n        Deletes a value from the tree, starting at the specified node.\n\n        Args:\n            value: The value to delete.\n            node: The node to start at.\n\n        Returns:\n            The new root node of the tree.\n        \"\"\"\n        if node is None:\n            return node\n\n        if value < node.value:\n            node.left = self._delete(value, node.left)\n        elif value > node.value:\n            node.right = self._delete(value, node.right)\n        else:\n            if node.left is None:\n                return node.right\n            elif node.right is None:\n                return node.left\n\n            # node with two children: Get the inorder successor (smallest\n            # in the right subtree)\n            successor = self._get_inorder_successor(node.right)\n\n            # Copy the inorder successor's value to this node\n            node.value = successor.value\n\n            # Delete the inorder successor\n            node.right = self._delete(successor.value, node.right)\n\n        return node\n\n    def _get_inorder_successor(self, node: Node) -> Node:\n        \"\"\"\n        Gets the inorder successor of a node.\n\n        Args:\n            node: The node to get the inorder successor of.\n\n        Returns:\n            The inorder successor of the node.\n        \"\"\"\n        if node.left is None:\n            return node\n\n        return self._get_inorder_successor(node.left)\n\n    def min_value(self) -> int:\n        \"\"\"\n        Gets the minimum value in the tree.\n\n        Returns:\n            The minimum value in the tree.\n        \"\"\"\n        if self.root is None:\n            raise ValueError(\"Tree is empty\")\n\n        node = self.root\n        while node.left is not None:\n            node = node.left\n\n        return node.value\n\n    def max_value(self) -> int:\n        \"\"\"\n        Gets the maximum value in the tree.\n\n        Returns:\n            The maximum value in the tree.\n        \"\"\"\n        if self.root is None:\n            raise ValueError(\"Tree is empty\")\n\n        node = self.root\n        while node.right is not None:\n            node = node.right\n\n        return node.value\n\n    def in_order_traversal(self) -> list[int]:\n        \"\"\"\n        Performs an in-order traversal of the tree.\n\n        Returns:\n            A list of the values in the tree in ascending order.\n        \"\"\"\n        values = []\n        self._in_order_traversal(self.root, values)\n        return values\n\n    def _in_order_traversal(self, node: Node, values: list[int]) -> None:\n        \"\"\"\n        Performs an in-order traversal of the tree, starting at the specified node.\n\n        Args:\n            node: The node to start at.\n            values: The list to store the values in.\n        \"\"\"\n        if node is not None:\n            self._in_order_traversal(node.left, values)\n            values.append(node.value)\n            self._in_order_traversal(node.right, values)\n\n    def pre_order_traversal(self) -> list[int]:\n        \"\"\"\n        Performs a pre-order traversal of the tree.\n\n        Returns:\n            A list of the values in the tree in pre-order.\n        \"\"\"\n        values = []\n        self._pre_order_traversal(self.root, values)\n        return values\n\n    def _pre_order_traversal(self, node: Node, values: list[int]) -> None:\n        \"\"\"\n        Performs a pre-order traversal of the tree, starting at the specified node.\n\n        Args:\n            node: The node to start at.\n            values: The list to store the values in.\n        \"\"\"\n        if node is not None:\n            values.append(node.value)\n            self._pre_order_traversal(node.left, values)\n            self._pre_order_traversal(node.right, values)\n\n    def post_order_traversal(self) -> list[int]:\n        \"\"\"\n        Performs a post-order traversal of the tree.\n\n        Returns:\n            A list of the values in the tree in post-order.\n        \"\"\"\n        values = []\n        self._post_order_traversal(self.root, values)\n        return values\n\n    def _post_order_traversal(self, node: Node, values: list[int]) -> None:\n        \"\"\"\n        Performs a post-order traversal of the tree, starting at the specified node.\n\n        Args:\n            node: The node to start at.\n            values: The list to store the values in.\n        \"\"\"\n        if node is not None:\n            self._post_order_traversal(node.left, values)\n            self._post_order_traversal(node.right, values)\n            values.append(node.value)\n\n\n# Example usage\ntree = BinarySearchTree()\ntree.insert(10)\ntree.insert(5)\ntree.insert(15)\ntree.insert(2)\ntree.insert(7)\ntree.insert(12)\ntree.insert(20)\n\nprint(tree.in_order_traversal())  # [2, 5, 7, 10, 12, 15, 20]\nprint(tree.pre_order_traversal())  # [10, 5, 2, 7, 15, 12, 20]\nprint(tree.post_order_traversal())  # [2, 7",
+      "explanation": "The code defines a binary search tree (BST) data structure and its operations in Python. A BST is a tree data structure that stores data in a way that allows for efficient searching and retrieval.\n\n**Node Class:**\n- The `Node` class represents a node in the BST.\n- It has three attributes: `value` (the value stored in the node), `left` (a reference to the left child node), and `right` (a reference to the right child node).\n\n**BinarySearchTree Class:**\n- The `BinarySearchTree` class represents the BST itself.\n- It has one attribute: `root`, which is a reference to the root node of the tree.\n\n**Insertion (insert):**\n- The `insert` method inserts a new value into the BST.\n- It first checks if the tree is empty (i.e., `root` is `None`). If so, it creates a new node with the given value and sets it as the root.\n- Otherwise, it calls the `_insert` helper method to insert the value into the tree.\n- The `_insert` method recursively traverses the tree, comparing the new value to the values in the nodes.\n- It inserts the new value as a left child if it's less than the current node's value and as a right child if it's greater.\n\n**Searching (search):**\n- The `search` method searches for a value in the BST.\n- It first checks if the tree is empty. If so, it returns `False`.\n- Otherwise, it calls the `_search` helper method to search for the value in the tree.\n- The `_search` method recursively traverses the tree, comparing the search value to the values in the nodes.\n- It returns `True` if the value is found and `False` otherwise.\n\n**Deletion (delete):**\n- The `delete` method deletes a value from the BST.\n- It first checks if the tree is empty. If so, it returns.\n- It then calls the `_delete` helper method to delete the value from the tree.\n- The `_delete` method recursively traverses the tree, comparing the delete value to the values in the nodes.\n- It deletes the node with the delete value and adjusts the tree structure accordingly.\n\n**Other Methods:**\n- `min_value`: Returns the minimum value in the BST.\n- `max_value`: Returns the maximum value in the BST.\n- `in_order_traversal`: Performs an in-order traversal of the BST and returns a list of values in ascending order.\n- `pre_order_traversal`: Performs a pre-order traversal of the BST and returns a list of values in pre-order.\n- `post_order_traversal`: Performs a post-order traversal of the BST and returns a list of values in post-order.\n\n**Example Usage:**\n- An example usage of the BST is provided at the end of the code.\n- It creates a BST, inserts values into it, and then prints the results of the in-order, pre-order, and post-order traversals.",
+      "examples": [],
+      "type": "code_implementation"
     },
     "confidence": 0.8
   },
   {
-    "success": false,
-    "error": "Content generation tool not available",
+    "success": true,
     "output": {
-      "message": "Please use a content generation tool for this task"
+      "content": {
+        "success": true,
+        "content": "## Python Data Structures: A Comprehensive Guide for Beginners\n\n### Introduction\n\nData structures are essential building blocks in any programming language. In Python, a versatile and popular language, data structures offer efficient organization and manipulation of data. This blog post provides a comprehensive guide to Python data structures, covering their types, operations, and real-world applications.\n\n### Types of Python Data Structures\n\nPython offers a wide range of data structures, each suited to specific purposes. Key types include:\n\n**1. Lists:**\n- Mutable, ordered sequences of elements\n- Can contain elements of mixed data types\n- Operations: item access, slicing, concatenation, sort\n```\nmy_list = [1, 2.5, \"hello\"]\nmy_list.append(4)\n```\n\n**2. Tuples:**\n- Immutable, ordered sequences of elements\n- Elements must be of the same data type\n- Operations: item access, slicing\n```\nmy_tuple = (1, 2.5, \"hello\")\n```\n\n**3. Dictionaries:**\n- Unordered collections of key-value pairs\n- Keys must be unique and hashable\n- Operations: item access, key deletion\n```\nmy_dict = {\"name\": \"John\", \"age\": 25}\nmy_dict[\"occupation\"] = \"Developer\"\n```\n\n**4. Sets:**\n- Unordered collections of unique elements\n- Operations: set union, intersection, difference\n```\nmy_set = {\"apple\", \"banana\", \"cherry\"}\n```\n\n### Operations on Data Structures\n\nPython data structures support various common operations:\n\n**1. Item Access:**\n```\nmy_list[0]  # Get the first element of a list\nmy_dict[\"name\"]  # Get the value associated with the \"name\" key in a dictionary\n```\n\n**2. Slicing:**\n```\nmy_list[1:3]  # Get a range of elements from a list\nmy_tuple[0::2]  # Get elements with a step of 2 from a tuple\n```\n\n**3. Concatenation:**\n```\nnew_list = my_list1 + my_list2  # Concatenate two lists\n```\n\n**4. Iteration:**\n```\nfor item in my_list:  # Iterate over each element in a list\nfor key in my_dict:  # Iterate over the keys in a dictionary\n```\n\n### Applications of Data Structures\n\nPython data structures find widespread use in various applications:\n\n**1. Data Organization:**\n- Lists and dictionaries organize data into structured formats for easy retrieval and manipulation.\n\n**2. Algorithm Implementation:**\n- Lists and sets form the basis of many algorithms, such as sorting, searching, and graph traversal.\n\n**3. Data Analysis:**\n- Dictionaries and sets are used extensively in data analysis to store and analyze datasets.\n\n**4. Object-Oriented Programming:**\n- Classes and objects in Python are implemented using data structures to manage their attributes and methods.\n\n### Conclusion\n\nPython data structures provide a powerful toolkit for organizing and manipulating data. By understanding their types, operations, and applications, developers can leverage these structures to build efficient and effective Python programs. This guide has covered the basics of Python data structures, and with practice, you can master their complexities to unlock their full potential.\n\n### References\n\n- [Python Data Structures Tutorial](https://docs.python.org/3/tutorial/datastructures.html)\n- [Data Structures in Python](https://www.tutorialspoint.com/python/python_data_structures.htm)",
+        "type": "article",
+        "confidence": 0.8,
+        "metadata": {
+          "format": "markdown",
+          "topic": "write a blog post about Python data structures",
+          "generated_at": "2025-01-13T16:42:44.354425"
+        }
+      },
+      "type": "article"
     }
   }
 ]

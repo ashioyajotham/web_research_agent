@@ -16,6 +16,7 @@ from utils.logger import AgentLogger
 from planning.task_planner import TaskPlanner
 from memory.memory_store import MemoryStore
 from learning.pattern_learner import PatternLearner
+from .strategy import ResearchStrategy  # Change from strategy.research to .strategy
 
 @dataclass
 class AgentConfig:
@@ -246,10 +247,38 @@ class Agent:
             }
 
     def _detect_task_type(self, task: str) -> TaskType:
+        """Improved task type detection"""
         task_lower = task.lower()
+        
+        # Code Generation Patterns
+        code_patterns = [
+            r'implement (?:a|an|the)?\s+\w+',
+            r'create (?:a|an|the)?\s+(?:\w+\s+)?(?:class|function|implementation)',
+            r'write (?:a|an|the)?\s+(?:\w+\s+)?(?:code|program|algorithm)',
+        ]
+        
+        # Content Generation Patterns
+        content_patterns = [
+            r'write (?:a|an|the)?\s+(?:blog|article|post|guide)',
+            r'create (?:a|an|the)?\s+(?:tutorial|documentation)',
+            r'explain (?:how|why|what)'
+        ]
+        
+        # Check code patterns first
+        for pattern in code_patterns:
+            if re.search(pattern, task_lower):
+                return TaskType.CODE
+                
+        # Then content patterns
+        for pattern in content_patterns:
+            if re.search(pattern, task_lower):
+                return TaskType.CONTENT
+                
+        # Then check other patterns
         for task_type, pattern in self.task_patterns.items():
             if re.search(pattern, task_lower):
                 return task_type
+                
         return TaskType.RESEARCH  # Default to research
 
     async def _handle_direct_question(self, task: str) -> Dict[str, Any]:
@@ -287,39 +316,89 @@ class Agent:
             }
 
     async def _handle_research(self, task: str) -> Dict[str, Any]:
-        """Handle research tasks with organized results"""
+        """Handle research tasks with chronological organization"""
         try:
-            search_results = await self.tools["google_search"].execute(task)
-            if not search_results.get('success'):
+            research_strategy = ResearchStrategy()
+            result = await research_strategy.execute(task, {"tools": self.tools})
+            
+            if not result.success:
                 return {
                     "success": False,
-                    "error": "Search failed",
+                    "error": result.error,
                     "output": {"results": []}
                 }
             
-            results = search_results.get('results', [])
-            if not results:
-                return {
-                    "success": False,
-                    "error": "No results found",
-                    "output": {"results": []}
-                }
-            
-            # Process and organize results
-            processed = {
-                "summary": "Latest developments found from multiple sources",
-                "key_findings": [r.get('snippet', '') for r in results[:3]],
-                "detailed_results": results
+            # Format the output chronologically
+            timeline = result.output["timeline"]
+            formatted_output = {
+                "chronological_summary": {
+                    "years": [{
+                        "year": year,
+                        "quarters": [{
+                            "quarter": quarter,
+                            "events": events
+                        } for quarter, events in quarters.items()]
+                    } for year, quarters in timeline.items()]
+                },
+                "major_milestones": result.output["major_milestones"],
+                "latest_developments": result.output["latest_developments"],
+                "sources": result.output["sources"]
             }
             
             return {
                 "success": True,
-                "output": processed,
-                "confidence": 0.8
+                "output": formatted_output,
+                "confidence": result.confidence
             }
             
         except Exception as e:
             self.logger.error(f"Research handling failed: {str(e)}")
+            return {
+                "success": False,
+                "error": str(e),
+                "output": {"results": []}
+            }
+
+    async def _handle_code_generation(self, task: str) -> Dict[str, Any]:
+        """Enhanced code generation handling"""
+        try:
+            if "code_generator" not in self.tools:
+                return {
+                    "success": False,
+                    "error": "Code generator not available",
+                    "output": {"results": []}
+                }
+
+            # Force code generation
+            result = await self.tools["code_generator"].execute(
+                query=task,
+                params={
+                    "force_generate": True,  # New flag to force code generation
+                    "language": "python",
+                    "include_examples": True
+                }
+            )
+
+            if not result.get("success"):
+                return {
+                    "success": False,
+                    "error": "Code generation failed",
+                    "output": {"results": []}
+                }
+
+            return {
+                "success": True,
+                "output": {
+                    "code": result.get("code"),
+                    "explanation": result.get("explanation", ""),
+                    "examples": result.get("examples", []),
+                    "type": "code_implementation"
+                },
+                "confidence": result.get("confidence", 0.7)
+            }
+
+        except Exception as e:
+            self.logger.error(f"Code generation failed: {str(e)}")
             return {
                 "success": False,
                 "error": str(e),

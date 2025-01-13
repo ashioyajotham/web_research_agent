@@ -1,4 +1,4 @@
-from typing import Dict, Any
+from typing import Dict, Any, List
 from datetime import datetime
 import pandas as pd
 from rich.console import Console
@@ -12,135 +12,106 @@ class PrettyFormatter:
     def __init__(self):
         self.console = Console()
 
-    def format_task_result(self, task: str, result: Dict[str, Any]):
-        """Format a task result with better error handling and display"""
-        # Create main panel
-        task_panel = Panel(
-            Text(task, style="bold blue"),
-            title="Task",
-            border_style="blue"
-        )
-        self.console.print(task_panel)
-
-        # Status section with more detail
-        status = "✅ Success" if result.get("success") else "❌ Failed"
-        status_color = "green" if result.get("success") else "red"
-        self.console.print(f"\n[{status_color}]Status: {status}[/{status_color}]")
-
-        # Error handling with more context
-        if error := result.get("error"):
-            error_detail = error
-            if "execution_time" in result:
-                error_detail += f"\nExecution time: {result['execution_time']:.3f}s"
-            if "confidence" in result:
-                error_detail += f"\nConfidence: {result['confidence']:.2f}"
-                
-            error_panel = Panel(
-                Text(error_detail, style="red"),
-                title="Error Details",
-                border_style="red"
-            )
-            self.console.print(error_panel)
-            
-            # Suggest possible solutions
-            if "timeout" in error.lower():
-                self.console.print("[yellow]Suggestion: Try increasing the timeout value or breaking down the task[/yellow]")
-            elif "tool not found" in error.lower():
-                self.console.print("[yellow]Suggestion: Verify tool configuration and dependencies[/yellow]")
-            
+    def format_task_result(self, task: str, result: Dict[str, Any]) -> None:
+        """Format and display task results with improved readability"""
+        # Show task header
+        self.console.print(f"\n[bold cyan]Task:[/bold cyan] {task}")
+        
+        if not result.get("success"):
+            self.console.print(f"[bold red]Error:[/bold red] {result.get('error', 'Unknown error')}")
             return
 
-        # Metrics
-        metrics_table = Table(title="Execution Metrics", show_header=True, header_style="bold cyan")
-        metrics_table.add_column("Metric", style="cyan")
-        metrics_table.add_column("Value", style="white")
-        
-        metrics_table.add_row("Confidence", f"{result.get('confidence', 0.0):.2f}")
-        metrics_table.add_row("Execution Time", f"{result.get('execution_time', 0.0):.3f}s")
-        
-        if steps_taken := result.get("steps_taken"):
-            metrics_table.add_row("Steps Taken", str(steps_taken))
-            
-        self.console.print(metrics_table)
-
-        # Output handling
         output = result.get("output", {})
-        if output:
-            if direct_answer := output.get("direct_answer"):
-                self.console.print("\n[bold green]Answer:[/bold green]", direct_answer)
-                if metadata := output.get("metadata"):
-                    self.console.print("\n[dim]Additional Information:[/dim]")
-                    for key, value in metadata.items():
-                        self.console.print(f"[dim]{key}:[/dim] {value}")
-            else:
-                # First show specific answer if available
-                if specific_answer := output.get("specific_answer"):
-                    answer_panel = Panel(
-                        Text(f"Answer: {specific_answer['value']}\n\n" +
-                             f"Confidence: {specific_answer['confidence']:.2f}\n" +
-                             (f"Source: {specific_answer['source']}\n" if specific_answer['source'] else "") +
-                             (f"Context: {specific_answer['context']}" if specific_answer['context'] else ""),
-                             style="green"),
-                        title="Extracted Answer",
-                        border_style="green"
-                    )
-                    self.console.print(answer_panel)
-                    
-                # Handle different output types
-                if isinstance(output, dict) and "code" in output:
-                    # Direct code object
-                    code = output["code"]
-                    if isinstance(code, dict):
-                        code = code.get("code", "")  # Extract code from nested structure
-                    if isinstance(code, str):
-                        syntax = Syntax(code, "python", theme="monokai", line_numbers=True)
-                        self.console.print(Panel(syntax, title="Generated Code", border_style="green"))
-                
-                elif "code" in output:
-                    # Code output
-                    code = output["code"]
-                    if isinstance(code, str):
-                        syntax = Syntax(code, "python", theme="monokai", line_numbers=True)
-                        self.console.print(Panel(syntax, title="Generated Code", border_style="green"))
-                
-                elif "data" in output:
-                    # Data analysis output
-                    data_panel = Panel(
-                        Text(str(output["data"]), style="white"),
-                        title="Data Analysis Results",
-                        border_style="cyan"
-                    )
-                    self.console.print(data_panel)
-                
-                elif "results" in output:
-                    # Search/research results
-                    if output["results"]:
-                        results_table = Table(show_header=True, header_style="bold magenta")
-                        results_table.add_column("Result", style="white", width=80)
-                        results_table.add_column("Source", style="dim blue")
-                        
-                        for item in output["results"]:
-                            if isinstance(item, dict):
-                                title = item.get("title", "No Title")
-                                link = item.get("link", "No Source")
-                                snippet = item.get("snippet", "No Content")
-                                results_table.add_row(f"{title}\n{snippet}", link)
-                            else:
-                                results_table.add_row(str(item), "N/A")
-                                
-                        self.console.print(results_table)
-                    else:
-                        self.console.print("[yellow]No results found[/yellow]")
-                
-                # Additional metadata if present
-                if metadata := output.get("metadata"):
-                    self.console.print("\n[bold cyan]Metadata:[/bold cyan]")
-                    for key, value in metadata.items():
-                        self.console.print(f"[dim]{key}:[/dim] {value}")
+        
+        # Handle different output types
+        if "direct_answer" in output:
+            self._format_direct_answer(output)
+        elif "chronological_summary" in output:
+            self._format_research_timeline(output)
+        elif "code" in output:
+            self._format_code_output(output)
+        elif "content" in output:
+            self._format_blog_content(output)
+        
+        # Show confidence
+        confidence = result.get("confidence", 0)
+        color = "green" if confidence > 0.8 else "yellow" if confidence > 0.5 else "red"
+        self.console.print(f"\n[{color}]Confidence: {confidence:.0%}[/{color}]")
 
-        # Execution metrics if present
-        if metrics := result.get("execution_metrics"):
-            self.console.print("\n[bold cyan]Execution Details:[/bold cyan]")
-            for key, value in metrics.items():
-                if key != "error":  # Skip error messages here as they're shown above
-                    self.console.print(f"[dim]{key}:[/dim] {value}")
+    def _format_direct_answer(self, output: Dict[str, Any]) -> None:
+        """Format direct answers with supporting info"""
+        if output.get("direct_answer"):
+            self.console.print(Panel(
+                f"[bold green]{output['direct_answer']}[/bold green]",
+                title="Answer",
+                border_style="green"
+            ))
+        
+        if "results" in output and output["results"]:
+            self._show_sources(output["results"][:3])
+
+    def _format_research_timeline(self, output: Dict[str, Any]) -> None:
+        """Format research results as a timeline"""
+        # Show latest developments first
+        if output.get("latest_developments"):
+            table = Table(title="Latest Developments", show_header=True)
+            table.add_column("Date", style="cyan")
+            table.add_column("Development", style="white")
+            
+            for event in output["latest_developments"]:
+                table.add_row(
+                    event.get("date", "N/A"),
+                    event.get("event", "").strip()
+                )
+            self.console.print(table)
+        
+        # Show major milestones
+        if output.get("major_milestones"):
+            self.console.print("\n[bold]Major Milestones:[/bold]")
+            for milestone in output["major_milestones"]:
+                self.console.print(f"• {milestone.get('event', '')}")
+        
+        # Show sources
+        if output.get("sources"):
+            self._show_sources(output["sources"])
+
+    def _format_code_output(self, output: Dict[str, Any]) -> None:
+        """Format code output with syntax highlighting"""
+        if output.get("code"):
+            # Show code with syntax highlighting
+            self.console.print("\n[bold]Implementation:[/bold]")
+            syntax = Syntax(
+                output["code"],
+                "python",
+                theme="monokai",
+                line_numbers=True
+            )
+            self.console.print(syntax)
+            
+            # Show explanation if available
+            if output.get("explanation"):
+                self.console.print("\n[bold]Explanation:[/bold]")
+                self.console.print(Markdown(output["explanation"]))
+
+    def _format_blog_content(self, output: Dict[str, Any]) -> None:
+        """Format blog/article content with Markdown"""
+        if output.get("content"):
+            content = output["content"]
+            if isinstance(content, dict):
+                content = content.get("content", "")
+            self.console.print(Markdown(content))
+
+    def _show_sources(self, sources: List[Dict[str, Any]]) -> None:
+        """Display reference sources"""
+        self.console.print("\n[bold]Sources:[/bold]")
+        for i, source in enumerate(sources, 1):
+            if isinstance(source, dict):
+                title = source.get("title", source.get("source", "Unknown"))
+                url = source.get("link", source.get("url", ""))
+                self.console.print(f"{i}. {title}")
+                if url:
+                    self.console.print(f"   [dim]{url}[/dim]")
+            elif isinstance(source, (list, tuple)) and len(source) == 2:
+                title, url = source
+                self.console.print(f"{i}. {title}")
+                self.console.print(f"   [dim]{url}[/dim]")

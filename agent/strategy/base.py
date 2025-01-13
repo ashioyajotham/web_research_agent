@@ -5,10 +5,10 @@ from dataclasses import dataclass
 @dataclass
 class StrategyResult:
     success: bool
-    steps_taken: List[Dict[str, Any]]
-    output: str
-    confidence: float
-    metadata: Dict[str, Any]
+    output: Dict[str, Any] = None
+    error: str = None
+    confidence: float = 0.0
+    metadata: Dict[str, Any] = None
 
 class Strategy(ABC):
     @abstractmethod

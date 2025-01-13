@@ -323,21 +323,27 @@ class CodeGeneratorTool(BaseTool):
         )
 
     async def execute(self, query: Optional[str] = None, **kwargs) -> Dict[str, Any]:
-        """Generate code based on query with algorithm awareness"""
+        """Generate code based on query with improved algorithm handling"""
         try:
             prompt = query or kwargs.get('prompt', '')
             template = kwargs.get('template', '')
+            algo_type = kwargs.get('algorithm_type', '')
             
-            # Detect algorithm type and get appropriate template
-            algo_type, algo_template = self._detect_algorithm_type(prompt)
+            # Enhanced prompt for code generation
+            generation_prompt = f"""Generate a complete Python implementation for: {prompt}
+
+            Requirements:
+            1. Include proper class and method documentation
+            2. Add type hints
+            3. Include error handling
+            4. Add example usage
+            5. Follow Python best practices
             
-            if template:
-                prompt = f"Modify this code:\n{template}\n\nBased on this request:\n{prompt}"
-            elif algo_template:
-                prompt = self._get_algorithm_prompt(prompt, algo_type, algo_template)
+            Return the implementation in a code block.
+            """
             
             # Generate response
-            response = self.model.generate_content(prompt)
+            response = self.model.generate_content(generation_prompt)
             
             if not response.text:
                 return {
@@ -354,17 +360,18 @@ class CodeGeneratorTool(BaseTool):
                     "code": None
                 }
                 
-            # Verify code quality
-            analysis = self._analyze_generated_code(code)
+            # Add explanation and examples
+            explanation_prompt = f"Explain how the following code works:\n```python\n{code}\n```"
+            explanation_response = self.model.generate_content(explanation_prompt)
             
             return {
                 "success": True,
                 "code": code,
-                "confidence": analysis['confidence'],
+                "explanation": explanation_response.text if explanation_response.text else "",
+                "confidence": 0.8,
                 "metadata": {
                     "algorithm_type": algo_type,
-                    "complexity": analysis['complexity'],
-                    "quality_score": analysis['quality_score']
+                    "language": "python"
                 }
             }
             
