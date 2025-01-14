@@ -4,17 +4,32 @@ from .base import BaseTool
 from typing import Dict, Any
 
 class WebScraperTool(BaseTool):
-    def execute(self, url: str) -> str:
+    def execute(self, url: str, **kwargs) -> Dict[str, Any]:
         try:
+            # Ignore max_length param if provided but use it for truncation if specified
+            max_length = kwargs.get('max_length', 500000)
+            
             response = requests.get(
                 url,
                 headers={'User-Agent': 'Mozilla/5.0'},
                 timeout=10
             )
             response.raise_for_status()
-            return self._extract_main_content(response.text)
+            text = self._extract_main_content(response.text)
+            
+            # Truncate to max_length if needed
+            if len(text) > max_length:
+                text = text[:max_length]
+                
+            return {
+                'success': True,
+                'output': text
+            }
         except Exception as e:
-            return f"Error scraping URL: {str(e)}"
+            return {
+                'success': False,
+                'error': str(e)
+            }
     
     def _extract_main_content(self, html: str) -> str:
         soup = BeautifulSoup(html, 'html.parser')

@@ -6,6 +6,12 @@ from typing import Any, Dict
 import json
 from logging.handlers import RotatingFileHandler
 
+class CustomFormatter(logging.Formatter):
+    def format(self, record):
+        if not hasattr(record, 'context'):
+            record.context = ''
+        return super().format(record)
+
 class AgentLogger:
     def __init__(self, log_dir: str = "./logs"):
         self.log_dir = Path(log_dir)
@@ -38,7 +44,7 @@ class AgentLogger:
             
             # Formatters
             console_format = logging.Formatter('%(message)s')
-            file_format = logging.Formatter('%(asctime)s [%(levelname)s] %(context)s: %(message)s')
+            file_format = CustomFormatter('%(asctime)s [%(levelname)s] %(context)s: %(message)s')
             
             console_handler.setFormatter(console_format)
             file_handler.setFormatter(file_format)
@@ -57,7 +63,7 @@ class AgentLogger:
             maxBytes=10_000_000,
             backupCount=5
         )
-        formatter = logging.Formatter('%(asctime)s - %(message)s')
+        formatter = CustomFormatter('%(asctime)s - %(message)s')
         file_handler.setFormatter(formatter)
         logger.addHandler(file_handler)
         
@@ -91,3 +97,19 @@ class AgentLogger:
             "timestamp": datetime.now().isoformat(),
             **metrics
         }))
+
+    def error(self, message: str, *args: Any, **kwargs: Any) -> None:
+        """Log error messages"""
+        self.logger.error(message, *args, **kwargs)
+
+    def warning(self, message: str, *args: Any, **kwargs: Any) -> None:
+        """Log warning messages"""
+        self.logger.warning(message, *args, **kwargs)
+
+    def info(self, message: str, *args: Any, **kwargs: Any) -> None:
+        """Log info messages"""
+        self.logger.info(message, *args, **kwargs)
+
+    def debug(self, message: str, *args: Any, **kwargs: Any) -> None:
+        """Log debug messages"""
+        self.logger.debug(message, *args, **kwargs)

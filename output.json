@@ -1,7 +1,113 @@
 [
   {
     "success": false,
-    "error": "FACTUAL_QUERY",
-    "task": "when did moi die"
+    "output": {
+      "results": [],
+      "extracted_data": {}
+    },
+    "confidence": 0.0,
+    "steps_completed": 0,
+    "total_steps": 2
+  },
+  {
+    "success": false,
+    "output": {
+      "results": [],
+      "extracted_data": {}
+    },
+    "confidence": 0.0,
+    "steps_completed": 0,
+    "total_steps": 2
+  },
+  {
+    "success": false,
+    "output": {
+      "results": [],
+      "extracted_data": {}
+    },
+    "confidence": 0.0,
+    "steps_completed": 0,
+    "total_steps": 2
+  },
+  {
+    "success": false,
+    "output": {
+      "analyses": [],
+      "insights": [],
+      "summary": null
+    },
+    "confidence": 0.0,
+    "steps_completed": 0,
+    "total_steps": 3
+  },
+  {
+    "success": false,
+    "output": {
+      "results": [],
+      "extracted_data": {}
+    },
+    "confidence": 0.0,
+    "steps_completed": 0,
+    "total_steps": 2
+  },
+  {
+    "success": false,
+    "output": {
+      "results": [],
+      "extracted_data": {}
+    },
+    "confidence": 0.0,
+    "steps_completed": 0,
+    "total_steps": 2
+  },
+  {
+    "success": false,
+    "output": {
+      "results": [],
+      "extracted_data": {}
+    },
+    "confidence": 0.0,
+    "steps_completed": 0,
+    "total_steps": 2
+  },
+  {
+    "success": false,
+    "output": {
+      "results": [],
+      "extracted_data": {}
+    },
+    "confidence": 0.0,
+    "steps_completed": 0,
+    "total_steps": 2
+  },
+  {
+    "success": false,
+    "output": {
+      "results": [],
+      "extracted_data": {}
+    },
+    "confidence": 0.0,
+    "steps_completed": 0,
+    "total_steps": 2
+  },
+  {
+    "success": false,
+    "output": {
+      "results": [],
+      "extracted_data": {}
+    },
+    "confidence": 0.0,
+    "steps_completed": 0,
+    "total_steps": 2
+  },
+  {
+    "success": false,
+    "output": {
+      "results": [],
+      "extracted_data": {}
+    },
+    "confidence": 0.0,
+    "steps_completed": 0,
+    "total_steps": 2
   }
 ]

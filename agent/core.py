@@ -625,6 +625,12 @@ class Agent:
             }
         )
 
+         # Initialize available tools map with actual available tools including content_tools
+        self.available_tools = {
+            name: tool for name, tool in tools.items() 
+            if name in ['google_search', 'web_scraper', 'content_generator']
+        }
+
     async def process_tasks(self, tasks: List[str]) -> List[Dict[str, Any]]:
         """Process tasks with better criteria handling"""
         # Parse tasks to understand relationships
@@ -715,7 +721,20 @@ class Agent:
         
         for step in steps:
             try:
-                step_result = await self._execute_step(step, context)
+                # Get tool instance
+                tool_name = step.get('tool')
+                tool = self.tools.get(tool_name)
+                
+                if not tool:
+                    raise ValueError(f"Tool {tool_name} not found")
+                    
+                # Execute tool
+                params = self._prepare_tool_params(step.get('action'), context)
+                step_result = await tool.execute(**params)
+                
+                if not isinstance(step_result, dict):
+                    step_result = {'success': False, 'error': 'Invalid tool response'}
+                    
                 results.append(step_result)
                 
                 # Adapt strategy based on results
@@ -723,9 +742,26 @@ class Agent:
                 
             except Exception as e:
                 self.logger.error(f"Step execution failed: {str(e)}")
-                continue
-        
+                results.append({
+                    'success': False,
+                    'error': str(e)
+                })
+                
         return self._combine_results(results, strategy, context)
+
+    def _prepare_tool_params(self, action: str, context: Dict[str, Any]) -> Dict[str, Any]:
+        """Prepare parameters for tool execution"""
+        params = {}
+        task = context.get('task', '')
+        
+        if action == 'search':
+            params['query'] = task
+        elif action == 'scrape':
+            params['url'] = context.get('url', '')
+        elif action in ['analyze', 'summarize']:
+            params['text'] = context.get('content', '')
+        
+        return params
 
     async def _learn_from_execution(self, task: str, result: Dict, context: Dict):
         """Learn from task execution"""
@@ -1037,7 +1073,7 @@ class Agent:
         max_retries = 3
         retry_count = 0
         
-        while retry_count < max_retries:
+        while (retry_count < max_retries):
             try:
                 result = await self._execute_task(task)
                 return result
@@ -1449,3 +1485,600 @@ class Agent:
             'timestamp': datetime.now()
         })
 
+    def _analyze_linguistics(self, task: str) -> Dict[str, Any]:
+        """Analyze linguistic features of the task"""
+        return {
+            'length': len(task.split()),
+            'question_type': self._detect_question_type(task),
+            'tense': self._detect_tense(task),
+            'keywords': self._extract_keywords(task)
+        }
+
+    def _detect_question_type(self, text: str) -> str:
+        """Detect type of question if present"""
+        text_lower = text.lower()
+        if text_lower.startswith('who'):
+            return 'person'
+        elif text_lower.startswith('what'):
+            return 'definition'
+        elif text_lower.startswith('when'):
+            return 'temporal'
+        elif text_lower.startswith('where'):
+            return 'location'
+        elif text_lower.startswith('why'):
+            return 'reason'
+        elif text_lower.startswith('how'):
+            return 'method'
+        return 'statement'
+
+    def _detect_tense(self, text: str) -> str:
+        """Basic tense detection"""
+        text_lower = text.lower()
+        if any(word in text_lower for word in ['will', 'going to']):
+            return 'future'
+        elif any(word in text_lower for word in ['did', 'was', 'were']):
+            return 'past'
+        return 'present'
+
+    def _extract_keywords(self, text: str) -> List[str]:
+        """Extract important keywords from text"""
+        # Simple keyword extraction
+        stop_words = {'the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to'}
+        return [word.lower() for word in text.split() if word.lower() not in stop_words]
+
+    def _analyze_semantics(self, task: str) -> Dict[str, Any]:
+        """Analyze semantic features of the task"""
+        try:
+            # Extract semantic features
+            features = {
+                'domain': self._infer_domain(task),
+                'intent': self._infer_intent(task),
+                'entities': self._extract_semantic_entities(task),
+                'requirements': self._extract_requirements(task)
+            }
+            return features
+        except Exception as e:
+            self.logger.warning(f"Semantic analysis failed: {str(e)}")
+            return {
+                'domain': 'unknown',
+                'intent': 'unknown',
+                'entities': [],
+                'requirements': []
+            }
+
+    def _infer_domain(self, task: str) -> str:
+        """Infer the domain of the task"""
+        task_lower = task.lower()
+        domains = {
+            'technical': ['code', 'programming', 'software', 'algorithm', 'data'],
+            'business': ['revenue', 'company', 'market', 'sales', 'profit'],
+            'scientific': ['research', 'study', 'analysis', 'experiment'],
+            'environmental': ['emissions', 'climate', 'sustainability'],
+            'general': ['find', 'search', 'list', 'compile', 'identify']
+        }
+        
+        scores = {domain: sum(1 for kw in keywords if kw in task_lower)
+                 for domain, keywords in domains.items()}
+        return max(scores.items(), key=lambda x: x[1])[0]
+
+    def _infer_intent(self, task: str) -> str:
+        """Infer the intent of the task"""
+        task_lower = task.lower()
+        
+        if any(w in task_lower for w in ['find', 'search', 'locate']):
+            return 'search'
+        elif any(w in task_lower for w in ['analyze', 'examine', 'study']):
+            return 'analysis'
+        elif any(w in task_lower for w in ['compare', 'contrast', 'versus']):
+            return 'comparison'
+        elif any(w in task_lower for w in ['list', 'enumerate', 'compile']):
+            return 'compilation'
+        return 'general'
+
+    def _extract_semantic_entities(self, task: str) -> List[str]:
+        """Extract semantic entities from task"""
+        # Look for proper nouns and key entities
+        entities = []
+        words = task.split()
+        for i, word in enumerate(words):
+            if (word[0].isupper() and (i == 0 or not words[i-1].endswith('.'))) or \
+               any(char.isdigit() for char in word):
+                entities.append(word)
+        return entities
+
+    def _extract_requirements(self, task: str) -> List[str]:
+        """Extract specific requirements from task"""
+        requirements = []
+        requirement_indicators = [
+            'must', 'should', 'need to', 'required to', 'has to',
+            'criteria:', 'requirements:', 'conditions:'
+        ]
+        
+        sentences = task.split('.')
+        for sentence in sentences:
+            if any(indicator in sentence.lower() for indicator in requirement_indicators):
+                requirements.append(sentence.strip())
+                
+        return requirements
+
+    def _extract_temporal_context(self, task: str) -> Dict[str, Any]:
+        """Extract temporal context from task text"""
+        try:
+            # Use existing temporal_processor to extract dates and periods
+            temporal_info = {
+                'dates': [],
+                'periods': [],
+                'relative_refs': [],
+                'context': None
+            }
+
+            # Extract explicit dates using temporal_processor
+            if hasattr(self.temporal_processor, 'extract_dates'):
+                dates = self.temporal_processor.extract_dates(task)
+                if dates:
+                    temporal_info['dates'] = dates
+
+            # Extract time periods (e.g., "2021 to 2023", "last 3 years")
+            period_patterns = [
+                r'(\d{4})\s*(?:to|through|until|-)?\s*(\d{4})',
+                r'(?:last|past|previous)\s+(\d+)\s+(?:year|month|day)s?',
+                r'(?:since|from)\s+(\d{4})',
+                r'(?:until|through|to)\s+(\d{4})'
+            ]
+
+            for pattern in period_patterns:
+                if matches := re.finditer(pattern, task, re.IGNORECASE):
+                    temporal_info['periods'].extend(m.group() for m in matches)
+
+            # Extract relative temporal references
+            relative_patterns = [
+                r'(?:current|this)\s+(?:year|month|quarter)',
+                r'(?:next|previous|last)\s+(?:year|month|quarter)',
+                r'(?:recently|lately|nowadays)',
+                r'(?:earlier|later|before|after)'
+            ]
+
+            for pattern in relative_patterns:
+                if matches := re.finditer(pattern, task, re.IGNORECASE):
+                    temporal_info['relative_refs'].extend(m.group() for m in matches)
+
+            # Set primary temporal context if available
+            if temporal_info['dates']:
+                temporal_info['context'] = temporal_info['dates'][0]
+            elif temporal_info['periods']:
+                temporal_info['context'] = temporal_info['periods'][0]
+            elif temporal_info['relative_refs']:
+                temporal_info['context'] = temporal_info['relative_refs'][0]
+
+            return temporal_info
+
+        except Exception as e:
+            self.logger.warning(f"Temporal context extraction failed: {str(e)}")
+            return {
+                'dates': [],
+                'periods': [],
+                'relative_refs': [],
+                'context': None
+            }
+
+    def _requires_information_gathering(self, task: str, context: Dict[str, Any]) -> bool:
+        """Determine if task requires gathering information"""
+        task_lower = task.lower()
+        
+        # Check semantic context
+        semantic = context.get('semantic', {})
+        if semantic.get('intent') in ['search', 'research', 'compilation']:
+            return True
+            
+        # Check explicit indicators
+        info_gathering_indicators = [
+            'find', 'search', 'gather', 'collect', 'compile',
+            'locate', 'identify', 'list', 'research',
+            'what is', 'who is', 'where is', 'when'
+        ]
+        
+        return any(indicator in task_lower for indicator in info_gathering_indicators)
+
+    def _requires_analysis(self, task: str, context: Dict[str, Any]) -> bool:
+        """Determine if task requires analysis"""
+        task_lower = task.lower()
+        
+        # Check semantic context
+        semantic = context.get('semantic', {})
+        if semantic.get('intent') in ['analysis', 'comparison']:
+            return True
+            
+        # Check explicit indicators
+        analysis_indicators = [
+            'analyze', 'analyse', 'examine', 'study',
+            'compare', 'evaluate', 'assess', 'investigate',
+            'explain', 'understand', 'determine'
+        ]
+        
+        return any(indicator in task_lower for indicator in analysis_indicators)
+
+    def _requires_generation(self, task: str, context: Dict[str, Any]) -> bool:
+        """Determine if task requires content generation"""
+        task_lower = task.lower()
+        
+        # Check semantic context
+        semantic = context.get('semantic', {})
+        if semantic.get('intent') in ['generation', 'creation']:
+            return True
+            
+        # Check explicit indicators
+        generation_indicators = [
+            'create', 'generate', 'write', 'compose',
+            'produce', 'make', 'develop', 'implement',
+            'build', 'design', 'construct'
+        ]
+        
+        return any(indicator in task_lower for indicator in generation_indicators)
+
+    def _create_info_gathering_strategy(self) -> Dict[str, Any]:
+        """Create strategy for information gathering tasks using available tools"""
+        steps = []
+        
+        # Only add steps for tools we actually have
+        if 'google_search' in self.available_tools:
+            steps.append({'action': 'search', 'tool': 'google_search'})
+        if 'web_scraper' in self.available_tools:
+            steps.append({'action': 'extract', 'tool': 'web_scraper'})
+            
+        return {
+            'type': 'information_gathering',
+            'steps': steps,
+            'fallback': {'action': 'search', 'tool': 'google_search'} if 'google_search' in self.available_tools else None
+        }
+
+    def _create_analysis_strategy(self) -> Dict[str, Any]:
+        """Create strategy for analysis tasks"""
+        return {
+            'type': 'analysis',
+            'steps': [
+                {'action': 'gather', 'tool': 'google_search'},
+                {'action': 'analyze', 'tool': 'content_generator', 'params': {'operation': 'analyze'}},
+                {'action': 'summarize', 'tool': 'content_generator', 'params': {'operation': 'summarize'}}
+            ],
+            'fallback': {'action': 'analyze', 'tool': 'content_generator', 'params': {'operation': 'analyze'}}
+        }
+
+    def _create_generation_strategy(self) -> Dict[str, Any]:
+        """Create strategy for generation tasks"""
+        return {
+            'type': 'generation',
+            'steps': [
+                {'action': 'research', 'tool': 'google_search'},
+                {'action': 'generate', 'tool': 'content_generator'},
+                {'action': 'refine', 'tool': 'content_refiner'}
+            ],
+            'fallback': {'action': 'generate', 'tool': 'content_generator'}
+        }
+
+    def _combine_strategies(self, strategies: List[Dict[str, Any]], context: Dict) -> Dict[str, Any]:
+        """Combine multiple strategies into a single coherent strategy"""
+        if not strategies:
+            return self._create_info_gathering_strategy()
+            
+        if len(strategies) == 1:
+            return strategies[0]
+            
+        # Combine steps from all strategies while removing duplicates
+        combined_steps = []
+        seen_actions = set()
+        
+        for strategy in strategies:
+            for step in strategy.get('steps', []):
+                action_key = f"{step['action']}_{step['tool']}"
+                if action_key not in seen_actions:
+                    combined_steps.append(step)
+                    seen_actions.add(action_key)
+        
+        # Use the type of the highest priority strategy
+        primary_type = strategies[0]['type']
+        
+        return {
+            'type': primary_type,
+            'steps': combined_steps,
+            'fallback': strategies[0].get('fallback')
+        }
+
+    def _prepare_tool_params(self, action: str, context: Dict[str, Any]) -> Dict[str, Any]:
+        """Prepare parameters for tool execution based on action and context"""
+        params = {}
+        
+        # Extract task/query from context
+        task = context.get('task', '')
+        
+        # Default parameters based on action type
+        if action == 'search':
+            params['query'] = task
+            params.update(self._prepare_search_params(task))
+            
+        elif action == 'extract' or action == 'scrape':
+            params['url'] = context.get('url', '')
+            params['max_length'] = 10000  # Reasonable default
+            
+        elif action == 'analyze':
+            params['text'] = context.get('content', '')
+            params['detailed'] = True
+            
+        elif action == 'filter':
+            params['content'] = context.get('content', '')
+            params['criteria'] = context.get('criteria', {})
+            
+        elif action == 'generate':
+            params['prompt'] = task
+            params['max_length'] = 2000
+            
+        elif action == 'summarize':
+            params['text'] = context.get('content', '')
+            params['max_length'] = 500
+            
+        return params
+
+    async def _execute_step(self, step: Dict[str, str], context: Dict[str, Any]) -> Dict[str, Any]:
+        """Execute a single strategy step with proper error handling"""
+        try:
+            action = step['action']
+            tool_name = step['tool']
+            
+            # Check if tool is available
+            if tool_name not in self.available_tools:
+                self.logger.warning(f"Tool {tool_name} not available")
+                return {
+                    'success': False,
+                    'error': f"Tool {tool_name} not available",
+                    'action': action,
+                    'tool': tool_name
+                }
+            
+            # Prepare tool parameters with operation type for content_generator
+            params = {}
+            if action == 'search':
+                params['query'] = context.get('task', '')
+            elif action == 'extract':
+                params['url'] = context.get('url', '')
+            elif action in ['analyze', 'summarize']:
+                params['query'] = context.get('content', '')
+                params['operation'] = action
+                
+            # Execute tool with prepared parameters
+            result = await self.available_tools[tool_name].execute(**params)
+            
+            return {
+                'success': bool(result.get('success', False)),
+                'output': result.get('output', {}),
+                'action': action,
+                'tool': tool_name,
+                'confidence': float(result.get('confidence', 0.0))
+            }
+                
+        except Exception as e:
+            self.logger.error(f"Step execution failed: {str(e)}")
+            return {
+                'success': False,
+                'error': str(e),
+                'action': step.get('action', 'unknown'),
+                'tool': step.get('tool', 'unknown')
+            }
+
+    def _combine_results(self, results: List[Dict[str, Any]], strategy: Dict[str, Any], context: Dict[str, Any]) -> Dict[str, Any]:
+        """Combine results from multiple steps into a final result"""
+        if not results:
+            return {
+                'success': False,
+                'error': 'No results to combine',
+                'output': {'results': []}
+            }
+            
+        # Count successful steps
+        successful_steps = sum(1 for r in results if r.get('success', False))
+        total_steps = len(results)
+        
+        # Calculate overall success and confidence
+        success = successful_steps > 0
+        confidence = (successful_steps / total_steps) if total_steps > 0 else 0.0
+        
+        # Combine outputs based on strategy type
+        strategy_type = strategy.get('type', 'information_gathering')
+        combined_output = self._combine_outputs_by_type(results, strategy_type, context)
+        
+        return {
+            'success': success,
+            'output': combined_output,
+            'confidence': confidence,
+            'steps_completed': successful_steps,
+            'total_steps': total_steps
+        }
+
+    def _combine_outputs_by_type(self, results: List[Dict[str, Any]], strategy_type: str, context: Dict[str, Any]) -> Dict[str, Any]:
+        """Combine outputs based on strategy type"""
+        if strategy_type == 'information_gathering':
+            return self._combine_information_outputs(results)
+        elif strategy_type == 'analysis':
+            return self._combine_analysis_outputs(results)
+        elif strategy_type == 'generation':
+            return self._combine_generation_outputs(results)
+        else:
+            return {'results': [r.get('output', {}) for r in results if r.get('success', False)]}
+
+    def _combine_information_outputs(self, results: List[Dict[str, Any]]) -> Dict[str, Any]:
+        """Combine information gathering outputs"""
+        combined_results = []
+        extracted_data = {}
+        
+        for result in results:
+            if not result.get('success', False):
+                continue
+                
+            output = result.get('output', {})
+            if 'results' in output:
+                combined_results.extend(output['results'])
+            if 'extracted_data' in output:
+                extracted_data.update(output['extracted_data'])
+        
+        return {
+            'results': combined_results[:10],  # Limit to top 10 most relevant results
+            'extracted_data': extracted_data
+        }
+
+    def _combine_analysis_outputs(self, results: List[Dict[str, Any]]) -> Dict[str, Any]:
+        """Combine analysis outputs"""
+        analyses = []
+        insights = []
+        
+        for result in results:
+            if not result.get('success', False):
+                continue
+                
+            output = result.get('output', {})
+            if 'analysis' in output:
+                analyses.append(output['analysis'])
+            if 'insights' in output:
+                insights.extend(output['insights'])
+        
+        return {
+            'analyses': analyses,
+            'insights': insights,
+            'summary': self._generate_analysis_summary(analyses) if analyses else None
+        }
+
+    def _combine_generation_outputs(self, results: List[Dict[str, Any]]) -> Dict[str, Any]:
+        """Combine generation outputs"""
+        generated_content = []
+        metadata = {}
+        
+        for result in results:
+            if not result.get('success', False):
+                continue
+                
+            output = result.get('output', {})
+            if 'content' in output:
+                generated_content.append(output['content'])
+            if 'metadata' in output:
+                metadata.update(output['metadata'])
+        
+        return {
+            'content': '\n'.join(generated_content),
+            'metadata': metadata,
+            'sources': [r.get('tool') for r in results if r.get('success', False)]
+        }
+
+    def _generate_analysis_summary(self, analyses: List[Dict[str, Any]]) -> str:
+        """Generate a summary of multiple analyses"""
+        if not analyses:
+            return ""
+            
+        # Combine key points from all analyses
+        key_points = []
+        for analysis in analyses:
+            if isinstance(analysis, dict):
+                key_points.extend(analysis.get('key_points', []))
+            elif isinstance(analysis, str):
+                key_points.append(analysis)
+                
+        return "\n".join(f"- {point}" for point in key_points[:5])
+
+    def _adapt_strategy(self, strategy: Dict[str, Any], step_result: Dict[str, Any], context: Dict[str, Any]) -> Dict[str, Any]:
+        """Adapt strategy based on step execution results and context"""
+        try:
+            # Don't modify original strategy
+            adapted_strategy = dict(strategy)
+            remaining_steps = adapted_strategy.get('steps', [])[:]
+            
+            # If step failed, try alternative approach
+            if not step_result.get('success', False):
+                tool_name = step_result.get('tool')
+                action = step_result.get('action')
+                
+                # Try to find alternative tool for same action
+                alternative = self._find_alternative_tool(action, tool_name)
+                if alternative:
+                    # Replace failed step with alternative
+                    for i, step in enumerate(remaining_steps):
+                        if step['tool'] == tool_name and step['action'] == action:
+                            remaining_steps[i] = {'action': action, 'tool': alternative}
+                            break
+                            
+                # If no alternative tool, try fallback action
+                elif fallback := strategy.get('fallback'):
+                    remaining_steps.append(fallback)
+            
+            # Adjust strategy based on results
+            adapted_strategy.update({
+                'steps': remaining_steps,
+                'confidence': self._calculate_strategy_confidence(strategy, step_result),
+                'last_result': step_result
+            })
+            
+            # Add any dynamic steps based on results
+            if dynamic_steps := self._generate_dynamic_steps(step_result, context):
+                adapted_strategy['steps'].extend(dynamic_steps)
+            
+            return adapted_strategy
+            
+        except Exception as e:
+            self.logger.warning(f"Strategy adaptation failed: {str(e)}")
+            return strategy
+
+    def _find_alternative_tool(self, action: str, failed_tool: str) -> Optional[str]:
+        """Find alternative tool for an action"""
+        action_tools = {
+            'search': ['google_search', 'duckduckgo_search', 'bing_search'],
+            'extract': ['web_scraper', 'html_parser', 'content_extractor'],
+            'analyze': ['content_analyzer', 'text_analyzer', 'semantic_analyzer'],
+            'filter': ['content_filter', 'text_filter', 'relevance_filter'],
+            'generate': ['content_generator', 'text_generator', 'llm_generator'],
+            'summarize': ['summarizer', 'text_summarizer', 'content_summarizer']
+        }
+        
+        if action in action_tools:
+            alternatives = [tool for tool in action_tools[action] 
+                          if tool in self.tools and tool != failed_tool]
+            return alternatives[0] if alternatives else None
+        return None
+
+    def _calculate_strategy_confidence(self, strategy: Dict[str, Any], step_result: Dict[str, Any]) -> float:
+        """Calculate strategy confidence based on step results"""
+        base_confidence = strategy.get('confidence', 0.7)
+        step_confidence = float(step_result.get('confidence', 0.0))
+        
+        if step_result.get('success', False):
+            # Successful step slightly increases confidence
+            return min(base_confidence * 1.1, 1.0)
+        else:
+            # Failed step significantly decreases confidence
+            return max(base_confidence * 0.5, 0.1)
+
+    def _generate_dynamic_steps(self, step_result: Dict[str, Any], context: Dict[str, Any]) -> List[Dict[str, str]]:
+        """Generate additional steps based on results"""
+        dynamic_steps = []
+        
+        if step_result.get('success', False):
+            output = step_result.get('output', {})
+            
+            # Add verification step for important information
+            if output.get('critical_info'):
+                dynamic_steps.append({
+                    'action': 'verify',
+                    'tool': 'fact_checker'
+                })
+            
+            # Add refinement step for generated content
+            if output.get('content'):
+                dynamic_steps.append({
+                    'action': 'refine',
+                    'tool': 'content_refiner'
+                })
+            
+            # Add summarization for large amounts of data
+            if len(str(output)) > 1000:
+                dynamic_steps.append({
+                    'action': 'summarize',
+                    'tool': 'summarizer'
+                })
+        
+        return dynamic_steps
+
+    # ...existing code...
