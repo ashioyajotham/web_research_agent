@@ -1,5 +1,5 @@
 import os
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, List, Optional, Tuple
 from dataclasses import dataclass
 import asyncio
 import time
@@ -18,6 +18,7 @@ from memory.memory_store import MemoryStore
 from learning.pattern_learner import PatternLearner
 from .strategy import ResearchStrategy
 from .task_parser import TaskParser, ParsedTask
+from .utils.temporal_processor import TemporalProcessor
 
 
 @dataclass
@@ -56,14 +57,19 @@ class AgentConfig:
 class AnswerProcessor:
     def __init__(self, config: AgentConfig):
         self.config = config
+        # Simplified query patterns to be more generic
         self.query_patterns = {
-            'person_query': r'^who\s+(?:is|was|are|were)',
-            'factual_query': r'^(?:what|when|where|why|how)',
-            'quantity_query': r'(?:how\s+(?:much|many)|what\s+(?:amount|percentage|number))',
+            'temporal_query': r'^when\s+.+',
+            'entity_query': r'^(?:who|what)\s+.+',
+            'location_query': r'^where\s+.+',
+            'reason_query': r'^(?:why|how)\s+.+',
+            'quantity_query': r'(?:how\s+(?:much|many)|what\s+(?:amount|number))'
         }
         self.answer_extractors = {
-            'person_query': self._extract_person_answer,
-            'factual_query': self._extract_factual_answer,
+            'temporal_query': self._extract_temporal_answer,
+            'entity_query': self._extract_entity_answer,
+            'location_query': self._extract_location_answer,
+            'reason_query': self._extract_reason_answer,
             'quantity_query': self._extract_quantity_answer
         }
 
@@ -193,14 +199,136 @@ class AnswerProcessor:
             "type": "quantity"
         }
 
+    def _extract_temporal_answer(self, query: str, results: List[Dict[str, str]]) -> Dict[str, Any]:
+        """Extract any temporal information from text"""
+        all_text = " ".join(r.get("snippet", "") + " " + r.get("title", "") for r in results)
+        
+        # Generic date patterns without specific event types
+        date_patterns = [
+            r'(?:on|at|in)\s+([A-Z][a-z]+\s+\d{1,2}(?:st|nd|rd|th)?,?\s+\d{4})',
+            r'([A-Z][a-z]+\s+\d{1,2}(?:st|nd|rd|th)?,?\s+\d{4})',
+            r'(?:in|during)\s+([A-Z][a-z]+\s+\d{4})',
+            r'(\d{4})'
+        ]
+        
+        return self._extract_with_patterns(date_patterns, all_text, 'temporal')
+
+    def _extract_with_patterns(self, patterns: List[str], text: str, answer_type: str) -> Dict[str, Any]:
+        """Generic pattern extraction with confidence scoring"""
+        best_match = None
+        max_confidence = 0.0
+        
+        for pattern in patterns:
+            matches = re.findall(pattern, text, re.IGNORECASE)
+            if matches:
+                counter = Counter(matches)
+                candidate = counter.most_common(1)[0][0]
+                confidence = min(0.5 + (counter[candidate] / len(matches)) * 0.5, 0.95)
+                
+                if confidence > max_confidence:
+                    best_match = candidate.strip()
+                    max_confidence = confidence
+        
+        return {
+            "answer": best_match,
+            "confidence": max_confidence,
+            "type": answer_type
+        }
+
+    def _extract_location_answer(self, query: str, results: List[Dict[str, str]]) -> Dict[str, Any]:
+        """Extract location-related answers"""
+        all_text = " ".join(r.get("snippet", "") + " " + r.get("title", "") for r in results)
+        
+        location_patterns = [
+            r'(?:in|at)\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*(?:\s*,\s*[A-Z][a-z]+)?)',
+            r'(?:location|place|city|country):\s*([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)',
+            r'(?:located|situated)\s+in\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)'
+        ]
+        
+        best_match = None
+        max_confidence = 0.0
+        
+        for pattern in location_patterns:
+            matches = re.findall(pattern, all_text)
+            if matches:
+                counter = Counter(matches)
+                candidate = counter.most_common(1)[0][0]
+                confidence = min(0.5 + (counter[candidate] / len(matches)) * 0.5, 0.95)
+                
+                if confidence > max_confidence:
+                    best_match = candidate.strip()
+                    max_confidence = confidence
+        
+        return {
+            "answer": best_match,
+            "confidence": max_confidence,
+            "type": "location"
+        }
+
 class TaskType(Enum):
-    FACTUAL_QUERY = "factual_query"  # Direct questions
-    RESEARCH = "research"  # Research tasks
-    CODE = "code"  # Code generation
-    CONTENT = "content"  # Blog/article writing
-    DATA_ANALYSIS = "data_analysis"  # Data processing
-    GENERAL = "general"  # Add this new type
-    COMPLETION = "completion"  # Add this new type
+    QUERY = "query"          # Any question or information request
+    ANALYSIS = "analysis"    # Any analytical task
+    GENERATION = "generation"  # Any content generation task
+    GENERAL = "general"      # Fallback type
+
+class MetricPattern:
+    def __init__(self, pattern: str, unit: str, normalization: float = 1.0):
+        self.pattern = pattern
+        self.unit = unit
+        self.normalization = normalization
+
+class MetricExtractor:
+    def __init__(self):
+        self.patterns = {
+            'emissions': [
+                MetricPattern(r'(\d+(?:\.\d+)?)\s*(?:million\s+)?(?:metric\s+)?(?:tons?|t)\s*(?:CO2|CO2e|carbon)', 'tCO2e', 1_000_000),
+                MetricPattern(r'(\d+(?:\.\d+)?)\s*(?:MT|Mt)\s*(?:CO2|CO2e)', 'tCO2e', 1_000_000)
+            ],
+            'percentage': [
+                MetricPattern(r'(\d+(?:\.\d+)?)\s*(?:percent|pct|%)', '%', 1.0),
+                MetricPattern(r'reduced\s+by\s+(\d+(?:\.\d+)?)\s*(?:percent|pct|%)', '%', 1.0)
+            ],
+            'currency': [
+                MetricPattern(r'(?:USD|€|£)?\s*(\d+(?:\.\d+)?)\s*(?:billion|bn)', 'USD', 1_000_000_000),
+                MetricPattern(r'(?:USD|€|£)?\s*(\d+(?:\.\d+)?)\s*(?:million|mn)', 'USD', 1_000_000)
+            ]
+        }
+
+    def extract_metrics(self, text: str, metric_type: str = None) -> List[Tuple[float, str]]:
+        """Extract metrics of specified type from text"""
+        results = []
+        patterns = self.patterns.get(metric_type, []) if metric_type else [p for patterns in self.patterns.values() for p in patterns]
+        
+        for pattern in patterns:
+            matches = re.finditer(pattern.pattern, text, re.IGNORECASE)
+            for match in matches:
+                try:
+                    value = float(match.group(1)) * pattern.normalization
+                    results.append((value, pattern.unit))
+                except (ValueError, IndexError):
+                    continue
+        return results
+
+    def calculate_percentage_change(self, old_value: float, new_value: float) -> float:
+        """Calculate percentage change between two values"""
+        if old_value == 0:
+            return float('inf') if new_value > 0 else 0
+        return ((new_value - old_value) / old_value) * 100
+
+class MetricType:
+    """Generic metric type handler"""
+    def __init__(self, pattern: str, unit: str = '', scale: float = 1.0):
+        self.pattern = pattern
+        self.unit = unit
+        self.scale = scale
+        
+    def extract(self, text: str) -> Optional[float]:
+        if match := re.search(self.pattern, text, re.IGNORECASE):
+            try:
+                return float(match.group(1)) * self.scale
+            except (ValueError, IndexError):
+                return None
+        return None
 
 class Agent:
     def __init__(self, tools: Dict[str, BaseTool], config: Optional[AgentConfig] = None):
@@ -212,6 +340,10 @@ class Agent:
         self.executor = Executor(tools, parallel=self.config.parallel_execution)
         self.logger = AgentLogger()
         self.answer_processor = AnswerProcessor(self.config)
+        self.metric_extractor = MetricExtractor()
+        self.temporal_processor = TemporalProcessor()
+        self.temporal_context: Optional[datetime] = None
+        self.context_history: List[Dict[str, Any]] = []
         
         api_key = os.getenv("GEMINI_API_KEY")
         if not api_key:
@@ -219,18 +351,14 @@ class Agent:
         genai.configure(api_key=api_key)
         self.model = genai.GenerativeModel('gemini-pro')
         
+        # Replace specific task patterns with more generic ones
         self.task_patterns = {
-            TaskType.FACTUAL_QUERY: r'^(?:who|what|when|where|why|how)\s+(?:is|are|was|were|do|does|did)',
-            TaskType.RESEARCH: r'(?:research|analyze|investigate|compare|study|find|search)',
-            TaskType.CODE: r'(?:implement|code|program|create\s+a\s+program|write\s+code)',
-            TaskType.CONTENT: r'(?:write|create|compose|draft)\s+(?:a|an)\s+(?:blog|article|post|essay)',
-            TaskType.DATA_ANALYSIS: r'(?:data|dataset|database|analyze\s+data)'
+            TaskType.QUERY: r'^(?:who|what|when|where|why|how)\s+.+',
+            TaskType.RESEARCH: r'(?:find|search|research|analyze|investigate)\s+.+',
+            TaskType.GENERATION: r'(?:create|generate|write|compose|implement)\s+.+',
+            TaskType.ANALYSIS: r'(?:analyze|compare|evaluate|assess)\s+.+',
+            TaskType.GENERAL: r'.*'
         }
-        
-        self.task_patterns.update({
-            TaskType.COMPLETION: r'^(?:[a-zA-Z]+\s+is\s*|complete\s+this|finish\s+this|what\s+comes\s+after)',
-            TaskType.GENERAL: r'.*'  # Catch-all pattern
-        })
         
         # Add completion prompts
         self.completion_prefixes = [
@@ -238,6 +366,15 @@ class Agent:
             "success is", "the purpose of"
         ]
         self.task_parser = TaskParser()
+
+        # Replace rigid metric types with flexible pattern matching
+        self.metric_patterns = {
+            # Generic numerical patterns
+            'number': MetricType(r'(\d+(?:\.\d+)?)\s*(?:units?)?'),
+            'percentage': MetricType(r'(\d+(?:\.\d+)?)\s*%'),
+            'currency': MetricType(r'(?:USD|€|£)?\s*(\d+(?:\.\d+)?)\s*(?:billion|million)?'),
+            'measurement': MetricType(r'(\d+(?:\.\d+)?)\s*(?:kg|km|m|ft|lbs)')
+        }
 
     async def process_tasks(self, tasks: List[str]) -> List[Dict[str, Any]]:
         """Process tasks with better criteria handling"""
@@ -379,28 +516,48 @@ class Agent:
     def _generate_criteria_summary(self, results: List[Dict], criteria: Dict) -> str:
         """Generate a human-readable summary of the matching results"""
         if not results:
-            return "No companies found matching all criteria."
-            
-        summary = "Companies matching all criteria:\n\n"
+            return "No matches found for the given criteria."
+        
+        # Detect entity type from criteria or task context
+        entity_type = self._detect_entity_type(criteria)
+        
+        summary = f"Matching {entity_type}s:\n\n"
         for result in results:
-            summary += f"- {result.get('title', 'Unknown')}\n"
+            # Basic info
+            name = result.get('title', 'Unknown')
+            summary += f"- {name}\n"
+            
+            # Add matching criteria details
             if 'detailed_content' in result:
-                relevant_info = self._extract_relevant_info(result['detailed_content'], criteria)
-                if relevant_info:
-                    summary += f"  {relevant_info}\n"
-                    
+                summary += "  Matching criteria:\n"
+                for criterion, value in result['detailed_content'].items():
+                    summary += f"    • {criterion}: {value}\n"
+            summary += "\n"
+        
         return summary
 
-    def _extract_relevant_info(self, content: str, criteria: Dict) -> str:
-        """Extract relevant information based on the criteria"""
-        info = []
+    def _detect_entity_type(self, criteria: Dict) -> str:
+        """Detect the type of entity being searched for"""
+        # Common entity indicators in criteria
+        entity_indicators = {
+            'company': ['revenue', 'headquarters', 'employees', 'industry'],
+            'person': ['age', 'occupation', 'education', 'nationality'],
+            'location': ['population', 'area', 'climate', 'coordinates'],
+            'product': ['price', 'features', 'manufacturer', 'specifications'],
+            'animal': ['species', 'habitat', 'diet', 'lifespan'],
+            'plant': ['height', 'native', 'climate', 'soil']
+        }
         
-        # Extract specific information based on criteria types
-        for criterion_type, criterion in criteria.items():
-            if match := self._extract_criterion_info(content, criterion_type, criterion):
-                info.append(match)
-                
-        return "; ".join(info) if info else ""
+        # Count matches for each entity type
+        matches = {
+            entity: sum(1 for indicator in indicators 
+                       if any(indicator.lower() in str(c).lower() 
+                             for c in criteria.values()))
+            for entity, indicators in entity_indicators.items()
+        }
+        
+        # Return most likely entity type or default to 'item'
+        return max(matches.items(), key=lambda x: x[1])[0] if matches else 'item'
 
     async def process_task(self, task: str) -> Dict[str, Any]:
         try:
@@ -418,6 +575,8 @@ class Agent:
                 return await self._handle_code_generation(task)
             elif task_type == TaskType.CONTENT:
                 return await self._handle_content_creation(task)
+            elif task_type == TaskType.NUMERICAL_COMPARISON:
+                return await self._handle_numerical_comparison(task)
             else:
                 return await self._handle_data_task(task)
                 
@@ -452,11 +611,16 @@ class Agent:
         if any(term in task_lower for term in ['write', 'compose', 'create article']):
             return TaskType.CONTENT
             
+        # Add numerical comparison detection
+        if any(term in task_lower for term in ['increase', 'decrease', 'reduce', 'change', 'compare']):
+            if any(term in task_lower for term in ['percent', '%', 'ratio', 'amount']):
+                return TaskType.NUMERICAL_COMPARISON
+            
         # If no specific pattern matches, treat as general
         return TaskType.GENERAL
 
     async def _handle_direct_question(self, task: str) -> Dict[str, Any]:
-        """Handle direct questions with cleaner answer extraction"""
+        """Handle any type of direct question"""
         try:
             search_result = await self.tools["google_search"].execute(task)
             if not search_result.get('success'):
@@ -466,62 +630,26 @@ class Agent:
                     "output": {"results": []}
                 }
             
-            results = search_result.get('results', [])
-            
-            # Process through answer processor first
+            results = search_result.get('output', {}).get('results', [])
             processed_answer = self.answer_processor.extract_direct_answer(task, results)
-            direct_answer = None
-            
-            if processed_answer and processed_answer.get('answer'):
-                direct_answer = processed_answer['answer']
-            else:
-                # Fallback to basic extraction
-                direct_answer = self._construct_direct_answer(task, results)
-            
-            # Clean up the answer by removing prefixes and normalizing
-            if direct_answer and isinstance(direct_answer, str):
-                # Remove unwanted prefixes
-                direct_answer = re.sub(
-                    r'^(?:(?:The|A|An)\s+)?(?:Richest\s+People\s+)?(?:According to|From|Source:|Wikipedia:?|Reuters:?)\s*',
-                    '',
-                    direct_answer
-                ).strip()
             
             return {
                 "success": True,
                 "output": {
-                    "direct_answer": direct_answer,
+                    "direct_answer": processed_answer.get('answer'),
+                    "type": processed_answer.get('type'),
                     "results": results
                 },
-                "confidence": 0.9 if direct_answer else 0.5
+                "confidence": processed_answer.get('confidence', 0.5)
             }
             
         except Exception as e:
-            self.logger.error(f"Direct question handling failed: {str(e)}")
+            self.logger.error(f"Question handling failed: {str(e)}")
             return {
                 "success": False,
                 "error": str(e),
                 "output": {"results": []}
             }
-
-    def _construct_direct_answer(self, query: str, results: List[Dict[str, str]]) -> Optional[str]:
-        """Construct a direct answer with proper context"""
-        if not results:
-            return None
-            
-        all_text = " ".join(r.get("snippet", "") for r in results)
-        
-        # Handle "who is richest" type queries
-        if 'richest' in query.lower() and 'world' in query.lower():
-            pattern = r'([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)\s*(?:is|remains|became)\s+(?:the\s+)?(?:world\'?s?\s+)?richest\s+(?:person|man|individual)[^.]*?(?:\$(\d+(?:\.\d+)?)\s*(billion|trillion))?'
-            matches = re.findall(pattern, all_text)
-            if matches:
-                for name, amount, scale in matches:
-                    if amount and scale:
-                        return f"{name.strip()} (${amount} {scale})"
-                    return name.strip()
-
-        return None
 
     async def _handle_research(self, task: str) -> Dict[str, Any]:
         """Handle research tasks with chronological organization"""
@@ -993,3 +1121,152 @@ class Agent:
                 "error": str(e),
                 "output": {"results": []}
             }
+
+    async def _handle_numerical_comparison(self, task: str) -> Dict[str, Any]:
+        """Handle tasks involving numerical comparisons with flexible metric detection"""
+        try:
+            # Extract time periods more flexibly
+            time_refs = self._extract_time_references(task)
+            if len(time_refs) < 2:
+                return {"success": False, "error": "Couldn't identify comparison periods"}
+
+            # Detect metric type from context
+            metric_info = self._detect_metric_type(task)
+            if not metric_info:
+                return {"success": False, "error": "Couldn't determine what to measure"}
+
+            # Gather measurements for each time period
+            measurements = {}
+            for period in time_refs:
+                search_query = f"{metric_info['context']} {period}"
+                result = await self.tools["google_search"].execute(search_query)
+                
+                if result.get('success'):
+                    for item in result.get('results', []):
+                        try:
+                            content = await self.tools["web_scraper"].execute(url=item['link'])
+                            if content:
+                                if value := metric_info['pattern'].extract(content):
+                                    measurements[period] = value
+                                    break
+                        except Exception as e:
+                            self.logger.warning(f"Extraction failed for {period}: {e}")
+                            continue
+
+            # Compare results
+            if len(measurements) == 2:
+                return self._format_comparison_result(measurements, metric_info)
+
+            return {
+                "success": False,
+                "error": "Insufficient data for comparison",
+                "output": {"partial_data": measurements}
+            }
+
+        except Exception as e:
+            self.logger.error(f"Numerical comparison failed: {e}")
+            return {
+                "success": False,
+                "error": str(e),
+                "output": {"results": []}
+            }
+
+    def _detect_metric_type(self, task: str) -> Optional[Dict[str, Any]]:
+        """Detect what kind of metric we're looking for based on context"""
+        task_lower = task.lower()
+        
+        # Extract measurement context
+        measurement_indicators = {
+            'amount': r'(?:amount|quantity|level|value)\s+of\s+([^,.]+)',
+            'measure': r'(?:measure|track|monitor)\s+([^,.]+)',
+            'compare': r'(?:compare|difference\s+in)\s+([^,.]+)'
+        }
+        
+        for indicator_type, pattern in measurement_indicators.items():
+            if match := re.search(pattern, task_lower):
+                context = match.group(1).strip()
+                # Find most appropriate metric pattern
+                metric_pattern = self._find_metric_pattern(context)
+                return {
+                    'type': indicator_type,
+                    'context': context,
+                    'pattern': metric_pattern
+                }
+        
+        # Fallback to generic number if context is unclear
+        return {
+            'type': 'general',
+            'context': task_lower,
+            'pattern': self.metric_patterns['number']
+        }
+
+    def _find_metric_pattern(self, context: str) -> MetricType:
+        """Find the most appropriate metric pattern based on context"""
+        context_lower = context.lower()
+        
+        if any(word in context_lower for word in ['price', 'cost', 'revenue', 'sales', '$', '€', '£']):
+            return self.metric_patterns['currency']
+        elif any(word in context_lower for word in ['percent', 'ratio', 'rate']):
+            return self.metric_patterns['percentage']
+        elif any(word in context_lower for word in ['weight', 'height', 'length', 'distance']):
+            return self.metric_patterns['measurement']
+        
+        return self.metric_patterns['number']
+
+    def _extract_time_references(self, task: str) -> List[str]:
+        """Extract time references more flexibly"""
+        # Look for various time formats
+        time_patterns = [
+            r'\b\d{4}\b',  # Years
+            r'\b(?:Q[1-4]|Quarter\s+[1-4])\s+\d{4}\b',  # Quarters
+            r'\b(?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:tember)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?)\s+\d{4}\b'  # Months
+        ]
+        
+        references = []
+        for pattern in time_patterns:
+            references.extend(re.findall(pattern, task, re.IGNORECASE))
+            
+        return sorted(set(references))  # Remove duplicates and sort
+
+    def _format_comparison_result(self, measurements: Dict[str, float], metric_info: Dict[str, Any]) -> Dict[str, Any]:
+        """Format comparison results with context"""
+        periods = sorted(measurements.keys())
+        old_value = measurements[periods[0]]
+        new_value = measurements[periods[1]]
+        change = ((new_value - old_value) / old_value) * 100 if old_value != 0 else float('inf')
+        
+        return {
+            "success": True,
+            "output": {
+                "comparison": {
+                    "earlier_period": periods[0],
+                    "later_period": periods[1],
+                    "earlier_value": old_value,
+                    "later_value": new_value,
+                    "percent_change": round(change, 2),
+                    "measure_type": metric_info['type'],
+                    "context": metric_info['context']
+                }
+            },
+            "confidence": 0.8
+        }
+
+    def update_temporal_context(self, timestamp: datetime) -> None:
+        """Update the temporal context with a new timestamp"""
+        self.temporal_context = timestamp
+        self._update_context_history('temporal_update', {
+            'timestamp': timestamp,
+            'type': 'temporal'
+        })
+
+    def get_temporal_context(self) -> Optional[datetime]:
+        """Retrieve current temporal context"""
+        return self.temporal_context
+
+    def _update_context_history(self, action: str, data: Dict[str, Any]) -> None:
+        """Update the context history with new actions"""
+        self.context_history.append({
+            'action': action,
+            'data': data,
+            'timestamp': datetime.now()
+        })

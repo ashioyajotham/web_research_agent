@@ -14,15 +14,18 @@ class TaskType(str, Enum):
     CODE = "code"
     DATA = "data"
     COMPOSITE = "composite"
+    CRITERIA_SEARCH = "criteria_search"
 
 @dataclass
 class PlanStep:
     id: str
+    task: str
     tool: str
-    params: Dict
+    params: Dict[str, Any]
     dependencies: List[str]
+    type: TaskType
     estimated_time: float
-    priority: int
+    complexity: float
 
 @dataclass
 class PlanMetrics:
@@ -35,14 +38,16 @@ class PlanMetrics:
 @dataclass
 class TaskPlan:
     steps: List[PlanStep]
-    estimated_time: float
-    metadata: Dict[str, Any]
+    type: TaskType
+    dependencies: nx.DiGraph
+    estimated_duration: float
+    total_complexity: float
+    parallel_execution: bool
 
 class TaskPlanner:
     def __init__(self, available_tools: List[str]):
-        self.available_tools = available_tools
-        self.execution_history = []
-        self.tool_performance = {}
+        self.tools = available_tools
+        self.dependency_graph = nx.DiGraph()
         self._initialize_nltk()
         
         # Add plan optimization settings
@@ -62,50 +67,54 @@ class TaskPlanner:
             nltk.download(['punkt', 'averaged_perceptron_tagger'], quiet=True)
 
     async def create_plan(self, task: str, context: Optional[Dict] = None) -> TaskPlan:
-        """Create an optimized execution plan"""
-        # Get initial plan
-        initial_plan = self._create_initial_plan(task, context)
+        """Create execution plan for task"""
+        task_type = self._analyze_task_type(task)
+        subtasks = self._decompose_task(task, task_type)
         
-        # Optimize for parallel execution
-        optimized_steps = self._optimize_parallel_execution(initial_plan.steps)
-        
-        # Calculate cost-benefit metrics
-        metrics = self._calculate_plan_metrics(optimized_steps, context)
+        steps = []
+        for i, subtask in enumerate(subtasks):
+            step = self._create_step(
+                f"step_{i}",
+                subtask,
+                task_type,
+                context
+            )
+            steps.append(step)
+            
+        self._add_step_dependencies(steps)
+        complexity = self._calculate_complexity(task)
         
         return TaskPlan(
-            steps=optimized_steps,
-            estimated_time=metrics.estimated_time,
-            metadata={
-                'task_type': self._analyze_task_type(task),
-                'metrics': metrics,
-                'parallel_groups': self._get_parallel_groups(optimized_steps),
-                'fallback_steps': self._generate_fallback_steps(task)
-            }
+            steps=steps,
+            type=task_type,
+            dependencies=self.dependency_graph,
+            estimated_duration=len(steps) * 2.0,
+            total_complexity=complexity,
+            parallel_execution=self._can_parallelize(steps)
         )
 
     def _analyze_task_type(self, task: str) -> TaskType:
-        """Determine the type of task using NLP analysis"""
+        """Determine task type using NLP"""
         tokens = word_tokenize(task.lower())
         pos_tags = pos_tag(tokens)
         
-        # Look for specific indicators in the task
-        if any(word in tokens for word in ['code', 'implement', 'program', 'function']):
-            return TaskType.CODE
-        elif any(word in tokens for word in ['analyze', 'calculate', 'compare']):
-            return TaskType.ANALYSIS
-        elif any(word in tokens for word in ['data', 'dataset', 'database']):
-            return TaskType.DATA
-        elif len([tag for _, tag in pos_tags if tag.startswith('VB')]) > 2:
-            return TaskType.COMPOSITE
-        else:
+        if any(word in tokens for word in ["research", "find", "search"]):
             return TaskType.RESEARCH
+        elif any(word in tokens for word in ["analyze", "compare", "evaluate"]):
+            return TaskType.ANALYSIS
+        elif any(word in tokens for word in ["code", "program", "implement"]):
+            return TaskType.CODE
+        elif any(word in tokens for word in ["data", "dataset", "database"]):
+            return TaskType.DATA
+        elif "criteria" in tokens:
+            return TaskType.CRITERIA_SEARCH
+        return TaskType.COMPOSITE
 
     def _decompose_task(self, task: str, task_type: TaskType) -> List[str]:
-        """Break down complex tasks into subtasks"""
+        """Break down complex task into subtasks"""
         if task_type == TaskType.COMPOSITE:
-            # Use sentence tokenization for complex tasks
-            return [sent.strip() for sent in nltk.sent_tokenize(task)]
-        return [task]  # Return single task if not composite
+            return self._decompose_composite(task)
+        return [task]
 
     def _create_step(
         self, 
@@ -119,12 +128,12 @@ class TaskPlanner:
         
         return PlanStep(
             id=step_id,
+            task=subtask,
             type=task_type,
-            description=subtask,
             tool=tool,
             params=self._generate_tool_params(subtask, tool, context),
             estimated_time=self._estimate_step_time(subtask, tool),
-            confidence=self._calculate_step_confidence(subtask, tool)
+            complexity=self._calculate_complexity(subtask)
         )
 
     def _select_tool(self, subtask: str, task_type: TaskType) -> str:
@@ -138,10 +147,10 @@ class TaskPlanner:
         
         preferred_tools = tool_mapping.get(task_type, ["google_search"])
         for tool in preferred_tools:
-            if tool in self.available_tools:
+            if tool in self.tools:
                 return tool
                 
-        return self.available_tools[0]  # Default to first available tool
+        return self.tools[0]  # Default to first available tool
 
     def _generate_tool_params(self, subtask: str, tool: str, context: Optional[Dict]) -> Dict[str, Any]:
         """Generate parameters for tool execution"""
@@ -298,11 +307,13 @@ class TaskPlanner:
         if task_type == TaskType.RESEARCH:
             fallback_steps.append(PlanStep(
                 id="fallback_search",
+                task=task,
                 tool="google_search",
                 params={"query": task, "fallback": True},
                 dependencies=[],
+                type=task_type,
                 estimated_time=10.0,
-                priority=0
+                complexity=self._calculate_complexity(task)
             ))
             
         return fallback_steps
@@ -318,11 +329,13 @@ class TaskPlanner:
         if failed_step.tool == "google_search":
             alternative_steps.append(PlanStep(
                 id=f"alternative_{failed_step.id}",
+                task=failed_step.task,
                 tool="web_scraper",
                 params=failed_step.params,
                 dependencies=failed_step.dependencies,
+                type=failed_step.type,
                 estimated_time=failed_step.estimated_time * 1.5,
-                priority=failed_step.priority - 1
+                complexity=failed_step.complexity
             ))
             
         return alternative_steps if alternative_steps else None

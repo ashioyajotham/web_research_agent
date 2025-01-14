@@ -2,88 +2,9 @@
   {
     "success": true,
     "output": {
-      "answer": "1. \"China is not our enemy.\" (Remarks at the Munich Security Conference, February 19, 2023)\n2. \"We have to compete with China, but we also have to engage with China.\" (Remarks at the East Asia Summit, November 13, 2022)\n3. \"The United States does not seek conflict with China.\" (Remarks at the UN General Assembly, September 21, 2022)\n4. \"We will compete with China, but we will also cooperate with them on issues of mutual interest.\" (Remarks at the Quad Leaders' Summit, May 24, 2022)\n5. \"China is not our enemy, but it is our most serious competitor.\" (Remarks at the Aspen Security Forum, July 20, 2021)\n6. \"We need to build a relationship with China that is based on competition, not conflict.\" (Remarks at the virtual Shangri-La Dialogue, June 12, 2021)\n7. \"The United States will work with its allies and partners to deter and counter China's aggressive behavior.\" (Remarks at the Quad Leaders' Summit, March 12, 2021)\n8. \"We are not seeking to decouple from China.\" (Remarks at the virtual Asia Society Town Hall, February 26, 2021)\n9. \"We will engage with China from a position of strength.\" (Remarks at the inauguration of the Biden-Harris administration, January 20, 2021)\n10. \"We must work with our allies and partners to address the challenges posed by China.\" (Remarks at the NATO Summit, June 14, 2021)",
-      "type": "general"
-    },
-    "confidence": 0.8
-  },
-  {
-    "success": true,
-    "output": {
-      "answer": "There is no information available about secret talks between US and Chinese AI companies being mediated by any organization in Geneva in 2023, so I cannot provide the name of a COO who mediated such talks.",
-      "type": "general"
-    },
-    "confidence": 0.8
-  },
-  {
-    "success": true,
-    "output": {
-      "answer": "| Date | Max compute used (petaflop days) |\n|---|---|\n| 2012 | 16 |\n| 2013 | 40 |\n| 2014 | 128 |\n| 2015 | 640 |\n| 2016 | 3,072 |\n| 2017 | 10,240 |\n| 2018 | 40,960 |\n| 2019 | 163,840 |\n| 2020 | 655,360 |\n| 2021 | 2,621,440 |\n| 2022 | 10,485,760 |",
-      "type": "general"
-    },
-    "confidence": 0.8
-  },
-  {
-    "success": false,
-    "error": "'technical'",
-    "output": {
+      "direct_answer": null,
       "results": []
-    }
-  },
-  {
-    "success": true,
-    "output": {
-      "answer": "**Criteria:**\n\n* Companies with a market capitalization greater than $10 billion\n* Headquartered in the United States\n* In the technology sector\n* Founded after 2000\n\n**List of Companies:**\n\n1. Alphabet Inc. (GOOGL)\n2. Amazon.com, Inc. (AMZN)\n3. Apple Inc. (AAPL)\n4. Meta Platforms, Inc. (META)\n5. Microsoft Corporation (MSFT)\n6. NVIDIA Corporation (NVDA)\n7. Tesla, Inc. (TSLA)\n8. Salesforce.com, Inc. (CRM)\n9. ServiceNow, Inc. (NOW)\n10. Snowflake Inc. (SNOW)",
-      "type": "general"
     },
-    "confidence": 0.8
-  },
-  {
-    "success": true,
-    "output": {
-      "answer": "* Zalando\n* Asos\n* Boohoo\n* H&M\n* Zara",
-      "type": "general"
-    },
-    "confidence": 0.8
-  },
-  {
-    "success": true,
-    "output": {
-      "answer": "Entities that are involved in the design, development, manufacture, sale, or servicing of motor vehicles. This includes:\n\n* **Manufacturers** of motor vehicles, such as cars, trucks, and buses\n* **Suppliers** of components and parts to motor vehicle manufacturers\n* **Dealers** that sell motor vehicles to consumers\n* **Service providers** that maintain and repair motor vehicles\n* **Financial institutions** that provide financing for the purchase of motor vehicles",
-      "type": "general"
-    },
-    "confidence": 0.8
-  },
-  {
-    "success": true,
-    "output": {
-      "answer": "Automakers",
-      "type": "general"
-    },
-    "confidence": 0.8
-  },
-  {
-    "success": true,
-    "output": {
-      "answer": "The provided context does not contain information about the total greenhouse gas emissions from automotive operations for 2021, 2022, and 2023. Therefore, I cannot answer this query from the provided context.",
-      "type": "general"
-    },
-    "confidence": 0.8
-  },
-  {
-    "success": true,
-    "output": {
-      "answer": "**Companies that earned more than \u20ac1B in revenue in 2023:**\n\n* Amazon\n* Apple\n* Alphabet (Google)\n* Microsoft\n* Meta (Facebook)\n* Samsung\n* Volkswagen\n* Toyota\n* Berkshire Hathaway\n* UnitedHealth Group\n* Johnson & Johnson\n* Pfizer\n* Roche Holding\n* Novartis\n* Nestle\n* Unilever\n* PepsiCo\n* Coca-Cola\n* Walmart\n* Home Depot\n* Costco",
-      "type": "general"
-    },
-    "confidence": 0.8
-  },
-  {
-    "success": true,
-    "output": {
-      "answer": "Independent Company",
-      "type": "general"
-    },
-    "confidence": 0.8
+    "confidence": 0.0
   }
 ]
