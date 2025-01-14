@@ -57,219 +57,92 @@ class AgentConfig:
 class AnswerProcessor:
     def __init__(self, config: AgentConfig):
         self.config = config
-        # Simplified query patterns to be more generic
-        self.query_patterns = {
-            'temporal_query': r'^when\s+.+',
-            'entity_query': r'^(?:who|what)\s+.+',
-            'location_query': r'^where\s+.+',
-            'reason_query': r'^(?:why|how)\s+.+',
-            'quantity_query': r'(?:how\s+(?:much|many)|what\s+(?:amount|number))'
-        }
-        self.answer_extractors = {
-            'temporal_query': self._extract_temporal_answer,
-            'entity_query': self._extract_entity_answer,
-            'location_query': self._extract_location_answer,
-            'reason_query': self._extract_reason_answer,
-            'quantity_query': self._extract_quantity_answer
+        # Generic information extraction patterns
+        self.info_patterns = {
+            'temporal': [
+                r'(?:died|passed\s+away|death)\s+(?:on|in|at)?\s+([^,.]+\d{4})',
+                r'(?:on|in|at)\s+([^,.]+\d{4})',
+                r'([A-Z][a-z]+\s+\d{1,2},?\s+\d{4})',
+                r'(\d{1,2}\s+[A-Z][a-z]+\s+\d{4})',
+            ],
+            'entity': [
+                r'(?:is|was|were)\s+([^,.]+)',
+                r'(?:called|named|known\s+as)\s+([^,.]+)'
+            ],
+            'location': [
+                r'(?:in|at|near|from)\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)',
+                r'(?:location|place):\s*([^,.]+)'
+            ]
         }
 
     def extract_direct_answer(self, query: str, results: List[Dict[str, str]]) -> Dict[str, Any]:
-        query_type = self._detect_query_type(query.lower())
-        extractor = self.answer_extractors.get(query_type)
+        """Generic information extraction based on query type"""
+        all_text = " ".join(r.get("snippet", "") + " " + r.get("title", "") for r in results)
+        query_lower = query.lower()
         
-        if extractor:
-            return extractor(query, results)
-        return {"answer": None, "confidence": 0.0}
+        # Determine information type needed
+        info_type = self._determine_info_type(query_lower)
+        
+        # Get relevant patterns
+        patterns = self.info_patterns.get(info_type, self.info_patterns['entity'])
+        
+        # Extract information
+        best_match = None
+        max_confidence = 0.0
+        
+        for pattern in patterns:
+            if matches := re.findall(pattern, all_text, re.IGNORECASE):
+                counter = Counter(matches)
+                candidate = counter.most_common(1)[0][0]
+                confidence = min(0.5 + (counter[candidate] / len(matches)) * 0.5, 0.95)
+                
+                if confidence > max_confidence:
+                    best_match = candidate.strip()
+                    max_confidence = confidence
+        
+        return {
+            "answer": best_match,
+            "confidence": max_confidence,
+            "type": info_type
+        }
 
-    def _detect_query_type(self, query: str) -> str:
-        for qtype, pattern in self.query_patterns.items():
-            if re.search(pattern, query):
-                return qtype
+    def _determine_info_type(self, query: str) -> str:
+        """Determine type of information being requested"""
+        if re.match(r'^when\b', query):
+            return 'temporal'
+        elif re.match(r'^where\b', query):
+            return 'location'
+        elif re.match(r'^(?:who|what)\b', query):
+            return 'entity'
         return 'general'
 
-    def _extract_person_answer(self, query: str, results: List[Dict[str, str]]) -> Dict[str, Any]:
-        """Extract person-related answers with context"""
-        all_text = " ".join(r.get("snippet", "") + " " + r.get("title", "") for r in results)
-        
-        # Refined patterns for person extraction - remove prefix phrases
-        patterns = [
-            # Direct mention pattern
-            r'([A-Z][a-z]+(?:\s+[A-Z][a-z]+)+)(?:\s+is\s+(?:the|a)\s+)?([^,.]+?)(?:\s*[,.]|$)',
-            # Context pattern
-            r'([A-Z][a-z]+(?:\s+[A-Z][a-z]+)+)(?:\s*,\s*([^,.]+))',
-        ]
-        
-        best_match = None
-        max_confidence = 0.0
-        
-        for pattern in patterns:
-            matches = re.findall(pattern, all_text)
-            if matches:
-                # Count occurrences to find most mentioned
-                counter = Counter(matches)
-                candidate = counter.most_common(1)[0][0]
-                confidence = min(0.5 + (counter[candidate] / len(matches)) * 0.5, 0.95)
-                
-                if confidence > max_confidence:
-                    name, context = candidate
-                    # Remove any prefix phrases like "Richest People" or "The person"
-                    name = re.sub(r'^(?:(?:The|A|An)\s+)?(?:Person|People|Man|Woman|Individual)\s+', '', name.strip())
-                    best_match = f"{name} ({context.strip()})"
-                    max_confidence = confidence
-        
-        return {
-            "answer": best_match,
-            "confidence": max_confidence,
-            "type": "person"
-        }
-
-    def _extract_factual_answer(self, query: str, results: List[Dict[str, str]]) -> Dict[str, Any]:
-        """Extract answers for general factual queries"""
-        all_text = " ".join(r.get("snippet", "") + " " + r.get("title", "") for r in results)
-        
-        # Patterns for different types of factual answers
-        patterns = {
-            'definition': r'(?:is|are|was|were)\s+((?:a|an|the)\s+[^.!?]+)',
-            'date': r'(?:on|in|at|during)\s+([A-Z][a-z]+\s+\d{1,2},?\s+\d{4})',
-            'location': r'(?:in|at|near|from)\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)',
-            'quantity': r'(\d+(?:\.\d+)?)\s+(?:percent|kg|miles|dollars|years)'
-        }
-        
-        best_match = None
-        max_confidence = 0.0
-        answer_type = None
-        
-        for ans_type, pattern in patterns.items():
-            matches = re.findall(pattern, all_text)
-            if matches:
-                counter = Counter(matches)
-                candidate = counter.most_common(1)[0][0]
-                confidence = min(0.5 + (counter[candidate] / len(matches)) * 0.5, 0.95)
-                
-                if confidence > max_confidence:
-                    best_match = candidate
-                    max_confidence = confidence
-                    answer_type = ans_type
-        
-        return {
-            "answer": best_match,
-            "confidence": max_confidence,
-            "type": answer_type
-        }
-
-    def _extract_quantity_answer(self, query: str, results: List[Dict[str, str]]) -> Dict[str, Any]:
-        """Extract numerical answers with units"""
-        all_text = " ".join(r.get("snippet", "") + " " + r.get("title", "") for r in results)
-        
-        # Patterns for different types of quantities
-        quantity_patterns = [
-            # Money amounts
-            r'\$\s*(\d+(?:\.\d+)?)\s*(billion|million|trillion)?',
-            # Percentages
-            r'(\d+(?:\.\d+)?)\s*(?:percent|%)',
-            # Measurements
-            r'(\d+(?:\.\d+)?)\s*(kg|km|miles|feet|meters)',
-            # Time periods
-            r'(\d+(?:\.\d+)?)\s*(years|months|days|hours)'
-        ]
-        
-        best_match = None
-        max_confidence = 0.0
-        
-        for pattern in quantity_patterns:
-            matches = re.findall(pattern, all_text)
-            if matches:
-                # Count occurrences to find most cited value
-                counter = Counter(matches)
-                candidate = counter.most_common(1)[0][0]
-                confidence = min(0.5 + (counter[candidate] / len(matches)) * 0.5, 0.95)
-                
-                if confidence > max_confidence:
-                    # Format the quantity with its unit
-                    if len(candidate) > 1:  # Has unit
-                        value, unit = candidate
-                        best_match = f"{value} {unit}"
-                    else:  # Just the value
-                        best_match = candidate[0]
-                    max_confidence = confidence
-        
-        return {
-            "answer": best_match,
-            "confidence": max_confidence,
-            "type": "quantity"
-        }
-
-    def _extract_temporal_answer(self, query: str, results: List[Dict[str, str]]) -> Dict[str, Any]:
-        """Extract any temporal information from text"""
-        all_text = " ".join(r.get("snippet", "") + " " + r.get("title", "") for r in results)
-        
-        # Generic date patterns without specific event types
-        date_patterns = [
-            r'(?:on|at|in)\s+([A-Z][a-z]+\s+\d{1,2}(?:st|nd|rd|th)?,?\s+\d{4})',
-            r'([A-Z][a-z]+\s+\d{1,2}(?:st|nd|rd|th)?,?\s+\d{4})',
-            r'(?:in|during)\s+([A-Z][a-z]+\s+\d{4})',
-            r'(\d{4})'
-        ]
-        
-        return self._extract_with_patterns(date_patterns, all_text, 'temporal')
-
-    def _extract_with_patterns(self, patterns: List[str], text: str, answer_type: str) -> Dict[str, Any]:
-        """Generic pattern extraction with confidence scoring"""
-        best_match = None
-        max_confidence = 0.0
-        
-        for pattern in patterns:
-            matches = re.findall(pattern, text, re.IGNORECASE)
-            if matches:
-                counter = Counter(matches)
-                candidate = counter.most_common(1)[0][0]
-                confidence = min(0.5 + (counter[candidate] / len(matches)) * 0.5, 0.95)
-                
-                if confidence > max_confidence:
-                    best_match = candidate.strip()
-                    max_confidence = confidence
-        
-        return {
-            "answer": best_match,
-            "confidence": max_confidence,
-            "type": answer_type
-        }
-
-    def _extract_location_answer(self, query: str, results: List[Dict[str, str]]) -> Dict[str, Any]:
-        """Extract location-related answers"""
-        all_text = " ".join(r.get("snippet", "") + " " + r.get("title", "") for r in results)
-        
-        location_patterns = [
-            r'(?:in|at)\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*(?:\s*,\s*[A-Z][a-z]+)?)',
-            r'(?:location|place|city|country):\s*([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)',
-            r'(?:located|situated)\s+in\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)'
-        ]
-        
-        best_match = None
-        max_confidence = 0.0
-        
-        for pattern in location_patterns:
-            matches = re.findall(pattern, all_text)
-            if matches:
-                counter = Counter(matches)
-                candidate = counter.most_common(1)[0][0]
-                confidence = min(0.5 + (counter[candidate] / len(matches)) * 0.5, 0.95)
-                
-                if confidence > max_confidence:
-                    best_match = candidate.strip()
-                    max_confidence = confidence
-        
-        return {
-            "answer": best_match,
-            "confidence": max_confidence,
-            "type": "location"
-        }
-
 class TaskType(Enum):
-    QUERY = "query"          # Any question or information request
-    ANALYSIS = "analysis"    # Any analytical task
-    GENERATION = "generation"  # Any content generation task
-    GENERAL = "general"      # Fallback type
+    """Dynamic task type system that can learn and adapt"""
+    GENERIC = auto()  # Base type for all tasks
+    
+    @classmethod
+    def infer_type(cls, task: str, context: Dict = None) -> 'TaskType':
+        """Dynamically infer task type based on context and patterns"""
+        return cls.GENERIC
+
+class DynamicPattern:
+    """Dynamic pattern matching system"""
+    def __init__(self, initial_patterns: Dict[str, List[str]] = None):
+        self.patterns = initial_patterns or {}
+        self.learned_patterns = {}
+        self.pattern_weights = {}
+
+    def add_pattern(self, category: str, pattern: str, weight: float = 1.0):
+        """Dynamically add new patterns"""
+        if category not in self.patterns:
+            self.patterns[category] = []
+        self.patterns[category].append(pattern)
+        self.pattern_weights[(category, pattern)] = weight
+
+    def learn_pattern(self, text: str, category: str):
+        """Learn new patterns from text"""
+        # Add pattern learning logic here
+        pass
 
 class MetricPattern:
     def __init__(self, pattern: str, unit: str, normalization: float = 1.0):
@@ -374,6 +247,29 @@ class Agent:
             'percentage': MetricType(r'(\d+(?:\.\d+)?)\s*%'),
             'currency': MetricType(r'(?:USD|€|£)?\s*(\d+(?:\.\d+)?)\s*(?:billion|million)?'),
             'measurement': MetricType(r'(\d+(?:\.\d+)?)\s*(?:kg|km|m|ft|lbs)')
+        }
+
+        # Replace rigid task patterns with dynamic pattern system
+        self.pattern_system = DynamicPattern()
+        
+        # Dynamic metric system
+        self.metric_system = {
+            'patterns': {},
+            'conversions': {},
+            'contexts': {}
+        }
+        
+        # Flexible extraction system
+        self.extractors = {
+            'general': lambda x: x,  # Default extractor
+            'learned': {}  # Learned extractors
+        }
+
+        # Add dynamic search configuration
+        self.search_config = {
+            'adaptive_timeout': True,
+            'dynamic_retries': True,
+            'semantic_processing': True
         }
 
     async def process_tasks(self, tasks: List[str]) -> List[Dict[str, Any]]:
@@ -560,64 +456,95 @@ class Agent:
         return max(matches.items(), key=lambda x: x[1])[0] if matches else 'item'
 
     async def process_task(self, task: str) -> Dict[str, Any]:
+        """More flexible task processing"""
         try:
-            task_type = self._detect_task_type(task)
+            # Dynamic context building
+            context = self._build_task_context(task)
             
-            if task_type == TaskType.COMPLETION:
-                return await self._handle_completion(task)
-            elif task_type == TaskType.GENERAL:
-                return await self._handle_general_query(task)
-            elif task_type == TaskType.FACTUAL_QUERY:
-                return await self._handle_direct_question(task)
-            elif task_type == TaskType.RESEARCH:
-                return await self._handle_research(task)
-            elif task_type == TaskType.CODE:
-                return await self._handle_code_generation(task)
-            elif task_type == TaskType.CONTENT:
-                return await self._handle_content_creation(task)
-            elif task_type == TaskType.NUMERICAL_COMPARISON:
-                return await self._handle_numerical_comparison(task)
-            else:
-                return await self._handle_data_task(task)
-                
+            # Determine processing strategy
+            strategy = await self._determine_strategy(task, context)
+            
+            # Execute with chosen strategy
+            result = await self._execute_with_strategy(task, strategy, context)
+            
+            # Learn from execution
+            if self.config.learning_enabled:
+                await self._learn_from_execution(task, result, context)
+            
+            return result
+            
         except Exception as e:
+            self.logger.error(f"Task processing failed: {str(e)}")
             return {
                 "success": False,
                 "error": str(e),
-                "task": task
+                "output": {"results": []}
             }
 
-    def _detect_task_type(self, task: str) -> TaskType:
-        """Enhanced task type detection"""
-        task_lower = task.lower()
+    async def _determine_strategy(self, task: str, context: Dict) -> Dict[str, Any]:
+        """Dynamically determine processing strategy"""
+        strategies = []
         
-        # Check for completion patterns first
-        if any(task_lower.startswith(prefix.lower()) for prefix in self.completion_prefixes):
-            return TaskType.COMPLETION
+        # Add strategies based on task properties
+        if self._requires_information_gathering(task, context):
+            strategies.append(self._create_info_gathering_strategy())
+        
+        if self._requires_analysis(task, context):
+            strategies.append(self._create_analysis_strategy())
+        
+        if self._requires_generation(task, context):
+            strategies.append(self._create_generation_strategy())
+        
+        # Combine strategies or select best one
+        return self._combine_strategies(strategies, context)
+
+    async def _execute_with_strategy(self, task: str, strategy: Dict, context: Dict) -> Dict[str, Any]:
+        """Execute task using dynamic strategy"""
+        steps = strategy.get('steps', [])
+        results = []
+        
+        for step in steps:
+            try:
+                step_result = await self._execute_step(step, context)
+                results.append(step_result)
+                
+                # Adapt strategy based on results
+                strategy = self._adapt_strategy(strategy, step_result, context)
+                
+            except Exception as e:
+                self.logger.error(f"Step execution failed: {str(e)}")
+                continue
+        
+        return self._combine_results(results, strategy, context)
+
+    async def _learn_from_execution(self, task: str, result: Dict, context: Dict):
+        """Learn from task execution"""
+        if result.get('success'):
+            # Learn patterns
+            self.pattern_system.learn_pattern(task, result.get('output', {}))
             
-        # Check for direct questions
-        if re.match(r'^(?:who|what|when|where|why|how)\s+(?:is|are|was|were|do|does|did)', task_lower):
-            return TaskType.FACTUAL_QUERY
+            # Learn metrics
+            if metrics := result.get('metrics'):
+                self._update_metric_system(metrics)
             
-        # Check for research/analysis tasks
-        if any(term in task_lower for term in ['research', 'analyze', 'investigate', 'compare']):
-            return TaskType.RESEARCH
-            
-        # Check for code tasks
-        if any(term in task_lower for term in ['code', 'implement', 'program', 'function']):
-            return TaskType.CODE
-            
-        # Check for content tasks
-        if any(term in task_lower for term in ['write', 'compose', 'create article']):
-            return TaskType.CONTENT
-            
-        # Add numerical comparison detection
-        if any(term in task_lower for term in ['increase', 'decrease', 'reduce', 'change', 'compare']):
-            if any(term in task_lower for term in ['percent', '%', 'ratio', 'amount']):
-                return TaskType.NUMERICAL_COMPARISON
-            
-        # If no specific pattern matches, treat as general
-        return TaskType.GENERAL
+            # Learn extraction patterns
+            if extractions := result.get('extractions'):
+                self._learn_extraction_patterns(extractions)
+
+    def _detect_task_type(self, task: str) -> TaskType:
+        """More flexible task type detection"""
+        # Use ML/pattern matching to determine task type
+        context = self._build_task_context(task)
+        return TaskType.infer_type(task, context)
+
+    def _build_task_context(self, task: str) -> Dict[str, Any]:
+        """Build rich context for task understanding"""
+        return {
+            'linguistic': self._analyze_linguistics(task),
+            'semantic': self._analyze_semantics(task),
+            'temporal': self._extract_temporal_context(task),
+            'domain': self._infer_domain(task)
+        }
 
     async def _handle_direct_question(self, task: str) -> Dict[str, Any]:
         """Handle any type of direct question"""
@@ -931,67 +858,80 @@ class Agent:
         start_time = time.time()
         
         try:
-            # Get relevant experiences with error handling
-            experiences = []
-            if self.config.learning_enabled:
-                try:
-                    experiences = self.memory.get_relevant_experiences(task)
-                except Exception as e:
-                    self.logger.warning(f"Memory retrieval failed: {str(e)}")
-            
-            # Try pattern matching first if enabled
-            if self.config.pattern_learning_enabled and self.pattern_learner:
-                try:
-                    similar_patterns = self.pattern_learner.find_similar_patterns(task)
-                    if similar_patterns:
-                        solution = self.pattern_learner.generalize_solution(similar_patterns)
-                        if solution:
-                            result = await self._execute_with_solution(task, solution)
-                            if result.get('success'):
-                                return result
-                except Exception as e:
-                    self.logger.warning(f"Pattern matching failed: {str(e)}")
-            
-            # Proceed with normal execution
-            if self.config.planning_enabled and self.planner:
-                plan = self.planner.create_plan(
-                    task=task,
-                    context={"experiences": experiences}
-                )
-                exec_result = await self.executor.execute_plan(
-                    plan=plan,
-                    model=self.model,
-                    max_steps=self.config.max_steps
+            # Apply dynamic search configuration for search tasks
+            if self._is_search_task(task):
+                search_params = self._prepare_search_params(task)
+                result = await self.tools["google_search"].execute(
+                    query=task,
+                    **search_params
                 )
                 
-                result = self._format_execution_result(exec_result, task, start_time)
-            else:
-                result = await self._execute_basic_task(task)
-                result = self._finalize_result(task, result, time.time() - start_time)
-            
-            # Store successful results for learning
-            if result.get('success') and self.config.learning_enabled:
-                try:
-                    self.pattern_learner.add_pattern(
-                        task=task,
-                        solution=result.get('output', {}),
-                        performance=self._calculate_effectiveness(result)
+                if result.get('success'):
+                    # Process search results based on task context
+                    processed_result = await self._process_search_results(
+                        task, 
+                        result['results'],
+                        result.get('metadata', {})
                     )
-                except Exception as e:
-                    self.logger.warning(f"Learning storage failed: {str(e)}")
-            
-            return result
-                
+                    return self._finalize_result(task, processed_result, time.time() - start_time)
+
+            # Handle other task types
+            return await self._execute_basic_task(task)
+
         except Exception as e:
-            self.logger.error(str(e), context=f"Task: {task[:50]}...", exc_info=True)
+            self.logger.error(f"Task execution failed: {str(e)}")
             return {
-                "success": False,
-                "error": str(e),
-                "output": {"results": []},
-                'confidence': 0.0,
-                'execution_time': time.time() - start_time,
-                'task': task
+                'success': False,
+                'error': str(e),
+                'output': {'results': []},
+                'execution_time': time.time() - start_time
             }
+
+    def _is_search_task(self, task: str) -> bool:
+        """Determine if task requires search capabilities"""
+        task_lower = task.lower()
+        search_indicators = ['find', 'search', 'look up', 'research', 'gather']
+        return any(indicator in task_lower for indicator in search_indicators)
+
+    def _prepare_search_params(self, task: str) -> Dict[str, Any]:
+        """Prepare dynamic search parameters"""
+        params = {
+            'timeout': 30,
+            'retries': 3,
+            'detailed': False
+        }
+        
+        if self.search_config['adaptive_timeout']:
+            params['timeout'] = self._calculate_adaptive_timeout(task)
+            
+        if self.search_config['dynamic_retries']:
+            params['retries'] = self._calculate_retry_count(task)
+            
+        if self.search_config['semantic_processing']:
+            params['semantic_analysis'] = True
+            
+        return params
+
+    def _calculate_adaptive_timeout(self, task: str) -> int:
+        """Calculate adaptive timeout based on task complexity"""
+        base_timeout = 30
+        words = len(task.split())
+        return min(base_timeout * (1 + words / 10), 120)
+
+    def _calculate_retry_count(self, task: str) -> int:
+        """Calculate retry count based on task importance"""
+        base_retries = 3
+        if any(term in task.lower() for term in ['important', 'critical', 'urgent']):
+            return base_retries + 2
+        return base_retries
+
+    async def _process_search_results(self, task: str, results: List[Dict], metadata: Dict) -> Dict[str, Any]:
+        """Process search results based on task context"""
+        if metadata.get('search_type') == 'semantic':
+            return await self._process_semantic_results(task, results)
+        elif metadata.get('search_type') == 'temporal':
+            return await self._process_temporal_results(task, results)
+        return await self._process_generic_results(task, results)
 
     def _format_execution_result(self, exec_result: ExecutionResult, task: str, start_time: float) -> Dict[str, Any]:
         """Format execution result with proper error handling"""

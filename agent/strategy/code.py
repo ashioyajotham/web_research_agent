@@ -2,6 +2,72 @@ from typing import List, Dict, Any
 from .base import Strategy, StrategyResult
 import re
 import ast
+from dataclasses import dataclass, field
+
+@dataclass
+class StrategyContext:
+    """Dynamic context for strategy execution"""
+    task_type: str
+    requirements: Dict[str, Any]
+    constraints: List[str] = field(default_factory=list)
+    adaptations: List[Dict[str, Any]] = field(default_factory=list)
+    metrics: Dict[str, float] = field(default_factory=dict)
+
+class AdaptiveCodeStrategy(Strategy):
+    """Enhanced code strategy with dynamic adaptation"""
+    def __init__(self):
+        super().__init__()
+        self.pattern_registry = AdaptiveAlgorithmRegistry()
+        self.analyzer = FlexibleCodeAnalyzer()
+        self.strategy_cache = {}
+        
+    async def execute(self, task: str, context: Dict[str, Any]) -> StrategyResult:
+        try:
+            # Create dynamic context
+            strategy_context = self._build_strategy_context(task, context)
+            
+            # Select or adapt pattern
+            pattern = self.pattern_registry.find_best_pattern(task, strategy_context)
+            if not pattern:
+                pattern = self._create_new_pattern(task, strategy_context)
+            
+            # Generate and analyze code
+            code_result = await self._generate_adaptive_code(pattern, strategy_context)
+            analysis = self.analyzer.analyze_code(code_result['code'], strategy_context)
+            
+            # Learn from execution
+            self._learn_from_execution(pattern, code_result, analysis)
+            
+            return StrategyResult(
+                success=True,
+                output={
+                    'code': code_result['code'],
+                    'analysis': analysis,
+                    'pattern_used': pattern['metadata'],
+                    'confidence': analysis['confidence']
+                }
+            )
+            
+        except Exception as e:
+            return StrategyResult(success=False, error=str(e))
+
+    def _build_strategy_context(self, task: str, context: Dict[str, Any]) -> StrategyContext:
+        """Build dynamic strategy context"""
+        requirements = self._analyze_requirements(task)
+        return StrategyContext(
+            task_type=self._detect_task_type(task),
+            requirements=requirements,
+            constraints=context.get('constraints', []),
+            adaptations=self.strategy_cache.get(task[:50], [])
+        )
+
+    def _learn_from_execution(self, pattern: Dict[str, Any], result: Dict[str, Any], analysis: Dict[str, Any]):
+        """Learn from strategy execution"""
+        success = result.get('success', False) and analysis['confidence'] > 0.7
+        self.pattern_registry.learn_from_execution(pattern, success, {
+            'analysis': analysis,
+            'result': result
+        })
 
 class CodeStrategy(Strategy):
     def __init__(self):

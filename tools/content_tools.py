@@ -1,12 +1,30 @@
 import os
-import google.generativeai as genai
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, List, Tuple
 from .base import BaseTool
 from datetime import datetime
 import logging
+import google.generativeai as genai
+from dataclasses import dataclass
+from enum import Enum, auto
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
+
+class ContentType(Enum):
+    TECHNICAL = auto()
+    EDUCATIONAL = auto()
+    ANALYSIS = auto()
+    GENERAL = auto()
+    CREATIVE = auto()
+    RESEARCH = auto()
+
+@dataclass
+class ContentStrategy:
+    content_type: ContentType
+    structure: List[str]
+    style_guide: Dict[str, Any]
+    requirements: List[str]
+    formatting: Dict[str, Any]
 
 class ContentGeneratorTool(BaseTool):
     def __init__(self):
@@ -23,47 +41,68 @@ class ContentGeneratorTool(BaseTool):
                 "max_output_tokens": 8192,
             }
         )
-        self.topic_analyzers = {
-            'technical': self._create_technical_prompt,
-            'educational': self._create_educational_prompt,
-            'analysis': self._create_analysis_prompt,
-            'general': self._create_general_prompt
+        
+        # Dynamic content strategies
+        self.strategies: Dict[ContentType, ContentStrategy] = self._initialize_strategies()
+        
+        # Learning system for content patterns
+        self.pattern_memory: Dict[str, List[Dict[str, Any]]] = {}
+        
+        # Adaptive formatting rules
+        self.formatting_rules = self._initialize_formatting_rules()
+
+    def _initialize_strategies(self) -> Dict[ContentType, ContentStrategy]:
+        """Initialize flexible content strategies"""
+        return {
+            ContentType.TECHNICAL: ContentStrategy(
+                content_type=ContentType.TECHNICAL,
+                structure=["overview", "technical_details", "implementation", "examples", "best_practices"],
+                style_guide={"tone": "technical", "depth": "high", "code_examples": True},
+                requirements=["code_samples", "technical_accuracy", "implementation_details"],
+                formatting={"code_blocks": True, "diagrams": True}
+            ),
+            ContentType.EDUCATIONAL: ContentStrategy(
+                content_type=ContentType.EDUCATIONAL,
+                structure=["learning_objectives", "concepts", "examples", "practice", "summary"],
+                style_guide={"tone": "instructional", "depth": "progressive", "examples": True},
+                requirements=["clear_explanations", "practical_exercises", "key_takeaways"],
+                formatting={"sections": True, "highlights": True}
+            ),
+            # ...existing code for other content types...
         }
 
     async def execute(self, query: str, **kwargs) -> Dict[str, Any]:
-        """Generate content based on the query"""
+        """Generate content with dynamic adaptation"""
         try:
-            logger.debug(f"Analyzing query type: {query}")
-            topic_type = self._analyze_topic_type(query)
-            prompt_creator = self.topic_analyzers.get(topic_type, self.topic_analyzers['general'])
+            # Analyze query and context
+            content_type = self._analyze_content_requirements(query, kwargs)
+            strategy = self.strategies[content_type]
             
-            prompt = prompt_creator(query)
-            logger.debug(f"Using {topic_type} prompt template")
-
+            # Build dynamic prompt
+            prompt = self._build_dynamic_prompt(query, strategy, kwargs)
+            
             # Generate initial content
             response = self.model.generate_content(prompt)
-            
             if not response.text:
                 return {"success": False, "error": "No content generated"}
 
-            # Enhance content with additional context
-            enhanced_content = await self._enhance_content(response.text, query)
+            # Process and enhance content
+            enhanced_content = await self._process_content(
+                response.text,
+                strategy,
+                context=kwargs.get('context', {})
+            )
             
-            # Use standard datetime instead of genai's datetime_helpers
-            current_time = datetime.now().isoformat()
+            # Learn from generation
+            self._update_pattern_memory(query, enhanced_content, content_type)
             
             return {
                 "success": True,
                 "content": {
                     "content": enhanced_content,
-                    "type": "article",
-                    "confidence": 0.8,
-                    "metadata": {
-                        "format": "markdown",
-                        "topic": query,
-                        "topic_type": topic_type,
-                        "generated_at": current_time
-                    }
+                    "type": content_type.name.lower(),
+                    "confidence": self._calculate_confidence(enhanced_content, strategy),
+                    "metadata": self._generate_metadata(query, content_type, kwargs)
                 }
             }
 
@@ -74,100 +113,76 @@ class ContentGeneratorTool(BaseTool):
                 "error": f"Content generation failed: {str(e)}",
             }
 
-    def _analyze_topic_type(self, query: str) -> str:
-        """Analyze the type of content needed"""
-        query_lower = query.lower()
+    def _analyze_content_requirements(self, query: str, context: Dict) -> ContentType:
+        """Dynamically analyze content requirements"""
+        query_features = self._extract_query_features(query)
+        context_features = self._extract_context_features(context)
         
-        if any(term in query_lower for term in ['code', 'programming', 'algorithm', 'technical']):
-            return 'technical'
-        elif any(term in query_lower for term in ['learn', 'guide', 'tutorial', 'how to']):
-            return 'educational'
-        elif any(term in query_lower for term in ['analyze', 'compare', 'review', 'pros and cons']):
-            return 'analysis'
-        return 'general'
+        # Use pattern memory to improve type detection
+        learned_patterns = self._get_relevant_patterns(query)
+        
+        return self._determine_content_type(query_features, context_features, learned_patterns)
 
-    def _create_technical_prompt(self, query: str) -> str:
-        return f"""Write a technical blog post about: {query}
+    def _build_dynamic_prompt(self, query: str, strategy: ContentStrategy, context: Dict) -> str:
+        """Build adaptive prompt based on strategy and context"""
+        prompt_parts = [
+            f"Generate content about: {query}\n",
+            self._format_structure(strategy.structure),
+            self._format_requirements(strategy.requirements),
+            self._add_context_requirements(context),
+            self._add_style_guide(strategy.style_guide)
+        ]
+        
+        return "\n".join(prompt_parts)
 
-        Requirements:
-        1. Start with a technical overview
-        2. Include code examples where relevant
-        3. Explain technical concepts clearly
-        4. Add implementation details
-        5. Include best practices
-        6. Add error handling considerations
-        7. Conclude with practical applications
-
-        Use proper Markdown formatting including code blocks.
-        """
-
-    def _create_educational_prompt(self, query: str) -> str:
-        return f"""Write an educational guide about: {query}
-
-        Requirements:
-        1. Start with a clear learning objective
-        2. Break down complex concepts
-        3. Include practical examples
-        4. Add step-by-step instructions
-        5. Include key takeaways
-        6. Add common pitfalls to avoid
-        7. Conclude with practice suggestions
-
-        Use proper Markdown formatting with clear sections and examples.
-        """
-
-    def _create_analysis_prompt(self, query: str) -> str:
-        return f"""Write an analytical article about: {query}
-
-        Requirements:
-        1. Present a clear overview
-        2. Analyze key components
-        3. Compare different aspects
-        4. Provide data and evidence
-        5. Discuss pros and cons
-        6. Include expert perspectives
-        7. Draw meaningful conclusions
-
-        Use proper Markdown formatting with data presentation.
-        """
-
-    def _create_general_prompt(self, query: str) -> str:
-        return f"""Write an informative article about: {query}
-
-        Requirements:
-        1. Start with an engaging introduction
-        2. Cover main topics comprehensively
-        3. Include relevant examples
-        4. Back claims with evidence
-        5. Address common questions
-        6. Provide actionable insights
-        7. End with a strong conclusion
-
-        Use proper Markdown formatting for readability.
-        """
-
-    async def _enhance_content(self, content: str, query: str) -> str:
-        """Enhance content with additional context and formatting"""
-        # Add table of contents for longer content
-        if len(content.split('\n')) > 20:
-            content = self._add_table_of_contents(content)
+    async def _process_content(self, content: str, strategy: ContentStrategy, context: Dict) -> str:
+        """Process and enhance content with contextual awareness"""
+        processed_content = content
+        
+        # Apply formatting rules
+        processed_content = self._apply_formatting(processed_content, strategy.formatting)
+        
+        # Add contextual enhancements
+        if context.get('need_examples'):
+            processed_content = await self._add_relevant_examples(processed_content, context)
             
-        # Add metadata section
-        content += f"\n\n---\n*Generated for topic: {query}*\n"
-        content += f"*Last updated: {datetime.now().strftime('%Y-%m-%d')}*\n"
+        if context.get('need_references'):
+            processed_content = await self._add_references(processed_content, context)
+            
+        # Add dynamic elements
+        processed_content = self._add_navigation_elements(processed_content, strategy)
         
-        return content
+        return processed_content
 
-    def _add_table_of_contents(self, content: str) -> str:
-        """Add table of contents to content"""
-        import re
-        headers = re.findall(r'^#{1,3} (.+)$', content, re.MULTILINE)
-        if headers:
-            toc = "\n## Table of Contents\n\n"
-            for i, header in enumerate(headers, 1):
-                toc += f"{i}. [{header}](#{header.lower().replace(' ', '-')})\n"
-            return toc + "\n" + content
-        return content
+    def _update_pattern_memory(self, query: str, content: str, content_type: ContentType) -> None:
+        """Learn from successful content generation"""
+        pattern = {
+            'query': query,
+            'type': content_type,
+            'structure': self._extract_content_structure(content),
+            'timestamp': datetime.now().isoformat()
+        }
+        
+        if query[:50] not in self.pattern_memory:
+            self.pattern_memory[query[:50]] = []
+        self.pattern_memory[query[:50]].append(pattern)
 
-    def get_description(self) -> str:
-        return "Generates blog posts and articles using Gemini Pro"
+    def _calculate_confidence(self, content: str, strategy: ContentStrategy) -> float:
+        """Calculate confidence score for generated content"""
+        scores = []
+        
+        # Check structure compliance
+        structure_score = self._check_structure_compliance(content, strategy.structure)
+        scores.append(structure_score)
+        
+        # Check requirements fulfillment
+        req_score = self._check_requirements_fulfillment(content, strategy.requirements)
+        scores.append(req_score)
+        
+        # Check formatting quality
+        format_score = self._check_formatting_quality(content, strategy.formatting)
+        scores.append(format_score)
+        
+        return sum(scores) / len(scores)
+
+    # ...existing helper methods...

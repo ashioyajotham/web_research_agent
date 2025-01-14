@@ -1,10 +1,7 @@
 [
   {
-    "success": true,
-    "output": {
-      "direct_answer": null,
-      "results": []
-    },
-    "confidence": 0.0
+    "success": false,
+    "error": "FACTUAL_QUERY",
+    "task": "when did moi die"
   }
 ]

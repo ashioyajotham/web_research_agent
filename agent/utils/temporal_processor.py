@@ -7,12 +7,23 @@ from dateutil import parser
 class TemporalProcessor:
     def __init__(self):
         self.logger = logging.getLogger(__name__)
-        # Generic time patterns
-        self.time_patterns = {
-            'relative': r'(?:today|yesterday|tomorrow)',
-            'duration': r'(?:last|next|past|previous|coming)\s+(\d+)\s*(?:day|week|month|year)s?',
-            'date': r'\d{4}(?:[/-]\d{2}){0,2}',
-            'period': r'(?:during|in|at|on|between)\s+([^,.]+)'
+        # Generic temporal patterns
+        self.patterns = {
+            'absolute': [
+                r'(?:on|in|at)\s+([^,.]+\d{4})',
+                r'([A-Z][a-z]+\s+\d{1,2},?\s+\d{4})',
+                r'(\d{1,2}\s+[A-Z][a-z]+\s+\d{4})',
+                r'(\d{4})'
+            ],
+            'relative': [
+                r'(\d+)\s*(?:day|week|month|year)s?\s+(?:ago|before|after)',
+                r'(?:last|next|this)\s+(?:day|week|month|year)',
+                r'(?:yesterday|today|tomorrow)'
+            ],
+            'duration': [
+                r'(?:for|during)\s+(\d+)\s*(?:day|week|month|year)s?',
+                r'between\s+([^,]+)\s+and\s+([^,]+)'
+            ]
         }
 
     def parse_time_range(self, time_str: str) -> Tuple[datetime, datetime]:
@@ -21,19 +32,19 @@ class TemporalProcessor:
             now = datetime.now()
             
             # Handle relative times
-            if match := re.search(self.time_patterns['relative'], time_str.lower()):
+            if match := re.search(self.patterns['relative'], time_str.lower()):
                 return self._handle_relative_time(match.group(), now)
             
             # Handle durations
-            if match := re.search(self.time_patterns['duration'], time_str.lower()):
+            if match := re.search(self.patterns['duration'], time_str.lower()):
                 return self._handle_duration(match, now)
             
             # Handle explicit dates
-            if match := re.search(self.time_patterns['date'], time_str):
+            if match := re.search(self.patterns['absolute'], time_str):
                 return self._handle_explicit_date(match.group())
             
             # Handle periods
-            if match := re.search(self.time_patterns['period'], time_str):
+            if match := re.search(self.patterns['duration'], time_str):
                 return self._handle_period(match.group(1), now)
             
             raise ValueError(f"Unsupported time format: {time_str}")
@@ -65,6 +76,32 @@ class TemporalProcessor:
     def get_time_difference(self, time1: datetime, time2: datetime) -> timedelta:
         """Calculate the absolute time difference between two timestamps"""
         return abs(time1 - time2)
+
+    def extract_temporal_info(self, text: str) -> Optional[datetime]:
+        """Extract temporal information from text"""
+        for pattern_type, patterns in self.patterns.items():
+            for pattern in patterns:
+                if matches := re.findall(pattern, text, re.IGNORECASE):
+                    try:
+                        # Handle different types of temporal references
+                        if pattern_type == 'absolute':
+                            return self._parse_absolute_date(matches[0])
+                        elif pattern_type == 'relative':
+                            return self._handle_relative_date(matches[0])
+                        elif pattern_type == 'duration':
+                            return self._handle_duration(matches[0])
+                    except Exception as e:
+                        self.logger.debug(f"Failed to parse {pattern_type} date: {e}")
+                        continue
+        return None
+
+    def _parse_absolute_date(self, date_str: str) -> Optional[datetime]:
+        """Parse absolute date references"""
+        try:
+            return parser.parse(date_str, fuzzy=True)
+        except Exception as e:
+            self.logger.debug(f"Date parsing failed: {e}")
+            return None
 
     def _extract_temporal_info(self, query: str) -> datetime:
         """Extract temporal information from a query string"""
