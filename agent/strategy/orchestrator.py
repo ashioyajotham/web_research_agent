@@ -2,6 +2,7 @@ from typing import List, Dict, Any, Tuple, Optional
 from dataclasses import dataclass
 from .base import Strategy, StrategyResult
 import numpy as np
+from functools import lru_cache
 
 @dataclass
 class StrategyMetrics:
@@ -17,17 +18,17 @@ class StrategyOrchestrator:
         self.execution_history = []
         self.strategy_metrics = {}
         
-        # Add strategy composition settings
+        # Enhanced configuration
         self.composition_threshold = 0.7
         self.max_composite_strategies = 3
-        
-        # Add learning parameters
         self.learning_rate = 0.1
         self.exploration_rate = 0.2
+        self.cache_timeout = 300  # 5 minutes
         
-        # Add performance tracking
+        # Enhanced tracking
         self.strategy_performance = {}
         self.task_patterns = {}
+        self.strategy_weights = {s.__class__.__name__: 1.0 for s in strategies}
 
     async def execute_best_strategy(self, task: str, context: Dict[str, Any]) -> StrategyResult:
         """Execute best strategy with dynamic composition"""
@@ -49,16 +50,25 @@ class StrategyOrchestrator:
         except Exception as e:
             return StrategyResult(success=False, error=str(e))
 
+    @lru_cache(maxsize=100)
     def _analyze_task_complexity(self, task: str) -> float:
-        """Analyze task complexity for strategy selection"""
-        factors = {
-            'length': len(task.split()) / 20,  # Normalized by typical length
-            'subtasks': len([w for w in task.lower().split() if w in ['and', 'or', 'then']]),
-            'specificity': len([w for w in task.lower().split() if w in ['exactly', 'specific', 'precise']]),
-            'scope': len([w for w in task.lower().split() if w in ['all', 'every', 'complete']])
+        """Optimized task complexity analysis"""
+        # Simplified complexity scoring
+        complexity_indicators = {
+            'research_terms': ['find', 'search', 'research', 'look up'],
+            'analysis_terms': ['analyze', 'compare', 'evaluate', 'assess'],
+            'synthesis_terms': ['combine', 'summarize', 'conclude'],
+            'validation_terms': ['verify', 'validate', 'confirm', 'check']
         }
         
-        return min(1.0, sum(factors.values()) / len(factors))
+        task_lower = task.lower()
+        score = 0.0
+        
+        for category, terms in complexity_indicators.items():
+            matches = sum(1 for term in terms if term in task_lower)
+            score += matches * 0.2
+        
+        return min(1.0, score)
 
     def _analyze_requirements(self, task: str) -> Dict[str, float]:
         """Analyze task requirements for strategy matching"""
@@ -87,12 +97,17 @@ class StrategyOrchestrator:
         return requirements
 
     async def _execute_composite_strategy(self, task: str, candidates: List[Tuple[Strategy, float]], context: Dict[str, Any]) -> StrategyResult:
-        """Execute multiple strategies in composition"""
+        """Enhanced composite strategy execution"""
         results = []
         total_confidence = 0.0
         
-        # Sort candidates by score and take top N
-        sorted_candidates = sorted(candidates, key=lambda x: x[1], reverse=True)
+        # Apply strategy weights
+        weighted_candidates = [
+            (s, score * self.strategy_weights[s.__class__.__name__])
+            for s, score in candidates
+        ]
+        
+        sorted_candidates = sorted(weighted_candidates, key=lambda x: x[1], reverse=True)
         top_candidates = sorted_candidates[:self.max_composite_strategies]
         
         # Execute strategies and collect results
@@ -163,7 +178,7 @@ class StrategyOrchestrator:
         return await self._execute_fallback_strategy(task, context)
 
     def _update_strategy_metrics(self, strategy: Strategy, result: StrategyResult):
-        """Update strategy performance metrics"""
+        """Enhanced metrics updating"""
         name = strategy.__class__.__name__
         if name not in self.strategy_metrics:
             self.strategy_metrics[name] = StrategyMetrics(
@@ -179,6 +194,17 @@ class StrategyOrchestrator:
         # Update with exponential moving average
         metrics.success_rate = (1 - self.learning_rate) * metrics.success_rate + self.learning_rate * float(result.success)
         metrics.avg_confidence = (1 - self.learning_rate) * metrics.avg_confidence + self.learning_rate * result.confidence
+        
+        # Update strategy weights based on performance
+        if result.success:
+            self.strategy_weights[name] *= (1 + self.learning_rate * result.confidence)
+        else:
+            self.strategy_weights[name] *= (1 - self.learning_rate * 0.5)
+        
+        # Normalize weights
+        total_weight = sum(self.strategy_weights.values())
+        for k in self.strategy_weights:
+            self.strategy_weights[k] /= total_weight
         
         # Update task patterns
         self._update_task_patterns(strategy, result)

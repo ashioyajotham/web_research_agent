@@ -264,4 +264,3 @@ class AdaptivePatternLearner:
             # Initialize empty state
             self.patterns = defaultdict(dict)
             self.pattern_hierarchy = defaultdict(list)
-``` 

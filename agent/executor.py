@@ -1,12 +1,29 @@
-from dataclasses import dataclass
-from typing import List, Dict, Any, Optional
+from dataclasses import dataclass, field
+from typing import List, Dict, Any, Optional, Tuple
 import asyncio
 import logging
+from datetime import datetime
 from planning.task_planner import TaskPlan, PlanStep, TaskType
+from .utils.temporal_processor import TemporalProcessor
 
-# Add logging
+# Enhance logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+@dataclass
+class ExecutionContext:
+    """Execution context for better tracking and adaptation"""
+    temporal_context: Optional[datetime] = None
+    metrics: Dict[str, Any] = field(default_factory=dict)
+    history: List[Dict[str, Any]] = field(default_factory=list)
+    patterns: Dict[str, Any] = field(default_factory=dict)
+    execution_stats: Dict[str, Any] = field(default_factory=dict)
+
+    def update_metric(self, key: str, value: Any) -> None:
+        self.metrics[key] = value
+        
+    def add_to_history(self, entry: Dict[str, Any]) -> None:
+        self.history.append({**entry, 'timestamp': datetime.now()})
 
 @dataclass
 class StepResult:
@@ -15,7 +32,9 @@ class StepResult:
     error: Optional[str] = None
     tool_name: Optional[str] = None
     metrics: Dict[str, Any] = None
-    context: Dict[str, Any] = None
+    context: Dict[str, Any] = field(default_factory=dict)
+    execution_time: float = 0.0
+    retries: int = 0
 
 @dataclass
 class ExecutionResult:
@@ -26,6 +45,8 @@ class ExecutionResult:
     steps: List[Dict[str, Any]]
     partial_results: Optional[Dict[str, Any]] = None
     execution_metrics: Optional[Dict[str, Any]] = None
+    context: ExecutionContext = field(default_factory=ExecutionContext)
+    timing: Dict[str, float] = field(default_factory=dict)
 
     def __post_init__(self):
         """Ensure output is properly formatted"""
@@ -57,68 +78,127 @@ class ExecutionResult:
             "partial_results": self.partial_results
         }
 
+    def add_timing(self, phase: str, duration: float) -> None:
+        self.timing[phase] = duration
+
+class ExecutionStrategy:
+    """Flexible execution strategy handler"""
+    def __init__(self, parallel: bool = True, max_retries: int = 3):
+        self.parallel = parallel
+        self.max_retries = max_retries
+        self.timeout = 60
+        self.fallback_handlers = {}
+
+    def set_timeout(self, timeout: int) -> None:
+        self.timeout = timeout
+
+    async def execute(self, step: PlanStep, tool: Any, context: ExecutionContext) -> StepResult:
+        start_time = asyncio.get_event_loop().time()
+        retries = 0
+        
+        while retries <= self.max_retries:
+            try:
+                result = await asyncio.wait_for(
+                    tool.execute(**step.params),
+                    timeout=self.timeout
+                )
+                
+                execution_time = asyncio.get_event_loop().time() - start_time
+                return StepResult(
+                    success=True,
+                    output=result,
+                    tool_name=step.tool,
+                    context={'step_id': step.id},
+                    execution_time=execution_time,
+                    retries=retries
+                )
+            except Exception as e:
+                retries += 1
+                if retries > self.max_retries:
+                    break
+                await asyncio.sleep(1 * retries)
+                
+        return StepResult(
+            success=False,
+            output=None,
+            error=f"Execution failed after {retries} retries",
+            tool_name=step.tool,
+            context={'step_id': step.id},
+            execution_time=asyncio.get_event_loop().time() - start_time,
+            retries=retries
+        )
+
 class Executor:
     def __init__(self, tools: Dict[str, Any], parallel: bool = True):
         self.tools = tools
-        self.parallel = parallel
+        self.execution_strategy = ExecutionStrategy(parallel=parallel)
         self._execution_cache = {}
         self._step_metrics = {}
+        self.temporal_processor = TemporalProcessor()
+        self.context = ExecutionContext()
 
     async def execute_plan(self, plan: TaskPlan, model: Any, max_steps: int) -> ExecutionResult:
-        """Execute a plan and handle results"""
+        """Execute plan with enhanced context awareness and adaptability"""
+        start_time = asyncio.get_event_loop().time()
+        
         try:
-            # Track metrics for this execution
-            execution_metrics = {
-                'start_time': asyncio.get_event_loop().time(),
-                'completed_steps': 0,
-                'failed_steps': 0,
-                'total_steps': len(plan.steps)
-            }
+            # Update execution context
+            self.context.temporal_context = datetime.now()
+            self.context.add_to_history({
+                'action': 'plan_execution_start',
+                'plan_id': id(plan),
+                'steps': len(plan.steps)
+            })
 
             # Execute steps with dependency handling
             results = await self._execute_with_dependencies(
-                plan.steps[:max_steps], 
+                plan.steps[:max_steps],
                 model,
-                execution_metrics
+                self.context
             )
 
-            # Calculate success metrics
+            # Process and combine results
             success_rate = self._calculate_success_rate(results)
-            execution_metrics['success_rate'] = success_rate
-            execution_metrics['end_time'] = asyncio.get_event_loop().time()
+            confidence = self._calculate_confidence(results, plan)
             
-            # Combine and process results
-            combined_output = self._combine_results(results, plan.metadata.get("task_type"))
-            
+            # Update execution statistics
+            execution_time = asyncio.get_event_loop().time() - start_time
+            self.context.execution_stats.update({
+                'total_time': execution_time,
+                'success_rate': success_rate,
+                'confidence': confidence
+            })
+
             return ExecutionResult(
                 success=any(r.success for r in results),
-                output=combined_output,
-                confidence=self._calculate_confidence(results, plan),
+                output=self._combine_results(results, plan.metadata.get("task_type")),
+                confidence=confidence,
                 success_rate=success_rate,
                 steps=[self._format_step_result(step, result) 
                        for step, result in zip(plan.steps, results)],
-                execution_metrics=execution_metrics,
-                partial_results=self._get_partial_results(results)
+                context=self.context,
+                timing={'total_execution': execution_time}
             )
 
         except Exception as e:
             logger.error(f"Plan execution failed: {str(e)}", exc_info=True)
             return ExecutionResult(
                 success=False,
-                output=None,
+                output={"results": []},
                 confidence=0.0,
                 success_rate=0.0,
                 steps=[{'error': str(e)}],
-                execution_metrics={'error': str(e)}
+                context=self.context,
+                timing={'total_execution': asyncio.get_event_loop().time() - start_time}
             )
 
     async def _execute_with_dependencies(
-        self, 
+        self,
         steps: List[PlanStep],
         model: Any,
-        metrics: Dict[str, Any]
+        context: ExecutionContext
     ) -> List[StepResult]:
-        """Execute steps respecting dependencies"""
+        """Enhanced dependency-aware execution with context"""
         results = []
         pending_steps = steps.copy()
         completed_steps = set()
@@ -136,14 +216,14 @@ class Executor:
                 break
 
             # Execute available steps
-            if self.parallel:
+            if self.execution_strategy.parallel:
                 step_results = await asyncio.gather(*[
-                    self._execute_step(step, model) for step in executable_steps
+                    self.execution_strategy.execute(step, self.tools[step.tool], context) for step in executable_steps
                 ])
             else:
                 step_results = []
                 for step in executable_steps:
-                    result = await self._execute_step(step, model)
+                    result = await self.execution_strategy.execute(step, self.tools[step.tool], context)
                     step_results.append(result)
 
             # Update tracking
@@ -153,13 +233,13 @@ class Executor:
                 pending_steps.remove(step)
 
             # Update metrics
-            metrics['completed_steps'] = len(completed_steps)
-            metrics['failed_steps'] = sum(1 for r in results if not r.success)
+            context.update_metric('completed_steps', len(completed_steps))
+            context.update_metric('failed_steps', sum(1 for r in results if not r.success))
 
         return results
 
     async def _execute_step(self, step: PlanStep, model: Any) -> StepResult:
-        """Execute a single step with enhanced error handling and caching"""
+        """Execute step with improved error handling and context awareness"""
         cache_key = f"{step.type}:{step.tool}:{hash(str(step.params))}"
         retry_count = 0
         max_retries = 2
@@ -232,7 +312,7 @@ class Executor:
                 )
 
     def _calculate_confidence(self, results: List[StepResult], plan: TaskPlan) -> float:
-        """Calculate overall execution confidence"""
+        """Enhanced confidence calculation with context consideration"""
         if not results:
             return 0.0
             
@@ -268,7 +348,7 @@ class Executor:
         return partial_results if partial_results else None
 
     def _combine_results(self, results: List[StepResult], task_type: Optional[TaskType] = None) -> Dict[str, Any]:
-        """Combine results with improved task-specific formatting"""
+        """Improved result combination with better type handling"""
         if not results:
             return {"results": []}
             

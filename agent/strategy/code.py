@@ -1,8 +1,11 @@
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 from .base import Strategy, StrategyResult
 import re
 import ast
 from dataclasses import dataclass, field
+from functools import lru_cache
+from tools.code_tools import CodeGenerator, CodeAnalyzer, AdaptiveAlgorithmRegistry, FlexibleCodeAnalyzer
+import time
 
 @dataclass
 class StrategyContext:
@@ -12,6 +15,9 @@ class StrategyContext:
     constraints: List[str] = field(default_factory=list)
     adaptations: List[Dict[str, Any]] = field(default_factory=list)
     metrics: Dict[str, float] = field(default_factory=dict)
+    history: List[Dict[str, Any]] = field(default_factory=list)
+    feedback_metrics: Dict[str, float] = field(default_factory=dict)
+    adaptation_rules: Dict[str, Any] = field(default_factory=dict)
 
 class AdaptiveCodeStrategy(Strategy):
     """Enhanced code strategy with dynamic adaptation"""
@@ -20,23 +26,44 @@ class AdaptiveCodeStrategy(Strategy):
         self.pattern_registry = AdaptiveAlgorithmRegistry()
         self.analyzer = FlexibleCodeAnalyzer()
         self.strategy_cache = {}
+        self.adaptation_engine = self._create_adaptation_engine()
+        self.learning_rate = 0.1
+
+    def _create_adaptation_engine(self) -> Dict[str, Any]:
+        return {
+            'patterns': {},
+            'rules': {},
+            'feedback': [],
+            'meta_templates': self._load_meta_templates()
+        }
+
+    @lru_cache(maxsize=100)
+    def _load_meta_templates(self) -> Dict[str, Any]:
+        return {
+            'code_patterns': self._generate_dynamic_patterns(),
+            'adaptation_rules': self._generate_adaptation_rules()
+        }
         
     async def execute(self, task: str, context: Dict[str, Any]) -> StrategyResult:
         try:
-            # Create dynamic context
             strategy_context = self._build_strategy_context(task, context)
             
-            # Select or adapt pattern
-            pattern = self.pattern_registry.find_best_pattern(task, strategy_context)
-            if not pattern:
-                pattern = self._create_new_pattern(task, strategy_context)
+            # Dynamic strategy selection
+            selected_strategy = self._select_optimal_strategy(task, strategy_context)
             
-            # Generate and analyze code
+            # Adaptive pattern matching
+            pattern = await self._find_or_create_pattern(task, strategy_context)
+            
+            # Generate and analyze code with feedback loop
             code_result = await self._generate_adaptive_code(pattern, strategy_context)
-            analysis = self.analyzer.analyze_code(code_result['code'], strategy_context)
+            analysis = await self._analyze_with_feedback(code_result, strategy_context)
             
-            # Learn from execution
-            self._learn_from_execution(pattern, code_result, analysis)
+            # Meta-programming adaptation
+            if analysis['requires_adaptation']:
+                code_result = await self._adapt_code_dynamically(code_result, analysis)
+            
+            # Update learning metrics
+            self._update_learning_metrics(pattern, code_result, analysis)
             
             return StrategyResult(
                 success=True,
@@ -44,12 +71,58 @@ class AdaptiveCodeStrategy(Strategy):
                     'code': code_result['code'],
                     'analysis': analysis,
                     'pattern_used': pattern['metadata'],
-                    'confidence': analysis['confidence']
+                    'adaptations': code_result.get('adaptations', []),
+                    'confidence': self._calculate_confidence(analysis)
                 }
             )
             
         except Exception as e:
+            self._handle_execution_error(e, strategy_context)
             return StrategyResult(success=False, error=str(e))
+
+    async def _find_or_create_pattern(self, task: str, context: StrategyContext) -> Dict[str, Any]:
+        pattern = self.pattern_registry.find_best_pattern(task, context)
+        if not pattern or pattern['confidence'] < 0.7:
+            pattern = await self._create_adaptive_pattern(task, context)
+        return pattern
+
+    async def _adapt_code_dynamically(self, code_result: Dict[str, Any], analysis: Dict[str, Any]) -> Dict[str, Any]:
+        adaptations = []
+        if analysis['complexity'] > 0.7:
+            adaptations.append(self._optimize_complexity(code_result['code']))
+        if analysis['maintainability'] < 0.6:
+            adaptations.append(self._improve_maintainability(code_result['code']))
+            
+        code_result['code'] = self._apply_adaptations(code_result['code'], adaptations)
+        code_result['adaptations'] = adaptations
+        return code_result
+
+    def _update_learning_metrics(self, pattern: Dict[str, Any], result: Dict[str, Any], analysis: Dict[str, Any]):
+        """Enhanced learning from execution results"""
+        metrics = {
+            'success_rate': 1.0 if result.get('success') else 0.0,
+            'complexity_score': analysis.get('complexity', 0.5),
+            'adaptation_effectiveness': self._calculate_adaptation_effectiveness(result),
+            'pattern_relevance': self._calculate_pattern_relevance(pattern, result)
+        }
+        
+        # Update pattern weights
+        self.pattern_registry.update_pattern_weights(pattern['id'], metrics)
+        
+        # Store learning history
+        self.strategy_cache[pattern['id']] = {
+            'metrics': metrics,
+            'timestamp': time.time()
+        }
+
+    def _calculate_confidence(self, analysis: Dict[str, Any]) -> float:
+        weights = {
+            'complexity': 0.3,
+            'maintainability': 0.3,
+            'security': 0.2,
+            'performance': 0.2
+        }
+        return sum(analysis.get(k, 0) * w for k, w in weights.items())
 
     def _build_strategy_context(self, task: str, context: Dict[str, Any]) -> StrategyContext:
         """Build dynamic strategy context"""
