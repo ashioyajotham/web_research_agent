@@ -21,6 +21,20 @@ class DatasetTool(BaseTool):
         """Implement abstract method from BaseTool"""
         return "Downloads and processes datasets from URLs, with support for various data analysis types"
 
+    def get_metadata(self) -> Dict[str, Any]:
+        """Return tool metadata"""
+        return {
+            "name": "dataset",
+            "type": "data_processing",
+            "version": "1.0",
+            "capabilities": [
+                "dataset_download",
+                "time_series_analysis",
+                "statistical_analysis",
+                "comparative_analysis"
+            ]
+        }
+
     async def execute(self, query: Optional[str] = None, url: Optional[str] = None, **kwargs) -> Dict[str, Any]:
         """Download and process dataset from URL"""
         try:

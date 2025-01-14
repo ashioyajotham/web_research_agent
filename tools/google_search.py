@@ -1,4 +1,4 @@
-from typing import Dict, Any, Optional, List, Tuple
+from typing import List, Dict, Any, Optional, Tuple, Callable
 import aiohttp
 import json
 import os
@@ -8,6 +8,8 @@ from aiohttp import ClientTimeout
 from .base import BaseTool
 from collections import defaultdict
 from datetime import datetime
+import time
+from agent.core import DynamicPattern
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
@@ -87,12 +89,12 @@ class AdaptiveSearchTool(BaseTool):
         self.max_retries = 3
         self.context = DynamicSearchContext()
         
-        # Flexible result processors
+        # Flexible result processors - Update to use correct method names
         self.result_processors = {
             'standard': self._process_standard_results,
-            'temporal': self._process_temporal_results,
-            'semantic': self._process_semantic_results,
-            'metric': self._process_metric_results
+            'temporal': self._handle_temporal_results,  # Changed from _process_temporal_results
+            'semantic': self._handle_semantic_results,  # Changed from _process_semantic_results
+            'metric': self._handle_metric_results      # Changed from _process_metric_results
         }
         
         # Dynamic search strategies
@@ -120,6 +122,24 @@ class AdaptiveSearchTool(BaseTool):
             'broad': lambda q: f'{q} OR similar',
             'recent': lambda q: f'{q} after:2023',
             'comprehensive': lambda q: f'allintitle: {q}'
+        }
+
+    def get_description(self) -> str:
+        """Return tool description"""
+        return "An adaptive Google Search tool that dynamically adjusts search strategies based on context and query patterns."
+
+    def get_metadata(self) -> Dict[str, Any]:
+        """Return tool metadata"""
+        return {
+            "name": "google_search",
+            "type": "search",
+            "version": "2.0",
+            "capabilities": [
+                "adaptive_search",
+                "temporal_awareness",
+                "semantic_processing",
+                "metric_analysis"
+            ]
         }
 
     async def execute(self, query: str, **kwargs) -> Dict[str, Any]:
@@ -347,5 +367,28 @@ class AdaptiveSearchTool(BaseTool):
         elif len(query.split()) > 4:
             return 'semantic'
         return 'generic'
+    
+    async def _broad_strategy(self, query: str, params: Dict) -> List[Dict]:
+        """Implement broad search strategy"""
+        modified_query = f"{query} OR similar"
+        return await self._execute_with_backoff(modified_query, **params)
 
-    # ... Rest of the implementation ...
+    async def _focused_strategy(self, query: str, params: Dict) -> List[Dict]:
+        """Implement focused search strategy"""
+        modified_query = f'"{query}"'
+        params['num'] = min(params.get('num', 10), 20)
+        return await self._execute_with_backoff(modified_query, **params)
+
+    async def _deep_strategy(self, query: str, params: Dict) -> List[Dict]:
+        """Implement deep search strategy"""
+        modified_query = f'allintitle:{query}'
+        params['detailed'] = True
+        return await self._execute_with_backoff(modified_query, **params)
+
+    async def _temporal_strategy(self, query: str, params: Dict) -> List[Dict]:
+        """Implement temporal search strategy"""
+        timeframe = params.get('timeframe', 'year')
+        modified_query = f'{query} when date {timeframe}'
+        return await self._execute_with_backoff(modified_query, **params)
+    
+# ... Rest of the implementation ...

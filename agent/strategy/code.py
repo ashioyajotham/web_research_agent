@@ -4,7 +4,7 @@ import re
 import ast
 from dataclasses import dataclass, field
 from functools import lru_cache
-from tools.code_tools import CodeGenerator, CodeAnalyzer, AdaptiveAlgorithmRegistry, FlexibleCodeAnalyzer
+from tools.code_tools import CodeGeneratorTool as CodeGenerator, CodeAnalysisTool as CodeAnalyzer, AdaptiveAlgorithmRegistry, AdaptiveCodeAnalyzer as FlexibleCodeAnalyzer
 import time
 
 @dataclass

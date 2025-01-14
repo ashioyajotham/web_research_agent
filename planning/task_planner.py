@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 import asyncio
 from typing import List, Dict, Any, Optional
 from enum import Enum
@@ -44,20 +44,33 @@ class TaskPlan:
     total_complexity: float
     parallel_execution: bool
 
+@dataclass
+class TaskConfiguration:
+    """Dynamic configuration for task planning"""
+    tool_weights: Dict[str, float] = field(default_factory=dict)
+    complexity_factors: Dict[str, float] = field(default_factory=dict)
+    parallel_threshold: float = 0.7
+    replan_threshold: float = 0.5
+    max_parallel_steps: int = 3
+    learning_rate: float = 0.1
+
 class TaskPlanner:
-    def __init__(self, available_tools: List[str]):
+    def __init__(self, available_tools: List[str], config: Optional[TaskConfiguration] = None):
         self.tools = available_tools
         self.dependency_graph = nx.DiGraph()
         self._initialize_nltk()
         
-        # Add plan optimization settings
-        self.parallel_threshold = 0.7  # Confidence threshold for parallel execution
-        self.replan_threshold = 0.5   # Threshold for triggering replanning
-        self.max_parallel_steps = 3    # Maximum parallel steps
+        # Use configurable settings
+        self.config = config or TaskConfiguration()
         
-        # Add performance tracking
-        self.step_performance = {}
+        # Add learning and adaptation capabilities
+        self.tool_performance = {}
+        self.task_patterns = {}
         self.failed_patterns = set()
+        
+        # Historical performance tracking
+        self.execution_history = []
+        self.pattern_success_rates = {}
 
     def _initialize_nltk(self):
         try:
@@ -94,21 +107,33 @@ class TaskPlanner:
         )
 
     def _analyze_task_type(self, task: str) -> TaskType:
-        """Determine task type using NLP"""
+        """Determine task type using NLP and historical patterns"""
         tokens = word_tokenize(task.lower())
         pos_tags = pos_tag(tokens)
         
-        if any(word in tokens for word in ["research", "find", "search"]):
-            return TaskType.RESEARCH
-        elif any(word in tokens for word in ["analyze", "compare", "evaluate"]):
-            return TaskType.ANALYSIS
-        elif any(word in tokens for word in ["code", "program", "implement"]):
-            return TaskType.CODE
-        elif any(word in tokens for word in ["data", "dataset", "database"]):
-            return TaskType.DATA
-        elif "criteria" in tokens:
-            return TaskType.CRITERIA_SEARCH
-        return TaskType.COMPOSITE
+        # Check historical patterns first
+        task_pattern = self._extract_task_pattern(tokens)
+        if task_pattern in self.task_patterns:
+            return self.task_patterns[task_pattern]
+            
+        # Use NLP-based analysis with learned weights
+        type_scores = {t: 0.0 for t in TaskType}
+        
+        for word in tokens:
+            for task_type in TaskType:
+                if word in self.config.tool_weights.get(task_type, {}):
+                    type_scores[task_type] += self.config.tool_weights[task_type][word]
+        
+        # Get highest scoring type
+        best_type = max(type_scores.items(), key=lambda x: x[1])[0]
+        
+        # Store pattern for future use
+        self.task_patterns[task_pattern] = best_type
+        return best_type
+
+    def _extract_task_pattern(self, tokens: List[str]) -> str:
+        """Extract key pattern from task tokens"""
+        return " ".join(sorted([t for t in tokens if t not in set(['the', 'a', 'an', 'in', 'on', 'at'])]))
 
     def _decompose_task(self, task: str, task_type: TaskType) -> List[str]:
         """Break down complex task into subtasks"""
@@ -137,20 +162,29 @@ class TaskPlanner:
         )
 
     def _select_tool(self, subtask: str, task_type: TaskType) -> str:
-        """Select the most appropriate tool for the task"""
-        tool_mapping = {
-            TaskType.RESEARCH: ["google_search", "web_scraper"],
-            TaskType.CODE: ["code_generator", "code_analysis"],
-            TaskType.DATA: ["dataset", "data_analysis"],
-            TaskType.ANALYSIS: ["analysis_tool", "data_analysis"]
-        }
+        """Select tool based on performance history and context"""
+        available_tools = set(self.tools)
         
-        preferred_tools = tool_mapping.get(task_type, ["google_search"])
-        for tool in preferred_tools:
-            if tool in self.tools:
-                return tool
+        # Check historical performance
+        if subtask in self.tool_performance:
+            best_tool = max(
+                self.tool_performance[subtask].items(),
+                key=lambda x: x[1]['success_rate']
+            )[0]
+            if best_tool in available_tools:
+                return best_tool
+        
+        # Use learned tool weights
+        tool_scores = {tool: 0.0 for tool in available_tools}
+        for tool in available_tools:
+            # Base score from configuration
+            tool_scores[tool] = self.config.tool_weights.get(tool, {}).get(task_type.value, 0.5)
+            
+            # Adjust based on historical success
+            if tool in self.pattern_success_rates:
+                tool_scores[tool] *= (1 + self.pattern_success_rates[tool])
                 
-        return self.tools[0]  # Default to first available tool
+        return max(tool_scores.items(), key=lambda x: x[1])[0]
 
     def _generate_tool_params(self, subtask: str, tool: str, context: Optional[Dict]) -> Dict[str, Any]:
         """Generate parameters for tool execution"""
@@ -263,7 +297,7 @@ class TaskPlanner:
         current_group = []
         
         for step in steps:
-            if len(current_group) < self.max_parallel_steps and self._can_run_parallel(step, current_group):
+            if len(current_group) < self.config.max_parallel_steps and self._can_run_parallel(step, current_group):
                 current_group.append(step)
             else:
                 if current_group:
@@ -351,4 +385,74 @@ class TaskPlanner:
             return False
             
         # Check confidence threshold
-        return self._calculate_step_confidence(step) >= self.parallel_threshold
+        return self._calculate_step_confidence(step) >= self.config.parallel_threshold
+
+    def learn_from_execution(self, 
+                           step: PlanStep, 
+                           success: bool, 
+                           execution_time: float, 
+                           results: Any):
+        """Learn from execution results"""
+        # Update tool performance
+        if step.task not in self.tool_performance:
+            self.tool_performance[step.task] = {}
+        
+        if step.tool not in self.tool_performance[step.task]:
+            self.tool_performance[step.task][step.tool] = {
+                'success_rate': 1.0,
+                'avg_time': execution_time,
+                'executions': 1
+            }
+        else:
+            stats = self.tool_performance[step.task][step.tool]
+            stats['executions'] += 1
+            stats['success_rate'] = (stats['success_rate'] * (stats['executions'] - 1) + float(success)) / stats['executions']
+            stats['avg_time'] = (stats['avg_time'] * (stats['executions'] - 1) + execution_time) / stats['executions']
+
+        # Update pattern success rates
+        pattern = self._extract_task_pattern(word_tokenize(step.task))
+        if pattern not in self.pattern_success_rates:
+            self.pattern_success_rates[pattern] = 0.0
+        
+        # Apply learning rate to update
+        current_rate = self.pattern_success_rates[pattern]
+        self.pattern_success_rates[pattern] = current_rate + self.config.learning_rate * (float(success) - current_rate)
+
+        # Store execution record
+        self.execution_history.append({
+            'step': step,
+            'success': success,
+            'time': execution_time,
+            'results': results
+        })
+
+    def _optimize_plan(self, steps: List[PlanStep]) -> List[PlanStep]:
+        """Optimize plan based on learned patterns"""
+        optimized_steps = []
+        
+        # Group steps by patterns
+        pattern_groups = self._group_by_patterns(steps)
+        
+        # Reorder based on success patterns
+        for group in pattern_groups:
+            if len(group) > 1:
+                group.sort(
+                    key=lambda s: self.pattern_success_rates.get(
+                        self._extract_task_pattern(word_tokenize(s.task)), 0.5
+                    ),
+                    reverse=True
+                )
+            optimized_steps.extend(group)
+            
+        return optimized_steps
+
+    def _group_by_patterns(self, steps: List[PlanStep]) -> List[List[PlanStep]]:
+        """Group steps by similar patterns"""
+        patterns = {}
+        for step in steps:
+            pattern = self._extract_task_pattern(word_tokenize(step.task))
+            if pattern not in patterns:
+                patterns[pattern] = []
+            patterns[pattern].append(step)
+            
+        return list(patterns.values())

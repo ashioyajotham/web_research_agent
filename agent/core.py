@@ -17,7 +17,6 @@ from planning.task_planner import TaskPlanner
 from memory.memory_store import MemoryStore
 from learning.pattern_learner import PatternLearner
 from .strategy import ResearchStrategy
-from .task_parser import TaskParser, ParsedTask
 from .utils.temporal_processor import TemporalProcessor
 
 
@@ -126,23 +125,158 @@ class TaskType(Enum):
         return cls.GENERIC
 
 class DynamicPattern:
-    """Dynamic pattern matching system"""
-    def __init__(self, initial_patterns: Dict[str, List[str]] = None):
-        self.patterns = initial_patterns or {}
+    """A flexible pattern matching system that can learn and adapt to any type of data"""
+    def __init__(self):
+        self.patterns = {
+            'general': {
+                'patterns': [],
+                'confidence_weights': {},
+                'context_rules': {}
+            }
+        }
         self.learned_patterns = {}
-        self.pattern_weights = {}
+        self.pattern_history = []
 
-    def add_pattern(self, category: str, pattern: str, weight: float = 1.0):
-        """Dynamically add new patterns"""
-        if category not in self.patterns:
-            self.patterns[category] = []
-        self.patterns[category].append(pattern)
-        self.pattern_weights[(category, pattern)] = weight
+    def add_category(self, category: str, base_patterns: List[str] = None,
+                    confidence_rules: Dict[str, float] = None):
+        """Dynamically add new pattern categories"""
+        self.patterns[category] = {
+            'patterns': base_patterns or [],
+            'confidence_weights': confidence_rules or {},
+            'context_rules': {}
+        }
 
-    def learn_pattern(self, text: str, category: str):
-        """Learn new patterns from text"""
-        # Add pattern learning logic here
-        pass
+    def learn_pattern(self, text: str, success_data: Dict[str, Any], context: Dict[str, Any] = None):
+        """Learn new patterns from successful matches"""
+        try:
+            signature = self._extract_pattern_signature(text, success_data)
+            if signature:
+                category = self._infer_pattern_category(signature, context)
+                confidence = self._calculate_pattern_confidence(signature, success_data)
+                
+                if category not in self.patterns:
+                    self.add_category(category)
+                
+                pattern = self._generate_flexible_pattern(signature)
+                self.patterns[category]['patterns'].append(pattern)
+                self.patterns[category]['confidence_weights'][pattern] = confidence
+                
+                self._update_pattern_history(category, pattern, confidence)
+        except Exception as e:
+            pass
+
+    def extract(self, text: str, context: Dict[str, Any] = None) -> List[Dict[str, Any]]:
+        """Extract information using all relevant patterns"""
+        results = []
+        relevant_categories = self._get_relevant_categories(context)
+        
+        for category in relevant_categories:
+            category_patterns = self.patterns[category]['patterns']
+            for pattern in category_patterns:
+                confidence = self.patterns[category]['confidence_weights'].get(pattern, 0.5)
+                
+                if matches := self._apply_pattern(pattern, text, context):
+                    for match in matches:
+                        results.append({
+                            'value': match,
+                            'pattern': pattern,
+                            'category': category,
+                            'confidence': confidence * self._context_multiplier(category, context)
+                        })
+        
+        return sorted(results, key=lambda x: x['confidence'], reverse=True)
+
+    def _extract_pattern_signature(self, text: str, success_data: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+        """Extract a signature that can be used to generate new patterns"""
+        try:
+            # Analyze text structure around successful data points
+            context_window = 50
+            for key, value in success_data.items():
+                if isinstance(value, str) and value in text:
+                    idx = text.find(value)
+                    before = text[max(0, idx - context_window):idx]
+                    after = text[idx + len(value):min(len(text), idx + len(value) + context_window)]
+                    
+                    return {
+                        'prefix': before,
+                        'value': value,
+                        'suffix': after,
+                        'type': self._infer_value_type(value)
+                    }
+        except:
+            return None
+
+    def _generate_flexible_pattern(self, signature: Dict[str, Any]) -> str:
+        """Generate a flexible regex pattern from a signature"""
+        try:
+            # Create pattern based on value type and context
+            value_type = signature['type']
+            prefix = re.escape(signature['prefix'].strip()).replace(r'\ ', r'\s+')
+            suffix = re.escape(signature['suffix'].strip()).replace(r'\ ', r'\s+')
+            
+            if value_type == 'numeric':
+                value_pattern = r'(\d+(?:\.\d+)?)'
+            elif value_type == 'date':
+                value_pattern = r'([A-Za-z]+\s+\d{1,2},?\s+\d{4}|\d{4})'
+            else:
+                value_pattern = r'([^.,;\s]+(?:\s+[^.,;\s]+)*)'
+            
+            return f"{prefix}\s*{value_pattern}\s*{suffix}"
+        except:
+            return r'(.+)'
+
+    def _infer_value_type(self, value: str) -> str:
+        """Infer the type of value for pattern generation"""
+        if re.match(r'^\d+(?:\.\d+)?$', value):
+            return 'numeric'
+        elif re.match(r'^(?:\d{4}|[A-Za-z]+\s+\d{1,2},?\s+\d{4})$', value):
+            return 'date'
+        return 'text'
+
+    def _get_relevant_categories(self, context: Dict[str, Any]) -> List[str]:
+        """Get relevant pattern categories based on context"""
+        if not context:
+            return list(self.patterns.keys())
+            
+        relevant = ['general']  # Always include general patterns
+        for category in self.patterns:
+            if self._is_category_relevant(category, context):
+                relevant.append(category)
+        return relevant
+
+    def _context_multiplier(self, category: str, context: Dict[str, Any]) -> float:
+        """Calculate context-based confidence multiplier"""
+        if not context or category == 'general':
+            return 1.0
+            
+        multiplier = 1.0
+        category_rules = self.patterns[category]['context_rules']
+        
+        for key, value in context.items():
+            if key in category_rules:
+                multiplier *= category_rules[key].get(str(value), 1.0)
+                
+        return min(max(multiplier, 0.1), 2.0)
+
+    def _apply_pattern(self, pattern: str, text: str, context: Dict[str, Any]) -> List[str]:
+        """Apply a pattern with context awareness"""
+        try:
+            matches = []
+            for match in re.finditer(pattern, text, re.IGNORECASE):
+                value = match.group(1)
+                if self._validate_match(value, context):
+                    matches.append(value)
+            return matches
+        except:
+            return []
+
+    def _validate_match(self, value: str, context: Dict[str, Any]) -> bool:
+        """Validate a match based on context"""
+        if not context:
+            return True
+            
+        # Add validation logic based on context
+        return True
 
 class MetricPattern:
     def __init__(self, pattern: str, unit: str, normalization: float = 1.0):
@@ -203,6 +337,150 @@ class MetricType:
                 return None
         return None
 
+class DynamicMetric:
+    """A more flexible metric system that can learn and adapt"""
+    def __init__(self, name: str, base_patterns: List[str] = None):
+        self.name = name
+        self.base_patterns = base_patterns or []
+        self.learned_patterns = []
+        self.confidence_scores = {}
+        self.conversion_rates = {}
+        self.context_weights = {}
+
+    def add_pattern(self, pattern: str, confidence: float = 0.5):
+        """Dynamically add new patterns with confidence scores"""
+        if pattern not in self.base_patterns and pattern not in self.learned_patterns:
+            self.learned_patterns.append(pattern)
+            self.confidence_scores[pattern] = confidence
+
+    def learn_from_example(self, text: str, value: float, unit: str = None):
+        """Learn new patterns from examples"""
+        # Extract context before and after the value
+        context = self._extract_context(text, str(value))
+        if context:
+            pattern = self._generate_pattern(context, value)
+            self.add_pattern(pattern, confidence=0.6)
+
+    def _extract_context(self, text: str, value: str, window: int = 10) -> Optional[Dict[str, str]]:
+        """Extract context around a value for pattern learning"""
+        try:
+            idx = text.find(value)
+            if idx >= 0:
+                start = max(0, idx - window)
+                end = min(len(text), idx + len(value) + window)
+                return {
+                    'prefix': text[start:idx].strip(),
+                    'suffix': text[idx + len(value):end].strip(),
+                    'value': value
+                }
+        except Exception:
+            pass
+        return None
+
+    def _generate_pattern(self, context: Dict[str, str], value: str) -> str:
+        """Generate a new regex pattern from context"""
+        prefix = re.escape(context['prefix']).replace(r'\ ', r'\s+')
+        suffix = re.escape(context['suffix']).replace(r'\ ', r'\s+')
+        return f"{prefix}(\d+(?:\.\d+)?){suffix}"
+
+class AdaptiveMetricSystem:
+    """A flexible metric system that can adapt to different domains and contexts"""
+    def __init__(self):
+        self.metrics = {}
+        self.conversions = {}
+        self.context_rules = {}
+        self.learning_rate = 0.1
+
+    def register_metric(self, name: str, patterns: List[str] = None, 
+                       conversions: Dict[str, float] = None,
+                       context_rules: Dict[str, float] = None):
+        """Register a new metric type with flexible configuration"""
+        self.metrics[name] = DynamicMetric(name, patterns)
+        if conversions:
+            self.conversions[name] = conversions
+        if context_rules:
+            self.context_rules[name] = context_rules
+
+    def learn_conversion(self, from_unit: str, to_unit: str, rate: float):
+        """Learn new unit conversions dynamically"""
+        if from_unit not in self.conversions:
+            self.conversions[from_unit] = {}
+        self.conversions[from_unit][to_unit] = rate
+
+    def add_context_rule(self, metric: str, context: str, weight: float):
+        """Add context-based rules for metric interpretation"""
+        if metric not in self.context_rules:
+            self.context_rules[metric] = {}
+        self.context_rules[metric][context] = weight
+
+class DynamicCompletionSystem:
+    """A flexible system for handling different types of completions"""
+    def __init__(self):
+        self.completion_patterns = {
+            'definition': {
+                'patterns': [r'(?:is|are|means|defined as)\s+', r'refers to\s+', r'can be described as\s+'],
+                'weight': 1.0
+            },
+            'explanation': {
+                'patterns': [r'happens when\s+', r'occurs due to\s+', r'works by\s+'],
+                'weight': 1.0
+            },
+            'example': {
+                'patterns': [r'for example[,:]?\s+', r'such as\s+', r'like\s+'],
+                'weight': 0.8
+            }
+        }
+        self.learned_patterns = {}
+        self.context_weights = {}
+        
+    def add_pattern(self, category: str, pattern: str, weight: float = 1.0):
+        """Add new completion pattern dynamically"""
+        if category not in self.completion_patterns:
+            self.completion_patterns[category] = {'patterns': [], 'weight': weight}
+        self.completion_patterns[category]['patterns'].append(pattern)
+
+    def learn_from_completion(self, prompt: str, completion: str, success: bool = True):
+        """Learn from successful or unsuccessful completions"""
+        try:
+            # Extract pattern from successful completion
+            if success:
+                pattern = self._extract_pattern(prompt, completion)
+                if pattern:
+                    category = self._categorize_pattern(pattern)
+                    self.add_pattern(category, pattern, weight=0.7)
+                    
+        except Exception as e:
+            pass
+
+    def _extract_pattern(self, prompt: str, completion: str) -> Optional[str]:
+        """Extract a potential pattern from prompt-completion pair"""
+        try:
+            # Find common structure
+            words_before = prompt.split()[-3:]  # Last 3 words
+            words_after = completion.split()[:3]  # First 3 words
+            
+            if words_before and words_after:
+                pattern = r'\s+'.join(map(re.escape, words_before)) + r'\s+(.+)'
+                return pattern
+        except:
+            pass
+        return None
+
+    def _categorize_pattern(self, pattern: str) -> str:
+        """Categorize a new pattern based on similarity to existing ones"""
+        for category, info in self.completion_patterns.items():
+            for existing_pattern in info['patterns']:
+                if self._pattern_similarity(pattern, existing_pattern) > 0.7:
+                    return category
+        return 'general'
+
+    def _pattern_similarity(self, pattern1: str, pattern2: str) -> float:
+        """Calculate similarity between two patterns"""
+        # Simple similarity based on common characters
+        chars1 = set(pattern1)
+        chars2 = set(pattern2)
+        return len(chars1 & chars2) / max(len(chars1), len(chars2))
+
 class Agent:
     def __init__(self, tools: Dict[str, BaseTool], config: Optional[AgentConfig] = None):
         self.config = config or AgentConfig()
@@ -234,11 +512,24 @@ class Agent:
         }
         
         # Add completion prompts
-        self.completion_prefixes = [
-            "life is", "love is", "the meaning of", "happiness is",
-            "success is", "the purpose of"
-        ]
-        self.task_parser = TaskParser()
+        self.completion_system = DynamicCompletionSystem()
+        
+        # Add some initial domain-specific patterns
+        self.completion_system.add_pattern(
+            'technical',
+            r'in (?:programming|computing|software),?\s+(.+)',
+            weight=1.2
+        )
+        self.completion_system.add_pattern(
+            'business',
+            r'in business terms?,?\s+(.+)',
+            weight=1.1
+        )
+        self.completion_system.add_pattern(
+            'scientific',
+            r'scientifically(?:\s+speaking)?,?\s+(.+)',
+            weight=1.1
+        )
 
         # Replace rigid metric types with flexible pattern matching
         self.metric_patterns = {
@@ -253,11 +544,7 @@ class Agent:
         self.pattern_system = DynamicPattern()
         
         # Dynamic metric system
-        self.metric_system = {
-            'patterns': {},
-            'conversions': {},
-            'contexts': {}
-        }
+        self.metric_system = AdaptiveMetricSystem()
         
         # Flexible extraction system
         self.extractors = {
@@ -271,6 +558,40 @@ class Agent:
             'dynamic_retries': True,
             'semantic_processing': True
         }
+
+        # Initialize with some base metrics
+        self.metric_system.register_metric(
+            'currency',
+            patterns=[
+                r'(?:USD|€|£)?\s*(\d+(?:\.\d+)?)\s*(?:billion|million|k)?',
+                r'(\d+(?:\.\d+)?)\s*(?:dollars|euros|pounds)'
+            ],
+            conversions={
+                'USD': {'EUR': 0.85, 'GBP': 0.73},
+                'billion': {'million': 1000, 'k': 1000000}
+            }
+        )
+
+        self.metric_system.register_metric(
+            'percentage',
+            patterns=[
+                r'(\d+(?:\.\d+)?)\s*%',
+                r'(\d+(?:\.\d+)?)\s*percent',
+                r'(\d+(?:\.\d+)?)\s*pts?'
+            ]
+        )
+
+        # Add domain-specific metrics that can be extended
+        self.metric_system.register_metric(
+            'emissions',
+            patterns=[
+                r'(\d+(?:\.\d+)?)\s*(?:tons?|t)\s*(?:CO2|CO2e)',
+                r'(\d+(?:\.\d+)?)\s*(?:MT|kt)'
+            ],
+            conversions={
+                't': {'kt': 0.001, 'MT': 0.000001}
+            }
+        )
 
     async def process_tasks(self, tasks: List[str]) -> List[Dict[str, Any]]:
         """Process tasks with better criteria handling"""
@@ -288,149 +609,6 @@ class Agent:
             results.append(result)
             
         return results
-
-    async def _handle_criteria_search(self, parsed_task: ParsedTask) -> Dict[str, Any]:
-        """Handle multi-criteria search using progressive filtering"""
-        try:
-            # Extract actual criteria from parsed task
-            criteria = parsed_task.components[0].criteria if parsed_task.components else []
-            
-            # Use first line as base query
-            base_query = parsed_task.main_task
-            
-            # Build search parameters from actual criteria
-            search_params = {
-                'location': next((c for c in criteria if 'EU' in c), None),
-                'industry': next((c for c in criteria if 'motor vehicle sector' in c), None),
-                'requirements': [c for c in criteria if any(term in c.lower() for term in 
-                    ['environmental', 'emissions', 'revenue', 'subsidiary'])]
-            }
-
-            # Step 1: Get initial broad results
-            initial_results = await self.tools["google_search"].execute(
-                query=base_query,
-                params={"detailed": True, "num": 20}  # Get more initial results
-            )
-
-            if not initial_results.get('success'):
-                return initial_results
-
-            results = initial_results.get('output', {}).get('results', [])
-            
-            # Step 2: Progressive filtering
-            filtered_results = []
-            for result in results:
-                # Get detailed information for each potential match
-                try:
-                    details = await self.tools["web_scraper"].execute(url=result.get('link', ''))
-                    if details:
-                        result['detailed_content'] = details
-                except:
-                    continue
-
-                # Check all criteria at once
-                matches_all = True
-                for criterion_type, criterion in criteria.items():
-                    if not await self._check_criterion(result, criterion_type, criterion):
-                        matches_all = False
-                        break
-
-                if matches_all:
-                    filtered_results.append(result)
-
-            # Step 3: Format final results
-            return {
-                "success": True,
-                "output": {
-                    "results": filtered_results,
-                    "total_matches": len(filtered_results),
-                    "applied_criteria": list(criteria.keys()),
-                    "original_query": base_query,
-                    "summary": self._generate_criteria_summary(filtered_results, criteria)
-                },
-                "confidence": self._calculate_criteria_confidence(filtered_results, criteria),
-                "task_type": "criteria_search"
-            }
-
-        except Exception as e:
-            self.logger.error(f"Criteria search failed: {str(e)}")
-            return {
-                "success": False,
-                "error": str(e),
-                "output": {"results": []}
-            }
-
-    async def _check_criterion(self, result: Dict, criterion_type: str, criterion: str) -> bool:
-        """Check a single criterion against a result"""
-        content = f"{result.get('title', '')} {result.get('snippet', '')} {result.get('detailed_content', '')}"
-        
-        if criterion_type == 'location':
-            # Check location criteria
-            location_pattern = rf"(?:headquartered|based)\s+in\s+{criterion}"
-            return bool(re.search(location_pattern, content, re.IGNORECASE))
-            
-        elif criterion_type == 'industry':
-            # Check industry/sector criteria
-            return criterion.lower() in content.lower()
-            
-        elif criterion_type == 'financial':
-            # Check financial criteria (revenue, market cap, etc.)
-            if 'revenue' in criterion.lower():
-                amount = re.search(r'(\d+(?:\.\d+)?)\s*(?:billion|million|trillion)?', criterion)
-                if amount:
-                    return self._check_financial_amount(content, amount.group())
-            return False
-            
-        elif criterion_type == 'status':
-            # Check company status (subsidiary, public, etc.)
-            if 'subsidiary' in criterion.lower():
-                return not bool(re.search(r'subsidiary\s+of', content, re.IGNORECASE))
-            
-        return False
-
-    def _check_financial_amount(self, content: str, target_amount: str) -> bool:
-        """Compare financial amounts with unit conversion"""
-        try:
-            # Extract numbers with units from content
-            amounts = re.findall(r'(\d+(?:\.\d+)?)\s*(billion|million|trillion)?', content)
-            target_val = float(re.search(r'\d+(?:\.\d+)?', target_amount).group())
-            
-            # Convert to same scale (billions)
-            scales = {'trillion': 1000, 'billion': 1, 'million': 0.001}
-            target_scale = next((s for s in scales if s in target_amount.lower()), 'billion')
-            target_val *= scales[target_scale]
-            
-            for amount, scale in amounts:
-                val = float(amount) * scales.get(scale.lower() if scale else 'billion', 1)
-                if val >= target_val:
-                    return True
-            
-            return False
-        except:
-            return False
-
-    def _generate_criteria_summary(self, results: List[Dict], criteria: Dict) -> str:
-        """Generate a human-readable summary of the matching results"""
-        if not results:
-            return "No matches found for the given criteria."
-        
-        # Detect entity type from criteria or task context
-        entity_type = self._detect_entity_type(criteria)
-        
-        summary = f"Matching {entity_type}s:\n\n"
-        for result in results:
-            # Basic info
-            name = result.get('title', 'Unknown')
-            summary += f"- {name}\n"
-            
-            # Add matching criteria details
-            if 'detailed_content' in result:
-                summary += "  Matching criteria:\n"
-                for criterion, value in result['detailed_content'].items():
-                    summary += f"    • {criterion}: {value}\n"
-            summary += "\n"
-        
-        return summary
 
     def _detect_entity_type(self, criteria: Dict) -> str:
         """Detect the type of entity being searched for"""
@@ -993,30 +1171,59 @@ class Agent:
         }
 
     async def _handle_completion(self, task: str) -> Dict[str, Any]:
-        """Handle pattern completion tasks using Gemini"""
+        """Handle completions more flexibly using dynamic patterns"""
         try:
-            # Prepare prompt for pattern completion
-            prompt = f"Complete this phrase naturally: {task}"
+            # Analyze task context
+            context = self._analyze_completion_context(task)
             
-            response = await asyncio.to_thread(
-                self.model.generate_content,
-                prompt
-            )
+            # Get relevant patterns based on context
+            patterns = self._get_relevant_completion_patterns(context)
             
-            if response and response.text:
-                completion = response.text.strip()
+            # Generate multiple completion candidates
+            candidates = []
+            for pattern_info in patterns:
+                try:
+                    # Prepare contextual prompt
+                    prompt = self._prepare_completion_prompt(task, pattern_info['pattern'])
+                    
+                    # Generate completion
+                    response = await asyncio.to_thread(
+                        self.model.generate_content,
+                        prompt
+                    )
+                    
+                    if response and response.text:
+                        candidates.append({
+                            'completion': response.text.strip(),
+                            'confidence': pattern_info['weight'],
+                            'pattern': pattern_info['pattern']
+                        })
+                except:
+                    continue
+
+            # Select best completion
+            if candidates:
+                best_candidate = max(candidates, key=lambda x: x['confidence'])
+                
+                # Learn from successful completion
+                self.completion_system.learn_from_completion(
+                    task, 
+                    best_candidate['completion']
+                )
+                
                 return {
                     "success": True,
                     "output": {
-                        "completion": completion,
-                        "type": "completion"
+                        "completion": best_candidate['completion'],
+                        "type": "completion",
+                        "pattern_used": best_candidate['pattern']
                     },
-                    "confidence": 0.9
+                    "confidence": best_candidate['confidence']
                 }
-            
+
             return {
                 "success": False,
-                "error": "Could not generate completion",
+                "error": "Could not generate suitable completion",
                 "output": {"results": []}
             }
             
@@ -1027,40 +1234,39 @@ class Agent:
                 "output": {"results": []}
             }
 
-    async def _handle_general_query(self, task: str) -> Dict[str, Any]:
-        """Handle general queries using Gemini"""
-        try:
-            # Prepare prompt for general query
-            prompt = f"Answer this query: {task}"
-            
-            response = await asyncio.to_thread(
-                self.model.generate_content,
-                prompt
-            )
-            
-            if response and response.text:
-                answer = response.text.strip()
-                return {
-                    "success": True,
-                    "output": {
-                        "answer": answer,
-                        "type": "general"
-                    },
-                    "confidence": 0.8
-                }
-            
-            return {
-                "success": False,
-                "error": "Could not generate answer",
-                "output": {"results": []}
-            }
-            
-        except Exception as e:
-            return {
-                "success": False,
-                "error": str(e),
-                "output": {"results": []}
-            }
+    def _analyze_completion_context(self, task: str) -> Dict[str, Any]:
+        """Analyze the context of a completion task"""
+        return {
+            'domain': self._detect_domain(task),
+            'formality': self._detect_formality(task),
+            'complexity': self._detect_complexity(task)
+        }
+
+    def _get_relevant_completion_patterns(self, context: Dict[str, Any]) -> List[Dict[str, Any]]:
+        """Get completion patterns relevant to the context"""
+        patterns = []
+        
+        for category, info in self.completion_system.completion_patterns.items():
+            # Adjust weight based on context
+            weight = info['weight']
+            if context['domain'] in category:
+                weight *= 1.2
+            if context['formality'] == 'formal' and 'technical' in category:
+                weight *= 1.1
+                
+            for pattern in info['patterns']:
+                patterns.append({
+                    'pattern': pattern,
+                    'weight': weight,
+                    'category': category
+                })
+                
+        return sorted(patterns, key=lambda x: x['weight'], reverse=True)
+
+    def _prepare_completion_prompt(self, task: str, pattern: str) -> str:
+        """Prepare a context-aware completion prompt"""
+        # Add relevant context and format the prompt
+        return f"Complete this statement naturally and informatively: {task}\n\nProvide a completion that {pattern}"
 
     async def _handle_numerical_comparison(self, task: str) -> Dict[str, Any]:
         """Handle tasks involving numerical comparisons with flexible metric detection"""

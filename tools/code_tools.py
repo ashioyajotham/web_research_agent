@@ -74,6 +74,26 @@ class DynamicLanguageHandler:
         return best_match[0], best_match[1]
 
 class CodeAnalysisTool(BaseTool):
+    """Tool for analyzing code and providing insights"""
+    
+    def get_metadata(self) -> Dict[str, Any]:
+        """Return tool metadata"""
+        return {
+            "name": "code_analysis",
+            "type": "analysis",
+            "version": "1.0",
+            "capabilities": [
+                "code_quality_analysis",
+                "security_analysis",
+                "performance_analysis",
+                "best_practices_check"
+            ]
+        }
+
+    def get_description(self) -> str:
+        """Return tool description"""
+        return "Analyzes code and provides insights using Gemini"
+
     def execute(self, input_data: str) -> str:
         try:
             data = json.loads(input_data)
@@ -263,88 +283,22 @@ class CodeAnalysisTool(BaseTool):
         
         return f"Refactoring suggestions not implemented for {language}"
 
-    def get_description(self) -> str:
-        return """Code analysis tool that can:
-- Analyze code structure and patterns
-- Extract data structures and relationships
-- Check for security vulnerabilities
-- Calculate code metrics
-- Suggest refactoring improvements
-Input should be a JSON object with 'command', 'code', and optional 'language' fields."""
-
 class CodeGeneratorTool(BaseTool):
     """Tool for generating code based on requirements"""
     
-    ALGORITHM_PATTERNS = {
-        'graph': {
-            'keywords': ['graph', 'vertex', 'edge', 'path', 'network', 'pagerank', 'dijkstra'],
-            'template': """
-                import numpy as np
-                
-                class Graph:
-                    def __init__(self):
-                        self.nodes = {}
-                        self.edges = {}
-                    
-                    def add_node(self, node):
-                        if node not in self.nodes:
-                            self.nodes[node] = len(self.nodes)
-                            
-                    def add_edge(self, from_node, to_node, weight=1):
-                        self.add_node(from_node)
-                        self.add_node(to_node)
-                        if from_node not in self.edges:
-                            self.edges[from_node] = {}
-                        self.edges[from_node][to_node] = weight
-                        
-                    def get_adjacency_matrix(self):
-                        n = len(self.nodes)
-                        matrix = np.zeros((n, n))
-                        for from_node, edges in self.edges.items():
-                            for to_node, weight in edges.items():
-                                matrix[self.nodes[from_node]][self.nodes[to_node]] = weight
-                        return matrix
-            """
-        },
-        'pagerank': {
-            'keywords': ['pagerank', 'power iteration', 'page rank'],
-            'template': """
-                import numpy as np
-                
-                def pagerank(adjacency_matrix: np.ndarray, damping_factor: float = 0.85, iterations: int = 20) -> np.ndarray:
-                    \"\"\"
-                    Calculate PageRank values using power iteration method.
-                    
-                    Args:
-                        adjacency_matrix: Matrix of web page links
-                        damping_factor: Damping factor (typically 0.85)
-                        iterations: Number of power iterations
-                        
-                    Returns:
-                        Array of PageRank values for each page
-                    \"\"\"
-                    n = len(adjacency_matrix)
-                    
-                    # Normalize adjacency matrix
-                    out_degrees = np.sum(adjacency_matrix, axis=1)
-                    transition_matrix = adjacency_matrix / out_degrees[:, np.newaxis]
-                    
-                    # Handle dangling nodes
-                    transition_matrix = np.nan_to_num(transition_matrix, 0)
-                    
-                    # Initialize PageRank values
-                    pagerank_vector = np.ones(n) / n
-                    
-                    # Power iteration
-                    for _ in range(iterations):
-                        pagerank_vector_next = (1 - damping_factor) / n + damping_factor * transition_matrix.T.dot(pagerank_vector)
-                        pagerank_vector = pagerank_vector_next
-                        
-                    return pagerank_vector
-            """
-        },
-        # ...existing patterns...
-    }
+    def get_metadata(self) -> Dict[str, Any]:
+        """Return tool metadata"""
+        return {
+            "name": "code_generator",
+            "type": "generation",
+            "version": "1.0",
+            "capabilities": [
+                "code_generation",
+                "algorithm_implementation",
+                "template_adaptation",
+                "pattern_based_generation"
+            ]
+        }
 
     def __init__(self):
         super().__init__()
@@ -624,56 +578,6 @@ class AdaptiveCodeAnalyzer(CodeAnalysisTool):
             strategy.update(self._adapt_to_context(context))
             
         return strategy
-
-class CodeAnalysisTool(BaseTool):
-    """Tool for analyzing code and providing insights"""
-    
-    async def execute(self, code: str, context: Optional[str] = None) -> Dict[str, Any]:
-        """Analyze code and provide insights"""
-        try:
-            model = genai.GenerativeModel('gemini-pro')
-            system_prompt = """Analyze the provided code and provide insights on:
-            - Code quality
-            - Potential improvements
-            - Best practices adherence
-            - Security considerations
-            Format as structured JSON with these categories."""
-            
-            chat = model.start_chat(history=[])
-            chat.send_message(system_prompt)
-            
-            analysis_prompt = f"Code to analyze:\n```\n{code}\n```"
-            if context:
-                analysis_prompt += f"\nContext: {context}"
-                
-            response = chat.send_message(analysis_prompt)
-            
-            return {
-                "analysis": response.text,
-                "type": "code_analysis",
-                "language": self._detect_language(code)
-            }
-        except Exception as e:
-            return {
-                "error": str(e),
-                "type": "code_analysis_error"
-            }
-
-    def get_description(self) -> str:
-        return "Analyzes code and provides insights using Gemini"
-
-    def _detect_language(self, code: str) -> str:
-        """Detect programming language from code"""
-        # Simple detection based on common patterns
-        if "def " in code or "import " in code:
-            return "python"
-        if "function" in code or "const" in code:
-            return "javascript"
-        if "public class" in code:
-            return "java"
-        if "package main" in code:
-            return "go"
-        return "unknown"
 
 class AlgorithmPattern:
     """Flexible algorithm pattern representation"""

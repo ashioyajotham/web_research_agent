@@ -1,0 +1,1 @@
+Study the agent codebase KEENLY since we had done a whole upgrade just use the new available dependencies where needed. Dont rush to create a new first just check like for this it can't import name code generator do analysis of the closest one and then replace

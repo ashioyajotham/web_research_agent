@@ -30,7 +30,7 @@ class ResearchPattern:
             return 0.5
         return (self.success_count / total) * self.weight
 
-class ResearchStrategyV2(Strategy):
+class ResearchStrategy(Strategy):
     def __init__(self):
         super().__init__()
         

@@ -1,6 +1,7 @@
 import requests
 from bs4 import BeautifulSoup
 from .base import BaseTool
+from typing import Dict, Any
 
 class WebScraperTool(BaseTool):
     def execute(self, url: str) -> str:
@@ -33,4 +34,19 @@ class WebScraperTool(BaseTool):
         return text[:500000]  # Limit content length
     
     def get_description(self) -> str:
-        return "Scrapes and extracts main content from a given URL. Input should be a valid URL."
+        """Return tool description"""
+        return "A web scraping tool that extracts content from web pages with support for various content types and structures."
+
+    def get_metadata(self) -> Dict[str, Any]:
+        """Return tool metadata"""
+        return {
+            "name": "web_scraper",
+            "type": "content_extraction",
+            "version": "1.0",
+            "capabilities": [
+                "html_extraction",
+                "text_extraction",
+                "structured_data",
+                "dynamic_content"
+            ]
+        }

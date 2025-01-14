@@ -264,3 +264,148 @@ class AdaptivePatternLearner:
             # Initialize empty state
             self.patterns = defaultdict(dict)
             self.pattern_hierarchy = defaultdict(list)
+
+from typing import Dict, List, Optional, Any
+import re
+from collections import defaultdict
+
+class PatternLearner:
+    """A flexible system for learning and managing patterns from various data sources"""
+    
+    def __init__(self):
+        self.patterns = defaultdict(list)
+        self.pattern_scores = {}
+        self.context_rules = defaultdict(dict)
+        self.min_confidence = 0.6
+        self.learning_rate = 0.1
+        
+    def learn(self, text: str, successful_matches: Dict[str, Any], context: Optional[Dict] = None) -> None:
+        """Learn patterns from successful matches"""
+        try:
+            # Extract pattern signatures
+            signatures = self._extract_signatures(text, successful_matches)
+            
+            for sig in signatures:
+                pattern_type = self._infer_pattern_type(sig, context)
+                pattern = self._generate_pattern(sig)
+                
+                if pattern and self._is_valid_pattern(pattern):
+                    self._add_pattern(pattern_type, pattern, context)
+                    
+        except Exception as e:
+            # Silently handle learning errors to not disrupt main flow
+            pass
+
+    def get_patterns(self, pattern_type: Optional[str] = None, context: Optional[Dict] = None) -> List[str]:
+        """Get learned patterns, optionally filtered by type and context"""
+        if pattern_type:
+            patterns = self.patterns.get(pattern_type, [])
+        else:
+            patterns = [p for patterns in self.patterns.values() for p in patterns]
+            
+        if context:
+            return self._filter_by_context(patterns, context)
+        return patterns
+
+    def _extract_signatures(self, text: str, matches: Dict[str, Any]) -> List[Dict[str, Any]]:
+        """Extract pattern signatures from successful matches"""
+        signatures = []
+        window_size = 50  # Context window size
+        
+        for key, value in matches.items():
+            if isinstance(value, str):
+                idx = text.find(value)
+                if idx >= 0:
+                    before = text[max(0, idx - window_size):idx]
+                    after = text[idx + len(value):min(len(text), idx + len(value) + window_size)]
+                    
+                    signatures.append({
+                        'prefix': before.strip(),
+                        'match': value,
+                        'suffix': after.strip(),
+                        'type': self._infer_value_type(value)
+                    })
+                    
+        return signatures
+
+    def _infer_pattern_type(self, signature: Dict[str, Any], context: Optional[Dict]) -> str:
+        """Infer the type of pattern from signature and context"""
+        match_value = signature['match']
+        match_type = signature['type']
+        
+        if match_type == 'numeric':
+            if '%' in match_value:
+                return 'percentage'
+            elif any(c in match_value for c in '$€£'):
+                return 'currency'
+            return 'number'
+        
+        elif match_type == 'date':
+            return 'temporal'
+            
+        elif match_type == 'text':
+            if context and context.get('domain'):
+                return f"entity_{context['domain']}"
+            return 'entity'
+            
+        return 'general'
+
+    def _generate_pattern(self, signature: Dict[str, Any]) -> Optional[str]:
+        """Generate a regex pattern from a signature"""
+        try:
+            prefix = re.escape(signature['prefix']).replace(r'\ ', r'\s+')
+            suffix = re.escape(signature['suffix']).replace(r'\ ', r'\s+')
+            
+            if signature['type'] == 'numeric':
+                value_pattern = r'(\d+(?:\.\d+)?)'
+            elif signature['type'] == 'date':
+                value_pattern = r'([A-Za-z]+\s+\d{1,2},?\s+\d{4}|\d{4})'
+            else:
+                value_pattern = r'([^.,;\s]+(?:\s+[^.,;\s]+)*)'
+            
+            return f"{prefix}\s*{value_pattern}\s*{suffix}"
+            
+        except Exception:
+            return None
+
+    def _infer_value_type(self, value: str) -> str:
+        """Infer the type of a value"""
+        if re.match(r'^\d+(?:\.\d+)?$', value):
+            return 'numeric'
+        elif re.match(r'^(?:\d{4}|[A-Za-z]+\s+\d{1,2},?\s+\d{4})$', value):
+            return 'date'
+        return 'text'
+
+    def _is_valid_pattern(self, pattern: str) -> bool:
+        """Validate a generated pattern"""
+        try:
+            re.compile(pattern)
+            return True
+        except (re.error, TypeError):
+            return False
+
+    def _add_pattern(self, pattern_type: str, pattern: str, context: Optional[Dict] = None) -> None:
+        """Add a new pattern with context rules"""
+        if pattern not in self.patterns[pattern_type]:
+            self.patterns[pattern_type].append(pattern)
+            self.pattern_scores[pattern] = 0.7  # Initial confidence score
+            
+            if context:
+                for key, value in context.items():
+                    self.context_rules[pattern][key] = value
+
+    def _filter_by_context(self, patterns: List[str], context: Dict) -> List[str]:
+        """Filter patterns by context relevance"""
+        filtered = []
+        for pattern in patterns:
+            pattern_context = self.context_rules.get(pattern, {})
+            if self._context_matches(pattern_context, context):
+                filtered.append(pattern)
+        return filtered
+
+    def _context_matches(self, pattern_context: Dict, context: Dict) -> bool:
+        """Check if pattern context matches given context"""
+        for key, value in context.items():
+            if pattern_context.get(key) != value:
+                return False
+        return True
