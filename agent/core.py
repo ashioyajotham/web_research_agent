@@ -16,7 +16,9 @@ from utils.logger import AgentLogger
 from planning.task_planner import TaskPlanner
 from memory.memory_store import MemoryStore
 from learning.pattern_learner import PatternLearner
-from .strategy import ResearchStrategy  # Change from strategy.research to .strategy
+from .strategy import ResearchStrategy
+from .task_parser import TaskParser, ParsedTask
+
 
 @dataclass
 class AgentConfig:
@@ -235,11 +237,52 @@ class Agent:
             "life is", "love is", "the meaning of", "happiness is",
             "success is", "the purpose of"
         ]
+        self.task_parser = TaskParser()
 
     async def process_tasks(self, tasks: List[str]) -> List[Dict[str, Any]]:
-        return await asyncio.gather(*[
-            self.process_task(task) for task in tasks
-        ])
+        """Process tasks with context awareness"""
+        # Parse tasks to understand relationships
+        parsed_tasks = self.task_parser.parse_tasks('\n'.join(tasks))
+        results = []
+        
+        for parsed_task in parsed_tasks:
+            if parsed_task.context.get('type') == 'multi_criteria':
+                # Handle multi-criteria task
+                result = await self._handle_multi_criteria_task(parsed_task)
+            else:
+                # Handle single task
+                result = await self.process_task(parsed_task.main_task)
+            results.append(result)
+            
+        return results
+
+    async def _handle_multi_criteria_task(self, parsed_task: ParsedTask) -> Dict[str, Any]:
+        """Handle tasks with multiple criteria"""
+        # Get initial results for main task
+        initial_results = await self.process_task(parsed_task.main_task)
+        
+        # Process each criterion
+        criteria_results = []
+        for component in parsed_task.components[1:]:  # Skip main task
+            subtask_result = await self.process_task(
+                component.text,
+                context={'parent_task': parsed_task.main_task}
+            )
+            criteria_results.append(subtask_result)
+            
+        # Combine and filter results
+        final_results = self._combine_criteria_results(
+            initial_results,
+            criteria_results,
+            parsed_task
+        )
+        
+        return final_results
+
+    def _combine_criteria_results(self, initial: Dict, criteria_results: List[Dict], task: ParsedTask) -> Dict:
+        """Combine and filter results based on all criteria"""
+        # Implementation for combining results while maintaining criteria relationships
+        # ...
 
     async def process_task(self, task: str) -> Dict[str, Any]:
         try:
