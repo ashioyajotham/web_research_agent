@@ -6,6 +6,7 @@ from dataclasses import dataclass
 import logging
 import os
 import numpy as np
+from sentence_transformers import SentenceTransformer
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
@@ -179,3 +180,4 @@ class MemoryStore:
                 )
         except sqlite3.Error as e:
             logger.error(f"Failed to cleanup old memories: {str(e)}")
+

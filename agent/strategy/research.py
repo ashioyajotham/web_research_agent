@@ -684,3 +684,87 @@ class ResearchStrategy(Strategy):
                     return matches.group(1).strip()
         
         return None
+
+    def _analyze_complexity(self, task: str) -> float:
+        """Analyze task complexity to determine required research depth"""
+        factors = {
+            'length': len(task.split()) / 20,  # Normalize by typical length
+            'topic_specificity': self._calculate_topic_specificity(task),
+            'scope': self._calculate_scope(task),
+            'temporal_requirements': self._check_temporal_requirements(task),
+            'verification_needs': self._check_verification_needs(task)
+        }
+        
+        return min(1.0, sum(factors.values()) / len(factors))
+
+    def _calculate_required_depth(self, complexity: float) -> int:
+        """Calculate required research depth based on complexity"""
+        if complexity > 0.8:
+            return self.max_depth
+        elif complexity > 0.6:
+            return 2
+        else:
+            return 1
+
+    def _calculate_topic_specificity(self, task: str) -> float:
+        """Calculate how specific the research topic is"""
+        task_lower = task.lower()
+        
+        # Check for specific technical terms
+        technical_terms = sum(1 for term in self.research_topics['technical'] 
+                            if term in task_lower)
+        
+        # Check for specific requirements
+        requirements = sum(1 for word in ['specific', 'exact', 'precise', 'detailed'] 
+                         if word in task_lower)
+        
+        return min(1.0, (technical_terms * 0.2 + requirements * 0.3))
+
+    def _calculate_scope(self, task: str) -> float:
+        """Calculate the scope of research required"""
+        task_lower = task.lower()
+        
+        # Check for broad scope indicators
+        broad_indicators = ['all', 'every', 'complete', 'comprehensive']
+        scope_score = sum(0.2 for word in broad_indicators if word in task_lower)
+        
+        # Check for time range requirements
+        if any(year in task for year in ['2024', '2023', '2022']):
+            scope_score += 0.3
+            
+        return min(1.0, scope_score)
+
+    def _check_temporal_requirements(self, task: str) -> float:
+        """Check if task has specific temporal requirements"""
+        task_lower = task.lower()
+        
+        # Check for time-specific requirements
+        time_indicators = {
+            'recent': 0.3,
+            'latest': 0.3,
+            'current': 0.3,
+            'historical': 0.4,
+            'timeline': 0.5,
+            'development': 0.3
+        }
+        
+        return min(1.0, sum(score for term, score in time_indicators.items() 
+                           if term in task_lower))
+
+    def _check_verification_needs(self, task: str) -> float:
+        """Check if task requires extensive verification"""
+        task_lower = task.lower()
+        
+        # Check for verification requirements
+        verification_indicators = {
+            'verify': 0.4,
+            'confirm': 0.4,
+            'validate': 0.4,
+            'accurate': 0.3,
+            'reliable': 0.3,
+            'trustworthy': 0.3,
+            'official': 0.3
+        }
+        
+        return min(1.0, sum(score for term, score in verification_indicators.items() 
+                           if term in task_lower))

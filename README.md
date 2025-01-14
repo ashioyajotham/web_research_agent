@@ -1,7 +1,47 @@
 # Web Research Agent
 
-An intelligent agent system for automated web research, data analysis, and code generation using LLMs. Built with Python, this agent can process natural language queries, perform targeted web searches, analyze data, and generate code solutions.
+An intelligent research agent that can perform complex web research, analysis, and content generation tasks.
 
+## Key Features
+
+### 1. Multi-Strategy Intelligence
+- Dynamic strategy selection and composition
+- Pattern-based learning and adaptation
+- Episodic memory with semantic clustering
+- Cross-validation of information sources
+
+### 2. Task Capabilities
+- Research and information synthesis
+- Code generation and analysis
+- Content creation and formatting
+- Pattern completion and general queries
+- Data analysis and validation
+
+### 3. Advanced Architecture
+- Memory System
+  - Semantic clustering
+  - Temporal decay
+  - Importance-based retention
+  - Context preservation
+
+- Pattern Learning
+  - Meta-learning capabilities
+  - Cross-task pattern recognition
+  - Adaptive thresholds
+  - Performance tracking
+
+- Task Planning
+  - Dynamic replanning
+  - Parallel execution optimization
+  - Cost-benefit analysis
+  - Failure recovery
+
+### 4. Tools Integration
+- Google Search (via Serper API)
+- Web Scraping
+- Code Generation
+- Data Analysis
+- Content Generation
 
 ## Architecture Overview
 

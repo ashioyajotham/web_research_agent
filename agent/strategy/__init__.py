@@ -1,6 +1,6 @@
 from .base import Strategy, StrategyResult
 from .research import ResearchStrategy
-from .coding import CodingStrategy
+from .code import CodeStrategy
 from .orchestrator import StrategyOrchestrator
 
-__all__ = ['Strategy', 'StrategyResult', 'ResearchStrategy', 'CodingStrategy', 'StrategyOrchestrator']
+__all__ = ['Strategy', 'StrategyResult', 'ResearchStrategy', 'CodeStrategy', 'StrategyOrchestrator']
