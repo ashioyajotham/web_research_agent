@@ -1,4 +1,4 @@
-from typing import Dict, List, Tuple
+from typing import Dict, List, Tuple, Any
 import numpy as np
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
@@ -43,6 +43,31 @@ class PatternLearner:
         # Track pattern success rates
         self.pattern_success_rates = {}
 
+        # Add completion specific patterns
+        self.completion_patterns = {
+            'is_statement': r'^[a-zA-Z]+\s+is',
+            'means_statement': r'^[a-zA-Z]+\s+means',
+            'definition': r'^(?:the|a|an)\s+[a-zA-Z]+\s+is',
+            'open_ended': r'^.*\.{3}$'
+        }
+        
+        # Add solution templates for completions
+        self.solution_templates['completion'] = {
+            'type': 'completion',
+            'tool': 'gemini',
+            'template': 'Complete this thought: {task}'
+        }
+        
+        # Add meta-learning settings
+        self.meta_patterns = {}
+        self.pattern_effectiveness = {}
+        self.adaptation_threshold = 0.6
+        self.min_pattern_confidence = 0.5
+        
+        # Add feedback tracking
+        self.pattern_feedback = {}
+        self.success_history = []
+
     def initialize_embeddings(self, model_name: str = "sentence-transformers/all-mpnet-base-v2"):
         """Initialize embedding model for better pattern matching"""
         from sentence_transformers import SentenceTransformer
@@ -69,6 +94,13 @@ class PatternLearner:
         if self.embedding_model:
             embedding = self.embedding_model.encode(task)
             self.pattern_embeddings.append(embedding)
+        
+        # Update meta-patterns
+        meta_features = self._extract_meta_features(task, solution)
+        self._update_meta_patterns(meta_features, performance)
+        
+        # Adapt thresholds based on performance
+        self._adapt_thresholds(performance if performance else 0.5)
 
     def find_similar_patterns(self, task: str, threshold: float = 0.7) -> List[Tuple[Dict, float]]:
         """Enhanced pattern matching with type awareness"""
@@ -92,11 +124,25 @@ class PatternLearner:
                     similar_patterns.append((pattern['solution'], similarity))
         
         # Sort by similarity score
-        return sorted(similar_patterns, key=lambda x: x[1], reverse=True)
+        similar_patterns = sorted(similar_patterns, key=lambda x: x[1], reverse=True)
+        
+        # Apply meta-pattern matching
+        meta_features = self._extract_meta_features(task, {})
+        meta_matches = self._find_meta_matches(meta_features)
+        
+        # Combine with direct pattern matches
+        combined_matches = self._combine_matches(similar_patterns, meta_matches)
+        
+        return combined_matches
 
     def _detect_pattern_type(self, task: str) -> str:
-        """Detect the type of pattern"""
+        """Enhanced pattern type detection"""
         task_lower = task.lower()
+        
+        # Check completion patterns first
+        for pattern in self.completion_patterns.values():
+            if re.match(pattern, task_lower):
+                return 'completion'
         
         for pattern_type, pattern in self.pattern_types.items():
             if re.search(pattern, task_lower):
@@ -162,3 +208,56 @@ class PatternLearner:
                 final_solution[key] = max(weighted_values, key=lambda x: x[1])[0]
 
         return final_solution
+
+    def _extract_meta_features(self, task: str, solution: Dict) -> Dict[str, Any]:
+        """Extract meta-features from task and solution"""
+        return {
+            'task_length': len(task.split()),
+            'solution_type': solution.get('type', 'unknown'),
+            'complexity': self._calculate_complexity(task),
+            'pattern_type': self._detect_pattern_type(task),
+            'has_entities': bool(re.search(r'[A-Z][a-z]+(?:\s+[A-Z][a-z]+)*', task))
+        }
+
+    def _update_meta_patterns(self, features: Dict[str, Any], performance: float):
+        """Update meta-patterns with new features"""
+        pattern_key = f"{features['pattern_type']}_{features['solution_type']}"
+        
+        if pattern_key not in self.meta_patterns:
+            self.meta_patterns[pattern_key] = {
+                'features': [],
+                'performances': []
+            }
+            
+        self.meta_patterns[pattern_key]['features'].append(features)
+        self.meta_patterns[pattern_key]['performances'].append(performance)
+        
+        # Prune old patterns if needed
+        self._prune_old_patterns(pattern_key)
+
+    def _adapt_thresholds(self, latest_performance: float):
+        """Adapt thresholds based on performance"""
+        self.success_history.append(latest_performance)
+        if len(self.success_history) > 10:
+            recent_performance = sum(self.success_history[-10:]) / 10
+            
+            # Adjust thresholds
+            if recent_performance < self.adaptation_threshold:
+                self.min_pattern_confidence += 0.05
+            else:
+                self.min_pattern_confidence = max(0.5, self.min_pattern_confidence - 0.02)
+                
+            # Keep threshold in reasonable range
+            self.min_pattern_confidence = min(0.9, max(0.5, self.min_pattern_confidence))
+
+    def _find_meta_matches(self, features: Dict[str, Any]) -> List[Tuple[Dict, float]]:
+        """Find matches based on meta-patterns"""
+        matches = []
+        
+        for pattern_key, pattern_data in self.meta_patterns.items():
+            similarity = self._calculate_meta_similarity(features, pattern_data['features'])
+            if similarity >= self.min_pattern_confidence:
+                avg_performance = sum(pattern_data['performances']) / len(pattern_data['performances'])
+                matches.append((pattern_data['features'][-1], similarity * avg_performance))
+                
+        return matches

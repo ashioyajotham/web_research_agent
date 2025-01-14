@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+import asyncio
 from typing import List, Dict, Any, Optional
 from enum import Enum
 import nltk
@@ -24,6 +25,14 @@ class PlanStep:
     priority: int
 
 @dataclass
+class PlanMetrics:
+    estimated_time: float
+    confidence: float
+    cost: float
+    benefit: float
+    complexity: float
+
+@dataclass
 class TaskPlan:
     steps: List[PlanStep]
     estimated_time: float
@@ -35,6 +44,15 @@ class TaskPlanner:
         self.execution_history = []
         self.tool_performance = {}
         self._initialize_nltk()
+        
+        # Add plan optimization settings
+        self.parallel_threshold = 0.7  # Confidence threshold for parallel execution
+        self.replan_threshold = 0.5   # Threshold for triggering replanning
+        self.max_parallel_steps = 3    # Maximum parallel steps
+        
+        # Add performance tracking
+        self.step_performance = {}
+        self.failed_patterns = set()
 
     def _initialize_nltk(self):
         try:
@@ -43,30 +61,25 @@ class TaskPlanner:
         except LookupError:
             nltk.download(['punkt', 'averaged_perceptron_tagger'], quiet=True)
 
-    def create_plan(self, task: str, context: Optional[Dict] = None) -> TaskPlan:
+    async def create_plan(self, task: str, context: Optional[Dict] = None) -> TaskPlan:
         """Create an optimized execution plan"""
-        # Analyze task requirements
-        requirements = self._analyze_requirements(task)
+        # Get initial plan
+        initial_plan = self._create_initial_plan(task, context)
         
-        # Build dependency graph
-        graph = self._build_dependency_graph(requirements)
+        # Optimize for parallel execution
+        optimized_steps = self._optimize_parallel_execution(initial_plan.steps)
         
-        # Optimize step ordering
-        ordered_steps = self._optimize_step_order(graph)
-        
-        # Assign tools and parameters
-        steps = self._assign_tools(ordered_steps, context)
-        
-        # Calculate estimated completion time
-        total_time = sum(step.estimated_time for step in steps)
+        # Calculate cost-benefit metrics
+        metrics = self._calculate_plan_metrics(optimized_steps, context)
         
         return TaskPlan(
-            steps=steps,
-            estimated_time=total_time,
+            steps=optimized_steps,
+            estimated_time=metrics.estimated_time,
             metadata={
                 'task_type': self._analyze_task_type(task),
-                'complexity': len(steps),
-                'created_at': datetime.now()
+                'metrics': metrics,
+                'parallel_groups': self._get_parallel_groups(optimized_steps),
+                'fallback_steps': self._generate_fallback_steps(task)
             }
         )
 
@@ -234,3 +247,95 @@ class TaskPlanner:
             stats['successes'] += 1
         stats['avg_time'] = (stats['avg_time'] * (stats['executions'] - 1) + execution_time) / stats['executions']
         stats['success_rate'] = stats['successes'] / stats['executions']
+
+    def _optimize_parallel_execution(self, steps: List[PlanStep]) -> List[PlanStep]:
+        """Optimize steps for parallel execution"""
+        parallel_groups = []
+        current_group = []
+        
+        for step in steps:
+            if len(current_group) < self.max_parallel_steps and self._can_run_parallel(step, current_group):
+                current_group.append(step)
+            else:
+                if current_group:
+                    parallel_groups.append(current_group)
+                current_group = [step]
+                
+        if current_group:
+            parallel_groups.append(current_group)
+            
+        # Flatten and maintain dependencies
+        optimized_steps = []
+        for group in parallel_groups:
+            for step in group:
+                step.parallel_group = id(group)
+                optimized_steps.append(step)
+                
+        return optimized_steps
+
+    def _calculate_plan_metrics(self, steps: List[PlanStep], context: Optional[Dict]) -> PlanMetrics:
+        """Calculate comprehensive plan metrics"""
+        total_time = sum(step.estimated_time for step in steps)
+        confidence = self._calculate_plan_confidence(steps)
+        cost = self._calculate_plan_cost(steps)
+        benefit = self._estimate_plan_benefit(steps, context)
+        complexity = self._calculate_plan_complexity(steps)
+        
+        return PlanMetrics(
+            estimated_time=total_time,
+            confidence=confidence,
+            cost=cost,
+            benefit=benefit,
+            complexity=complexity
+        )
+
+    def _generate_fallback_steps(self, task: str) -> List[PlanStep]:
+        """Generate fallback steps for recovery"""
+        fallback_steps = []
+        task_type = self._analyze_task_type(task)
+        
+        # Add general fallback based on task type
+        if task_type == TaskType.RESEARCH:
+            fallback_steps.append(PlanStep(
+                id="fallback_search",
+                tool="google_search",
+                params={"query": task, "fallback": True},
+                dependencies=[],
+                estimated_time=10.0,
+                priority=0
+            ))
+            
+        return fallback_steps
+
+    async def replan_on_failure(self, failed_step: PlanStep, context: Dict) -> Optional[List[PlanStep]]:
+        """Dynamically replan on step failure"""
+        self.failed_patterns.add((failed_step.tool, failed_step.id))
+        
+        # Try alternative approach based on failure
+        alternative_steps = []
+        
+        # Add step-specific alternatives
+        if failed_step.tool == "google_search":
+            alternative_steps.append(PlanStep(
+                id=f"alternative_{failed_step.id}",
+                tool="web_scraper",
+                params=failed_step.params,
+                dependencies=failed_step.dependencies,
+                estimated_time=failed_step.estimated_time * 1.5,
+                priority=failed_step.priority - 1
+            ))
+            
+        return alternative_steps if alternative_steps else None
+
+    def _can_run_parallel(self, step: PlanStep, group: List[PlanStep]) -> bool:
+        """Determine if step can run in parallel with group"""
+        # Check dependencies
+        if any(dep in [s.id for s in group] for dep in step.dependencies):
+            return False
+            
+        # Check resource conflicts
+        if any(s.tool == step.tool for s in group):
+            return False
+            
+        # Check confidence threshold
+        return self._calculate_step_confidence(step) >= self.parallel_threshold

@@ -6,6 +6,7 @@ from dateutil import parser
 
 class ResearchStrategy(Strategy):
     def __init__(self):
+        super().__init__()
         self.research_keywords = [
             "find", "search", "analyze", "compare", "list",
             "what", "when", "where", "who", "how",
@@ -50,6 +51,30 @@ class ResearchStrategy(Strategy):
             self._specific_detail_search,
             self._organization_search
         ]
+        
+        # Add source evaluation metrics
+        self.source_evaluation = {
+            'academic': {
+                'domains': ['edu', 'ac.', 'research'],
+                'weight': 0.9
+            },
+            'official': {
+                'domains': ['gov', 'org', 'int'],
+                'weight': 0.8
+            },
+            'news': {
+                'domains': ['news', 'bbc', 'reuters'],
+                'weight': 0.7
+            }
+        }
+        
+        # Add synthesis parameters
+        self.synthesis_threshold = 0.7
+        self.cross_validation_required = 2
+        
+        # Add depth control
+        self.max_depth = 3
+        self.min_confidence = 0.7
 
     def can_handle(self, task: str) -> float:
         task_lower = task.lower()
@@ -61,62 +86,61 @@ class ResearchStrategy(Strategy):
 
     async def execute(self, task: str, context: Dict[str, Any]) -> StrategyResult:
         try:
-            if not context or 'tools' not in context:
-                return StrategyResult(success=False, error="Missing required tools")
-
-            # Execute all search phases
-            all_events = []
-            for phase_func in self.search_phases:
-                phase_events = await phase_func(task, context['tools'])
-                if phase_events:
-                    all_events.extend(phase_events)
-                
-                # Check if we have enough results
-                if len(all_events) >= self.min_results:
-                    break
-
-            # If still not enough results, try alternative searches
-            if len(all_events) < self.min_results:
-                additional_events = await self._try_alternative_searches(task, context['tools'])
-                all_events.extend(additional_events)
-
-            # Deduplicate and sort events
-            unique_events = self._deduplicate_events(all_events)
+            # Analyze task complexity to determine depth
+            complexity = self._analyze_complexity(task)
+            required_depth = self._calculate_required_depth(complexity)
             
-            if not unique_events:
-                return StrategyResult(
-                    success=False,
-                    error="No relevant information found",
-                    output={"message": "Could not find relevant research data"}
-                )
-
-            # Process and organize findings
-            credibility_scores = self._analyze_source_credibility(unique_events)
-            categorized_findings = self._categorize_findings(unique_events)
-            validated_events = self._cross_reference_findings(unique_events)
+            # Execute research phases
+            initial_results = await self._execute_research_phases(task, context, required_depth)
             
-            # Generate final output
-            synthesis = self._generate_research_synthesis(
-                validated_events, 
-                categorized_findings,
-                credibility_scores
-            )
-
+            # Validate and synthesize results
+            validated_results = self._cross_validate_results(initial_results)
+            synthesized_results = self._synthesize_results(validated_results)
+            
+            # Check confidence and depth requirements
+            if synthesized_results['confidence'] < self.min_confidence:
+                # Increase depth and retry if needed
+                if required_depth < self.max_depth:
+                    return await self.execute(task, {**context, 'depth': required_depth + 1})
+            
             return StrategyResult(
                 success=True,
-                output={
-                    "summary": synthesis['overview'],
-                    "timeline": self._group_events(validated_events),
-                    "major_milestones": self._extract_major_milestones(validated_events),
-                    "latest_developments": synthesis['latest'][:5],  # Ensure top 5 latest
-                    "key_findings": synthesis['key_points'],
-                    "sources": self._format_sources(validated_events)
-                },
-                confidence=synthesis['confidence']
+                output=synthesized_results,
+                confidence=synthesized_results['confidence']
             )
-
+            
         except Exception as e:
             return StrategyResult(success=False, error=str(e))
+
+    async def _execute_research_phases(self, task: str, context: Dict[str, Any], depth: int) -> Dict[str, Any]:
+        """Execute research phases with adaptive depth"""
+        results = {}
+        
+        # Execute phases based on depth
+        for phase in range(depth):
+            phase_results = await self._execute_phase(task, context, phase)
+            results[f'phase_{phase}'] = phase_results
+            
+            # Check if we have enough high-quality results
+            if self._check_results_quality(results):
+                break
+                
+        return results
+
+    def _check_results_quality(self, results: Dict[str, Any]) -> bool:
+        """Check if results meet quality thresholds"""
+        # Implement quality checks
+        # ...existing code...
+
+    def _cross_validate_results(self, results: Dict[str, Any]) -> Dict[str, Any]:
+        """Cross-validate results across sources"""
+        # Implement cross-validation
+        # ...existing code...
+
+    def _synthesize_results(self, results: Dict[str, Any]) -> Dict[str, Any]:
+        """Synthesize results into coherent output"""
+        # Implement synthesis
+        # ...existing code...
 
     async def _perform_research(self, task: str, tools: Dict[str, Any]) -> Dict[str, Any]:
         """Perform initial research with specific focus"""
