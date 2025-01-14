@@ -51,7 +51,7 @@ def main(task_file_path: str, output_file_path: str):
     from tools.content_tools import ContentGeneratorTool
     
     tools = {
-        "google_search": GoogleSearchTool(),  # This now uses Serper API
+        "google_search": GoogleSearchTool(), # Add Google Search Tool
         "web_scraper": WebScraperTool(),
         "code_analysis": CodeAnalysisTool(),
         "code_generator": CodeGeneratorTool(),
@@ -64,7 +64,7 @@ def main(task_file_path: str, output_file_path: str):
         max_steps=10,
         min_confidence=0.7,
         timeout=300,
-        learning_enabled=True,  # Changed from enable_reflection
+        learning_enabled=True,
         memory_path="agent_memory.db",
         parallel_execution=True,
         planning_enabled=True,

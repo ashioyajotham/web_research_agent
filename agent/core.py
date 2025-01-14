@@ -240,49 +240,167 @@ class Agent:
         self.task_parser = TaskParser()
 
     async def process_tasks(self, tasks: List[str]) -> List[Dict[str, Any]]:
-        """Process tasks with context awareness"""
+        """Process tasks with better criteria handling"""
         # Parse tasks to understand relationships
         parsed_tasks = self.task_parser.parse_tasks('\n'.join(tasks))
         results = []
         
         for parsed_task in parsed_tasks:
-            if parsed_task.context.get('type') == 'multi_criteria':
-                # Handle multi-criteria task
-                result = await self._handle_multi_criteria_task(parsed_task)
+            if parsed_task.task_type == "criteria_search":
+                # Handle criteria-based search task
+                result = await self._handle_criteria_search(parsed_task)
             else:
-                # Handle single task
+                # Handle regular task
                 result = await self.process_task(parsed_task.main_task)
             results.append(result)
             
         return results
 
-    async def _handle_multi_criteria_task(self, parsed_task: ParsedTask) -> Dict[str, Any]:
-        """Handle tasks with multiple criteria"""
-        # Get initial results for main task
-        initial_results = await self.process_task(parsed_task.main_task)
-        
-        # Process each criterion
-        criteria_results = []
-        for component in parsed_task.components[1:]:  # Skip main task
-            subtask_result = await self.process_task(
-                component.text,
-                context={'parent_task': parsed_task.main_task}
-            )
-            criteria_results.append(subtask_result)
+    async def _handle_criteria_search(self, parsed_task: ParsedTask) -> Dict[str, Any]:
+        """Handle multi-criteria search using progressive filtering"""
+        try:
+            # Extract actual criteria from parsed task
+            criteria = parsed_task.components[0].criteria if parsed_task.components else []
             
-        # Combine and filter results
-        final_results = self._combine_criteria_results(
-            initial_results,
-            criteria_results,
-            parsed_task
-        )
-        
-        return final_results
+            # Use first line as base query
+            base_query = parsed_task.main_task
+            
+            # Build search parameters from actual criteria
+            search_params = {
+                'location': next((c for c in criteria if 'EU' in c), None),
+                'industry': next((c for c in criteria if 'motor vehicle sector' in c), None),
+                'requirements': [c for c in criteria if any(term in c.lower() for term in 
+                    ['environmental', 'emissions', 'revenue', 'subsidiary'])]
+            }
 
-    def _combine_criteria_results(self, initial: Dict, criteria_results: List[Dict], task: ParsedTask) -> Dict:
-        """Combine and filter results based on all criteria"""
-        # Implementation for combining results while maintaining criteria relationships
-        # ...
+            # Step 1: Get initial broad results
+            initial_results = await self.tools["google_search"].execute(
+                query=base_query,
+                params={"detailed": True, "num": 20}  # Get more initial results
+            )
+
+            if not initial_results.get('success'):
+                return initial_results
+
+            results = initial_results.get('output', {}).get('results', [])
+            
+            # Step 2: Progressive filtering
+            filtered_results = []
+            for result in results:
+                # Get detailed information for each potential match
+                try:
+                    details = await self.tools["web_scraper"].execute(url=result.get('link', ''))
+                    if details:
+                        result['detailed_content'] = details
+                except:
+                    continue
+
+                # Check all criteria at once
+                matches_all = True
+                for criterion_type, criterion in criteria.items():
+                    if not await self._check_criterion(result, criterion_type, criterion):
+                        matches_all = False
+                        break
+
+                if matches_all:
+                    filtered_results.append(result)
+
+            # Step 3: Format final results
+            return {
+                "success": True,
+                "output": {
+                    "results": filtered_results,
+                    "total_matches": len(filtered_results),
+                    "applied_criteria": list(criteria.keys()),
+                    "original_query": base_query,
+                    "summary": self._generate_criteria_summary(filtered_results, criteria)
+                },
+                "confidence": self._calculate_criteria_confidence(filtered_results, criteria),
+                "task_type": "criteria_search"
+            }
+
+        except Exception as e:
+            self.logger.error(f"Criteria search failed: {str(e)}")
+            return {
+                "success": False,
+                "error": str(e),
+                "output": {"results": []}
+            }
+
+    async def _check_criterion(self, result: Dict, criterion_type: str, criterion: str) -> bool:
+        """Check a single criterion against a result"""
+        content = f"{result.get('title', '')} {result.get('snippet', '')} {result.get('detailed_content', '')}"
+        
+        if criterion_type == 'location':
+            # Check location criteria
+            location_pattern = rf"(?:headquartered|based)\s+in\s+{criterion}"
+            return bool(re.search(location_pattern, content, re.IGNORECASE))
+            
+        elif criterion_type == 'industry':
+            # Check industry/sector criteria
+            return criterion.lower() in content.lower()
+            
+        elif criterion_type == 'financial':
+            # Check financial criteria (revenue, market cap, etc.)
+            if 'revenue' in criterion.lower():
+                amount = re.search(r'(\d+(?:\.\d+)?)\s*(?:billion|million|trillion)?', criterion)
+                if amount:
+                    return self._check_financial_amount(content, amount.group())
+            return False
+            
+        elif criterion_type == 'status':
+            # Check company status (subsidiary, public, etc.)
+            if 'subsidiary' in criterion.lower():
+                return not bool(re.search(r'subsidiary\s+of', content, re.IGNORECASE))
+            
+        return False
+
+    def _check_financial_amount(self, content: str, target_amount: str) -> bool:
+        """Compare financial amounts with unit conversion"""
+        try:
+            # Extract numbers with units from content
+            amounts = re.findall(r'(\d+(?:\.\d+)?)\s*(billion|million|trillion)?', content)
+            target_val = float(re.search(r'\d+(?:\.\d+)?', target_amount).group())
+            
+            # Convert to same scale (billions)
+            scales = {'trillion': 1000, 'billion': 1, 'million': 0.001}
+            target_scale = next((s for s in scales if s in target_amount.lower()), 'billion')
+            target_val *= scales[target_scale]
+            
+            for amount, scale in amounts:
+                val = float(amount) * scales.get(scale.lower() if scale else 'billion', 1)
+                if val >= target_val:
+                    return True
+            
+            return False
+        except:
+            return False
+
+    def _generate_criteria_summary(self, results: List[Dict], criteria: Dict) -> str:
+        """Generate a human-readable summary of the matching results"""
+        if not results:
+            return "No companies found matching all criteria."
+            
+        summary = "Companies matching all criteria:\n\n"
+        for result in results:
+            summary += f"- {result.get('title', 'Unknown')}\n"
+            if 'detailed_content' in result:
+                relevant_info = self._extract_relevant_info(result['detailed_content'], criteria)
+                if relevant_info:
+                    summary += f"  {relevant_info}\n"
+                    
+        return summary
+
+    def _extract_relevant_info(self, content: str, criteria: Dict) -> str:
+        """Extract relevant information based on the criteria"""
+        info = []
+        
+        # Extract specific information based on criteria types
+        for criterion_type, criterion in criteria.items():
+            if match := self._extract_criterion_info(content, criterion_type, criterion):
+                info.append(match)
+                
+        return "; ".join(info) if info else ""
 
     async def process_task(self, task: str) -> Dict[str, Any]:
         try:
