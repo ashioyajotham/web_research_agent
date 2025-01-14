@@ -118,10 +118,42 @@ class AnswerProcessor:
 class TaskType(Enum):
     """Dynamic task type system that can learn and adapt"""
     GENERIC = auto()  # Base type for all tasks
+    QUERY = auto()    # Question-based tasks
+    RESEARCH = auto() # Research-based tasks
+    GENERATION = auto() # Content generation tasks
+    ANALYSIS = auto()  # Analysis tasks
+    CODE = auto()     # Code-related tasks
+    DATA = auto()     # Data-related tasks
     
     @classmethod
     def infer_type(cls, task: str, context: Dict = None) -> 'TaskType':
         """Dynamically infer task type based on context and patterns"""
+        task_lower = task.lower()
+        
+        # Query detection
+        if re.match(r'^(?:who|what|when|where|why|how)\b', task_lower):
+            return cls.QUERY
+            
+        # Research detection
+        if any(word in task_lower for word in ['research', 'find', 'search', 'look up']):
+            return cls.RESEARCH
+            
+        # Generation detection
+        if any(word in task_lower for word in ['create', 'generate', 'write', 'compose']):
+            return cls.GENERATION
+            
+        # Analysis detection
+        if any(word in task_lower for word in ['analyze', 'analyse', 'examine', 'study']):
+            return cls.ANALYSIS
+            
+        # Code detection
+        if any(word in task_lower for word in ['code', 'program', 'implement', 'function']):
+            return cls.CODE
+            
+        # Data detection
+        if any(word in task_lower for word in ['data', 'dataset', 'database']):
+            return cls.DATA
+            
         return cls.GENERIC
 
 class DynamicPattern:
@@ -508,7 +540,7 @@ class Agent:
             TaskType.RESEARCH: r'(?:find|search|research|analyze|investigate)\s+.+',
             TaskType.GENERATION: r'(?:create|generate|write|compose|implement)\s+.+',
             TaskType.ANALYSIS: r'(?:analyze|compare|evaluate|assess)\s+.+',
-            TaskType.GENERAL: r'.*'
+            TaskType.GENERIC: r'.*'
         }
         
         # Add completion prompts
@@ -1416,3 +1448,4 @@ class Agent:
             'data': data,
             'timestamp': datetime.now()
         })
+

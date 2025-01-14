@@ -51,6 +51,25 @@ class ContentGeneratorTool(BaseTool):
         # Adaptive formatting rules
         self.formatting_rules = self._initialize_formatting_rules()
 
+    def get_description(self) -> str:
+        """Return tool description"""
+        return "A content generation tool that creates high-quality content with dynamic adaptation based on context and requirements"
+
+    def get_metadata(self) -> Dict[str, Any]:
+        """Return tool metadata"""
+        return {
+            "name": "content_generator",
+            "type": "content_creation",
+            "version": "1.0",
+            "capabilities": [
+                "technical_writing",
+                "educational_content",
+                "analysis_reports",
+                "research_summaries",
+                "adaptive_formatting"
+            ]
+        }
+
     def _initialize_strategies(self) -> Dict[ContentType, ContentStrategy]:
         """Initialize flexible content strategies"""
         return {
@@ -69,6 +88,41 @@ class ContentGeneratorTool(BaseTool):
                 formatting={"sections": True, "highlights": True}
             ),
             # ...existing code for other content types...
+        }
+
+    def _initialize_formatting_rules(self) -> Dict[str, Dict[str, Any]]:
+        """Initialize default formatting rules"""
+        return {
+            'technical': {
+                'code_blocks': {
+                    'style': 'fenced',
+                    'language_hint': True
+                },
+                'headers': {
+                    'style': 'atx',  # # Style headers
+                    'max_level': 3
+                }
+            },
+            'educational': {
+                'sections': {
+                    'clear_breaks': True,
+                    'numbered': True
+                },
+                'highlights': {
+                    'bold_key_terms': True,
+                    'box_definitions': True
+                }
+            },
+            'general': {
+                'paragraphs': {
+                    'max_length': 500,
+                    'line_breaks': True
+                },
+                'lists': {
+                    'bullet_style': '-',
+                    'max_nesting': 2
+                }
+            }
         }
 
     async def execute(self, query: str, **kwargs) -> Dict[str, Any]:
