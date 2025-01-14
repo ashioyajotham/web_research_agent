@@ -197,6 +197,8 @@ class TaskType(Enum):
     CODE = "code"  # Code generation
     CONTENT = "content"  # Blog/article writing
     DATA_ANALYSIS = "data_analysis"  # Data processing
+    GENERAL = "general"  # Add this new type
+    COMPLETION = "completion"  # Add this new type
 
 class Agent:
     def __init__(self, tools: Dict[str, BaseTool], config: Optional[AgentConfig] = None):
@@ -222,6 +224,17 @@ class Agent:
             TaskType.CONTENT: r'(?:write|create|compose|draft)\s+(?:a|an)\s+(?:blog|article|post|essay)',
             TaskType.DATA_ANALYSIS: r'(?:data|dataset|database|analyze\s+data)'
         }
+        
+        self.task_patterns.update({
+            TaskType.COMPLETION: r'^(?:[a-zA-Z]+\s+is\s*|complete\s+this|finish\s+this|what\s+comes\s+after)',
+            TaskType.GENERAL: r'.*'  # Catch-all pattern
+        })
+        
+        # Add completion prompts
+        self.completion_prefixes = [
+            "life is", "love is", "the meaning of", "happiness is",
+            "success is", "the purpose of"
+        ]
 
     async def process_tasks(self, tasks: List[str]) -> List[Dict[str, Any]]:
         return await asyncio.gather(*[
@@ -232,7 +245,11 @@ class Agent:
         try:
             task_type = self._detect_task_type(task)
             
-            if task_type == TaskType.FACTUAL_QUERY:
+            if task_type == TaskType.COMPLETION:
+                return await self._handle_completion(task)
+            elif task_type == TaskType.GENERAL:
+                return await self._handle_general_query(task)
+            elif task_type == TaskType.FACTUAL_QUERY:
                 return await self._handle_direct_question(task)
             elif task_type == TaskType.RESEARCH:
                 return await self._handle_research(task)
@@ -251,39 +268,31 @@ class Agent:
             }
 
     def _detect_task_type(self, task: str) -> TaskType:
-        """Improved task type detection"""
+        """Enhanced task type detection"""
         task_lower = task.lower()
         
-        # Code Generation Patterns
-        code_patterns = [
-            r'implement (?:a|an|the)?\s+\w+',
-            r'create (?:a|an|the)?\s+(?:\w+\s+)?(?:class|function|implementation)',
-            r'write (?:a|an|the)?\s+(?:\w+\s+)?(?:code|program|algorithm)',
-        ]
-        
-        # Content Generation Patterns
-        content_patterns = [
-            r'write (?:a|an|the)?\s+(?:blog|article|post|guide)',
-            r'create (?:a|an|the)?\s+(?:tutorial|documentation)',
-            r'explain (?:how|why|what)'
-        ]
-        
-        # Check code patterns first
-        for pattern in code_patterns:
-            if re.search(pattern, task_lower):
-                return TaskType.CODE
-                
-        # Then content patterns
-        for pattern in content_patterns:
-            if re.search(pattern, task_lower):
-                return TaskType.CONTENT
-                
-        # Then check other patterns
-        for task_type, pattern in self.task_patterns.items():
-            if re.search(pattern, task_lower):
-                return task_type
-                
-        return TaskType.RESEARCH  # Default to research
+        # Check for completion patterns first
+        if any(task_lower.startswith(prefix.lower()) for prefix in self.completion_prefixes):
+            return TaskType.COMPLETION
+            
+        # Check for direct questions
+        if re.match(r'^(?:who|what|when|where|why|how)\s+(?:is|are|was|were|do|does|did)', task_lower):
+            return TaskType.FACTUAL_QUERY
+            
+        # Check for research/analysis tasks
+        if any(term in task_lower for term in ['research', 'analyze', 'investigate', 'compare']):
+            return TaskType.RESEARCH
+            
+        # Check for code tasks
+        if any(term in task_lower for term in ['code', 'implement', 'program', 'function']):
+            return TaskType.CODE
+            
+        # Check for content tasks
+        if any(term in task_lower for term in ['write', 'compose', 'create article']):
+            return TaskType.CONTENT
+            
+        # If no specific pattern matches, treat as general
+        return TaskType.GENERAL
 
     async def _handle_direct_question(self, task: str) -> Dict[str, Any]:
         """Handle direct questions with cleaner answer extraction"""
@@ -753,3 +762,73 @@ class Agent:
             'error': result.get('error'),
             'metrics': result.get('metrics', {})
         }
+
+    async def _handle_completion(self, task: str) -> Dict[str, Any]:
+        """Handle pattern completion tasks using Gemini"""
+        try:
+            # Prepare prompt for pattern completion
+            prompt = f"Complete this phrase naturally: {task}"
+            
+            response = await asyncio.to_thread(
+                self.model.generate_content,
+                prompt
+            )
+            
+            if response and response.text:
+                completion = response.text.strip()
+                return {
+                    "success": True,
+                    "output": {
+                        "completion": completion,
+                        "type": "completion"
+                    },
+                    "confidence": 0.9
+                }
+            
+            return {
+                "success": False,
+                "error": "Could not generate completion",
+                "output": {"results": []}
+            }
+            
+        except Exception as e:
+            return {
+                "success": False,
+                "error": str(e),
+                "output": {"results": []}
+            }
+
+    async def _handle_general_query(self, task: str) -> Dict[str, Any]:
+        """Handle general queries using Gemini"""
+        try:
+            # Prepare prompt for general query
+            prompt = f"Answer this query: {task}"
+            
+            response = await asyncio.to_thread(
+                self.model.generate_content,
+                prompt
+            )
+            
+            if response and response.text:
+                answer = response.text.strip()
+                return {
+                    "success": True,
+                    "output": {
+                        "answer": answer,
+                        "type": "general"
+                    },
+                    "confidence": 0.8
+                }
+            
+            return {
+                "success": False,
+                "error": "Could not generate answer",
+                "output": {"results": []}
+            }
+            
+        except Exception as e:
+            return {
+                "success": False,
+                "error": str(e),
+                "output": {"results": []}
+            }

@@ -29,7 +29,11 @@ class PrettyFormatter:
 
             # Handle different output types
             if isinstance(output, dict):
-                if 'chronological_summary' in output:
+                if 'completion' in output:
+                    self._format_completion(task, output)
+                elif 'answer' in output:
+                    self._format_general_answer(output)
+                elif 'chronological_summary' in output:
                     self._format_research_results(output)
                 elif 'content' in output:
                     self._format_blog_content(output['content'])
@@ -44,6 +48,43 @@ class PrettyFormatter:
 
         except Exception as e:
             self.console.print(f"[red]Formatting error: {str(e)}[/red]")
+
+    def _format_completion(self, task: str, output: Dict[str, Any]) -> None:
+        """Format completion results with style"""
+        completion = output.get('completion', '')
+        if completion:
+            # Clean up completion (remove redundant task text)
+            task_lower = task.lower().rstrip('.')
+            completion_lower = completion.lower()
+            if completion_lower.startswith(task_lower):
+                completion = completion[len(task_lower):].strip()
+            
+            # Format the complete response
+            full_response = f"{task.rstrip('.')} {completion.lstrip()}"
+            
+            self.console.print(Panel(
+                Text(full_response, style="green"),
+                title="Completion",
+                border_style="cyan",
+                padding=(1, 2)
+            ))
+            
+            if output.get('confidence'):
+                self.console.print(f"\n[dim]Confidence: {output['confidence']:.2f}[/dim]")
+
+    def _format_general_answer(self, output: Dict[str, Any]) -> None:
+        """Format general query answers"""
+        answer = output.get('answer', '')
+        if answer:
+            self.console.print(Panel(
+                Markdown(answer),
+                title="Answer",
+                border_style="blue",
+                padding=(1, 2)
+            ))
+            
+            if output.get('confidence'):
+                self.console.print(f"\n[dim]Confidence: {output['confidence']:.2f}[/dim]")
 
     def _format_blog_content(self, content: Any) -> None:
         """Format blog content with improved handling"""

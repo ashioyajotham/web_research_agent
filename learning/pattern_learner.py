@@ -3,6 +3,9 @@ import numpy as np
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 from datetime import datetime
+import re
+
+
 
 class PatternLearner:
     def __init__(self):
@@ -14,6 +17,31 @@ class PatternLearner:
         self.embedding_model = None
         self.pattern_embeddings = []
         self.performance_metrics = {}
+        
+        # Add new pattern types
+        self.pattern_types = {
+            'completion': r'^[a-zA-Z]+\s+is\s*',
+            'general_query': r'^(?:tell|explain|describe|what)',
+            'factual': r'^(?:who|what|when|where|why|how)',
+            'action': r'^(?:find|search|get|list|show)'
+        }
+        
+        # Add solution templates
+        self.solution_templates = {
+            'completion': {
+                'type': 'completion',
+                'tool': 'gemini',
+                'template': '{task}'
+            },
+            'general_query': {
+                'type': 'general',
+                'tool': 'gemini',
+                'template': 'Answer this query: {task}'
+            }
+        }
+        
+        # Track pattern success rates
+        self.pattern_success_rates = {}
 
     def initialize_embeddings(self, model_name: str = "sentence-transformers/all-mpnet-base-v2"):
         """Initialize embedding model for better pattern matching"""
@@ -21,76 +49,92 @@ class PatternLearner:
         self.embedding_model = SentenceTransformer(model_name)
 
     def add_pattern(self, task: str, solution: Dict, performance: float = None):
-        self.patterns.append(task)
-        self.solutions.append(solution)
+        """Enhanced pattern storage with type detection"""
+        pattern_type = self._detect_pattern_type(task)
         
-        if len(self.patterns) > 1:  # Only fit when we have enough data
-            self.vectorizer.fit(self.patterns)
+        # Store pattern with its type
+        self.patterns.append({
+            'text': task,
+            'type': pattern_type,
+            'solution': solution,
+            'performance': performance
+        })
         
-        # Track performance metrics
-        if performance:
-            self.performance_metrics[task] = {
-                'success_rate': performance,
-                'timestamp': datetime.now(),
-                'solution_type': solution.get('type', 'unknown')
-            }
+        # Update success rates
+        if pattern_type not in self.pattern_success_rates:
+            self.pattern_success_rates[pattern_type] = []
+        self.pattern_success_rates[pattern_type].append(performance if performance else 0.5)
         
-        # Generate and store embeddings
+        # Generate embeddings if available
         if self.embedding_model:
             embedding = self.embedding_model.encode(task)
             self.pattern_embeddings.append(embedding)
 
     def find_similar_patterns(self, task: str, threshold: float = 0.7) -> List[Tuple[Dict, float]]:
-        """Enhanced pattern matching using both TF-IDF and embeddings"""
+        """Enhanced pattern matching with type awareness"""
         if not self.patterns:
             return []
 
-        results = []
+        task_type = self._detect_pattern_type(task)
         
-        # TF-IDF similarity
-        tfidf_similarities = self._get_tfidf_similarities(task)
+        # Get base template if available
+        template = self.solution_templates.get(task_type)
+        if template:
+            return [(template, 0.9)]  # High confidence for direct template matches
         
-        # Embedding similarity if available
+        # Find similar patterns of the same type
+        similar_patterns = []
+        
+        for i, pattern in enumerate(self.patterns):
+            if pattern['type'] == task_type:
+                similarity = self._calculate_similarity(task, pattern['text'])
+                if similarity >= threshold:
+                    similar_patterns.append((pattern['solution'], similarity))
+        
+        # Sort by similarity score
+        return sorted(similar_patterns, key=lambda x: x[1], reverse=True)
+
+    def _detect_pattern_type(self, task: str) -> str:
+        """Detect the type of pattern"""
+        task_lower = task.lower()
+        
+        for pattern_type, pattern in self.pattern_types.items():
+            if re.search(pattern, task_lower):
+                return pattern_type
+        
+        return 'general_query'  # default type
+
+    def _calculate_similarity(self, task1: str, task2: str) -> float:
+        """Calculate similarity between two tasks using multiple methods"""
+        # Use embeddings if available
         if self.embedding_model:
-            embedding_similarities = self._get_embedding_similarities(task)
+            emb1 = self.embedding_model.encode(task1)
+            emb2 = self.embedding_model.encode(task2)
+            embedding_sim = cosine_similarity([emb1], [emb2])[0][0]
             
-            # Combine similarities with weighted average
-            for i, (solution, tfidf_sim) in enumerate(tfidf_similarities):
-                emb_sim = embedding_similarities[i][1]
-                combined_sim = (tfidf_sim * 0.4 + emb_sim * 0.6)  # Weight embeddings higher
-                
-                if combined_sim >= threshold:
-                    results.append((solution, combined_sim))
-        else:
-            results = [s for s in tfidf_similarities if s[1] >= threshold]
+            # Combine with other similarity measures
+            text_sim = self._calculate_text_similarity(task1, task2)
+            return 0.7 * embedding_sim + 0.3 * text_sim
             
-        return sorted(results, key=lambda x: x[1], reverse=True)
+        return self._calculate_text_similarity(task1, task2)
 
-    def _get_embedding_similarities(self, task: str) -> List[Tuple[Dict, float]]:
-        """Calculate embedding-based similarities"""
-        task_embedding = self.embedding_model.encode(task)
-        similarities = []
-        
-        for i, pattern_embedding in enumerate(self.pattern_embeddings):
-            similarity = cosine_similarity([task_embedding], [pattern_embedding])[0][0]
-            similarities.append((self.solutions[i], float(similarity)))
-            
-        return similarities
-
-    def _get_tfidf_similarities(self, task: str) -> List[Tuple[Dict, float]]:
-        task_vector = self.vectorizer.transform([task])
-        pattern_vectors = self.vectorizer.transform(self.patterns)
+    def _calculate_text_similarity(self, text1: str, text2: str) -> float:
+        """Calculate text similarity using TF-IDF and other metrics"""
+        task_vector = self.vectorizer.transform([text1])
+        pattern_vectors = self.vectorizer.transform([text2])
         
         similarities = cosine_similarity(task_vector, pattern_vectors)[0]
         
-        return [
-            (self.solutions[i], float(sim))
-            for i, sim in enumerate(similarities)
-        ]
+        return float(similarities[0])
 
     def generalize_solution(self, similar_patterns: List[Tuple[Dict, float]]) -> Dict:
+        """Generate solution with enhanced template handling"""
         if not similar_patterns:
             return {}
+
+        # If first pattern has high confidence, use it directly
+        if similar_patterns[0][1] > 0.9:
+            return similar_patterns[0][0]
 
         # Weight solutions by similarity score
         weighted_solutions = []
