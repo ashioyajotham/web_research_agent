@@ -8,10 +8,12 @@ from rich.console import Console
 from enum import Enum
 from datetime import datetime
 
-from agent.core import Agent, AgentConfig
+from agent.core import Agent
+from agent.config import AgentConfig  # Update import to use new config location
 from tools.base import BaseTool
 from formatters.pretty_output import PrettyFormatter
 from utils.logger import AgentLogger
+from agent.utils.config import SystemConfig  # Import SystemConfig
 
 # Load environment variables
 load_dotenv()
@@ -33,6 +35,10 @@ async def process_tasks(agent: Agent, tasks: List[str]) -> List[Dict]:
     return await asyncio.gather(*[agent.process_task(task) for task in tasks])
 
 def main(task_file_path: str, output_file_path: str):
+    # Load system configuration
+    system_config = SystemConfig.from_yaml("config/system.yaml")
+    system_config.ensure_directories()
+    
     # Verify environment variables are loaded
     if not os.getenv("SERPER_API_KEY"):
         print("\nEnvironment Variable Check:")
@@ -59,16 +65,19 @@ def main(task_file_path: str, output_file_path: str):
         "content_generator": ContentGeneratorTool()  # Add content generator
     }
     
-    # Initialize agent with updated config parameters
+    # Initialize agent config with system config
     config = AgentConfig(
+        tools=tools,
+        system_config=system_config,
         max_steps=10,
         min_confidence=0.7,
         timeout=300,
-        learning_enabled=True,  # Changed from enable_reflection
+        learning_enabled=True,
         memory_path="agent_memory.db",
         parallel_execution=True,
         planning_enabled=True,
-        pattern_learning_enabled=True
+        pattern_learning_enabled=True,
+        logger=AgentLogger()
     )
     
     agent = Agent(tools=tools, config=config)

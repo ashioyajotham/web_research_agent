@@ -29,24 +29,6 @@ class ContentStrategy:
     requirements: List[str]
     formatting: Dict[str, Any]
 
-@dataclass
-class AgentConfig:
-    """Configuration for Agent initialization"""
-    tools: Dict[str, BaseTool]
-    max_steps: int = 10
-    max_retries: int = 3
-    min_confidence: float = 0.7
-    timeout: int = 300
-    parallel_tasks: bool = True
-    memory_size: int = 1000
-    confidence_threshold: float = 0.7
-    learning_enabled: bool = True
-    memory_path: str = "agent_memory.db"
-    parallel_execution: bool = True
-    planning_enabled: bool = True
-    pattern_learning_enabled: bool = True
-    logger: Optional[AgentLogger] = None
-
 class ContentGeneratorTool(BaseTool):
     def __init__(self):
         api_key = os.getenv("GEMINI_API_KEY")

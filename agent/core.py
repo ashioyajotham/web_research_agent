@@ -18,17 +18,8 @@ from memory.memory_store import MemoryStore
 from learning.pattern_learner import PatternLearner
 from .strategy import ResearchStrategy
 from .utils.temporal_processor import TemporalProcessor
+from .config import AgentConfig  # Update to use new config location
 
-
-@dataclass
-class AgentConfig:
-    """Configuration for Agent initialization"""
-    tools: Dict[str, BaseTool]
-    logger: AgentLogger
-    max_retries: int = 3
-    parallel_tasks: bool = True
-    memory_size: int = 1000
-    confidence_threshold: float = 0.7
 
 class AnswerProcessor:
     def __init__(self, config: AgentConfig):
@@ -653,6 +644,7 @@ class Agent:
         try:
             # Dynamic context building
             context = self._build_task_context(task)
+            context['task'] = task  # Ensure task is in context
             
             # Determine processing strategy
             strategy = await self._determine_strategy(task, context)
@@ -660,7 +652,7 @@ class Agent:
             # Execute with chosen strategy
             result = await self._execute_with_strategy(task, strategy, context)
             
-            # Learn from execution
+            # Learn from execution if enabled
             if self.config.learning_enabled:
                 await self._learn_from_execution(task, result, context)
             
@@ -698,47 +690,73 @@ class Agent:
         
         for step in steps:
             try:
-                # Get tool instance
-                tool_name = step.get('tool')
-                tool = self.tools.get(tool_name)
-                
-                if not tool:
-                    raise ValueError(f"Tool {tool_name} not found")
-                    
-                # Execute tool
-                params = self._prepare_tool_params(step.get('action'), context)
-                step_result = await tool.execute(**params)
-                
-                if not isinstance(step_result, dict):
-                    step_result = {'success': False, 'error': 'Invalid tool response'}
-                    
+                # Execute step
+                step_result = await self._execute_step(step, context)
                 results.append(step_result)
+                
+                # Update context with step results
+                if step_result.get('success'):
+                    context.update({
+                        'last_result': step_result.get('output', {}),
+                        'step_type': step.get('action'),
+                        'step_tool': step.get('tool')
+                    })
                 
                 # Adapt strategy based on results
                 strategy = self._adapt_strategy(strategy, step_result, context)
                 
             except Exception as e:
-                self.logger.error(f"Step execution failed: {str(e)}")
+                self.logger.error(f"Strategy step failed: {str(e)}")
                 results.append({
                     'success': False,
-                    'error': str(e)
+                    'error': str(e),
+                    'action': step.get('action'),
+                    'tool': step.get('tool')
                 })
                 
         return self._combine_results(results, strategy, context)
 
-    def _prepare_tool_params(self, action: str, context: Dict[str, Any]) -> Dict[str, Any]:
-        """Prepare parameters for tool execution"""
-        params = {}
-        task = context.get('task', '')
-        
-        if action == 'search':
-            params['query'] = task
-        elif action == 'scrape':
-            params['url'] = context.get('url', '')
-        elif action in ['analyze', 'summarize']:
-            params['text'] = context.get('content', '')
-        
-        return params
+    async def _execute_step(self, step: Dict[str, str], context: Dict[str, Any]) -> Dict[str, Any]:
+        """Execute a single strategy step with proper async handling"""
+        try:
+            tool_name = step.get('tool')
+            tool = self.tools.get(tool_name)
+            
+            if not tool:
+                raise ValueError(f"Tool {tool_name} not found")
+            
+            # Prepare parameters
+            params = {
+                'query': context.get('task', ''),
+                **self._prepare_tool_params(step.get('action'), context)
+            }
+            
+            # Execute tool
+            result = await tool.execute(**params)
+            
+            if not isinstance(result, dict):
+                return {
+                    'success': False,
+                    'error': 'Invalid tool response',
+                    'action': step.get('action'),
+                    'tool': tool_name
+                }
+                
+            return {
+                'success': True,
+                'output': result,
+                'action': step.get('action'),
+                'tool': tool_name
+            }
+            
+        except Exception as e:
+            self.logger.error(f"Step execution failed: {str(e)}")
+            return {
+                'success': False,
+                'error': str(e),
+                'action': step.get('action', 'unknown'),
+                'tool': step.get('tool', 'unknown')
+            }
 
     async def _learn_from_execution(self, task: str, result: Dict, context: Dict):
         """Learn from task execution"""
@@ -1410,7 +1428,7 @@ class Agent:
         time_patterns = [
             r'\b\d{4}\b',  # Years
             r'\b(?:Q[1-4]|Quarter\s+[1-4])\s+\d{4}\b',  # Quarters
-            r'\b(?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:tember)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?)\s+\d{4}\b'  # Months
+            r'\b(?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:tember)?|Oct(?:ober)?|Nov(?:ember)|Dec(?:ember)?)\s+\d{4}\b'  # Months
         ]
         
         references = []
@@ -1795,42 +1813,23 @@ class Agent:
         return params
 
     async def _execute_step(self, step: Dict[str, str], context: Dict[str, Any]) -> Dict[str, Any]:
-        """Execute a single strategy step with proper error handling"""
+        """Execute a single strategy step with proper async handling"""
         try:
-            action = step['action']
-            tool_name = step['tool']
+            tool_name = step.get('tool')
+            tool = self.tools.get(tool_name)
             
-            # Check if tool is available
-            if tool_name not in self.available_tools:
-                self.logger.warning(f"Tool {tool_name} not available")
-                return {
-                    'success': False,
-                    'error': f"Tool {tool_name} not available",
-                    'action': action,
-                    'tool': tool_name
-                }
-            
-            # Prepare tool parameters with operation type for content_generator
-            params = {}
-            if action == 'search':
-                params['query'] = context.get('task', '')
-            elif action == 'extract':
-                params['url'] = context.get('url', '')
-            elif action in ['analyze', 'summarize']:
-                params['query'] = context.get('content', '')
-                params['operation'] = action
-                
-            # Execute tool with prepared parameters
-            result = await self.available_tools[tool_name].execute(**params)
-            
-            return {
-                'success': bool(result.get('success', False)),
-                'output': result.get('output', {}),
-                'action': action,
-                'tool': tool_name,
-                'confidence': float(result.get('confidence', 0.0))
+            if not tool:
+                raise ValueError(f"Tool {tool_name} not found")
+
+            params = {
+                'query': context.get('task', ''),
+                'operation': step.get('action', 'generate'),
+                'context': context
             }
-                
+
+            result = await tool.execute(**params)
+            return result
+
         except Exception as e:
             self.logger.error(f"Step execution failed: {str(e)}")
             return {
@@ -2080,7 +2079,9 @@ class Agent:
             self.logger.error(f"Step execution failed: {str(e)}")
             return {
                 'success': False,
-                'error': str(e)
+                'error': str(e),
+                'action': step.get('action', 'unknown'),
+                'tool': step.get('tool', 'unknown')
             }
 
     # ...existing code...
