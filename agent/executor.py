@@ -38,33 +38,17 @@ class StepResult:
 
 @dataclass
 class ExecutionResult:
-    success: bool
-    output: Dict[str, Any]
-    confidence: float
-    success_rate: float
-    steps: List[Dict[str, Any]]
-    partial_results: Optional[Dict[str, Any]] = None
-    execution_metrics: Optional[Dict[str, Any]] = None
-    context: ExecutionContext = field(default_factory=ExecutionContext)
+    success: bool = False
+    output: Dict[str, Any] = field(default_factory=dict)
+    error: Optional[str] = None
+    steps: List[Dict[str, Any]] = field(default_factory=list)
     timing: Dict[str, float] = field(default_factory=dict)
-
+    
     def __post_init__(self):
-        """Ensure output is properly formatted"""
-        if self.output is None:
-            self.output = {"results": []}
-        elif isinstance(self.output, dict):
-            if "results" not in self.output:
-                self.output["results"] = []
-        else:
+        if not isinstance(self.output, dict):
             self.output = {"results": [str(self.output)]}
-            
-        # Ensure numeric types
-        self.confidence = float(self.confidence)
-        self.success_rate = float(self.success_rate)
-        
-        # Ensure metrics dict exists
-        if self.execution_metrics is None:
-            self.execution_metrics = {}
+        elif "results" not in self.output:
+            self.output["results"] = []
 
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary format"""
@@ -136,6 +120,7 @@ class Executor:
         self._step_metrics = {}
         self.temporal_processor = TemporalProcessor()
         self.context = ExecutionContext()
+        self.logger = logging.getLogger(__name__)
 
     async def execute_plan(self, plan: TaskPlan, model: Any, max_steps: int) -> ExecutionResult:
         """Execute plan with enhanced context awareness and adaptability"""
@@ -238,78 +223,94 @@ class Executor:
 
         return results
 
-    async def _execute_step(self, step: PlanStep, model: Any) -> StepResult:
-        """Execute step with improved error handling and context awareness"""
-        cache_key = f"{step.type}:{step.tool}:{hash(str(step.params))}"
-        retry_count = 0
-        max_retries = 2
+    async def execute_step(self, step: Dict[str, Any], context: Dict[str, Any]) -> ExecutionResult:
+        start_time = datetime.now()
         
-        while retry_count <= max_retries:
-            try:
-                # Check cache for identical previous executions
-                if cache_key in self._execution_cache:
-                    logger.info(f"Using cached result for step {step.id}")
-                    return self._execution_cache[cache_key]
+        try:
+            tool_name = step.get('tool')
+            if not tool_name:
+                raise ValueError("No tool specified for step")
 
-                start_time = asyncio.get_event_loop().time()
+            tool = context.get('tools', {}).get(tool_name)
+            if not tool:
+                raise ValueError(f"Tool {tool_name} not found")
+
+            # Prepare parameters
+            params = {
+                'query': context.get('query', ''),
+                **step.get('params', {})
+            }
+
+            # Execute tool with proper async handling
+            if asyncio.iscoroutinefunction(tool.execute):
+                result = await tool.execute(**params)
+            else:
+                result = await asyncio.to_thread(tool.execute, **params)
+
+            execution_time = (datetime.now() - start_time).total_seconds()
+            
+            return ExecutionResult(
+                success=True,
+                output=result,
+                timing={'execution_time': execution_time},
+                steps=[{
+                    'tool': tool_name,
+                    'status': 'completed',
+                    'execution_time': execution_time
+                }]
+            )
+
+        except Exception as e:
+            self.logger.error(f"Step execution failed: {str(e)}")
+            return ExecutionResult(
+                success=False,
+                error=str(e),
+                steps=[{
+                    'tool': step.get('tool', 'unknown'),
+                    'status': 'failed',
+                    'error': str(e)
+                }]
+            )
+
+    async def _execute_step(self, step: Dict[str, Any], context: Dict[str, Any]) -> Dict[str, Any]:
+        """Execute single step with proper async handling"""
+        try:
+            tool_name = step.get('tool')
+            tool = self.tools.get(tool_name)
+            
+            if not tool:
+                raise ValueError(f"Tool {tool_name} not found")
+
+            result = await tool.execute(
+                query=context.get('task', ''),
+                operation=step.get('action', 'generate'),
+                context=context
+            )
+
+            return result if isinstance(result, dict) else {
+                'success': False,
+                'error': 'Invalid tool response'
+            }
+
+        except Exception as e:
+            return {
+                'success': False, 
+                'error': str(e)
+            }
+
+    async def execute_plan(self, plan: List[Dict[str, Any]], context: Dict[str, Any]) -> ExecutionResult:
+        results = []
+        for step in plan:
+            result = await self.execute_step(step, context)
+            results.append(result)
+            if not result.success:
+                break
                 
-                # Validate tool exists
-                if step.tool not in self.tools:
-                    raise ValueError(f"Tool '{step.tool}' not found")
-                    
-                tool = self.tools[step.tool]
-                
-                # Add execution context
-                step.params['model'] = model if step.type in [TaskType.CODE, TaskType.ANALYSIS] else None
-                
-                # Execute with timeout
-                result = await asyncio.wait_for(
-                    tool.execute(**step.params),
-                    timeout=60  # 1 minute timeout per step
-                )
-                
-                # Validate result
-                if not result:
-                    raise ValueError("Tool returned empty result")
-                
-                # Calculate metrics
-                execution_time = asyncio.get_event_loop().time() - start_time
-                step_metrics = {
-                    'execution_time': execution_time,
-                    'tool': step.tool,
-                    'type': step.type,
-                    'retries': retry_count
-                }
-                
-                step_result = StepResult(
-                    success=True,
-                    output=result,
-                    tool_name=step.tool,
-                    metrics=step_metrics,
-                    context={'step_id': step.id}
-                )
-                
-                # Cache successful results
-                self._execution_cache[cache_key] = step_result
-                self._step_metrics[step.id] = step_metrics
-                
-                return step_result
-                
-            except (asyncio.TimeoutError, ValueError, Exception) as e:
-                retry_count += 1
-                if retry_count <= max_retries:
-                    await asyncio.sleep(1 * retry_count)  # Exponential backoff
-                    continue
-                    
-                logger.error(f"Step execution failed after {retry_count} retries: {str(e)}", exc_info=True)
-                return StepResult(
-                    success=False,
-                    output=None,
-                    error=str(e),
-                    tool_name=step.tool,
-                    metrics={'error': str(e), 'retries': retry_count},
-                    context={'step_id': step.id}
-                )
+        return ExecutionResult(
+            success=all(r.success for r in results),
+            output={'results': [r.output for r in results]},
+            steps=[step for r in results for step in r.steps]
+        )
 
     def _calculate_confidence(self, results: List[StepResult], plan: TaskPlan) -> float:
         """Enhanced confidence calculation with context consideration"""

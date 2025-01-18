@@ -44,14 +44,14 @@ def main(task_file_path: str, output_file_path: str):
     initialize_nltk()
     
     # Import and initialize tools
-    from tools.google_search import AdaptiveSearchTool
+    from tools.google_search import GoogleSearchTool
     from tools.web_scraper import WebScraperTool
     from tools.code_tools import CodeGeneratorTool, CodeAnalysisTool
     from tools.dataset_tool import DatasetTool
     from tools.content_tools import ContentGeneratorTool
     
     tools = {
-        "google_search": AdaptiveSearchTool(), # Add Google Search Tool
+        "google_search": GoogleSearchTool(),  # This now uses Serper API
         "web_scraper": WebScraperTool(),
         "code_analysis": CodeAnalysisTool(),
         "code_generator": CodeGeneratorTool(),
@@ -64,7 +64,7 @@ def main(task_file_path: str, output_file_path: str):
         max_steps=10,
         min_confidence=0.7,
         timeout=300,
-        learning_enabled=True,
+        learning_enabled=True,  # Changed from enable_reflection
         memory_path="agent_memory.db",
         parallel_execution=True,
         planning_enabled=True,

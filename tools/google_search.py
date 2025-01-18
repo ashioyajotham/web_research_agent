@@ -94,11 +94,8 @@ class AdaptiveSearchTool(BaseTool):
         if not self.api_key:
             raise ValueError("Serper API key not found")
             
-        self.base_url = "https://google.serper.dev/search"
-        self.timeout = ClientTimeout(total=30)
-        self.max_retries = 3
+        self.logger = logging.getLogger(__name__)
         self.context = DynamicSearchContext()
-        self.logger = logger
 
     @staticmethod
     def get_description() -> str:

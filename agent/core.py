@@ -22,36 +22,13 @@ from .utils.temporal_processor import TemporalProcessor
 
 @dataclass
 class AgentConfig:
-    max_steps: int = 5
-    min_confidence: float = 0.7
-    timeout: int = 300
-    learning_enabled: bool = True
-    memory_path: str = "agent_memory.db"
-    parallel_execution: bool = True
-    planning_enabled: bool = True
-    pattern_learning_enabled: bool = True
-    extraction_patterns: Dict[str, List[str]] = None
-
-    def __post_init__(self):
-        if self.extraction_patterns is None:
-            self.extraction_patterns = {
-                'numerical': [
-                    r'(\d+\.?\d*)%',
-                    r'\$?\s*(\d+\.?\d*)\s*(?:billion|million|trillion)',
-                    r'(\d+\.?\d*)\s*(?:percent|points?)'
-                ],
-                'date_bounded': [
-                    r'(?:in|during|for)\s*(?:20\d{2})',
-                    r'(?:as of|since|until)\s*(?:20\d{2})'
-                ],
-                'comparison': [
-                    r'(?:increased|decreased|grew|fell)\s*(?:by|to)\s*(\d+\.?\d*)',
-                    r'(?:higher|lower|more|less)\s*than\s*(\d+\.?\d*)'
-                ],
-                'entity': [
-                    r'([A-Z][A-Za-z0-9]+(?:\s+[A-Z][A-Za-z0-9]+)*)'
-                ]
-            }
+    """Configuration for Agent initialization"""
+    tools: Dict[str, BaseTool]
+    logger: AgentLogger
+    max_retries: int = 3
+    parallel_tasks: bool = True
+    memory_size: int = 1000
+    confidence_threshold: float = 0.7
 
 class AnswerProcessor:
     def __init__(self, config: AgentConfig):
@@ -2080,5 +2057,30 @@ class Agent:
                 })
         
         return dynamic_steps
+
+    async def execute_step(self, step: Dict[str, Any], context: Dict[str, Any]) -> Dict[str, Any]:
+        """Execute a single step with proper async handling"""
+        try:
+            tool_name = step.get('tool')
+            tool = self.tools.get(tool_name)
+            
+            if not tool:
+                raise ValueError(f"Tool {tool_name} not found")
+
+            params = {
+                'query': context.get('task', ''),
+                'operation': step.get('action', 'generate'),
+                'context': context
+            }
+
+            result = await tool.execute(**params)
+            return result
+
+        except Exception as e:
+            self.logger.error(f"Step execution failed: {str(e)}")
+            return {
+                'success': False,
+                'error': str(e)
+            }
 
     # ...existing code...

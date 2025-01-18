@@ -126,25 +126,30 @@ class ContentGeneratorTool(BaseTool):
             }
         }
 
-    async def execute(self, query: str, **kwargs) -> Dict[str, Any]:
-        """Execute content operations with dynamic adaptation"""
+    async def execute(self, query: str = None, **kwargs) -> Dict[str, Any]:
+        """Execute content operations with proper async handling"""
+        if not query:
+            return {
+                'success': False,
+                'error': 'Query parameter is required'
+            }
+
         try:
-            # Determine operation type from kwargs
             operation = kwargs.get('operation', 'generate')
-            
+            context = kwargs.get('context', {})
+
             if operation == 'analyze':
-                return await self._analyze_content(query, **kwargs)
+                return await self._analyze_content(query, **context)
             elif operation == 'summarize':
-                return await self._summarize_content(query, **kwargs)
+                return await self._summarize_content(query, **context)
             else:
-                # Default to content generation
-                return await self._generate_content(query, **kwargs)
+                return await self._generate_content(query, **context)
 
         except Exception as e:
-            logger.error(f"Content operation failed: {str(e)}", exc_info=True)
+            self.logger.error(f"Content operation failed: {str(e)}")
             return {
-                "success": False,
-                "error": str(e),
+                'success': False,
+                'error': str(e)
             }
 
     async def _analyze_content(self, content: str, **kwargs) -> Dict[str, Any]:
