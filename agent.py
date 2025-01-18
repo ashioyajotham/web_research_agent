@@ -31,8 +31,27 @@ def initialize_nltk():
     pass
 
 async def process_tasks(agent: Agent, tasks: List[str]) -> List[Dict]:
-    """Process multiple tasks using the agent"""
-    return await asyncio.gather(*[agent.process_task(task) for task in tasks])
+    """Process multiple tasks using the agent with better error handling"""
+    if not tasks:
+        return []
+        
+    processed_tasks = []
+    for task in tasks:
+        if not task or not task.strip():
+            continue
+            
+        try:
+            result = await agent.process_task(task.strip())
+            processed_tasks.append(result)
+        except Exception as e:
+            processed_tasks.append({
+                'success': False,
+                'error': str(e),
+                'output': {'results': []},
+                'task': task
+            })
+            
+    return processed_tasks
 
 def main(task_file_path: str, output_file_path: str):
     try:

@@ -640,30 +640,59 @@ class Agent:
         return max(matches.items(), key=lambda x: x[1])[0] if matches else 'item'
 
     async def process_task(self, task: str) -> Dict[str, Any]:
-        """More flexible task processing"""
+        """Public interface for processing a single task"""
         try:
-            # Dynamic context building
-            context = self._build_task_context(task)
-            context['task'] = task  # Ensure task is in context
+            self.logger.info(f"Processing task: {task}")
             
-            # Determine processing strategy
+            # Build context
+            context = self._build_task_context(task)
+            
+            # Determine task type and strategy
+            task_type = self._detect_task_type(task)
             strategy = await self._determine_strategy(task, context)
             
-            # Execute with chosen strategy
-            result = await self._execute_with_strategy(task, strategy, context)
+            # Execute task safely with strategy
+            start_time = time.time()
+            result = await self._safe_execute_task(task)
             
-            # Learn from execution if enabled
-            if self.config.learning_enabled:
-                await self._learn_from_execution(task, result, context)
-            
-            return result
+            # Format and return result
+            return self._format_execution_result(
+                result, 
+                task,
+                start_time
+            )
             
         except Exception as e:
             self.logger.error(f"Task processing failed: {str(e)}")
             return {
-                "success": False,
-                "error": str(e),
-                "output": {"results": []}
+                'success': False,
+                'error': str(e),
+                'output': {'results': []},
+                'task': task
+            }
+
+    async def _route_task(self, task: str, task_type: TaskType, context: Dict[str, Any]) -> Dict[str, Any]:
+        """Route task to appropriate handler based on type"""
+        try:
+            if task_type == TaskType.QUERY:
+                return await self._handle_query_task(task, context)
+            elif task_type == TaskType.RESEARCH:
+                return await self._handle_research(task)
+            elif task_type == TaskType.CODE:
+                return await self._handle_code_generation(task)
+            elif task_type == TaskType.GENERATION:
+                return await self._handle_content_creation(task)
+            else:
+                # Default to basic execution for other types
+                return await self._execute_task(task)
+                
+        except Exception as e:
+            self.logger.error(f"Task routing failed: {str(e)}")
+            return {
+                'success': False,
+                'error': str(e),
+                'output': {'results': []},
+                'task': task
             }
 
     async def _determine_strategy(self, task: str, context: Dict) -> Dict[str, Any]:
@@ -821,7 +850,7 @@ class Agent:
         }
 
     async def _handle_direct_question(self, task: str) -> Dict[str, Any]:
-        """Handle any type of direct question"""
+        """Handle direct questions with better information extraction"""
         try:
             search_result = await self.tools["google_search"].execute(task)
             if not search_result.get('success'):
@@ -832,16 +861,32 @@ class Agent:
                 }
             
             results = search_result.get('output', {}).get('results', [])
-            processed_answer = self.answer_processor.extract_direct_answer(task, results)
+            
+            # Extract content from top results
+            enriched_results = []
+            for result in results[:3]:  # Process top 3 results
+                try:
+                    if 'url' in result:
+                        content = await self.tools["web_scraper"].execute(url=result['url'])
+                        if content and isinstance(content, str):
+                            result['full_content'] = content
+                            enriched_results.append(result)
+                except Exception as e:
+                    self.logger.warning(f"Content extraction failed for {result.get('url')}: {e}")
+                    continue
+
+            # Synthesize answer from enriched results
+            answer = await self._synthesize_answer(task, enriched_results)
             
             return {
                 "success": True,
                 "output": {
-                    "direct_answer": processed_answer.get('answer'),
-                    "type": processed_answer.get('type'),
-                    "results": results
-                },
-                "confidence": processed_answer.get('confidence', 0.5)
+                    "answer": answer.get('answer'),
+                    "confidence": answer.get('confidence', 0.0),
+                    "source": answer.get('source'),
+                    "supporting_text": answer.get('supporting_text'),
+                    "results": results  # Include original results for reference
+                }
             }
             
         except Exception as e:
@@ -851,6 +896,103 @@ class Agent:
                 "error": str(e),
                 "output": {"results": []}
             }
+
+    async def _synthesize_answer(self, question: str, results: List[Dict[str, Any]]) -> Dict[str, Any]:
+        """Synthesize a direct answer from search results and content"""
+        try:
+            # Analyze question type
+            question_type = self._detect_question_type(question.lower())
+            
+            # Extract relevant information based on question type
+            answer_data = {
+                'answer': None,
+                'confidence': 0.0,
+                'source': None,
+                'supporting_text': None
+            }
+            
+            # Combine all available text
+            all_text = []
+            for result in results:
+                all_text.append(result.get('title', ''))
+                all_text.append(result.get('snippet', ''))
+                all_text.append(result.get('full_content', ''))
+            
+            full_text = ' '.join(all_text)
+            
+            # Use appropriate extraction patterns based on question type
+            if question_type == 'person':  # Who questions
+                patterns = [
+                    r'(?:COO|CEO|Chief Operating Officer|leader|head)\s+(?:is|was)\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+){0,2})',
+                    r'([A-Z][a-z]+(?:\s+[A-Z][a-z]+){0,2})\s+(?:is|was)\s+(?:the|a)\s+(?:COO|CEO|Chief Operating Officer|leader|head)'
+                ]
+            elif question_type == 'organization':  # What org questions
+                patterns = [
+                    r'(?:organization|company|group)\s+(?:called|named)\s+([A-Z][A-Za-z\s&]+)',
+                    r'([A-Z][A-Za-z\s&]+)\s+(?:organized|hosted|mediated|facilitated)'
+                ]
+            # Add more patterns for other question types...
+            
+            # Find best match
+            best_match = None
+            max_confidence = 0.0
+            
+            for pattern in patterns:
+                matches = re.finditer(pattern, full_text, re.IGNORECASE)
+                for match in matches:
+                    answer = match.group(1).strip()
+                    context = full_text[max(0, match.start() - 100):min(len(full_text), match.end() + 100)]
+                    confidence = self._calculate_answer_confidence(answer, context, question)
+                    
+                    if confidence > max_confidence:
+                        best_match = {
+                            'answer': answer,
+                            'confidence': confidence,
+                            'supporting_text': context
+                        }
+                        max_confidence = confidence
+
+            if best_match:
+                answer_data.update(best_match)
+                
+                # Find source
+                for result in results:
+                    if best_match['supporting_text'] in result.get('full_content', ''):
+                        answer_data['source'] = result.get('url')
+                        break
+
+            return answer_data
+            
+        except Exception as e:
+            self.logger.error(f"Answer synthesis failed: {str(e)}")
+            return {
+                'answer': None,
+                'confidence': 0.0,
+                'source': None,
+                'supporting_text': None
+            }
+
+    def _calculate_answer_confidence(self, answer: str, context: str, question: str) -> float:
+        """Calculate confidence score for an answer"""
+        confidence = 0.5  # Base confidence
+        
+        # Increase confidence based on various factors
+        if answer in question:  # Answer appears in question
+            confidence += 0.1
+            
+        # Multiple mentions increase confidence
+        mentions = len(re.findall(re.escape(answer), context, re.IGNORECASE))
+        confidence += min(0.1 * mentions, 0.3)
+        
+        # Recent dates in context increase confidence
+        if re.search(r'202[3-4]', context):
+            confidence += 0.1
+            
+        # Authoritative sources
+        if any(source in context.lower() for source in ['official', 'announced', 'confirmed', 'reported']):
+            confidence += 0.1
+            
+        return min(confidence, 1.0)
 
     async def _handle_research(self, task: str) -> Dict[str, Any]:
         """Handle research tasks with chronological organization"""
@@ -2137,5 +2279,397 @@ class Agent:
                 'action': step.get('action', 'unknown'),
                 'tool': step.get('tool', 'unknown')
             }
+
+    async def _handle_query_task(self, task: str, context: Dict[str, Any]) -> Dict[str, Any]:
+        """Handle query tasks with improved answer synthesis"""
+        try:
+            # First, perform initial search
+            search_result = await self.tools["google_search"].execute(query=task)
+            if not search_result.get('success'):
+                return {
+                    "success": False,
+                    "error": "Search failed",
+                    "output": {"results": []}
+                }
+
+            results = search_result.get('output', {}).get('results', [])
+            
+            # Extract full content from top results
+            enriched_results = []
+            for result in results[:3]:  # Process top 3 results
+                try:
+                    if 'url' in result:
+                        content = await self.tools["web_scraper"].execute(url=result['url'])
+                        if content and isinstance(content, str):
+                            result['full_content'] = content
+                            enriched_results.append(result)
+                except Exception as e:
+                    self.logger.warning(f"Content extraction failed for {result.get('url')}: {e}")
+                    continue
+
+            # Analyze query type and extract specific information
+            query_type = self._analyze_query_type(task)
+            answer_data = await self._extract_specific_answer(task, query_type, enriched_results)
+            
+            if answer_data.get('answer'):
+                return {
+                    "success": True,
+                    "output": {
+                        "answer": answer_data['answer'],
+                        "confidence": answer_data['confidence'],
+                        "source": answer_data['source'],
+                        "supporting_text": answer_data['supporting_text']
+                    }
+                }
+            else:
+                return {
+                    "success": False,
+                    "error": "Could not find specific answer",
+                    "output": {"results": results}
+                }
+
+        except Exception as e:
+            self.logger.error(f"Query handling failed: {str(e)}")
+            return {
+                "success": False,
+                "error": str(e),
+                "output": {"results": []}
+            }
+
+    def _analyze_query_type(self, query: str) -> Dict[str, Any]:
+        """Analyze the type and structure of a query"""
+        query_lower = query.lower()
+        
+        # Determine question type and target information
+        if query_lower.startswith('who'):
+            return {
+                'type': 'person',
+                'patterns': [
+                    r'(?:COO|CEO|Chief \w+ Officer|head|leader)\s+(?:is|was)\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+){0,2})',
+                    r'([A-Z][a-z]+(?:\s+[A-Z][a-z]+){0,2})\s+(?:is|was)\s+(?:the|a)\s+(?:COO|CEO|Chief \w+ Officer|head|leader)',
+                    r'([A-Z][a-z]+(?:\s+[A-Z][a-z]+){0,2})\s+(?:leads|led|runs|ran|manages|managed)'
+                ],
+                'context_window': 150
+            }
+        elif query_lower.startswith('what'):
+            return {
+                'type': 'entity',
+                'patterns': [
+                    r'(?:organization|company|group)\s+(?:called|named)\s+([A-Z][A-Za-z\s&\.]+)',
+                    r'([A-Z][A-Za-z\s&\.]+)\s+(?:organized|hosted|mediated|facilitated)',
+                    r'(?:by|through)\s+([A-Z][A-Za-z\s&\.]+)'
+                ],
+                'context_window': 150
+            }
+        # Add more query types as needed
+        return {
+            'type': 'general',
+            'patterns': [r'([^.,;]+)'],
+            'context_window': 100
+        }
+
+    async def _extract_specific_answer(self, query: str, query_type: Dict[str, Any], results: List[Dict[str, Any]]) -> Dict[str, Any]:
+        """Extract specific answer based on query type"""
+        all_texts = []
+        for result in results:
+            if 'full_content' in result:
+                all_texts.append({
+                    'text': result['full_content'],
+                    'source': result.get('url'),
+                    'title': result.get('title', '')
+                })
+            all_texts.append({
+                'text': f"{result.get('title', '')} {result.get('snippet', '')}",
+                'source': result.get('url'),
+                'title': result.get('title', '')
+            })
+
+        best_match = None
+        max_confidence = 0.0
+        
+        for text_data in all_texts:
+            text = text_data['text']
+            
+            for pattern in query_type['patterns']:
+                matches = list(re.finditer(pattern, text, re.IGNORECASE | re.MULTILINE))
+                
+                for match in matches:
+                    answer = match.group(1).strip()
+                    context_start = max(0, match.start() - query_type['context_window'])
+                    context_end = min(len(text), match.end() + query_type['context_window'])
+                    context = text[context_start:context_end].strip()
+                    
+                    # Calculate confidence based on multiple factors
+                    confidence = self._calculate_answer_confidence(
+                        answer=answer,
+                        context=context,
+                        query=query,
+                        query_type=query_type['type'],
+                        source_title=text_data['title']
+                    )
+                    
+                    if confidence > max_confidence:
+                        best_match = {
+                            'answer': answer,
+                            'confidence': confidence,
+                            'source': text_data['source'],
+                            'context': context
+                        }
+                        max_confidence = confidence
+
+        return best_match or {
+            'answer': None,
+            'confidence': 0.0,
+            'source': None,
+            'context': None
+        }
+
+    def _calculate_answer_confidence(self, answer: str, context: str, query: str, query_type: str, source_title: str) -> float:
+        """Calculate confidence score for an answer"""
+        confidence = 0.5  # Base confidence
+        
+        # Check answer relevance
+        if answer.lower() in query.lower():
+            confidence += 0.1
+        
+        # Multiple mentions increase confidence
+        mentions = len(re.findall(re.escape(answer), context, re.IGNORECASE))
+        confidence += min(0.1 * mentions, 0.3)
+        
+        # Recent dates in context increase confidence
+        if re.search(r'202[3-4]', context):
+            confidence += 0.1
+        
+        # Authoritative source indicators
+        authority_terms = ['official', 'announced', 'confirmed', 'reported', 'according']
+        if any(term in context.lower() for term in authority_terms):
+            confidence += 0.1
+            
+        # Title relevance
+        query_keywords = set(re.findall(r'\w+', query.lower())) - {'who', 'what', 'when', 'where', 'why', 'how', 'is', 'the', 'a', 'an'}
+        title_keywords = set(re.findall(r'\w+', source_title.lower()))
+        keyword_overlap = len(query_keywords & title_keywords) / len(query_keywords) if query_keywords else 0
+        confidence += keyword_overlap * 0.2
+        
+        # Specific type validation
+        if query_type == 'person' and not re.match(r'^[A-Z][a-z]+(?:\s+[A-Z][a-z]+){0,2}$', answer):
+            confidence -= 0.2
+            
+        return min(max(confidence, 0.1), 1.0)
+
+    # ...existing code...
+
+class DynamicQueryProcessor:
+    """Flexible query processing system that learns from experience"""
+    def __init__(self):
+        self.patterns = {
+            'person_role': {
+                'base_patterns': [
+                    r'(?:is|was)\s+(?:the|a)\s+(\w+)\s+(?:of|at|for)',
+                    r'(?:serves|served|works|worked)\s+as\s+(\w+)',
+                    r'(?:position|role|title)\s*(?:is|was)\s+(\w+)'
+                ],
+                'weight': 1.0
+            },
+            'organization': {
+                'base_patterns': [
+                    r'(?:organization|company|group)\s+(?:called|named)\s+([^,.]+)',
+                    r'(?:by|through|at)\s+([A-Z][A-Za-z\s&\.]+)'
+                ],
+                'weight': 1.0
+            }
+        }
+        self.learned_patterns = {}
+        self.success_history = []
+        
+    def learn_from_success(self, query: str, answer: str, context: str):
+        """Learn new patterns from successful answers"""
+        query_type = self._infer_query_type(query)
+        
+        # Extract context around the answer
+        before, after = self._extract_context_window(context, answer)
+        if before and after:
+            # Generate new pattern
+            new_pattern = self._generate_pattern(before, after)
+            
+            if query_type not in self.learned_patterns:
+                self.learned_patterns[query_type] = []
+                
+            self.learned_patterns[query_type].append({
+                'pattern': new_pattern,
+                'confidence': 0.6,  # Initial confidence
+                'successes': 1,
+                'failures': 0
+            })
+
+    def _extract_context_window(self, text: str, target: str, window: int = 50) -> Tuple[str, str]:
+        """Extract context window around target text"""
+        try:
+            idx = text.find(target)
+            if idx >= 0:
+                start = max(0, idx - window)
+                end = min(len(text), idx + len(target) + window)
+                before = text[start:idx].strip()
+                after = text[idx + len(target):end].strip()
+                return before, after
+        except:
+            pass
+        return "", ""
+
+    def _generate_pattern(self, before: str, after: str) -> str:
+        """Generate a new pattern from context"""
+        # Clean and escape special characters
+        before = re.escape(before).replace(r'\ ', r'\s+')
+        after = re.escape(after).replace(r'\ ', r'\s+')
+        
+        # Make pattern more flexible
+        return f"{before}\s*([^.,;]+?)\s*{after}"
+
+class Agent:
+    def __init__(self, tools: Dict[str, BaseTool], config: Optional[AgentConfig] = None):
+        # ...existing initialization code...
+        self.query_processor = DynamicQueryProcessor()
+        self.pattern_history = []
+
+    async def _extract_specific_answer(self, query: str, results: List[Dict[str, Any]]) -> Dict[str, Any]:
+        """Extract specific answer with dynamic pattern matching"""
+        try:
+            all_texts = []
+            for result in results:
+                if 'full_content' in result:
+                    all_texts.append({
+                        'text': result['full_content'],
+                        'source': result.get('url'),
+                        'title': result.get('title', '')
+                    })
+
+            best_match = None
+            max_confidence = 0.0
+
+            # Use both base and learned patterns
+            patterns = self._get_relevant_patterns(query)
+            
+            for text_data in all_texts:
+                text = text_data['text']
+                
+                for pattern_info in patterns:
+                    pattern = pattern_info['pattern']
+                    base_confidence = pattern_info['confidence']
+                    
+                    matches = list(re.finditer(pattern, text, re.IGNORECASE | re.MULTILINE))
+                    for match in matches:
+                        answer = match.group(1).strip()
+                        context = self._get_context(text, match)
+                        
+                        confidence = self._calculate_dynamic_confidence(
+                            answer=answer,
+                            context=context,
+                            query=query,
+                            base_confidence=base_confidence,
+                            source_title=text_data['title']
+                        )
+                        
+                        if confidence > max_confidence:
+                            best_match = {
+                                'answer': answer,
+                                'confidence': confidence,
+                                'source': text_data['source'],
+                                'context': context,
+                                'pattern_used': pattern
+                            }
+                            max_confidence = confidence
+
+            # Learn from successful match
+            if best_match and best_match['confidence'] > 0.7:
+                self.query_processor.learn_from_success(
+                    query,
+                    best_match['answer'],
+                    best_match['context']
+                )
+
+            return best_match or {
+                'answer': None,
+                'confidence': 0.0,
+                'source': None,
+                'context': None
+            }
+            
+        except Exception as e:
+            self.logger.error(f"Answer extraction failed: {str(e)}")
+            return {
+                'answer': None,
+                'confidence': 0.0,
+                'source': None,
+                'context': None
+            }
+
+    def _get_relevant_patterns(self, query: str) -> List[Dict[str, Any]]:
+        """Get relevant patterns for the query"""
+        patterns = []
+        query_type = self._infer_query_type(query)
+        
+        # Add base patterns
+        if query_type in self.query_processor.patterns:
+            for pattern in self.query_processor.patterns[query_type]['base_patterns']:
+                patterns.append({
+                    'pattern': pattern,
+                    'confidence': self.query_processor.patterns[query_type]['weight']
+                })
+        
+        # Add learned patterns
+        if query_type in self.query_processor.learned_patterns:
+            patterns.extend(self.query_processor.learned_patterns[query_type])
+            
+        return patterns
+
+    def _calculate_dynamic_confidence(self, answer: str, context: str, query: str, 
+                                   base_confidence: float, source_title: str) -> float:
+        """Calculate confidence dynamically based on multiple factors"""
+        confidence = base_confidence
+        
+        # Context relevance
+        query_terms = set(re.findall(r'\w+', query.lower()))
+        context_terms = set(re.findall(r'\w+', context.lower()))
+        overlap = len(query_terms & context_terms) / len(query_terms) if query_terms else 0
+        confidence += overlap * 0.2
+        
+        # Answer format validation
+        if re.match(r'^[A-Z][a-z]+(?:\s+[A-Z][a-z]+)*$', answer):
+            confidence += 0.1
+            
+        # Recent information bonus
+        if any(year in context for year in ['2023', '2024']):
+            confidence += 0.1
+            
+        # Source authority
+        authority_indicators = ['official', 'announced', 'confirmed', 'according']
+        if any(indicator in context.lower() for indicator in authority_indicators):
+            confidence += 0.1
+            
+        # Multiple mentions
+        mentions = len(re.findall(re.escape(answer), context, re.IGNORECASE))
+        confidence += min(0.1 * mentions, 0.2)
+        
+        return min(max(confidence, 0.1), 1.0)
+
+    def _infer_query_type(self, query: str) -> str:
+        """Infer query type dynamically"""
+        query_lower = query.lower()
+        
+        # Dynamic type inference based on keywords and structure
+        type_indicators = {
+            'person_role': ['who', 'person', 'role', 'position', 'head', 'leader'],
+            'organization': ['which', 'what', 'organization', 'company', 'group'],
+            'location': ['where', 'location', 'place', 'country'],
+            'temporal': ['when', 'date', 'time', 'year'],
+            'process': ['how', 'process', 'method', 'way'],
+            'reason': ['why', 'reason', 'cause', 'purpose']
+        }
+        
+        for type_name, indicators in type_indicators.items():
+            if any(indicator in query_lower for indicator in indicators):
+                return type_name
+                
+        return 'general'
 
     # ...existing code...

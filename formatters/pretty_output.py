@@ -14,7 +14,7 @@ class PrettyFormatter:
         self.console = Console()
 
     def format_task_result(self, task: str, result: Dict[str, Any]) -> None:
-        """Format a task result with error handling"""
+        """Format a task result with enhanced output handling"""
         try:
             self.console.print(f"[bold blue]Task:[/bold blue] {task}")
             
@@ -29,25 +29,32 @@ class PrettyFormatter:
 
             # Handle different output types
             if isinstance(output, dict):
-                if 'completion' in output:
-                    self._format_completion(task, output)
-                elif 'answer' in output:
-                    self._format_general_answer(output)
-                elif 'chronological_summary' in output:
-                    self._format_research_results(output)
-                elif 'content' in output:
-                    self._format_blog_content(output['content'])
+                # Direct answer output
+                if 'answer' in output and output['answer']:
+                    self._format_direct_answer_output(output)
+                # Query results with supporting info
                 elif 'direct_answer' in output:
-                    self._format_direct_answer(output)
+                    self._format_direct_answer_with_context(output)
+                # Timeline/chronological output
+                elif 'chronological_summary' in output:
+                    self._format_chronological_output(output)
+                # Search results
                 elif 'results' in output:
-                    self._format_search_results(output.get('results', []))
-                elif 'code' in output:
-                    self._format_code_output(output)
+                    if any(result.get('full_content') for result in output['results']):
+                        self._format_enriched_results(output['results'])
+                    else:
+                        self._format_basic_search_results(output['results'])
+                else:
+                    self.console.print(str(output))
             else:
                 self.console.print(str(output))
 
+            # Show confidence if available
+            if 'confidence' in result:
+                self._format_confidence(result['confidence'])
+
         except Exception as e:
-            self.console.print(f"[red]Formatting error: {str(e)}[/red]")
+            self.logger.error(f"Formatting error: {str(e)}")
 
     def _format_completion(self, task: str, output: Dict[str, Any]) -> None:
         """Format completion results with style"""
@@ -389,3 +396,121 @@ class PrettyFormatter:
                 self.console.print(f"{i}. {source.get('title', '')}")
                 if 'url' in source:
                     self.console.print(f"   [dim]{source['url']}[/dim]")
+
+    def _format_direct_answer_output(self, output: Dict[str, Any]) -> None:
+        """Format direct answer with supporting evidence"""
+        answer = output.get('answer')
+        source = output.get('source', '')
+        supporting_text = output.get('supporting_text', '')
+        
+        # Format main answer
+        answer_panel = Panel(
+            f"[bold green]{answer}[/bold green]",
+            title="Answer",
+            border_style="green"
+        )
+        self.console.print(answer_panel)
+        
+        # Show supporting evidence if available
+        if supporting_text:
+            support_panel = Panel(
+                Text(supporting_text, style="dim"),
+                title="Supporting Context",
+                border_style="blue"
+            )
+            self.console.print(support_panel)
+        
+        # Show source if available
+        if source:
+            self.console.print(f"\n[dim]Source: {source}[/dim]")
+
+    def _format_direct_answer_with_context(self, output: Dict[str, Any]) -> None:
+        """Format direct answer with rich context"""
+        answer = output.get('direct_answer')
+        supporting = output.get('supporting_text', '')
+        source = output.get('source', '')
+        
+        # Main answer section
+        if answer:
+            self.console.print(Panel(
+                f"[bold green]{answer}[/bold green]",
+                title="Direct Answer",
+                border_style="green"
+            ))
+        
+        # Supporting context
+        if supporting:
+            self.console.print(Panel(
+                Text(supporting, style="dim"),
+                title="Context",
+                border_style="blue",
+                padding=(1, 2)
+            ))
+        
+        # Source reference
+        if source:
+            self.console.print(f"\n[dim]Source: {source}[/dim]")
+
+    def _format_enriched_results(self, results: List[Dict[str, Any]]) -> None:
+        """Format results with full content"""
+        for i, result in enumerate(results[:3], 1):  # Show top 3 enriched results
+            title = result.get('title', 'No Title')
+            url = result.get('url', '')
+            content = result.get('full_content', '').strip()
+            
+            # Truncate content for display
+            if content:
+                content = content[:500] + "..." if len(content) > 500 else content
+            
+            self.console.print(f"\n[bold cyan]Result {i}:[/bold cyan]")
+            self.console.print(Panel(
+                f"[bold]{title}[/bold]\n\n{content}",
+                border_style="blue",
+                padding=(1, 2)
+            ))
+            if url:
+                self.console.print(f"[dim]Source: {url}[/dim]")
+
+    def _format_basic_search_results(self, results: List[Dict[str, Any]]) -> None:
+        """Format basic search results in a table"""
+        if not results:
+            self.console.print("[yellow]No results found[/yellow]")
+            return
+
+        table = Table(show_header=True, header_style="bold magenta", padding=(0, 2))
+        table.add_column("Title", style="bold")
+        table.add_column("Summary", style="dim")
+        
+        for result in results[:5]:  # Show top 5 results
+            title = result.get('title', 'No title')
+            snippet = result.get('snippet', 'No description available')
+            table.add_row(title, snippet)
+
+        self.console.print(table)
+
+    def _format_chronological_output(self, output: Dict[str, Any]) -> None:
+        """Format chronological/timeline output"""
+        if 'chronological_summary' in output and output['chronological_summary'].get('years'):
+            self.console.print("\n[bold blue]Timeline:[/bold blue]")
+            
+            for year_data in output['chronological_summary']['years']:
+                year = year_data['year']
+                self.console.print(f"\n[bold]{year}[/bold]")
+                
+                for quarter in year_data['quarters']:
+                    q_name = quarter['quarter']
+                    self.console.print(f"\n[cyan]{q_name}[/cyan]")
+                    
+                    for event in quarter.get('events', []):
+                        self.console.print(f"  • {event.get('event', '')}")
+
+        if 'major_milestones' in output and output['major_milestones']:
+            self.console.print("\n[bold blue]Key Milestones:[/bold blue]")
+            for milestone in output['major_milestones']:
+                self.console.print(f"  • {milestone.get('event', '')}")
+
+    def _format_confidence(self, confidence: float) -> None:
+        """Format confidence score with visual indicator"""
+        conf_percentage = int(confidence * 100)
+        color = "green" if conf_percentage > 75 else "yellow" if conf_percentage > 50 else "red"
+        self.console.print(f"\n[{color}]Confidence: {conf_percentage}%[/{color}]")
