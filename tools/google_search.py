@@ -3,6 +3,7 @@ import os
 import logging
 import asyncio
 import aiohttp
+import time
 from datetime import datetime, timedelta
 from aiohttp import ClientTimeout
 from collections import defaultdict
@@ -94,6 +95,10 @@ class AdaptiveSearchTool(BaseTool):
         if not self.api_key:
             raise ValueError("Serper API key not found")
             
+        # Add missing attributes
+        self.base_url = "https://google.serper.dev/search"
+        self.max_retries = 3
+        self.timeout = ClientTimeout(total=30)
         self.logger = logging.getLogger(__name__)
         self.context = DynamicSearchContext()
 
@@ -132,22 +137,38 @@ class AdaptiveSearchTool(BaseTool):
         }
 
     async def execute(self, query: str = None, **kwargs) -> Dict[str, Any]:
-        """Execute search with automatic retries and optimization"""
+        """Execute search with proper parameter handling"""
         if not query:
-            return {'success': False, 'error': 'Query required', 'results': []}
+            return {
+                'success': False,
+                'error': 'Query parameter is required',
+                'output': {'results': []}
+            }
 
-        start_time = datetime.now()
+        start_time = time.time()
         try:
-            results = await self._execute_search(query, **kwargs)
-            execution_time = (datetime.now() - start_time).total_seconds()
+            results = await self._execute_with_backoff(query, **kwargs)
+            execution_time = time.time() - start_time
             
-            success = bool(results)
-            self.context.update(query, success, results, execution_time)
+            # Only return success if we have actual results
+            if not results:
+                return {
+                    'success': False,
+                    'error': 'No search results found',
+                    'output': {'results': []},
+                    'execution_time': execution_time
+                }
             
+            # Return results in standardized format
             return {
                 'success': True,
-                'results': results,
-                'execution_time': execution_time
+                'output': {
+                    'results': results,
+                    'metadata': {
+                        'execution_time': execution_time,
+                        'result_count': len(results)
+                    }
+                }
             }
             
         except Exception as e:
@@ -155,7 +176,7 @@ class AdaptiveSearchTool(BaseTool):
             return {
                 'success': False,
                 'error': str(e),
-                'results': []
+                'output': {'results': []}
             }
 
     async def _execute_search(self, query: str, **kwargs) -> List[Dict]:
@@ -195,13 +216,57 @@ class AdaptiveSearchTool(BaseTool):
 
         raise Exception(f"Search failed after {self.max_retries} attempts")
 
+    async def _execute_with_backoff(self, query: str, **kwargs) -> List[Dict]:
+        """Execute search with exponential backoff"""
+        max_attempts = kwargs.get('retries', self.max_retries)
+        base_delay = kwargs.get('base_delay', 1)
+        
+        for attempt in range(max_attempts):
+            try:
+                # Prepare search parameters
+                params = self.context.get_search_params(query)
+                params.update(kwargs)
+                
+                headers = {
+                    'X-API-KEY': self.api_key,
+                    'Content-Type': 'application/json'
+                }
+                
+                # Execute search with proper error handling
+                async with aiohttp.ClientSession(timeout=self.timeout) as session:
+                    async with session.post(
+                        self.base_url,
+                        json={'q': query, **params},
+                        headers=headers
+                    ) as response:
+                        if response.status == 200:
+                            data = await response.json()
+                            results = self._process_results(data)
+                            if results:  # Only return if we have actual results
+                                return results
+                        else:
+                            error = await response.text()
+                            self.logger.warning(f"Search attempt {attempt + 1}/{max_attempts} failed: {error}")
+                            
+            except asyncio.TimeoutError:
+                self.logger.warning(f"Search attempt {attempt + 1}/{max_attempts} timed out")
+            except Exception as e:
+                self.logger.error(f"Search attempt {attempt + 1}/{max_attempts} failed: {str(e)}")
+            
+            if attempt < max_attempts - 1:
+                delay = base_delay * (2 ** attempt)
+                self.logger.info(f"Retrying in {delay} seconds...")
+                await asyncio.sleep(delay)
+        
+        return []  # Return empty list if all attempts fail
+
     def _process_results(self, data: Dict) -> List[Dict]:
         """Process and clean search results"""
         if not data or 'organic' not in data:
             return []
             
         results = []
-        for item in data['organic']:
+        for item in data.get('organic', []):
             if 'title' in item and 'link' in item:
                 results.append({
                     'title': item['title'],

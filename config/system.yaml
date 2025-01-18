@@ -1,0 +1,17 @@
+# API Settings
+api_keys:
+  serper: ${SERPER_API_KEY}
+  gemini: ${GEMINI_API_KEY}
+
+# Performance Settings
+max_retries: 3
+timeout: 30
+parallel_requests: 5
+
+# Storage Settings
+cache_dir: "cache"
+log_dir: "logs"
+
+# Feature Flags
+enable_caching: true
+debug_mode: false

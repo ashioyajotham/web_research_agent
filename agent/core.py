@@ -717,7 +717,7 @@ class Agent:
         return self._combine_results(results, strategy, context)
 
     async def _execute_step(self, step: Dict[str, str], context: Dict[str, Any]) -> Dict[str, Any]:
-        """Execute a single strategy step with proper async handling"""
+        """Execute a single step with proper parameter handling"""
         try:
             tool_name = step.get('tool')
             tool = self.tools.get(tool_name)
@@ -728,23 +728,35 @@ class Agent:
             # Prepare parameters
             params = {
                 'query': context.get('task', ''),
+                'operation': step.get('action'),
                 **self._prepare_tool_params(step.get('action'), context)
             }
-            
+
             # Execute tool
             result = await tool.execute(**params)
             
+            # Validate result structure
             if not isinstance(result, dict):
                 return {
                     'success': False,
-                    'error': 'Invalid tool response',
+                    'error': 'Invalid tool response format',
+                    'action': step.get('action'),
+                    'tool': tool_name
+                }
+            
+            # Validate result content
+            if result.get('success') and not result.get('results') and not result.get('output'):
+                return {
+                    'success': False,
+                    'error': 'Tool returned success but no data',
                     'action': step.get('action'),
                     'tool': tool_name
                 }
                 
             return {
-                'success': True,
-                'output': result,
+                'success': result.get('success', False),
+                'output': result.get('output') or result.get('results', {}),
+                'error': result.get('error'),
                 'action': step.get('action'),
                 'tool': tool_name
             }
@@ -757,6 +769,27 @@ class Agent:
                 'action': step.get('action', 'unknown'),
                 'tool': step.get('tool', 'unknown')
             }
+
+    def _combine_results(self, results: List[Dict[str, Any]], strategy: Dict[str, Any], context: Dict[str, Any]) -> Dict[str, Any]:
+        """Combine results from multiple steps"""
+        if not results:
+            return {
+                'success': False,
+                'error': 'No results to combine',
+                'output': {'results': []}
+            }
+
+        # Only count truly successful steps with data
+        successful_steps = sum(1 for r in results 
+                             if r.get('success', False) and 
+                             (r.get('output') or r.get('results')))
+        total_steps = len(results)
+        
+        # Success requires actual data
+        success = successful_steps > 0
+        confidence = (successful_steps / total_steps) if total_steps > 0 else 0.0
+
+        # ...rest of method...
 
     async def _learn_from_execution(self, task: str, result: Dict, context: Dict):
         """Learn from task execution"""
@@ -1813,23 +1846,44 @@ class Agent:
         return params
 
     async def _execute_step(self, step: Dict[str, str], context: Dict[str, Any]) -> Dict[str, Any]:
-        """Execute a single strategy step with proper async handling"""
+        """Execute a single step with proper parameter handling"""
         try:
             tool_name = step.get('tool')
             tool = self.tools.get(tool_name)
             
             if not tool:
                 raise ValueError(f"Tool {tool_name} not found")
-
+            
+            # Prepare parameters with proper fallbacks
             params = {
                 'query': context.get('task', ''),
-                'operation': step.get('action', 'generate'),
-                'context': context
+                'operation': step.get('action'),
+                **self._prepare_tool_params(step.get('action'), context)
             }
 
+            # Handle special cases
+            if tool_name == 'web_scraper' and 'url' in context:
+                params['url'] = context['url']
+            
+            # Execute tool
             result = await tool.execute(**params)
-            return result
-
+            
+            if isinstance(result, dict):
+                return {
+                    'success': result.get('success', False),
+                    'output': result.get('output', {}),
+                    'error': result.get('error'),
+                    'action': step.get('action'),
+                    'tool': tool_name
+                }
+            
+            return {
+                'success': False,
+                'error': 'Invalid tool response',
+                'action': step.get('action'),
+                'tool': tool_name
+            }
+            
         except Exception as e:
             self.logger.error(f"Step execution failed: {str(e)}")
             return {

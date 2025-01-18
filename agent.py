@@ -35,74 +35,86 @@ async def process_tasks(agent: Agent, tasks: List[str]) -> List[Dict]:
     return await asyncio.gather(*[agent.process_task(task) for task in tasks])
 
 def main(task_file_path: str, output_file_path: str):
-    # Load system configuration
-    system_config = SystemConfig.from_yaml("config/system.yaml")
-    system_config.ensure_directories()
-    
-    # Verify environment variables are loaded
-    if not os.getenv("SERPER_API_KEY"):
-        print("\nEnvironment Variable Check:")
-        print(f"SERPER_API_KEY: {'✓ Set' if os.getenv('SERPER_API_KEY') else '✗ Missing'}")
-        print("\nPlease ensure your .env file contains SERPER_API_KEY")
-        sys.exit(1)
+    try:
+        # Load system configuration with fallback to defaults
+        system_config = SystemConfig.from_yaml("config/system.yaml")
+        system_config.ensure_directories()
+        
+        # Verify environment variables and credentials
+        if not system_config.api_keys.get("serper"):
+            print("\nEnvironment Variable Check:")
+            print("✗ SERPER_API_KEY not found")
+            print("\nPlease ensure your .env file contains SERPER_API_KEY")
+            sys.exit(1)
+            
+        if not system_config.api_keys.get("gemini"):
+            print("\nEnvironment Variable Check:")
+            print("✗ GEMINI_API_KEY not found")
+            print("\nPlease ensure your .env file contains GEMINI_API_KEY")
+            sys.exit(1)
 
-    # Initialize NLTK silently
-    initialize_nltk()
-    
-    # Import and initialize tools
-    from tools.google_search import AdaptiveSearchTool
-    from tools.web_scraper import WebScraperTool
-    from tools.code_tools import CodeGeneratorTool, CodeAnalysisTool
-    from tools.dataset_tool import DatasetTool
-    from tools.content_tools import ContentGeneratorTool
-    
-    tools = {
-        "google_search": AdaptiveSearchTool(),
-        "web_scraper": WebScraperTool(),
-        "code_analysis": CodeAnalysisTool(),
-        "code_generator": CodeGeneratorTool(),
-        "dataset": DatasetTool(),
-        "content_generator": ContentGeneratorTool()  # Add content generator
-    }
-    
-    # Initialize agent config with system config
-    config = AgentConfig(
-        tools=tools,
-        system_config=system_config,
-        max_steps=10,
-        min_confidence=0.7,
-        timeout=300,
-        learning_enabled=True,
-        memory_path="agent_memory.db",
-        parallel_execution=True,
-        planning_enabled=True,
-        pattern_learning_enabled=True,
-        logger=AgentLogger()
-    )
-    
-    agent = Agent(tools=tools, config=config)
-    
-    # Read tasks
-    with open(task_file_path, 'r') as f:
-        tasks = [line.strip() for line in f.readlines() if line.strip()]
-    
-    # Process tasks and format results
-    results = asyncio.run(process_tasks(agent, tasks))
-    
-    # Output formatting
-    console = Console()
-    formatter = PrettyFormatter()
-    
-    console.print("\n[bold]🤖 Web Research Agent Results[/bold]\n")
-    for task, result in zip(tasks, results):
-        formatter.format_task_result(task, result)
-        console.print("\n" + "-" * 80 + "\n")
-    
-    # Save results
-    with open(output_file_path, 'w') as f:
-        json.dump(results, f, indent=2, cls=EnhancedJSONEncoder)
-    
-    console.print(f"\n[dim]Full results saved to: {output_file_path}[/dim]")
+        # Initialize components
+        # Initialize NLTK silently
+        initialize_nltk()
+        
+        # Import and initialize tools
+        from tools.google_search import AdaptiveSearchTool
+        from tools.web_scraper import WebScraperTool
+        from tools.code_tools import CodeGeneratorTool, CodeAnalysisTool
+        from tools.dataset_tool import DatasetTool
+        from tools.content_tools import ContentGeneratorTool
+        
+        tools = {
+            "google_search": AdaptiveSearchTool(),
+            "web_scraper": WebScraperTool(),
+            "code_analysis": CodeAnalysisTool(),
+            "code_generator": CodeGeneratorTool(),
+            "dataset": DatasetTool(),
+            "content_generator": ContentGeneratorTool()  # Add content generator
+        }
+        
+        # Initialize agent config with system config
+        config = AgentConfig(
+            tools=tools,
+            system_config=system_config,
+            max_steps=10,
+            min_confidence=0.7,
+            timeout=300,
+            learning_enabled=True,
+            memory_path="agent_memory.db",
+            parallel_execution=True,
+            planning_enabled=True,
+            pattern_learning_enabled=True,
+            logger=AgentLogger()
+        )
+        
+        agent = Agent(tools=tools, config=config)
+        
+        # Read tasks
+        with open(task_file_path, 'r') as f:
+            tasks = [line.strip() for line in f.readlines() if line.strip()]
+        
+        # Process tasks and format results
+        results = asyncio.run(process_tasks(agent, tasks))
+        
+        # Output formatting
+        console = Console()
+        formatter = PrettyFormatter()
+        
+        console.print("\n[bold]🤖 Web Research Agent Results[/bold]\n")
+        for task, result in zip(tasks, results):
+            formatter.format_task_result(task, result)
+            console.print("\n" + "-" * 80 + "\n")
+        
+        # Save results
+        with open(output_file_path, 'w') as f:
+            json.dump(results, f, indent=2, cls=EnhancedJSONEncoder)
+        
+        console.print(f"\n[dim]Full results saved to: {output_file_path}[/dim]")
+
+    except Exception as e:
+        print(f"\nError during initialization: {str(e)}")
+        sys.exit(1)
 
 if __name__ == "__main__":
     import sys

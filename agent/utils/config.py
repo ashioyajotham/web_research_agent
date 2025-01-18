@@ -1,3 +1,4 @@
+import os
 from typing import Dict, Any, Optional
 from pathlib import Path
 import yaml
@@ -47,12 +48,46 @@ class SystemConfig:
     debug_mode: bool = False
     
     @classmethod
+    def create_default_config(cls) -> Dict[str, Any]:
+        """Create default configuration"""
+        return {
+            "api_keys": {
+                "serper": os.getenv("SERPER_API_KEY", ""),
+                "gemini": os.getenv("GEMINI_API_KEY", "")
+            },
+            "max_retries": 3,
+            "timeout": 30,
+            "parallel_requests": 5,
+            "cache_dir": "cache",
+            "log_dir": "logs",
+            "enable_caching": True,
+            "debug_mode": False
+        }
+
+    @classmethod
     def from_yaml(cls, config_path: str) -> 'SystemConfig':
-        """Load configuration from YAML file"""
-        with open(config_path, 'r') as f:
-            config_data = yaml.safe_load(f)
+        """Load configuration from YAML file with fallback to defaults"""
+        config_data = {}
+        
+        try:
+            with open(config_path, 'r') as f:
+                config_data = yaml.safe_load(f)
+        except FileNotFoundError:
+            # Create default config file if it doesn't exist
+            config_data = cls.create_default_config()
+            os.makedirs(os.path.dirname(config_path), exist_ok=True)
+            with open(config_path, 'w') as f:
+                yaml.dump(config_data, f, default_flow_style=False)
+        
+        # Resolve environment variables in api_keys
+        if 'api_keys' in config_data:
+            for key, value in config_data['api_keys'].items():
+                if isinstance(value, str) and value.startswith('${') and value.endswith('}'):
+                    env_var = value[2:-1]
+                    config_data['api_keys'][key] = os.getenv(env_var, '')
+        
         return cls(**config_data)
-    
+
     def ensure_directories(self) -> None:
         """Ensure required directories exist"""
         Path(self.cache_dir).mkdir(parents=True, exist_ok=True)
