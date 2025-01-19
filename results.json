@@ -32,9 +32,10 @@
           "position": 3
         },
         {
-          "title": "Remarks and Highlights - United States Mission to the United Nations",
-          "link": "https://usun.usmission.gov/category/remarks-and-highlights/",
-          "snippet": "In her fourth and final UN Security Council presidency, Ambassador Linda Thomas-Greenfield, U.S. Representative to the United Nations, raised key U.S. ...",
+          "title": "Political Drivers of China's Changing Nuclear Policy",
+          "link": "https://carnegieendowment.org/research/2024/07/china-nuclear-buildup-political-drivers-united-states-relationship-international-security",
+          "snippet": "Many Chinese nuclear experts have largely accepted the Western term of \u201cstrategic stability\u201d to describe such a relationship. They believe that ...",
+          "date": "Jul 17, 2024",
           "position": 4
         },
         {
@@ -231,27 +232,22 @@
       "query": "Compile a list of companies satisfying the following criteria:",
       "results": [
         {
-          "title": "Chapter 01 Marketing: The Art and Science of Satisfying Customers",
-          "link": "https://quizlet.com/717720657/chapter-01-marketing-the-art-and-science-of-satisfying-customers-flash-cards/",
-          "snippet": "Companies who follow a sales orientation emphasize the belief that creative advertising and personal selling will persuade customers to buy.",
+          "title": "What Makes a Company a Great Place To Work: 15 Things - Indeed",
+          "link": "https://www.indeed.com/career-advice/finding-a-job/what-makes-a-company-a-great-place-to-work",
+          "snippet": "When searching for jobs, look for companies with happy employees, good benefits and a positive company culture. These are signs of a great place ...",
+          "date": "Dec 21, 2024",
           "attributes": {
-            "Missing": "criteria"
+            "Missing": "Compile | Show results with:Compile"
           },
           "position": 1
         },
         {
-          "title": "Find all objects in an ArrayList that satisfy a list of criteria in Java",
-          "link": "https://stackoverflow.com/questions/50184182/find-all-objects-in-an-arraylist-that-satisfy-a-list-of-criteria-in-java",
-          "snippet": "I want to write a method that can take a list of City objects and a list of criteria ( total , men , women ) and return all the objects inside that satisfy ...",
-          "date": "May 4, 2018",
+          "title": "Small Business and Entrepreneurs Exam 1 Flashcards - Quizlet",
+          "link": "https://quizlet.com/529416846/small-business-and-entrepreneurs-exam-1-flash-cards/",
+          "snippet": "You need to create a legal structure for your business. You would like some of the benefits enjoyed by large corporations, but do not want to be taxed twice ...",
+          "rating": 4.3,
+          "ratingCount": 6,
           "position": 2
-        },
-        {
-          "title": "Solved Some of the following criteria are essential to | Chegg.com",
-          "link": "https://www.chegg.com/homework-help/questions-and-answers/following-criteria-essential-satisfactory-performance-several-professions-one-unique-audit-q187768613",
-          "snippet": "Some of the following criteria are essential to satisfactory performance in several professions. Which one is unique to audit work by CPAs?",
-          "date": "Jun 26, 2024",
-          "position": 3
         },
         {
           "title": "Companies with strong reputations for quality follow certain ...",
@@ -260,13 +256,22 @@
           "attributes": {
             "Missing": "Compile satisfying criteria:"
           },
+          "position": 3
+        },
+        {
+          "title": "Solved Some of the following criteria are essential to | Chegg.com",
+          "link": "https://www.chegg.com/homework-help/questions-and-answers/following-criteria-essential-satisfactory-performance-several-professions-one-unique-audit-q187768613",
+          "snippet": "Some of the following criteria are essential to satisfactory performance in several professions. Which one is unique to audit work by CPAs?",
+          "date": "Jun 26, 2024",
+          "attributes": {
+            "Missing": "Compile satisfying"
+          },
           "position": 4
         },
         {
-          "title": "What Makes a Company a Great Place To Work: 15 Things - Indeed",
-          "link": "https://www.indeed.com/career-advice/finding-a-job/what-makes-a-company-a-great-place-to-work",
-          "snippet": "When searching for jobs, look for companies with happy employees, good benefits and a positive company culture. These are signs of a great place ...",
-          "date": "Dec 21, 2024",
+          "title": "Help & FAQs - CSR",
+          "link": "https://www.csr.gov.in/content/csr/global/master/home/helpandfaqs.html",
+          "snippet": "A company satisfying any of the following criteria during the immediately preceding financial year is required to comply with CSR provisions specified under ...",
           "attributes": {
             "Missing": "Compile | Show results with:Compile"
           },
@@ -349,18 +354,11 @@
           "position": 1
         },
         {
-          "title": "Building a sustainable automotive industry in Europe | Deloitte Insights",
-          "link": "https://www2.deloitte.com/us/en/insights/environmental-social-governance/automotive-industry-sustainability.html",
-          "snippet": "Our research analyzes the current progress of European automotive companies on their sustainability journey.",
-          "date": "Nov 6, 2024",
-          "position": 2
-        },
-        {
           "title": "[PDF] SEC 1 Sector Classification \u2013 Exposure Draft - EFRAG",
           "link": "https://www.efrag.org/system/files/sites/webpublishing/Meeting%20Documents/2405070938330278/04-02%20-%20Sector%20Classification%20SEC%201%20-%20SRB%20240604.pdf",
           "snippet": "This paper provides technical advice from the EFRAG SR TEG to the EFRAG SRB following the EFRAG SR TEG's public discussion.",
           "date": "Jun 4, 2024",
-          "position": 3
+          "position": 2
         },
         {
           "title": "Sector-specific ESRS - EFRAG",
@@ -369,13 +367,42 @@
           "attributes": {
             "Missing": "operate | Show results with:operate"
           },
+          "position": 3
+        },
+        {
+          "title": "ESRS workstreams - EFRAG",
+          "link": "https://www.efrag.org/en/sustainability-reporting/esrs-workstreams",
+          "snippet": "EFRAG was appointed as technical advisor to the European Commission for the development of draft sustainability reporting standards.",
+          "attributes": {
+            "Missing": "operate | Show results with:operate"
+          },
+          "sitelinks": [
+            {
+              "title": "Sector agnostic standards (set...",
+              "link": "https://www.efrag.org/en/sustainability-reporting/esrs-workstreams/sector-agnostic-standards-set-1-esrs"
+            },
+            {
+              "title": "Sector specific",
+              "link": "https://www.efrag.org/en/sustainability-reporting/esrs-workstreams/sectorspecific-esrs"
+            },
+            {
+              "title": "Implementation support",
+              "link": "https://www.efrag.org/en/sustainability-reporting/esrs-workstreams/implementation-support"
+            },
+            {
+              "title": "SMEs",
+              "link": "https://www.efrag.org/en/sustainability-reporting/esrs-workstreams/smes"
+            }
+          ],
           "position": 4
         },
         {
-          "title": "[PDF] SEC 1 Sector Classification and General Requirements - EFRAG",
-          "link": "https://www.efrag.org/system/files/sites/webpublishing/Meeting%20Documents/2407231201048062/04-04A%20-%20Sector%20Classification%20SEC%201%20-%20clean%20-%20SRB%20240917.pdf",
-          "snippet": "This paper provides the technical advice from EFRAG SR TEG to the EFRAG SRB, following EFRAG SR TEG's public discussion.",
-          "date": "Sep 17, 2024",
+          "title": "EFRAG Sector Specific ESRS",
+          "link": "https://efrag-website.azurewebsites.net/lab5",
+          "snippet": "EFRAG is tasked to develop a set of sector-agnostic draft ESRS. This will be multi-year exercise. In particular, EFRAG's mandate also includes the development ...",
+          "attributes": {
+            "Missing": "operate | Show results with:operate"
+          },
           "position": 5
         }
       ],
@@ -405,15 +432,15 @@
           "position": 3
         },
         {
-          "title": "National Environmental Policy Act (NEPA) Classes of Action",
-          "link": "https://www.environment.fhwa.dot.gov/nepa/classes_of_action.aspx",
-          "snippet": "NEPA requires Federal agencies to prepare environmental impact statements (EISs) for major Federal actions that significantly affect the quality of the human ...",
+          "title": "Environmental Stewardship of Manufacturing Operations | Stellantis",
+          "link": "https://www.stellantis.com/en/responsibility/environmental-stewardship-of-manufacturing-operations",
+          "snippet": "avoiding waste and promoting recycling;; reducing emissions by using materials that have less pollutants;; promoting sustainable materials and maximizing ...",
           "position": 4
         },
         {
-          "title": "Reducing car pollution - Washington State Department of Ecology",
-          "link": "https://ecology.wa.gov/issues-and-local-projects/education-training/what-you-can-do/reducing-car-pollution",
-          "snippet": "Maintain your vehicle. Vehicle pollutants harm our health and contain greenhouse gases that cause climate change. Burning gasoline and diesel fuel creates ...",
+          "title": "National Environmental Policy Act (NEPA) Classes of Action",
+          "link": "https://www.environment.fhwa.dot.gov/nepa/classes_of_action.aspx",
+          "snippet": "NEPA requires Federal agencies to prepare environmental impact statements (EISs) for major Federal actions that significantly affect the quality of the human ...",
           "position": 5
         }
       ],
@@ -552,23 +579,9 @@
           "position": 3
         },
         {
-          "title": "Holding Company vs. Parent | Holdings, Subsidiaries, & More",
-          "link": "https://wyomingllcattorney.com/Form-a-Wyoming-LLC/Holding-Company-Setup/vs-Parent",
-          "snippet": "A subsidiary is a company that is owned or controlled by another company, usually referred to as its holding company or parent company. A subsidiary company is ...",
-          "sitelinks": [
-            {
-              "title": "Holding Company Vs. Parent",
-              "link": "https://wyomingllcattorney.com/Form-a-Wyoming-LLC/Holding-Company-Setup/vs-Parent#:~:text=Holding%20Company%20vs.%20Parent,-The%20main%20difference%20between%20a"
-            },
-            {
-              "title": "Parent Company",
-              "link": "https://wyomingllcattorney.com/Form-a-Wyoming-LLC/Holding-Company-Setup/vs-Parent#:~:text=Parent%20Company,-A%20parent%20company%20is%20a"
-            },
-            {
-              "title": "Enhanced Privacy",
-              "link": "https://wyomingllcattorney.com/Form-a-Wyoming-LLC/Holding-Company-Setup/vs-Parent#:~:text=Enhanced%20Privacy"
-            }
-          ],
+          "title": "[PDF] What is a Holding Company Structure and Why is it so Popular?",
+          "link": "https://www.nass.org/sites/default/files/2023-07/issue-paper-CT-Corp-NASS-summer23.pdf",
+          "snippet": "A holding company is a parent company\u2014usually a corporation or LLC \u2014 whose purpose is to buy and control the ownership interests of other companies. The.",
           "position": 4
         },
         {
