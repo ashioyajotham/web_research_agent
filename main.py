@@ -10,8 +10,11 @@ from config.config_loader import ConfigLoader
 from utils.helpers import setup_logging
 
 async def process_tasks(task_file: Path, output_file: Path, config: Dict) -> None:
-    # Initialize agent
-    agent = Agent(config['api_keys']['gemini'])
+    # Initialize agent with both API keys
+    agent = Agent(
+        api_key=config['api_keys']['gemini'],
+        serper_api_key=config['api_keys']['serper']
+    )
     
     # Read tasks
     tasks = task_file.read_text().splitlines()

@@ -3,19 +3,25 @@ import google.generativeai as genai
 from .memory import Memory
 from .planner import Planner
 from .learner import Learner
+from tools.web_search import WebSearchTool
+from tools.web_browse import WebBrowser
+from tools.code_tools import CodeGenerator
 
 class Agent:
-    def __init__(self, api_key: str):
+    def __init__(self, api_key: str, serper_api_key: str):
         self.memory = Memory()
         self.planner = Planner()
         self.learner = Learner()
+        
+        # Initialize tools
+        self._web_search_tool = WebSearchTool(serper_api_key)
         
         # Initialize Gemini
         genai.configure(api_key=api_key)
         self.model = genai.GenerativeModel('gemini-pro')
         
         self.tools = {
-            'web_search': self._web_search,
+            'web_search': self._web_search_tool.search,
             'web_browse': self._web_browse,
             'code_generate': self._code_generate
         }
