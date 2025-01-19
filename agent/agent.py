@@ -36,24 +36,27 @@ class Agent:
 
     async def execute_task(self, task: str) -> Dict:
         try:
-            result = await self._execute_step({
-                "tool": "web_search",
-                "params": {
-                    "query": task,
-                    "num_results": 5
-                }
-            })
+            # Execute search
+            search_result = await self._web_search_tool.search(task)
             
+            if not search_result.get("success"):
+                return {
+                    "query": task,
+                    "results": [],
+                    "error": search_result.get("error")
+                }
+                
             return {
-                "task": task,
-                "success": True,
-                "results": result.get("results", [])  # Simplified structure
+                "query": task,
+                "results": search_result.get("results", []),
+                "success": True
             }
             
         except Exception as e:
+            print(f"Task execution error: {str(e)}")
             return {
-                "task": task,
-                "success": False,
+                "query": task,
+                "results": [],
                 "error": str(e)
             }
 

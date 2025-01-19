@@ -18,17 +18,13 @@ async def process_tasks(task_file: Path, output_file: Path, config: Dict) -> Non
         serper_api_key=config['api_keys']['serper']
     )
     
-    formatter = OutputFormatter()
     results = []
-    
     for task in task_file.read_text().splitlines():
         if task.strip():
+            print(f"\nProcessing task: {task}")
             result = await agent.execute_task(task)
-            print(formatter.format_results(result))
-            results.append({
-                "query": task,
-                "results": result.get("results", [])
-            })
+            print(f"Found {len(result.get('results', []))} results")
+            results.append(result)
     
     output_file.write_text(
         json.dumps({"searches": results}, indent=2)

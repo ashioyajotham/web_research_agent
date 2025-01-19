@@ -25,34 +25,27 @@ class WebSearchTool:
         try:
             print(f"Searching for: {query}")  # Debug print
             
-            headers = {
-                'X-API-KEY': self.api_key,
-                'Content-Type': 'application/json'
-            }
-            
-            payload = {
-                'q': query,
-                'num': num_results
-            }
-
             async with aiohttp.ClientSession() as session:
                 async with session.post(
                     self.base_url,
-                    headers=headers,
-                    json=payload
+                    headers=self.headers,
+                    json={"q": query, "num": num_results}
                 ) as response:
-                    if response.status != 200:
-                        raise Exception(f"Search failed: {response.status}")
                     
                     data = await response.json()
-                    return self._parse_results(data)
-        
+                    print(f"Search response: {json.dumps(data, indent=2)}")  # Debug
+                    
+                    return {
+                        "success": True,
+                        "results": data.get("organic", [])
+                    }
+                    
         except Exception as e:
             print(f"Search error: {str(e)}")
             return {
-                'success': False,
-                'error': str(e),
-                'results': []
+                "success": False,
+                "error": str(e),
+                "results": []
             }
     
     def _parse_results(self, data: Dict) -> Dict:
