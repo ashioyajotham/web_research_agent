@@ -3,7 +3,7 @@
     "task": "Compile a list of 10 statements made by Joe Biden regarding US-China relations. Each statement must have been made on a separate occasion. Provide a source for each statement.",
     "result": {
       "task": "Compile a list of 10 statements made by Joe Biden regarding US-China relations. Each statement must have been made on a separate occasion. Provide a source for each statement.",
-      "error": "'\"query\"'",
+      "error": "'\\n          \"steps\"'",
       "success": false
     }
   },
@@ -11,7 +11,7 @@
     "task": "Find the name of the COO of the organization that mediated secret talks between US and Chinese AI companies in Geneva in 2023.",
     "result": {
       "task": "Find the name of the COO of the organization that mediated secret talks between US and Chinese AI companies in Geneva in 2023.",
-      "error": "'\"query\"'",
+      "error": "'\\n          \"steps\"'",
       "success": false
     }
   },
@@ -19,7 +19,7 @@
     "task": "Download Epoch AI\u00e2\u20ac\u2122s dataset of large-scale AI models. From this, extract a time series showing how the maximum amount of compute used to train any AI system has changed over time. Each entry in your response must represent a training run which, at the time it happened, set a new record for the maximum amount of compute used to train an AI system.",
     "result": {
       "task": "Download Epoch AI\u00e2\u20ac\u2122s dataset of large-scale AI models. From this, extract a time series showing how the maximum amount of compute used to train any AI system has changed over time. Each entry in your response must represent a training run which, at the time it happened, set a new record for the maximum amount of compute used to train an AI system.",
-      "error": "'\"query\"'",
+      "error": "'\\n          \"steps\"'",
       "success": false
     }
   },
@@ -27,7 +27,7 @@
     "task": "By what percentage did Volkswagen reduce the sum of their Scope 1 and Scope 2 greenhouse gas emissions in 2023 compared to 2021?",
     "result": {
       "task": "By what percentage did Volkswagen reduce the sum of their Scope 1 and Scope 2 greenhouse gas emissions in 2023 compared to 2021?",
-      "error": "'\"query\"'",
+      "error": "'\\n          \"steps\"'",
       "success": false
     }
   },
@@ -35,7 +35,7 @@
     "task": "Compile a list of companies satisfying the following criteria:",
     "result": {
       "task": "Compile a list of companies satisfying the following criteria:",
-      "error": "'\"query\"'",
+      "error": "'\\n          \"steps\"'",
       "success": false
     }
   },
@@ -43,7 +43,7 @@
     "task": "They are based in the EU",
     "result": {
       "task": "They are based in the EU",
-      "error": "'\"query\"'",
+      "error": "'\\n          \"steps\"'",
       "success": false
     }
   },
@@ -51,7 +51,7 @@
     "task": "They operate within the motor vehicle sector, as defined by the European Financial Reporting Advisory Group's (EFRAG) draft sector guidance",
     "result": {
       "task": "They operate within the motor vehicle sector, as defined by the European Financial Reporting Advisory Group's (EFRAG) draft sector guidance",
-      "error": "'\"query\"'",
+      "error": "'\\n          \"steps\"'",
       "success": false
     }
   },
@@ -59,7 +59,7 @@
     "task": "They provide detailed environmental information for their automotive operations",
     "result": {
       "task": "They provide detailed environmental information for their automotive operations",
-      "error": "'\"query\"'",
+      "error": "'\\n          \"steps\"'",
       "success": false
     }
   },
@@ -67,7 +67,7 @@
     "task": "The total greenhouse gas emissions from their automotive operations are available for 2021, 2022, and 2023",
     "result": {
       "task": "The total greenhouse gas emissions from their automotive operations are available for 2021, 2022, and 2023",
-      "error": "'\"query\"'",
+      "error": "'\\n          \"steps\"'",
       "success": false
     }
   },
@@ -75,7 +75,7 @@
     "task": "They earned more than \u00e2\u201a\u00ac1B in revenue in 2023",
     "result": {
       "task": "They earned more than \u00e2\u201a\u00ac1B in revenue in 2023",
-      "error": "'\"query\"'",
+      "error": "'\\n          \"steps\"'",
       "success": false
     }
   },
@@ -83,7 +83,7 @@
     "task": "They are not a subsidiary of another company, except if the parent company is a holding company",
     "result": {
       "task": "They are not a subsidiary of another company, except if the parent company is a holding company",
-      "error": "'\"query\"'",
+      "error": "'\\n          \"steps\"'",
       "success": false
     }
   }

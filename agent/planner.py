@@ -13,30 +13,21 @@ class Planner:
     def __init__(self, model=None):
         self.model = model
         self.planning_prompt = """
-        Break down this task into specific steps. For each step specify:
-        1. Tool to use (web_search, web_browse, code_generate)
-        2. Required parameters:
-           - web_search: {"query": "search query", "num_results": 5}
-           - web_browse: {"url": "webpage url", "elements": ["main", "article"]}
-           - code_generate: {"instruction": "what to code", "language": "python", "context": "any context"}
-        3. Dependencies on other steps
-        
-        Respond in this exact JSON format:
+        Create a plan to accomplish this task. Respond with JSON only:
         {
-            "steps": [
-                {
-                    "tool": "web_search",
-                    "params": {
-                        "query": "your search query",
-                        "num_results": 5
-                    },
-                    "dependencies": []
-                }
-            ]
+          "steps": [
+            {
+              "tool": "web_search",
+              "params": {
+                "query": "actual search query here",
+                "num_results": 5
+              }
+            }
+          ]
         }
         
         Task: {task}
-        Previous context: {context}
+        Context: {context}
         """
         
         # Set default parameters
@@ -80,69 +71,39 @@ class Planner:
         return ordered_steps
 
     def _generate_plan(self, task: str, context: Dict = None) -> Dict:
+        # Format prompt using class template
         prompt = self.planning_prompt.format(
             task=task,
             context=str(context) if context else "No previous context"
         )
         
         try:
+            # Generate and debug print
+            print(f"\nSending prompt:\n{prompt}")
             response = self.model.generate_content(prompt)
-            response_text = response.text.strip()
-            print(f"\nRaw response for task: {task[:30]}...\n{response_text}\n")
-
-            # Extract JSON part
-            if "```" in response_text:
-                parts = response_text.split("```")
-                for part in parts:
-                    if part.strip().startswith(('json', '{')):
-                        response_text = part.replace('json', '').strip()
-                        break
+            print(f"\nRaw LLM Response:\n{response.text}")
             
-            # Remove any remaining markdown or formatting
-            response_text = response_text.strip('`').strip()
-            print(f"\nCleaned response:\n{response_text}\n")
-
-            try:
-                plan = json.loads(response_text)
-                # Ensure steps array exists
-                if "steps" not in plan:
-                    plan = {"steps": [plan]}  # Wrap single step in steps array
-                    
-                # Ensure each step has required fields and proper parameter structure
-                for step in plan["steps"]:
-                    if "params" not in step:
-                        step["params"] = {}
-                    if isinstance(step["params"], str):
-                        # Fix: Properly structure string params based on tool type
-                        if step["tool"] == "web_search":
-                            step["params"] = {"query": step["params"]}
-                        elif step["tool"] == "web_browse":
-                            step["params"] = {"url": step["params"]}
-                        elif step["tool"] == "code_generate":
-                            step["params"] = {"instruction": step["params"]}
-                    if "dependencies" not in step:
-                        step["dependencies"] = []
-
-                return plan
-
-            except json.JSONDecodeError as e:
-                print(f"\nJSON Parse error: {str(e)}\n")
-                return self._get_fallback_plan(task)
-
+            json_str = response.text
+            if "```" in json_str:
+                json_str = json_str.split("```")[1]
+                if json_str.startswith("json"):
+                    json_str = json_str[4:]
+            
+            print(f"\nCleaned JSON string:\n{json_str}")    
+            plan = json.loads(json_str.strip())
+            print(f"\nParsed plan:\n{json.dumps(plan, indent=2)}")
+            
+            return plan
+            
         except Exception as e:
-            print(f"\nGeneral error in plan generation: {str(e)}\n")
+            print(f"Plan Generation Error: {e}")
             return self._get_fallback_plan(task)
 
     def _get_fallback_plan(self, task: str) -> Dict:
-        """Improved fallback plan to ensure proper parameter structure"""
         return {
             "steps": [{
                 "tool": "web_search",
-                "params": {
-                    "query": str(task),  # Ensure query is string
-                    "num_results": 5
-                },
-                "dependencies": []
+                "params": {"query": task, "num_results": 5}
             }]
         }
 

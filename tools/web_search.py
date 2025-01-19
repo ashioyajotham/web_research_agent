@@ -19,6 +19,9 @@ class WebSearchTool:
         """
         Perform web search using Serper API
         """
+        if isinstance(query, str) and query.startswith('"') and query.endswith('"'):
+            query = query[1:-1]  # Remove surrounding quotes
+
         try:
             print(f"Searching for: {query}")  # Debug print
             
