@@ -24,24 +24,20 @@ class Learner:
             'prompt_performance': {}
         }
 
-    def update(self, task: str, steps: List[Dict], outcome: Dict) -> None:
-        # Extract task pattern
-        pattern = self._extract_pattern(task)
+    def update(self, step: Dict, result: Dict, outcome: Dict = None) -> None:
+        if outcome is None:
+            outcome = {
+                'success': result.get('success', False),
+                'error': result.get('error', None)
+            }
         
-        # Create experience
-        experience = Experience(
-            task_pattern=pattern,
-            steps=steps,
-            outcome=outcome.get('success', False),
-            metrics=self._calculate_metrics(steps, outcome)
-        )
+        experience = {
+            'step': step,
+            'result': result,
+            'outcome': outcome
+        }
         
-        # Update metrics
-        self._update_metrics(experience)
-        
-        # Store experience
-        self.experiences.append(experience.__dict__)
-        self._save_experiences()
+        self.experiences.append(experience)
 
     def get_recommendations(self, task: str) -> Dict:
         pattern = self._extract_pattern(task)

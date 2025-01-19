@@ -71,32 +71,37 @@ class Planner:
         return ordered_steps
 
     def _generate_plan(self, task: str, context: Dict = None) -> Dict:
-        # Format prompt using class template
-        prompt = self.planning_prompt.format(
-            task=task,
-            context=str(context) if context else "No previous context"
-        )
+        prompt = """Return a JSON object:
+        {
+            "steps": [
+                {
+                    "tool": "web_search",
+                    "params": {
+                        "query": "your search query here",
+                        "num_results": 5
+                    }
+                }
+            ]
+        }"""
         
         try:
-            # Generate and debug print
-            print(f"\nSending prompt:\n{prompt}")
-            response = self.model.generate_content(prompt)
-            print(f"\nRaw LLM Response:\n{response.text}")
+            response = self.model.generate_content(f"{prompt}\nTask: {task}")
+            text = response.text.strip()
             
-            json_str = response.text
-            if "```" in json_str:
-                json_str = json_str.split("```")[1]
-                if json_str.startswith("json"):
-                    json_str = json_str[4:]
+            # Clean response
+            if "```" in text:
+                text = text.split("```")[1].strip()
+                if text.startswith("json"):
+                    text = text[4:].strip()
+                    
+            # Remove all newlines and extra spaces
+            text = "".join(line.strip() for line in text.splitlines())
             
-            print(f"\nCleaned JSON string:\n{json_str}")    
-            plan = json.loads(json_str.strip())
-            print(f"\nParsed plan:\n{json.dumps(plan, indent=2)}")
-            
+            plan = json.loads(text)
             return plan
             
         except Exception as e:
-            print(f"Plan Generation Error: {e}")
+            print(f"Plan Generation Error: {str(e)}")
             return self._get_fallback_plan(task)
 
     def _get_fallback_plan(self, task: str) -> Dict:
