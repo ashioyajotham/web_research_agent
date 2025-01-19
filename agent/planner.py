@@ -86,53 +86,60 @@ class Planner:
         )
         
         try:
-            # Get response from model
             response = self.model.generate_content(prompt)
-            
-            # Extract and clean response text
             response_text = response.text.strip()
+            print(f"\nRaw response for task: {task[:30]}...\n{response_text}\n")
+
+            # Extract JSON part
+            if "```" in response_text:
+                parts = response_text.split("```")
+                for part in parts:
+                    if part.strip().startswith(('json', '{')):
+                        response_text = part.replace('json', '').strip()
+                        break
             
-            # Remove code blocks if present
-            if response_text.startswith("```"):
-                response_text = "\n".join(response_text.split("\n")[1:-1])
-                
-            # Remove any JSON markers
-            response_text = response_text.replace("```json", "").replace("```", "")
-            
-            # Clean any escaped quotes
-            response_text = response_text.replace('\\"', '"')
-            
+            # Remove any remaining markdown or formatting
+            response_text = response_text.strip('`').strip()
+            print(f"\nCleaned response:\n{response_text}\n")
+
             try:
                 plan = json.loads(response_text)
-                # Validate required structure
-                if "steps" not in plan or not isinstance(plan["steps"], list):
-                    raise ValueError("Invalid plan structure")
+                # Ensure steps array exists
+                if "steps" not in plan:
+                    plan = {"steps": [plan]}  # Wrap single step in steps array
+                    
+                # Ensure each step has required fields and proper parameter structure
+                for step in plan["steps"]:
+                    if "params" not in step:
+                        step["params"] = {}
+                    if isinstance(step["params"], str):
+                        # Fix: Properly structure string params based on tool type
+                        if step["tool"] == "web_search":
+                            step["params"] = {"query": step["params"]}
+                        elif step["tool"] == "web_browse":
+                            step["params"] = {"url": step["params"]}
+                        elif step["tool"] == "code_generate":
+                            step["params"] = {"instruction": step["params"]}
+                    if "dependencies" not in step:
+                        step["dependencies"] = []
+
                 return plan
-                
-            except (json.JSONDecodeError, ValueError) as e:
-                print(f"Error parsing plan: {e}")
-                # Return fallback plan
-                return {
-                    "steps": [{
-                        "tool": "web_search",
-                        "params": {
-                            "query": task,
-                            "num_results": 5
-                        },
-                        "dependencies": []
-                    }]
-                }
-                
+
+            except json.JSONDecodeError as e:
+                print(f"\nJSON Parse error: {str(e)}\n")
+                return self._get_fallback_plan(task)
+
         except Exception as e:
-            print(f"Plan generation error: {e}")
+            print(f"\nGeneral error in plan generation: {str(e)}\n")
             return self._get_fallback_plan(task)
 
     def _get_fallback_plan(self, task: str) -> Dict:
+        """Improved fallback plan to ensure proper parameter structure"""
         return {
             "steps": [{
                 "tool": "web_search",
                 "params": {
-                    "query": task,
+                    "query": str(task),  # Ensure query is string
                     "num_results": 5
                 },
                 "dependencies": []

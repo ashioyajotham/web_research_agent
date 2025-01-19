@@ -16,16 +16,26 @@ class WebSearchTool:
     @sleep_and_retry
     @limits(calls=10, period=60)  # Rate limit: 10 calls per minute
     async def search(self, query: str, num_results: int = 5) -> Dict:
+        """
+        Perform web search using Serper API
+        """
         try:
+            print(f"Searching for: {query}")  # Debug print
+            
+            headers = {
+                'X-API-KEY': self.api_key,
+                'Content-Type': 'application/json'
+            }
+            
+            payload = {
+                'q': query,
+                'num': num_results
+            }
+
             async with aiohttp.ClientSession() as session:
-                payload = {
-                    'q': query,
-                    'num': num_results
-                }
-                
                 async with session.post(
                     self.base_url,
-                    headers=self.headers,
+                    headers=headers,
                     json=payload
                 ) as response:
                     if response.status != 200:
@@ -35,6 +45,7 @@ class WebSearchTool:
                     return self._parse_results(data)
         
         except Exception as e:
+            print(f"Search error: {str(e)}")
             return {
                 'success': False,
                 'error': str(e),

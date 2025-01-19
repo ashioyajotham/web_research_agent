@@ -30,23 +30,47 @@ class Agent:
         }
     
     async def execute_task(self, task: str) -> Dict:
-        # 1. Plan task decomposition
-        plan = self.planner.create_plan(task)
-        
-        # 2. Execute steps while maintaining context
-        result = {}
-        for step in plan:
-            # Execute step using appropriate tool
-            step_result = await self._execute_step(step)
-            self.memory.add(step, step_result)
+        try:
+            steps = self.planner.create_plan(task)
+            print(f"Generated plan with {len(steps)} steps")
             
-            # Learn from execution
-            self.learner.update(step, step_result)
+            results = []
+            for step in steps:
+                # Add detailed parameter debugging
+                print(f"\nStep details:")
+                print(f"Tool: {step.tool}")
+                print(f"Params type: {type(step.params)}")
+                print(f"Params content: {json.dumps(step.params, indent=2)}")
+                
+                tool_name = step.tool
+                params = step.params
+                
+                if tool_name not in self.tools:
+                    raise ValueError(f"Unknown tool: {tool_name}")
+                
+                # Debug the actual parameters being passed
+                print(f"Calling {tool_name} with params: {json.dumps(params, indent=2)}")
+                
+                step_result = await self.tools[tool_name](**params)
+                self.memory.add(step, step_result)
+                
+                # Learn from execution
+                self.learner.update(step, step_result)
+                results.append({
+                    'step': {'tool': step.tool, 'params': step.params},
+                    'result': step_result
+                })
             
-        return result
-
-    async def _execute_step(self, step: dict) -> Dict:
-        tool_name = step['tool']
-        if tool_name in self.tools:
-            return await self.tools[tool_name](step['params'])
-        return {'error': f'Unknown tool: {tool_name}'}
+            return {
+                'task': task,
+                'results': results,
+                'success': True
+            }
+            
+        except Exception as e:
+            print(f"Error in execute_task: {str(e)}")  # Debug
+            return {
+                'task': task,
+                'error': str(e),
+                'success': False
+            }
