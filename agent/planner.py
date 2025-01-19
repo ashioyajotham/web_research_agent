@@ -55,8 +55,18 @@ class Planner:
             context=str(context) if context else "No previous context"
         )
         
-        response = genai.generate_text(prompt)
-        return json.loads(response)
+        # Use correct Gemini API method
+        response = self.model.generate_content(prompt)
+        try:
+            # Parse response text into JSON
+            return json.loads(response.text)
+        except json.JSONDecodeError:
+            return {
+                "steps": [{
+                    "tool": "web_search",
+                    "params": {"query": task}
+                }]
+            }
 
     def _validate_steps(self, steps: List[Dict]) -> List[Step]:
         validated = []

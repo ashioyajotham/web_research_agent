@@ -4,8 +4,8 @@ from .memory import Memory
 from .planner import Planner
 from .learner import Learner
 from tools.web_search import WebSearchTool
-from tools.web_browse import WebBrowser
-from tools.code_tools import CodeGenerator
+from tools.web_browse import WebBrowserTool
+from tools.code_tools import CodeTools
 
 class Agent:
     def __init__(self, api_key: str, serper_api_key: str):
@@ -15,6 +15,8 @@ class Agent:
         
         # Initialize tools
         self._web_search_tool = WebSearchTool(serper_api_key)
+        self._web_browser_tool = WebBrowserTool()
+        self._code_tools = CodeTools()
         
         # Initialize Gemini
         genai.configure(api_key=api_key)
@@ -22,8 +24,8 @@ class Agent:
         
         self.tools = {
             'web_search': self._web_search_tool.search,
-            'web_browse': self._web_browse,
-            'code_generate': self._code_generate
+            'web_browse': self._web_browser_tool.browse,
+            'code_generate': self._code_tools.generate_code
         }
     
     async def execute_task(self, task: str) -> Dict:
