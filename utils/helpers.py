@@ -7,8 +7,24 @@ import re
 def setup_logging(config: Dict) -> logging.Logger:
     """Configure logging based on config settings"""
     log_path = Path(config['logging']['file'])
-    log_path.parent.mkdir(parents=True, exist_ok=True)
     
+    # Create logs directory if it doesn't exist
+    try:
+        log_path.parent.mkdir(parents=True, exist_ok=True)
+        
+        # Create empty log file if it doesn't exist
+        if not log_path.exists():
+            log_path.touch()
+    except Exception as e:
+        print(f"Error creating log file: {e}")
+        # Fallback to console only logging
+        logging.basicConfig(
+            level=config['logging']['level'],
+            format=config['logging']['format'],
+            handlers=[logging.StreamHandler()]
+        )
+        return logging.getLogger(__name__)
+
     logging.basicConfig(
         level=config['logging']['level'],
         format=config['logging']['format'],

@@ -3,9 +3,14 @@ import yaml
 from pathlib import Path
 from typing import Dict, Any
 import re
+from dotenv import load_dotenv
 
 class ConfigLoader:
     def __init__(self, config_path: str = "config/config.yaml"):
+        # Load environment variables from .env file
+        env_path = Path(__file__).parent.parent / '.env'
+        load_dotenv(dotenv_path=env_path)
+        
         self.config_path = Path(config_path)
         self.config = self._load_config()
         
@@ -27,7 +32,7 @@ class ConfigLoader:
                 for var in env_vars:
                     env_value = os.getenv(var)
                     if env_value is None:
-                        raise ValueError(f"Environment variable not set: {var}")
+                        raise ValueError(f"Environment variable not set: {var}. Check .env file.")
                     value = value.replace(f"${{{var}}}", env_value)
                 return value
             elif isinstance(value, dict):
