@@ -36,18 +36,21 @@ class Agent:
 
     async def execute_task(self, task: str) -> Dict:
         try:
-            # Clean task string to prevent JSON escape issues
-            task = task.encode('ascii', 'ignore').decode('ascii')
-            
             plan = self.planner.create_plan(task)
+            if not isinstance(plan, dict) or "steps" not in plan:
+                raise ValueError("Invalid plan structure")
+                
             results = []
-            
-            for step in plan.get('steps', []):
+            for step in plan["steps"]:  # Direct list access instead of get()
+                if not isinstance(step, dict):
+                    continue
+                    
                 result = await self._execute_step(step)
                 outcome = {
                     'success': result.get('success', False),
                     'error': result.get('error', None)
                 }
+                
                 self.learner.update(step, result, outcome)
                 results.append({'step': step, 'result': result})
             
@@ -62,4 +65,36 @@ class Agent:
                 'task': task,
                 'error': str(e),
                 'success': False
+            }
+
+    async def _execute_step(self, step: dict) -> Dict:
+        try:
+            # Validate step
+            if not isinstance(step, dict):
+                raise ValueError("Invalid step format")
+                
+            tool_name = step.get('tool')
+            if not tool_name or tool_name not in self.tools:
+                raise ValueError(f"Unknown tool: {tool_name}")
+                
+            params = step.get('params', {})
+            print(f"\nExecuting {tool_name} with params: {params}")
+            
+            # Execute tool
+            result = await self.tools[tool_name](**params)
+            
+            return {
+                'success': True,
+                'result': result,
+                'tool': tool_name,
+                'params': params
+            }
+            
+        except Exception as e:
+            print(f"Step execution error: {str(e)}")
+            return {
+                'success': False,
+                'error': str(e),
+                'tool': step.get('tool'),
+                'params': step.get('params', {})
             }
