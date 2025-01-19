@@ -21,20 +21,16 @@ async def process_tasks(task_file: Path, output_file: Path, config: Dict) -> Non
     formatter = OutputFormatter()
     results = []
     
-    tasks = task_file.read_text().splitlines()
-    for i, task in enumerate(tasks, 1):
-        if task.strip():
-            print(formatter.format_header(f"Task {i}/{len(tasks)}: {task}"))
-            result = await agent.execute_task(task)
-            
-            if result.get('success', False):
-                print(formatter.format_search_results(result.get('results', [])))
-            else:
-                print(formatter.format_error(result.get('error', 'Unknown error')))
-                
-            results.append(result)
+    tasks = [t for t in task_file.read_text().splitlines() if t.strip()]
+    print(formatter.format_header())
     
-    print(f"\n{Fore.GREEN}Saving results to {output_file}{Style.RESET_ALL}")
+    for i, task in enumerate(tasks, 1):
+        print(formatter.format_task_section(i, len(tasks), task))
+        print(f"Searching...")
+        result = await agent.execute_task(task)
+        print(formatter.format_search_results(result.get('results', [])))
+        results.append(result)
+    
     output_file.write_text(json.dumps({"searches": results}, indent=2))
 
 def main():

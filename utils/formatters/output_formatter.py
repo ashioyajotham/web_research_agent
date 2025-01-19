@@ -14,7 +14,7 @@ class OutputType(Enum):
 class OutputFormatter:
     def __init__(self):
         init()  # Initialize colorama
-        self.width = 80
+        self.width = 100
         self.indent = 2
         
     def format_task(self, task: str) -> str:
@@ -98,35 +98,42 @@ class OutputFormatter:
             
         return "\n".join(output)
 
-    def format_header(self, task: str) -> str:
-        border = "=" * self.width
-        task_wrapped = textwrap.fill(task, width=self.width-4)
+    def format_header(self) -> str:
         return f"""
-{Fore.CYAN}{border}{Style.RESET_ALL}
-  {Fore.YELLOW}{task_wrapped}{Style.RESET_ALL}
-{Fore.CYAN}{border}{Style.RESET_ALL}
+{Fore.CYAN}{'=' * self.width}
+{self._center_text('Web Research Agent Results')}
+{'=' * self.width}{Style.RESET_ALL}
 """
-
+    
+    def _center_text(self, text: str) -> str:
+        padding = (self.width - len(text)) // 2
+        return " " * padding + text
+        
+    def format_task_section(self, task_num: int, total_tasks: int, task: str) -> str:
+        return f"""
+{Fore.YELLOW}Task {task_num}/{total_tasks}:{Style.RESET_ALL}
+{self._wrap_text(task)}
+{Fore.BLUE}{'-' * self.width}{Style.RESET_ALL}
+"""
+    
     def format_search_results(self, results: List[Dict]) -> str:
         if not results:
-            return f"{Fore.RED}No results found{Style.RESET_ALL}"
+            return f"\n{Fore.RED}No relevant information found{Style.RESET_ALL}\n"
             
         output = []
-        for i, result in enumerate(results, 1):
-            title = result.get('title', 'No title')
-            link = result.get('link', 'No link')
-            snippet = result.get('snippet', 'No description')
-            
-            wrapped_snippet = textwrap.fill(
-                snippet, 
-                width=self.width-self.indent*2,
-                initial_indent=' '*self.indent,
-                subsequent_indent=' '*self.indent
-            )
-            
+        for i, result in enumerate(results[:5], 1):
             output.append(f"""
-{Fore.GREEN}[{i}] {Fore.YELLOW}{title}{Style.RESET_ALL}
-{Fore.BLUE}{link}{Style.RESET_ALL}
-{wrapped_snippet}
-""")
+{Fore.GREEN}Finding {i}:{Style.RESET_ALL}
+  {result.get('title', '')}
+  {Fore.BLUE}{result.get('link', '')}{Style.RESET_ALL}
+  {self._wrap_text(result.get('snippet', ''), indent=2)}""")
+            
         return '\n'.join(output)
+    
+    def _wrap_text(self, text: str, indent: int = 0) -> str:
+        return textwrap.fill(
+            text,
+            width=self.width - indent,
+            initial_indent=' ' * indent,
+            subsequent_indent=' ' * indent
+        )
