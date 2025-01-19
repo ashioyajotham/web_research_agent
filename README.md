@@ -1,3 +1,6 @@
+## Project Structure
+
+```
 project/
 ├── agent/
 │   ├── __init__.py
@@ -18,3 +21,4 @@ project/
 ├── main.py              # Entry point
 ├── requirements.txt
 └── README.md
+```
