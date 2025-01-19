@@ -28,7 +28,10 @@ async def process_tasks(task_file: Path, output_file: Path, config: Dict) -> Non
         try:
             print(formatter.format_task_section(i, len(tasks), task))
             result = await agent.execute_task(task)
-            print(formatter.format_search_results(result.get('results', [])))
+            if result['success']:
+                print(formatter.format_search_results(result.get('results', [])))
+            else:
+                print(formatter._format_error(result.get('error', 'Unknown error occurred')))
             results.append(result)
         except Exception as e:
             print(formatter._format_error(f"Error processing task {i}: {str(e)}"))

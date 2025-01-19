@@ -23,29 +23,28 @@ class ResultSynthesizer:
         """Synthesize list-type results with proper formatting"""
         compiled_items = []
         seen = set()
+        limit = requirements.count if requirements.count else len(results)
         
-        for result in results:
+        for idx, result in enumerate(results):
+            if idx >= limit:
+                break
+                
             content = result.get('snippet', '').strip()
-            if not content or content.lower() in seen:
-                continue
-                
-            seen.add(content.lower())
-            item = {
-                'content': content,
-                'metadata': {
-                    'source': result.get('link'),
-                    'date': result.get('date')
-                }
-            }
+            content_key = content.lower() if content else ''
             
-            if requirements.format_requirements:
-                item.update(self._apply_format_requirements(item, requirements))
-                
-            compiled_items.append(item)
+            if content and content_key not in seen:
+                seen.add(content_key)
+                compiled_items.append({
+                    'content': content,
+                    'metadata': {
+                        'source': result.get('link'),
+                        'date': result.get('date')
+                    }
+                })
         
         return {
             'type': 'compilation',
-            'items': compiled_items[:requirements.count] if requirements.count else compiled_items,
+            'items': compiled_items,
             'total_found': len(compiled_items)
         }
 
@@ -55,12 +54,24 @@ class ResultSynthesizer:
             return {'type': 'fact', 'answer': None}
             
         best_result = results[0]
+        supporting = []
+        
+        # Safer list iteration instead of slicing
+        remaining_results = results[1:]
+        support_count = 0
+        for result in remaining_results:
+            if support_count >= 2:  # Limit to 2 supporting sources
+                break
+            if result.get('link'):
+                supporting.append(result.get('link'))
+                support_count += 1
+            
         return {
             'type': 'fact',
             'answer': best_result.get('snippet', '').strip(),
-            'confidence': 'high' if len(results) > 1 and self._verify_fact(results) else 'medium',
+            'confidence': 'high' if supporting and self._verify_fact(results) else 'medium',
             'source': best_result.get('link'),
-            'supporting_sources': [r.get('link') for r in results[1:3]]
+            'supporting_sources': supporting
         }
 
     def _verify_fact(self, results: List[Dict]) -> bool:
@@ -68,8 +79,18 @@ class ResultSynthesizer:
         if len(results) < 2:
             return False
             
+        # Use explicit indexing instead of slicing
         main_content = results[0].get('snippet', '').lower()
-        return any(self._content_similarity(main_content, r.get('snippet', '').lower()) for r in results[1:3])
+        verified = False
+        
+        # Check up to 2 additional sources
+        for i in range(1, min(3, len(results))):
+            comparison_content = results[i].get('snippet', '').lower()
+            if self._content_similarity(main_content, comparison_content):
+                verified = True
+                break
+                
+        return verified
 
     def _content_similarity(self, text1: str, text2: str) -> bool:
         """Basic content similarity check"""

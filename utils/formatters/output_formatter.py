@@ -48,13 +48,10 @@ class OutputFormatter:
             
         output = []
         for i, result in enumerate(results[:self.config.max_results], 1):
-            bullet = "●" if i == 1 else "○" if i == 2 else "■"
+            bullet = "●" if i == 1 else "○"
             output.append(f"""
 {self.styles['accent']}{bullet}{self.styles['reset']} {self.styles['secondary']}{result.get('title', '')}{self.styles['reset']}
-   {self.styles['link']}{result.get('link', '')}{self.styles['reset']}
    {self._wrap_text(result.get('snippet', ''), indent=3)}""")
-            if result.get('date'):
-                output.append(f"   {self.styles['secondary']}Date:{self.styles['reset']} {result.get('date')}")
                 
         return "\n".join(output)
 
@@ -132,9 +129,7 @@ class OutputFormatter:
         """Format a task section header"""
         return f"""
 {self.styles['secondary']}Task {task_num}/{total_tasks}:{self.styles['reset']}
-{self._wrap_text(task)}
-{self.styles['link']}{'-' * self.config.width}{self.styles['reset']}
-"""
+{self._wrap_text(task)}"""
 
     def _format_error(self, message: str) -> str:
         """Format error messages"""

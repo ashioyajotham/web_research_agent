@@ -6,7 +6,6 @@ from ratelimit import limits, sleep_and_retry
 
 class WebSearchTool:
     def __init__(self, api_key: str):
-        self.api_key = api_key
         self.base_url = "https://google.serper.dev/search"
         self.headers = {
             'X-API-KEY': api_key,
@@ -15,8 +14,11 @@ class WebSearchTool:
     
     @sleep_and_retry
     @limits(calls=10, period=60)  # Rate limit: 10 calls per minute
-    async def search(self, query: str, silent: bool = False) -> Dict:
-        """Execute search without printing intermediate output if silent=True"""
+    async def search(self, query: str, silent: bool = False, num_results: int = 5) -> Dict:
+        """
+        Execute web search using Serper API.
+        Only supports 'query' and 'silent' parameters.
+        """
         if isinstance(query, str) and query.startswith('"') and query.endswith('"'):
             query = query[1:-1]  # Remove surrounding quotes
 
@@ -28,7 +30,7 @@ class WebSearchTool:
                 async with session.post(
                     self.base_url,
                     headers=self.headers,
-                    json={"q": query, "num": 5}
+                    json={"q": query, "num": num_results}
                 ) as response:
                     
                     data = await response.json()

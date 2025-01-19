@@ -39,32 +39,66 @@ class Agent:
 
     async def execute_task(self, task: str) -> Dict:
         try:
-            # Analyze task
-            requirements = self.task_analyzer.analyze(task)
+            # Get search results silently
+            search_result = await self._web_search_tool.search(task, silent=True)
             
-            # Create execution plan
-            plan = await self.planner.create_plan(task, requirements)
+            # Process results
+            processed_results = []
+            seen_content = set()
             
-            # Execute plan steps
-            results = []
-            for step in plan:
-                step_result = await self._execute_step(step)
-                if step_result.get('success'):
-                    results.extend(step_result.get('result', {}).get('results', []))
+            # Analyze task type
+            is_list_task = any(word in task.lower() for word in ['list', 'compile', 'gather'])
+            is_quote_task = 'statements' in task.lower() or 'quotes' in task.lower()
             
-            # Synthesize results
-            synthesized_results = self.synthesizer.synthesize(results, requirements)
+            for result in search_result.get('results', []):
+                content = result.get('snippet', '').strip()
+                if not content:
+                    continue
+                    
+                # Handle quotes differently
+                if is_quote_task:
+                    quotes = self._extract_quotes(content)
+                    for quote in quotes:
+                        quote_key = quote.lower()
+                        if quote_key not in seen_content:
+                            seen_content.add(quote_key)
+                            processed_results.append({
+                                'title': "Quote",
+                                'snippet': quote,
+                                'link': result.get('link'),
+                                'date': result.get('date')
+                            })
+                else:
+                    # Regular content handling
+                    content_key = content.lower()
+                    if content_key not in seen_content:
+                        seen_content.add(content_key)
+                        processed_results.append({
+                            'title': result.get('title', 'Result'),
+                            'snippet': content,
+                            'link': result.get('link'),
+                            'date': result.get('date')
+                        })
             
             return {
-                "query": task,
-                "intent": requirements.intent.value,
-                "requirements": requirements.__dict__,
-                "results": synthesized_results,
-                "success": True
+                'success': True,
+                'results': processed_results[:5]  # Limit to top 5 results
             }
             
         except Exception as e:
-            return self._create_error_response(task, str(e))
+            return {
+                'success': False,
+                'error': str(e)
+            }
+    
+    def _extract_quotes(self, text: str) -> List[str]:
+        quotes = []
+        parts = text.split('"')
+        for i in range(1, len(parts), 2):
+            quote = parts[i].strip()
+            if quote:
+                quotes.append(quote)
+        return quotes
 
     def _process_results(self, results: List[Dict], requirements: TaskRequirements) -> List[Dict]:
         """Process results based on task requirements"""
@@ -72,45 +106,54 @@ class Agent:
             return []
             
         processed = []
-        seen_content = set()  # For deduplication
+        seen_content = set()
         
+        # Use manual iteration with a counter instead of slicing
         if requirements.intent == TaskIntent.COMPILE:
-            # Handle list compilation
+            count = 0
+            max_count = requirements.count if requirements.count else len(results)
+            
             for result in results:
+                if count >= max_count:
+                    break
+                    
                 content = result.get('snippet', '').strip()
-                if content and content.lower() not in seen_content:
-                    seen_content.add(content.lower())
+                content_key = content.lower() if content else ''
+                
+                if content and content_key not in seen_content:
+                    seen_content.add(content_key)
                     processed.append({
                         'content': content,
                         'source': result.get('link'),
                         'date': result.get('date')
                     })
+                    count += 1
                     
-            # Respect count requirement if specified
-            if requirements.count:
-                processed = processed[:requirements.count]
-                
         elif requirements.intent == TaskIntent.FIND:
-            # For fact-finding, use most relevant result
-            return [{
-                'answer': results[0].get('snippet'),
-                'source': results[0].get('link'),
-                'date': results[0].get('date')
-            }]
-            
+            if results:
+                return [{
+                    'answer': results[0].get('snippet'),
+                    'source': results[0].get('link'),
+                    'date': results[0].get('date')
+                }]
+                
         elif requirements.intent in [TaskIntent.ANALYZE, TaskIntent.CALCULATE]:
-            # For analysis/calculation, combine relevant information
-            relevant_info = []
-            for result in results[:3]:  # Use top 3 results for analysis
+            count = 0
+            for result in results:
+                if count >= 3:  # Limit to top 3 results
+                    break
+                    
                 content = result.get('snippet', '').strip()
-                if content and content.lower() not in seen_content:
-                    seen_content.add(content.lower())
-                    relevant_info.append({
+                content_key = content.lower() if content else ''
+                
+                if content and content_key not in seen_content:
+                    seen_content.add(content_key)
+                    processed.append({
                         'point': content,
                         'source': result.get('link')
                     })
-            return relevant_info
-            
+                    count += 1
+                    
         return processed
 
     def _create_error_response(self, task: str, error: str) -> Dict:
