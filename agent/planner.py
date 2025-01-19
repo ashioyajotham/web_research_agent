@@ -14,15 +14,43 @@ class Planner:
         self.model = model
         self.planning_prompt = """
         Break down this task into specific steps. For each step specify:
-        1. The tool to use (web_search, web_browse, code_generate)
-        2. Required parameters
+        1. Tool to use (web_search, web_browse, code_generate)
+        2. Required parameters:
+           - web_search: {"query": "search query", "num_results": 5}
+           - web_browse: {"url": "webpage url", "elements": ["main", "article"]}
+           - code_generate: {"instruction": "what to code", "language": "python", "context": "any context"}
         3. Dependencies on other steps
+        
+        Respond in this exact JSON format:
+        {
+            "steps": [
+                {
+                    "tool": "web_search",
+                    "params": {
+                        "query": "your search query",
+                        "num_results": 5
+                    },
+                    "dependencies": []
+                }
+            ]
+        }
         
         Task: {task}
         Previous context: {context}
-        
-        Respond in JSON format.
         """
+        
+        # Set default parameters
+        self.default_params = {
+            'web_search': {
+                'num_results': 5
+            },
+            'web_browse': {
+                'elements': ['main']
+            },
+            'code_generate': {
+                'language': 'python'
+            }
+        }
         
         self.available_tools = {
             'web_search': {
@@ -57,18 +85,59 @@ class Planner:
             context=str(context) if context else "No previous context"
         )
         
-        # Use correct Gemini API method
-        response = self.model.generate_content(prompt)
         try:
-            # Parse response text into JSON
-            return json.loads(response.text)
-        except json.JSONDecodeError:
-            return {
-                "steps": [{
-                    "tool": "web_search",
-                    "params": {"query": task}
-                }]
-            }
+            # Get response from model
+            response = self.model.generate_content(prompt)
+            
+            # Extract and clean response text
+            response_text = response.text.strip()
+            
+            # Remove code blocks if present
+            if response_text.startswith("```"):
+                response_text = "\n".join(response_text.split("\n")[1:-1])
+                
+            # Remove any JSON markers
+            response_text = response_text.replace("```json", "").replace("```", "")
+            
+            # Clean any escaped quotes
+            response_text = response_text.replace('\\"', '"')
+            
+            try:
+                plan = json.loads(response_text)
+                # Validate required structure
+                if "steps" not in plan or not isinstance(plan["steps"], list):
+                    raise ValueError("Invalid plan structure")
+                return plan
+                
+            except (json.JSONDecodeError, ValueError) as e:
+                print(f"Error parsing plan: {e}")
+                # Return fallback plan
+                return {
+                    "steps": [{
+                        "tool": "web_search",
+                        "params": {
+                            "query": task,
+                            "num_results": 5
+                        },
+                        "dependencies": []
+                    }]
+                }
+                
+        except Exception as e:
+            print(f"Plan generation error: {e}")
+            return self._get_fallback_plan(task)
+
+    def _get_fallback_plan(self, task: str) -> Dict:
+        return {
+            "steps": [{
+                "tool": "web_search",
+                "params": {
+                    "query": task,
+                    "num_results": 5
+                },
+                "dependencies": []
+            }]
+        }
 
     def _validate_steps(self, steps: List[Dict]) -> List[Step]:
         validated = []
@@ -76,6 +145,11 @@ class Planner:
             if step['tool'] not in self.available_tools:
                 raise ValueError(f"Unknown tool: {step['tool']}")
                 
+            # Add default parameters if missing
+            if step['tool'] in self.default_params:
+                for param, value in self.default_params[step['tool']].items():
+                    step['params'].setdefault(param, value)
+            
             # Validate required parameters
             required_params = self.available_tools[step['tool']]['params']
             for param in required_params:
