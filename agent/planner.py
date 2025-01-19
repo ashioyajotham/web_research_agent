@@ -1,7 +1,7 @@
-import json
 from typing import List, Dict
 import google.generativeai as genai
 from dataclasses import dataclass
+from .comprehension.task_analyzer import TaskIntent, TaskRequirements
 
 @dataclass
 class Step:
@@ -10,68 +10,133 @@ class Step:
     dependencies: List[int] = None
 
 class Planner:
-    def __init__(self, model=None):
+    def __init__(self, model: genai.GenerativeModel):
         self.model = model
-        self.planning_prompt = """Return ONLY a JSON object in this exact format (no other text):
-{"steps":[{"tool":"web_search","params":{"query":"search query","num_results":5}}]}
 
-Example input: "Find Tesla news"
-Example output: {"steps":[{"tool":"web_search","params":{"query":"Tesla recent news","num_results":5}}]}
-
-Task: {task}"""
-
-    def create_plan(self, task: str) -> Dict:
-        try:
-            # Generate plan
-            response = self.model.generate_content(self.planning_prompt.format(task=task))
-            raw_text = response.text.strip()
-            print(f"Raw response: {repr(raw_text)}")
-            
-            # Extract JSON
-            cleaned_text = raw_text
-            if "```" in cleaned_text:
-                parts = cleaned_text.split("```")
-                for part in parts:
-                    if "{" in part:
-                        cleaned_text = part[part.find("{"):part.rfind("}")+1]
-                        break
-            
-            print(f"Cleaned text: {repr(cleaned_text)}")
-            
-            # Parse JSON
-            plan = json.loads(cleaned_text)
-            print(f"Parsed plan: {json.dumps(plan, indent=2)}")
-            
-            # Validate structure
-            if not isinstance(plan, dict) or "steps" not in plan:
-                raise ValueError("Invalid plan structure")
-                
-            return plan
-            
-        except Exception as e:
-            print(f"Plan creation error: {str(e)}")
-            return self._get_fallback_plan(task)
-
-    def _validate_step(self, step: Dict) -> bool:
-        if not isinstance(step, dict):
-            return False
-            
-        if "tool" not in step or step["tool"] not in self.available_tools:
-            return False
-            
-        if "params" not in step or not isinstance(step["params"], dict):
-            return False
-            
-        tool_info = self.available_tools[step["tool"]]
-        return all(param in step["params"] for param in tool_info["required"])
-
-    def _get_fallback_plan(self, task: str) -> Dict:
-        return {
-            "steps": [{
-                "tool": "web_search",
-                "params": {
-                    "query": task,
-                    "num_results": 5
-                }
-            }]
+    async def create_plan(self, task: str, requirements: TaskRequirements) -> List[Dict]:
+        """Create a dynamic plan based on task requirements"""
+        
+        # Define step templates based on intent
+        step_templates = {
+            TaskIntent.COMPILE: self._create_compilation_plan,
+            TaskIntent.FIND: self._create_fact_finding_plan,
+            TaskIntent.ANALYZE: self._create_analysis_plan,
+            TaskIntent.CALCULATE: self._create_calculation_plan,
+            TaskIntent.EXTRACT: self._create_extraction_plan,
+            TaskIntent.VERIFY: self._create_verification_plan
         }
+        
+        # Get appropriate planning function
+        plan_creator = step_templates.get(requirements.intent, self._create_default_plan)
+        return plan_creator(task, requirements)
+
+    def _create_compilation_plan(self, task: str, requirements: TaskRequirements) -> List[Dict]:
+        """Create plan for compilation tasks"""
+        steps = []
+        
+        # Initial broad search
+        steps.append({
+            'tool': 'web_search',
+            'params': {
+                'query': task,
+                'num_results': max(requirements.count * 2 if requirements.count else 10, 5)
+            }
+        })
+        
+        # Add verification step if sources required
+        if requirements.sources_required:
+            steps.append({
+                'tool': 'web_browse',
+                'params': {'verify_sources': True}
+            })
+            
+        return steps
+
+    def _create_fact_finding_plan(self, task: str, requirements: TaskRequirements) -> List[Dict]:
+        """Create plan for fact-finding tasks"""
+        steps = []
+        
+        # Start with focused search
+        steps.append({
+            'tool': 'web_search',
+            'params': {
+                'query': task,
+                'search_type': 'specific',
+                'num_results': 3
+            }
+        })
+        
+        # Add source verification if required
+        if requirements.sources_required:
+            steps.append({
+                'tool': 'web_browse',
+                'params': {'verify_sources': True}
+            })
+            
+        return steps
+
+    def _create_analysis_plan(self, task: str, requirements: TaskRequirements) -> List[Dict]:
+        """Create plan for analysis tasks"""
+        steps = []
+        
+        # Multiple searches for comprehensive analysis
+        searches = self._break_down_analysis(task)
+        for search in searches:
+            steps.append({
+                'tool': 'web_search',
+                'params': {
+                    'query': search,
+                    'search_type': 'comprehensive'
+                }
+            })
+            
+        return steps
+
+    def _create_calculation_plan(self, task: str, requirements: TaskRequirements) -> List[Dict]:
+        """Create plan for calculation tasks"""
+        steps = []
+        
+        # Search for numerical data
+        steps.append({
+            'tool': 'web_search',
+            'params': {
+                'query': task,
+                'search_type': 'numeric',
+                'num_results': 5
+            }
+        })
+        
+        # Add data extraction step
+        steps.append({
+            'tool': 'web_browse',
+            'params': {'extract_numbers': True}
+        })
+        
+        return steps
+
+    def _break_down_analysis(self, task: str) -> List[str]:
+        """Break down complex analysis tasks into subtasks"""
+        base_query = task.lower()
+        queries = [base_query]
+        
+        # Add supporting queries based on task content
+        if 'compare' in base_query:
+            parts = base_query.split('compare')
+            if len(parts) > 1:
+                queries.extend([f"statistics {p.strip()}" for p in parts[1].split('and')])
+                
+        elif 'trend' in base_query or 'over time' in base_query:
+            queries.append(f"{base_query} historical data")
+            queries.append(f"{base_query} latest statistics")
+            
+        return queries[:3]  # Limit to 3 searches
+
+    def _create_default_plan(self, task: str, requirements: TaskRequirements) -> List[Dict]:
+        """Create a basic plan for unspecified task types"""
+        return [{
+            'tool': 'web_search',
+            'params': {
+                'query': task,
+                'num_results': 5
+            }
+        }]
