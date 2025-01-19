@@ -9,18 +9,18 @@ from tools.code_tools import CodeTools
 
 class Agent:
     def __init__(self, api_key: str, serper_api_key: str):
+        # Initialize Gemini first
+        genai.configure(api_key=api_key)
+        self.model = genai.GenerativeModel('gemini-pro')
+        
         self.memory = Memory()
-        self.planner = Planner()
+        self.planner = Planner(model=self.model)  # Pass model to Planner
         self.learner = Learner()
         
         # Initialize tools
         self._web_search_tool = WebSearchTool(serper_api_key)
         self._web_browser_tool = WebBrowserTool()
         self._code_tools = CodeTools()
-        
-        # Initialize Gemini
-        genai.configure(api_key=api_key)
-        self.model = genai.GenerativeModel('gemini-pro')
         
         self.tools = {
             'web_search': self._web_search_tool.search,

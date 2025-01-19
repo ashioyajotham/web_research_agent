@@ -1,3 +1,4 @@
+import json
 from typing import List, Dict
 import google.generativeai as genai
 from dataclasses import dataclass
@@ -9,7 +10,8 @@ class Step:
     dependencies: List[int] = None
 
 class Planner:
-    def __init__(self):
+    def __init__(self, model=None):
+        self.model = model
         self.planning_prompt = """
         Break down this task into specific steps. For each step specify:
         1. The tool to use (web_search, web_browse, code_generate)
