@@ -88,12 +88,12 @@
           "position": 4
         },
         {
-          "title": "Statement from NSC Spokesperson Adrienne Watson on the U.S. ...",
-          "link": "https://geneva.usmission.gov/2024/05/15/statement-from-nsc-spokesperson-adrienne-watson-on-the-us-prc-talks-on-ai-risk-and-safety/",
-          "snippet": "In a candid and constructive discussion, the United States and PRC exchanged perspectives on their respective approaches to AI safety and risk management.",
-          "date": "May 15, 2024",
+          "title": "China and U.S. envoys to hold 1st top-level dialogue on artificial ...",
+          "link": "https://www.pbs.org/newshour/politics/china-and-u-s-envoys-to-hold-1st-top-level-dialogue-on-artificial-intelligence",
+          "snippet": "... between U.S. President Joe Biden and Chinese President Xi Jinping in San Francisco in November. Both the U.S. and China see AI as crucial ...",
+          "date": "May 13, 2024",
           "attributes": {
-            "Missing": "mediated secret companies"
+            "Missing": "mediated secret 2023."
           },
           "position": 5
         }
@@ -124,22 +124,22 @@
           "position": 2
         },
         {
-          "title": "Finding the Best Training Data for Your AI Model - Keylabs",
-          "link": "https://keylabs.ai/blog/finding-the-best-training-data-for-your-ai-model/",
-          "snippet": "Discover the top sources for AI model training data. Learn how to select high-quality data to train your models effectively.",
-          "date": "Jan 29, 2024",
+          "title": "What is data drift in ML, and how to detect and handle it - Evidently AI",
+          "link": "https://www.evidentlyai.com/ml-in-production/data-drift",
+          "snippet": "Data drift refers to changes in the distribution of the features an ML model receives in production, potentially causing a decline in model ...",
+          "date": "Jan 9, 2025",
           "sitelinks": [
             {
-              "title": "Open Source Datasets",
-              "link": "https://keylabs.ai/blog/finding-the-best-training-data-for-your-ai-model/#:~:text=Open%20Source%20Datasets,-Open%20source%20datasets%20are%20maintained"
+              "title": "What Is Data Drift In Ml...",
+              "link": "https://www.evidentlyai.com/ml-in-production/data-drift#:~:text=What%20is%20data%20drift%20in%20ML%2C%20and%20how%20to%20detect%20and%20handle%20it,-Last%20updated%3A"
             },
             {
-              "title": "Model Parameters And...",
-              "link": "https://keylabs.ai/blog/finding-the-best-training-data-for-your-ai-model/#:~:text=Model%20Parameters%20and%20Hyperparameters,-During%20the%20training%20process%2C"
+              "title": "What Is Data Drift?",
+              "link": "https://www.evidentlyai.com/ml-in-production/data-drift#:~:text=What%20is%20data%20drift%3F,-TL%3BDR.%20Data"
             },
             {
-              "title": "Model Training Process",
-              "link": "https://keylabs.ai/blog/finding-the-best-training-data-for-your-ai-model/#:~:text=Model%20Training%20Process,-The%20model%20training%20process%20typically"
+              "title": "How To Detect Data Drift",
+              "link": "https://www.evidentlyai.com/ml-in-production/data-drift#:~:text=How%20to%20detect%20data%20drift,-As%20we%20explored%20earlier%2C"
             }
           ],
           "position": 3
@@ -222,6 +222,15 @@
           "position": 3
         },
         {
+          "title": "Our Decarbonization Commitments - Volkswagen",
+          "link": "https://www.vw.com/en/our-decarbonization-commitments.html",
+          "snippet": "30.8% VOC emissions on a per-car basis. 57.8% waste to landfill on a per-car basis. In line with the Volkswagen Group, we intend to be a net carbon neutral ...",
+          "attributes": {
+            "Missing": "percentage sum 2021?"
+          },
+          "position": 4
+        },
+        {
           "title": "Way to Zero: Volkswagen presents roadmap for climate-neutral ...",
           "link": "https://www.volkswagen-newsroom.com/en/press-releases/way-to-zero-volkswagen-presents-roadmap-for-climate-neutral-mobility-7081",
           "snippet": "The company intends to be net carbon neutral by 2050 at the latest. A new interim milestone is the targeted 40-percent reduction in CO 2 emissions per vehicle ...",
@@ -229,13 +238,6 @@
           "attributes": {
             "Missing": "sum | Show results with:sum"
           },
-          "position": 4
-        },
-        {
-          "title": "[PDF] Volkswagen Climate Proxy Report - PIRC",
-          "link": "https://www.pirc.co.uk/wp-content/uploads/2024/05/VW-Proxy-report.pdf",
-          "snippet": "By 2030 the company aims to cut production-related carbon emissions. (scope 1 and 2) from passenger cars and light commercial vehicles by. 50%, ...",
-          "date": "May 27, 2024",
           "position": 5
         }
       ],
@@ -299,12 +301,6 @@
           "position": 1
         },
         {
-          "title": "Countries in the EU and EEA - GOV.UK",
-          "link": "https://www.gov.uk/eu-eea",
-          "snippet": "The EU countries are: Austria, Belgium, Bulgaria, Croatia, Republic of Cyprus, Czech Republic, Denmark, Estonia, Finland, France, Germany, Greece, Hungary, ...",
-          "position": 2
-        },
-        {
           "title": "ME | WHAT IS THE EUROPEAN UNION? - EU",
           "link": "https://op.europa.eu/webpub/com/eu-and-me/en/WHAT_IS_THE_EUROPEAN_UNION.html",
           "snippet": "The European Union is a unique partnership between 27 European countries, known as Member States, or EU countries. Together they cover much of the European ...",
@@ -322,6 +318,12 @@
               "link": "https://op.europa.eu/webpub/com/eu-and-me/en/WHAT_IS_THE_EUROPEAN_UNION.html#:~:text=New%20members,-In%201973%2C%20Denmark%2C"
             }
           ],
+          "position": 2
+        },
+        {
+          "title": "Countries in the EU and EEA - GOV.UK",
+          "link": "https://www.gov.uk/eu-eea",
+          "snippet": "The EU countries are: Austria, Belgium, Bulgaria, Croatia, Republic of Cyprus, Czech Republic, Denmark, Estonia, Finland, France, Germany, Greece, Hungary, ...",
           "position": 3
         },
         {
@@ -357,10 +359,10 @@
       "query": "They operate within the motor vehicle sector, as defined by the European Financial Reporting Advisory Group's (EFRAG) draft sector guidance",
       "results": [
         {
-          "title": "Building a sustainable automotive industry in Europe | Deloitte Insights",
-          "link": "https://www2.deloitte.com/us/en/insights/environmental-social-governance/automotive-industry-sustainability.html",
-          "snippet": "Our research analyzes the current progress of European automotive companies on their sustainability journey.",
-          "date": "Nov 6, 2024",
+          "title": "[PDF] SEC 1 Sector Classification \u2013 Exposure Draft - EFRAG",
+          "link": "https://www.efrag.org/system/files/sites/webpublishing/Meeting%20Documents/2405070938330278/04-02%20-%20Sector%20Classification%20SEC%201%20-%20SRB%20240604.pdf",
+          "snippet": "This paper provides technical advice from the EFRAG SR TEG to the EFRAG SRB following the EFRAG SR TEG's public discussion.",
+          "date": "Jun 4, 2024",
           "position": 1
         },
         {
@@ -370,26 +372,30 @@
           "position": 2
         },
         {
-          "title": "[PDF] SEC 1 Sector Classification \u2013 Exposure Draft - EFRAG",
-          "link": "https://www.efrag.org/system/files/sites/webpublishing/Meeting%20Documents/2405070938330278/04-02%20-%20Sector%20Classification%20SEC%201%20-%20SRB%20240604.pdf",
-          "snippet": "This paper provides technical advice from the EFRAG SR TEG to the EFRAG SRB following the EFRAG SR TEG's public discussion.",
-          "date": "Jun 4, 2024",
-          "position": 3
-        },
-        {
           "title": "Sector-specific ESRS - EFRAG",
           "link": "https://www.efrag.org/en/sustainability-reporting/esrs-workstreams/sectorspecific-esrs",
           "snippet": "EFRAG is tasked to develop a set of sector-agnostic draft ESRS. This will be a multi-year exercise. In particular, EFRAG's mandate also includes the ...",
           "attributes": {
             "Missing": "operate | Show results with:operate"
           },
+          "position": 3
+        },
+        {
+          "title": "EFRAG Sector Specific ESRS",
+          "link": "https://efrag-website.azurewebsites.net/lab5",
+          "snippet": "EFRAG is tasked to develop a set of sector-agnostic draft ESRS. This will be multi-year exercise. In particular, EFRAG's mandate also includes the development ...",
+          "attributes": {
+            "Missing": "operate | Show results with:operate"
+          },
           "position": 4
         },
         {
-          "title": "[PDF] SEC 1 Sector Classification and General Requirements - EFRAG",
-          "link": "https://www.efrag.org/system/files/sites/webpublishing/Meeting%20Documents/2407231201048062/04-04A%20-%20Sector%20Classification%20SEC%201%20-%20clean%20-%20SRB%20240917.pdf",
-          "snippet": "This paper provides the technical advice from EFRAG SR TEG to the EFRAG SRB, following EFRAG SR TEG's public discussion.",
-          "date": "Sep 17, 2024",
+          "title": "Road Transport (TRO) standard setting, Research phase - EFRAG",
+          "link": "https://www.efrag.org/en/projects/road-transport-tro-standard-setting/research-phase",
+          "snippet": "This will be multi-year exercise. On this page, stakeholders can find information related to the development of ESRS for Road Transport sector.",
+          "attributes": {
+            "Missing": "guidance | Show results with:guidance"
+          },
           "position": 5
         }
       ],
@@ -461,31 +467,31 @@
           "position": 3
         },
         {
-          "title": "Emissions of Carbon Dioxide in the Transportation Sector",
-          "link": "https://www.cbo.gov/publication/58861",
-          "snippet": "In 2021, CO2 emissions in the transportation sector were 6 percent less than they were in 2005. The decline in emissions from transportation has ...",
-          "date": "Dec 13, 2022",
-          "sitelinks": [
-            {
-              "title": "Trends In Carbon Dioxide...",
-              "link": "https://www.cbo.gov/publication/58861#:~:text=Trends%20in%20Carbon%20Dioxide%20Emissions,-In%202017%2C%20CO2"
-            },
-            {
-              "title": "Changes In Fuel Economy",
-              "link": "https://www.cbo.gov/publication/58861#:~:text=Changes%20in%20Fuel%20Economy,-Corporate%20average%20fuel%20economy%20%28"
-            },
-            {
-              "title": "Appendix Bdata Sources For...",
-              "link": "https://www.cbo.gov/publication/58861#:~:text=Appendix%20BData%20Sources%20for%20Figures"
-            }
-          ],
+          "title": "Road to Better: Ford Releases 2023 Integrated Sustainability and ...",
+          "link": "https://media.ford.com/content/fordmedia/fna/us/en/news/2023/04/03/road-to-better--ford-releases-2023-integrated-sustainability-and.html",
+          "snippet": "The report shares new data that shows Ford on track to achieve carbon neutrality no later than 2050 across its vehicles, operations and supply chain.",
+          "date": "Apr 3, 2023",
           "position": 4
         },
         {
-          "title": "[PDF] 2023 Sustainability Report Journey to Zero - General Motors",
-          "link": "https://www.gm.com/content/dam/company/docs/us/en/gmcom/company/GM_2023_SR.pdf",
-          "snippet": "This report covers certain sustainability metrics and data for GM as of and during the year ended December 31, 2023, unless otherwise stated ...",
-          "date": "Apr 30, 2024",
+          "title": "CO2 Emissions in 2022 \u2013 Analysis - IEA",
+          "link": "https://www.iea.org/reports/co2-emissions-in-2022",
+          "snippet": "Energy-related CO2 emissions grew by 0.9% to over 36.8 Gt in 2022. Global carbon dioxide (CO2) emissions from energy combustion and industrial ...",
+          "date": "Mar 2, 2023",
+          "sitelinks": [
+            {
+              "title": "Co2 Emissions In 2022",
+              "link": "https://www.iea.org/reports/co2-emissions-in-2022#:~:text=CO2%20Emissions%20in%202022,-Download%20PDF"
+            },
+            {
+              "title": "Cooling Degree Days In...",
+              "link": "https://www.iea.org/reports/co2-emissions-in-2022#:~:text=Cooling%20degree%20days%20in%20summer%20months%20for%20selected%20countries%20and%20regions%2C%202000%2D2022"
+            },
+            {
+              "title": "China's Emissions Barely...",
+              "link": "https://www.iea.org/reports/co2-emissions-in-2022#:~:text=China%27s%20emissions%20barely%20changed%20from%202021%20to%202022%2C%20amid%20Covid%2D19%20lockdowns%20and%20a%20real%20estate%20slump"
+            }
+          ],
           "position": 5
         }
       ],
@@ -566,29 +572,15 @@
           "position": 3
         },
         {
-          "title": "Holding Company - Defined, How it Works, Pros, Types",
-          "link": "https://corporatefinanceinstitute.com/resources/management/holding-company/",
-          "snippet": "A holding company is a company that doesn't conduct any operations, ventures, or other active tasks for itself. Instead, it exists for the purpose of owning ...",
+          "title": "[PDF] What is a Holding Company Structure and Why is it so Popular?",
+          "link": "https://www.nass.org/sites/default/files/2023-07/issue-paper-CT-Corp-NASS-summer23.pdf",
+          "snippet": "A holding company is a parent company\u2014usually a corporation or LLC \u2014 whose purpose is to buy and control the ownership interests of other companies. The.",
           "position": 4
         },
         {
-          "title": "Holding Company vs. Parent | Holdings, Subsidiaries, & More",
-          "link": "https://wyomingllcattorney.com/Form-a-Wyoming-LLC/Holding-Company-Setup/vs-Parent",
-          "snippet": "A subsidiary is a company that is owned or controlled by another company, usually referred to as its holding company or parent company. A subsidiary company is ...",
-          "sitelinks": [
-            {
-              "title": "Holding Company Vs. Parent",
-              "link": "https://wyomingllcattorney.com/Form-a-Wyoming-LLC/Holding-Company-Setup/vs-Parent#:~:text=Holding%20Company%20vs.%20Parent,-The%20main%20difference%20between%20a"
-            },
-            {
-              "title": "Parent Company",
-              "link": "https://wyomingllcattorney.com/Form-a-Wyoming-LLC/Holding-Company-Setup/vs-Parent#:~:text=Parent%20Company,-A%20parent%20company%20is%20a"
-            },
-            {
-              "title": "Enhanced Privacy",
-              "link": "https://wyomingllcattorney.com/Form-a-Wyoming-LLC/Holding-Company-Setup/vs-Parent#:~:text=Enhanced%20Privacy"
-            }
-          ],
+          "title": "Holding Company - Defined, How it Works, Pros, Types",
+          "link": "https://corporatefinanceinstitute.com/resources/management/holding-company/",
+          "snippet": "A holding company is a company that doesn't conduct any operations, ventures, or other active tasks for itself. Instead, it exists for the purpose of owning ...",
           "position": 5
         }
       ],

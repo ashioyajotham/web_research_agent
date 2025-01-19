@@ -1,139 +1,190 @@
-from typing import Dict, Any, List
-from colorama import init, Fore, Back, Style
-import json
+from typing import Dict, Any, List, Optional
+from colorama import init, Fore, Style
+from dataclasses import dataclass
 import textwrap
-from enum import Enum
+import re
 
-class OutputType(Enum):
-    SEARCH = "search"
-    LIST = "list"
-    CODE = "code"
-    ERROR = "error"
-    DIRECT = "direct"
+@dataclass
+class FormatConfig:
+    width: int = 100
+    indent: int = 2
+    max_results: int = 5
+    snippet_length: int = 300
+    show_metadata: bool = True
 
 class OutputFormatter:
-    def __init__(self):
-        init()  # Initialize colorama
-        self.width = 100
-        self.indent = 2
+    def __init__(self, config: Optional[FormatConfig] = None):
+        init()
+        self.config = config or FormatConfig()
+        self.styles = {
+            'primary': f"{Fore.CYAN}",
+            'secondary': f"{Fore.YELLOW}",
+            'accent': f"{Fore.GREEN}",
+            'link': f"{Fore.BLUE}",
+            'warning': f"{Fore.RED}",
+            'reset': f"{Style.RESET_ALL}"
+        }
+
+    def format_output(self, query: str, results: List[Dict]) -> str:
+        """Dynamic output formatting based on content analysis"""
+        if not results:
+            return self._format_error("No results found")
+
+        content_attributes = self._analyze_content(query, results)
         
-    def format_task(self, task: str) -> str:
-        return f"\n{Fore.CYAN}Task:{Style.RESET_ALL} {task}"
+        sections = [
+            self._format_header(query, content_attributes),
+            self._format_main_content(results, content_attributes),
+            self._format_metadata(results) if self.config.show_metadata else "",
+            self._format_footer(content_attributes)
+        ]
         
-    def format_step(self, step: Dict) -> str:
-        tool = step.get('tool', 'unknown')
-        params = step.get('params', {})
-        return f"\n{Fore.YELLOW}Using {tool}:{Style.RESET_ALL} {params}"
-        
-    def format_result(self, result: Dict) -> str:
-        if not result.get('success', False):
-            return self.format_error(result.get('error', 'Unknown error'))
-            
-        output_type = self.detect_output_type(result)
-        if output_type == OutputType.ERROR:
-            return self.format_error(result.get('error', 'Unknown error'))
-        elif output_type == OutputType.LIST:
-            return self.format_list(result)
-        elif output_type == OutputType.CODE:
-            return self.format_code(result)
-        elif output_type == OutputType.SEARCH:
-            return self.format_search(result)
-        else:
-            return self.format_direct(result)
-            
-    def detect_output_type(self, result: Dict) -> OutputType:
-        task = result.get('task', '').lower()
-        if 'error' in result:
-            return OutputType.ERROR
-        elif any(word in task for word in ['list', 'compile', 'enumerate']):
-            return OutputType.LIST
-        elif any(word in task for word in ['code', 'function', 'program']):
-            return OutputType.CODE
-        elif result.get('results', [{}])[0].get('tool') == 'web_search':
-            return OutputType.SEARCH
-        return OutputType.DIRECT
-        
-    def format_error(self, error: str) -> str:
-        return f"\n{Fore.RED}Error: {error}{Style.RESET_ALL}\n"
-        
-    def format_list(self, result: Dict) -> str:
-        items = result.get('results', [{}])[0].get('result', {}).get('results', [])
-        output = [f"\n{Fore.GREEN}Results:{Style.RESET_ALL}"]
-        for i, item in enumerate(items, 1):
-            output.append(f"\n{i}. {Fore.YELLOW}{item.get('title', '')}{Style.RESET_ALL}")
-            if 'link' in item:
-                output.append(f"   {Fore.BLUE}{item['link']}{Style.RESET_ALL}")
-            if 'snippet' in item:
-                output.append(f"   {item['snippet']}")
-        return '\n'.join(output)
-        
-    def format_code(self, result: Dict) -> str:
-        code = result.get('results', [{}])[0].get('result', {}).get('code', '')
-        return f"\n{Fore.CYAN}Generated Code:{Style.RESET_ALL}\n```\n{code}\n```"
-        
-    def format_search(self, result: Dict) -> str:
-        items = result.get('results', [{}])[0].get('result', {}).get('results', [])
-        output = [f"\n{Fore.GREEN}Search Results:{Style.RESET_ALL}"]
-        for item in items:
-            output.append(f"\n{Fore.YELLOW}• {item.get('title', '')}{Style.RESET_ALL}")
-            output.append(f"  {Fore.BLUE}{item.get('link', '')}{Style.RESET_ALL}")
-            output.append(f"  {item.get('snippet', '')}")
-        return '\n'.join(output)
-        
-    def format_direct(self, result: Dict) -> str:
-        answer = result.get('results', [{}])[0].get('result', {}).get('answer', '')
-        return f"\n{Fore.GREEN}Answer:{Style.RESET_ALL} {answer}"
-        
-    def format_results(self, results: Dict) -> str:
-        if not results.get("success"):
-            return f"{Fore.RED}Error: {results.get('error')}{Style.RESET_ALL}"
+        return "\n".join(filter(None, sections))
+
+    def format_search_results(self, results: List[Dict]) -> str:
+        """Format search results with simple, clear presentation"""
+        if not results:
+            return f"\n{self.styles['warning']}No relevant information found{self.styles['reset']}\n"
             
         output = []
-        search_results = results.get("results", [])
-        
-        for item in search_results:
-            output.append(f"\n{Fore.YELLOW}{item.get('title')}{Style.RESET_ALL}")
-            output.append(f"{Fore.BLUE}{item.get('link')}{Style.RESET_ALL}")
-            output.append(f"{item.get('snippet')}\n")
-            
+        for i, result in enumerate(results[:self.config.max_results], 1):
+            bullet = "●" if i == 1 else "○" if i == 2 else "■"
+            output.append(f"""
+{self.styles['accent']}{bullet}{self.styles['reset']} {self.styles['secondary']}{result.get('title', '')}{self.styles['reset']}
+   {self.styles['link']}{result.get('link', '')}{self.styles['reset']}
+   {self._wrap_text(result.get('snippet', ''), indent=3)}""")
+            if result.get('date'):
+                output.append(f"   {self.styles['secondary']}Date:{self.styles['reset']} {result.get('date')}")
+                
         return "\n".join(output)
 
-    def format_header(self) -> str:
-        return f"""
-{Fore.CYAN}{'=' * self.width}
-{self._center_text('Web Research Agent Results')}
-{'=' * self.width}{Style.RESET_ALL}
-"""
-    
-    def _center_text(self, text: str) -> str:
-        padding = (self.width - len(text)) // 2
-        return " " * padding + text
-        
-    def format_task_section(self, task_num: int, total_tasks: int, task: str) -> str:
-        return f"""
-{Fore.YELLOW}Task {task_num}/{total_tasks}:{Style.RESET_ALL}
-{self._wrap_text(task)}
-{Fore.BLUE}{'-' * self.width}{Style.RESET_ALL}
-"""
-    
-    def format_search_results(self, results: List[Dict]) -> str:
-        if not results:
-            return f"\n{Fore.RED}No relevant information found{Style.RESET_ALL}\n"
-            
-        output = []
-        for i, result in enumerate(results[:5], 1):
-            output.append(f"""
-{Fore.GREEN}Finding {i}:{Style.RESET_ALL}
-  {result.get('title', '')}
-  {Fore.BLUE}{result.get('link', '')}{Style.RESET_ALL}
-  {self._wrap_text(result.get('snippet', ''), indent=2)}""")
-            
-        return '\n'.join(output)
-    
+    def _analyze_content(self, query: str, results: List[Dict]) -> Dict:
+        """Analyze content to determine optimal presentation"""
+        return {
+            'importance': self._assess_importance(results),
+            'complexity': self._assess_complexity(query, results),
+            'temporal_relevance': self._has_temporal_data(results),
+            'numerical_content': self._has_numerical_data(results),
+            'source_diversity': len(set(r.get('link', '').split('/')[2] for r in results)),
+            'has_dates': any('date' in r for r in results),
+            'key_points': self._extract_key_points(results)
+        }
+
+    def _format_main_content(self, results: List[Dict], attributes: Dict) -> str:
+        """Format content using our proven search results formatter"""
+        return self.format_search_results(results)
+
     def _wrap_text(self, text: str, indent: int = 0) -> str:
         return textwrap.fill(
             text,
-            width=self.width - indent,
+            width=self.config.width - indent,
             initial_indent=' ' * indent,
             subsequent_indent=' ' * indent
         )
+
+    def _center_text(self, text: str) -> str:
+        padding = (self.config.width - len(text)) // 2
+        return " " * padding + text
+
+    def format_header(self) -> str:
+        """Format the overall header for the research results"""
+        return f"""
+{self.styles['primary']}{'=' * self.config.width}
+{self._center_text('Research Results')}
+{'=' * self.config.width}{self.styles['reset']}
+"""
+
+    def _format_header(self, query: str, attributes: Dict) -> str:
+        """Format the header for a specific query"""
+        complexity_indicator = "★" * int(attributes['complexity'] * 5) if 'complexity' in attributes else ""
+        return f"""
+{self.styles['primary']}{'=' * self.config.width}
+{self._center_text('Query Analysis')}
+{'-' * self.config.width}{self.styles['reset']}
+{self._wrap_text(query)}
+{self.styles['secondary']}{complexity_indicator}{self.styles['reset']}
+{self.styles['primary']}{'-' * self.config.width}{self.styles['reset']}
+"""
+
+    def _format_metadata(self, results: List[Dict]) -> str:
+        """Format metadata about the search results"""
+        if not results:
+            return ""
+            
+        sources = set(r.get('link', '').split('/')[2] for r in results if 'link' in r)
+        dates = [r.get('date') for r in results if 'date' in r]
+        
+        metadata = [
+            f"\n{self.styles['secondary']}Sources:{self.styles['reset']} {len(sources)}",
+            f"{self.styles['secondary']}Results:{self.styles['reset']} {len(results)}"
+        ]
+        
+        if dates:
+            metadata.append(f"{self.styles['secondary']}Date Range:{self.styles['reset']} {min(dates)} - {max(dates)}")
+            
+        return "\n".join(metadata)
+
+    def _format_footer(self, attributes: Dict = None) -> str:
+        """Format the footer with optional attributes summary"""
+        return f"\n{self.styles['primary']}{'=' * self.config.width}{self.styles['reset']}\n"
+
+    def format_task_section(self, task_num: int, total_tasks: int, task: str) -> str:
+        """Format a task section header"""
+        return f"""
+{self.styles['secondary']}Task {task_num}/{total_tasks}:{self.styles['reset']}
+{self._wrap_text(task)}
+{self.styles['link']}{'-' * self.config.width}{self.styles['reset']}
+"""
+
+    def _format_error(self, message: str) -> str:
+        """Format error messages"""
+        return f"\n{self.styles['warning']}Error: {message}{self.styles['reset']}\n"
+
+    def _has_temporal_data(self, results: List[Dict]) -> bool:
+        """Check if results contain temporal data"""
+        return any('date' in r for r in results) or any(
+            re.search(r'\b\d{4}\b', r.get('snippet', '')) for r in results
+        )
+
+    def _has_numerical_data(self, results: List[Dict]) -> bool:
+        """Check if results contain significant numerical data"""
+        return any(
+            len(re.findall(r'[-+]?\d*\.?\d+%?', r.get('snippet', ''))) > 1 
+            for r in results
+        )
+
+    def _assess_importance(self, results: List[Dict]) -> float:
+        """Assess the importance/relevance of results"""
+        factors = [
+            len([r for r in results if '.gov' in r.get('link', '')]) > 0,
+            len([r for r in results if '.edu' in r.get('link', '')]) > 0,
+            any(r.get('date') for r in results),
+            len(set(r.get('link', '').split('/')[2] for r in results)) > 3
+        ]
+        return sum(factors) / len(factors)
+
+    def _extract_key_points(self, results: List[Dict]) -> List[str]:
+        """Extract key points from results"""
+        points = []
+        for result in results[:self.config.max_results]:
+            sentences = re.split(r'[.!?]+', result.get('snippet', ''))
+            points.extend([
+                s.strip() for s in sentences 
+                if len(s.split()) > 5 and len(s.split()) < 30
+                and any(w.islower() for w in s.split())
+            ])
+        return list(set(points))[:5]  # Return top 5 unique points
+
+    def _format_simple_results(self, results: List[Dict]) -> List[str]:
+        """Format basic search results"""
+        output = []
+        for i, result in enumerate(results[:self.config.max_results], 1):
+            output.extend([
+                f"\n{self.styles['accent']}Result {i}:{self.styles['reset']}",
+                f"{self.styles['secondary']}{result.get('title', '')}{self.styles['reset']}",
+                f"{self.styles['link']}{result.get('link', '')}{self.styles['reset']}",
+                self._wrap_text(result.get('snippet', ''), indent=2)
+            ])
+            if result.get('date'):
+                output.append(f"{self.styles['secondary']}Date:{self.styles['reset']} {result['date']}")
+        return output

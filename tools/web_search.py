@@ -15,25 +15,25 @@ class WebSearchTool:
     
     @sleep_and_retry
     @limits(calls=10, period=60)  # Rate limit: 10 calls per minute
-    async def search(self, query: str, num_results: int = 5) -> Dict:
-        """
-        Perform web search using Serper API
-        """
+    async def search(self, query: str, silent: bool = False) -> Dict:
+        """Execute search without printing intermediate output if silent=True"""
         if isinstance(query, str) and query.startswith('"') and query.endswith('"'):
             query = query[1:-1]  # Remove surrounding quotes
 
         try:
-            print(f"Searching for: {query}")  # Debug print
-            
+            if not silent:
+                print(f"Searching for: {query}")
+
             async with aiohttp.ClientSession() as session:
                 async with session.post(
                     self.base_url,
                     headers=self.headers,
-                    json={"q": query, "num": num_results}
+                    json={"q": query, "num": 5}
                 ) as response:
                     
                     data = await response.json()
-                    print(f"Search response: {json.dumps(data, indent=2)}")  # Debug
+                    if not silent:
+                        print(f"Search response: {json.dumps(data, indent=2)}")
                     
                     return {
                         "success": True,
@@ -41,7 +41,8 @@ class WebSearchTool:
                     }
                     
         except Exception as e:
-            print(f"Search error: {str(e)}")
+            if not silent:
+                print(f"Search error: {str(e)}")
             return {
                 "success": False,
                 "error": str(e),

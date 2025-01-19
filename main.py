@@ -25,11 +25,14 @@ async def process_tasks(task_file: Path, output_file: Path, config: Dict) -> Non
     print(formatter.format_header())
     
     for i, task in enumerate(tasks, 1):
-        print(formatter.format_task_section(i, len(tasks), task))
-        print(f"Searching...")
-        result = await agent.execute_task(task)
-        print(formatter.format_search_results(result.get('results', [])))
-        results.append(result)
+        try:
+            print(formatter.format_task_section(i, len(tasks), task))
+            result = await agent.execute_task(task)
+            print(formatter.format_search_results(result.get('results', [])))
+            results.append(result)
+        except Exception as e:
+            print(formatter._format_error(f"Error processing task {i}: {str(e)}"))
+            continue
     
     output_file.write_text(json.dumps({"searches": results}, indent=2))
 

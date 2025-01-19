@@ -36,8 +36,8 @@ class Agent:
 
     async def execute_task(self, task: str) -> Dict:
         try:
-            # Execute search
-            search_result = await self._web_search_tool.search(task)
+            # Execute search (without printing raw search details)
+            search_result = await self._web_search_tool.search(task, silent=True)  # Add silent parameter
             
             if not search_result.get("success"):
                 return {
@@ -53,7 +53,6 @@ class Agent:
             }
             
         except Exception as e:
-            print(f"Task execution error: {str(e)}")
             return {
                 "query": task,
                 "results": [],
