@@ -36,9 +36,9 @@
                   "position": 3
                 },
                 {
-                  "title": "Political Drivers of China's Changing Nuclear Policy",
-                  "link": "https://carnegieendowment.org/research/2024/07/china-nuclear-buildup-political-drivers-united-states-relationship-international-security",
-                  "snippet": "Many Chinese nuclear experts have largely accepted the Western term of \u201cstrategic stability\u201d to describe such a relationship. They believe that ...",
+                  "title": "Remarks and Highlights - United States Mission to the United Nations",
+                  "link": "https://usun.usmission.gov/category/remarks-and-highlights/",
+                  "snippet": "In her fourth and final UN Security Council presidency, Ambassador Linda Thomas-Greenfield, U.S. Representative to the United Nations, raised key U.S. ...",
                   "position": 4
                 },
                 {
@@ -98,15 +98,15 @@
                   "position": 3
                 },
                 {
-                  "title": "China and U.S. envoys to hold 1st top-level dialogue on artificial ...",
-                  "link": "https://www.pbs.org/newshour/politics/china-and-u-s-envoys-to-hold-1st-top-level-dialogue-on-artificial-intelligence",
-                  "snippet": "... between U.S. President Joe Biden and Chinese President Xi Jinping in San Francisco in November. Both the U.S. and China see AI as crucial ...",
-                  "position": 4
-                },
-                {
                   "title": "China and the United States Begin Official AI Dialogue - Richard Weitz",
                   "link": "https://www.chinausfocus.com/peace-security/china-and-the-united-states-begin-official-ai-dialogue",
                   "snippet": "China and the United States held their first intergovernmental meeting on artificial intelligence (AI) in Geneva, Switzerland on May 14, 2024.",
+                  "position": 4
+                },
+                {
+                  "title": "China and U.S. envoys to hold 1st top-level dialogue on artificial ...",
+                  "link": "https://www.pbs.org/newshour/politics/china-and-u-s-envoys-to-hold-1st-top-level-dialogue-on-artificial-intelligence",
+                  "snippet": "... between U.S. President Joe Biden and Chinese President Xi Jinping in San Francisco in November. Both the U.S. and China see AI as crucial ...",
                   "position": 5
                 }
               ],
@@ -166,9 +166,9 @@
                   "position": 4
                 },
                 {
-                  "title": "Artificial Intelligence in Pharmaceutical Technology and Drug ...",
-                  "link": "https://pmc.ncbi.nlm.nih.gov/articles/PMC10385763/",
-                  "snippet": "This comprehensive review explores the wide-ranging applications of AI in drug discovery, drug delivery dosage form designs, process optimization, testing, and ...",
+                  "title": "Agentic AI: 4 reasons why it's the next big thing in AI research - IBM",
+                  "link": "https://www.ibm.com/think/insights/agentic-ai",
+                  "snippet": "Agentic AI refers to a system or program that is capable of autonomously performing tasks on behalf of a user or another system by designing its workflow and ...",
                   "position": 5
                 }
               ],
@@ -272,21 +272,21 @@
                   "position": 1
                 },
                 {
+                  "title": "Find all objects in an ArrayList that satisfy a list of criteria in Java",
+                  "link": "https://stackoverflow.com/questions/50184182/find-all-objects-in-an-arraylist-that-satisfy-a-list-of-criteria-in-java",
+                  "snippet": "I want to write a method that can take a list of City objects and a list of criteria ( total , men , women ) and return all the objects inside that satisfy ...",
+                  "position": 2
+                },
+                {
                   "title": "Solved Some of the following criteria are essential to | Chegg.com",
                   "link": "https://www.chegg.com/homework-help/questions-and-answers/following-criteria-essential-satisfactory-performance-several-professions-one-unique-audit-q187768613",
                   "snippet": "Some of the following criteria are essential to satisfactory performance in several professions. Which one is unique to audit work by CPAs?",
-                  "position": 2
+                  "position": 3
                 },
                 {
                   "title": "Companies with strong reputations for quality follow certain ...",
                   "link": "https://homework.study.com/explanation/companies-with-strong-reputations-for-quality-follow-certain-guidelines-such-as.html",
                   "snippet": "Companies with strong reputations for quality follow certain guidelines, such as _____. A) establishing long-term relationships with suppliers.",
-                  "position": 3
-                },
-                {
-                  "title": "Find all objects in an ArrayList that satisfy a list of criteria in Java",
-                  "link": "https://stackoverflow.com/questions/50184182/find-all-objects-in-an-arraylist-that-satisfy-a-list-of-criteria-in-java",
-                  "snippet": "I want to write a method that can take a list of City objects and a list of criteria ( total , men , women ) and return all the objects inside that satisfy ...",
                   "position": 4
                 },
                 {
@@ -414,9 +414,9 @@
                   "position": 4
                 },
                 {
-                  "title": "Road Transport (RTO) standard setting, Research phase - EFRAG",
-                  "link": "https://www.efrag.org/en/projects/road-transport-rto-standard-setting/research-phase",
-                  "snippet": "The sector standard for road transport includes undertakings that are typically active in two sector categories: passenger land transport and freight transport ...",
+                  "title": "Road Transport (TRO) standard setting, Research phase - EFRAG",
+                  "link": "https://www.efrag.org/en/projects/road-transport-tro-standard-setting/research-phase",
+                  "snippet": "This will be multi-year exercise. On this page, stakeholders can find information related to the development of ESRS for Road Transport sector.",
                   "position": 5
                 }
               ],
@@ -470,15 +470,15 @@
                   "position": 3
                 },
                 {
-                  "title": "Environmental Stewardship of Manufacturing Operations | Stellantis",
-                  "link": "https://www.stellantis.com/en/responsibility/environmental-stewardship-of-manufacturing-operations",
-                  "snippet": "avoiding waste and promoting recycling;; reducing emissions by using materials that have less pollutants;; promoting sustainable materials and maximizing ...",
-                  "position": 4
-                },
-                {
                   "title": "National Environmental Policy Act (NEPA) Classes of Action",
                   "link": "https://www.environment.fhwa.dot.gov/nepa/classes_of_action.aspx",
                   "snippet": "NEPA requires Federal agencies to prepare environmental impact statements (EISs) for major Federal actions that significantly affect the quality of the human ...",
+                  "position": 4
+                },
+                {
+                  "title": "Reducing car pollution - Washington State Department of Ecology",
+                  "link": "https://ecology.wa.gov/issues-and-local-projects/education-training/what-you-can-do/reducing-car-pollution",
+                  "snippet": "Maintain your vehicle. Vehicle pollutants harm our health and contain greenhouse gases that cause climate change. Burning gasoline and diesel fuel creates ...",
                   "position": 5
                 }
               ],
@@ -656,9 +656,9 @@
                   "position": 3
                 },
                 {
-                  "title": "[PDF] What is a Holding Company Structure and Why is it so Popular?",
-                  "link": "https://www.nass.org/sites/default/files/2023-07/issue-paper-CT-Corp-NASS-summer23.pdf",
-                  "snippet": "A holding company is a parent company\u2014usually a corporation or LLC \u2014 whose purpose is to buy and control the ownership interests of other companies. The.",
+                  "title": "Holding Company vs. Parent | Holdings, Subsidiaries, & More",
+                  "link": "https://wyomingllcattorney.com/Form-a-Wyoming-LLC/Holding-Company-Setup/vs-Parent",
+                  "snippet": "A subsidiary is a company that is owned or controlled by another company, usually referred to as its holding company or parent company. A subsidiary company is ...",
                   "position": 4
                 },
                 {

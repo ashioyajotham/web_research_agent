@@ -12,64 +12,41 @@ class Step:
 class Planner:
     def __init__(self, model=None):
         self.model = model
-        self.available_tools = {
-            'web_search': {
-                'params': ['query', 'num_results'],
-                'required': ['query']
-            },
-            'web_browse': {
-                'params': ['url', 'elements'],
-                'required': ['url']
-            },
-            'code_generate': {
-                'params': ['instruction', 'language'],
-                'required': ['instruction']
-            }
-        }
-        
-        self.planning_prompt = """Generate a plan as a single-line JSON with NO formatting:
-{"steps":[{"tool":"tool_name","params":{"param1":"value1"}}]}
+        self.planning_prompt = """Return ONLY a JSON object in this exact format (no other text):
+{"steps":[{"tool":"web_search","params":{"query":"search query","num_results":5}}]}
 
-Available tools:
-- web_search: {"params":{"query":"search terms","num_results":5}}
-- web_browse: {"params":{"url":"webpage_url","elements":["main"]}}
-- code_generate: {"params":{"instruction":"task","language":"python"}}
+Example input: "Find Tesla news"
+Example output: {"steps":[{"tool":"web_search","params":{"query":"Tesla recent news","num_results":5}}]}
 
-Example:
-Task: "Find Tesla news"
-{"steps":[{"tool":"web_search","params":{"query":"Tesla recent news","num_results":5}}]}
-
-Current Task: {task}"""
+Task: {task}"""
 
     def create_plan(self, task: str) -> Dict:
         try:
-            # Generate initial plan
+            # Generate plan
             response = self.model.generate_content(self.planning_prompt.format(task=task))
             raw_text = response.text.strip()
+            print(f"Raw response: {repr(raw_text)}")
             
-            # Clean response
-            if "```" in raw_text:
-                parts = raw_text.split("```")
+            # Extract JSON
+            cleaned_text = raw_text
+            if "```" in cleaned_text:
+                parts = cleaned_text.split("```")
                 for part in parts:
-                    if part.strip().startswith(('{', '[')):
-                        raw_text = part.strip()
+                    if "{" in part:
+                        cleaned_text = part[part.find("{"):part.rfind("}")+1]
                         break
             
+            print(f"Cleaned text: {repr(cleaned_text)}")
+            
             # Parse JSON
-            plan = json.loads(raw_text)
+            plan = json.loads(cleaned_text)
+            print(f"Parsed plan: {json.dumps(plan, indent=2)}")
             
             # Validate structure
             if not isinstance(plan, dict) or "steps" not in plan:
                 raise ValueError("Invalid plan structure")
-            
-            # Validate each step
-            validated_steps = []
-            for step in plan["steps"]:
-                if not self._validate_step(step):
-                    raise ValueError(f"Invalid step: {step}")
-                validated_steps.append(step)
-            
-            return {"steps": validated_steps}
+                
+            return plan
             
         except Exception as e:
             print(f"Plan creation error: {str(e)}")

@@ -4,33 +4,35 @@ from pathlib import Path
 from typing import List, Dict
 import json
 import sys
+import logging
+from colorama import Fore, Style
 
 from agent.agent import Agent
 from config.config_loader import ConfigLoader
 from utils.helpers import setup_logging
+from utils.formatters.output_formatter import OutputFormatter
 
 async def process_tasks(task_file: Path, output_file: Path, config: Dict) -> None:
-    # Initialize agent with both API keys
     agent = Agent(
         api_key=config['api_keys']['gemini'],
         serper_api_key=config['api_keys']['serper']
     )
     
-    # Read tasks
-    tasks = task_file.read_text().splitlines()
-    
-    # Process each task
+    formatter = OutputFormatter()
     results = []
-    for task in tasks:
+    
+    for task in task_file.read_text().splitlines():
         if task.strip():
             result = await agent.execute_task(task)
+            print(formatter.format_results(result))
             results.append({
-                'task': task,
-                'result': result
+                "query": task,
+                "results": result.get("results", [])
             })
     
-    # Save results
-    output_file.write_text(json.dumps(results, indent=2))
+    output_file.write_text(
+        json.dumps({"searches": results}, indent=2)
+    )
 
 def main():
     # Parse arguments

@@ -36,35 +36,25 @@ class Agent:
 
     async def execute_task(self, task: str) -> Dict:
         try:
-            plan = self.planner.create_plan(task)
-            if not isinstance(plan, dict) or "steps" not in plan:
-                raise ValueError("Invalid plan structure")
-                
-            results = []
-            for step in plan["steps"]:  # Direct list access instead of get()
-                if not isinstance(step, dict):
-                    continue
-                    
-                result = await self._execute_step(step)
-                outcome = {
-                    'success': result.get('success', False),
-                    'error': result.get('error', None)
+            result = await self._execute_step({
+                "tool": "web_search",
+                "params": {
+                    "query": task,
+                    "num_results": 5
                 }
-                
-                self.learner.update(step, result, outcome)
-                results.append({'step': step, 'result': result})
+            })
             
             return {
-                'task': task,
-                'results': results,
-                'success': True
+                "task": task,
+                "success": True,
+                "results": result.get("results", [])  # Simplified structure
             }
             
         except Exception as e:
             return {
-                'task': task,
-                'error': str(e),
-                'success': False
+                "task": task,
+                "success": False,
+                "error": str(e)
             }
 
     async def _execute_step(self, step: dict) -> Dict:
