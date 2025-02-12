@@ -11,6 +11,7 @@ from agent.agent import Agent
 from config.config_loader import ConfigLoader
 from utils.helpers import setup_logging
 from utils.formatters.output_formatter import OutputFormatter
+from utils.task_parser import TaskParser
 
 async def process_tasks(task_file: Path, output_file: Path, config: Dict) -> None:
     agent = Agent(
@@ -19,15 +20,22 @@ async def process_tasks(task_file: Path, output_file: Path, config: Dict) -> Non
     )
     
     formatter = OutputFormatter()
+    parser = TaskParser()
     results = []
     
-    tasks = [t for t in task_file.read_text().splitlines() if t.strip()]
+    content = task_file.read_text()
+    tasks = parser.parse_tasks(content)
     print(formatter.format_header())
     
-    for i, task in enumerate(tasks, 1):
+    for i, task_data in enumerate(tasks, 1):
         try:
-            print(formatter.format_task_section(i, len(tasks), task))
-            result = await agent.execute_task(task)
+            # Combine main task with subtasks for context
+            full_task = task_data['task']
+            if (task_data['subtasks']):
+                full_task += "\nCriteria:\n" + "\n".join(task_data['subtasks'])
+                
+            print(formatter.format_task_section(i, len(tasks), task_data['task']))
+            result = await agent.execute_task(full_task)
             if result['success']:
                 print(formatter.format_search_results(result.get('results', [])))
             else:

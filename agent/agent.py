@@ -39,8 +39,14 @@ class Agent:
 
     async def execute_task(self, task: str) -> Dict:
         try:
-            # Get search results silently
-            search_result = await self._web_search_tool.search(task, silent=True)
+            # Handle criteria-based tasks
+            if "Criteria:\n" in task:
+                main_task, criteria = task.split("Criteria:\n", 1)
+                # Combine all criteria into a single search query
+                search_query = f"{main_task.strip()} {criteria.replace(chr(10), ' AND ')}"
+                search_result = await self._web_search_tool.search(search_query, silent=True)
+            else:
+                search_result = await self._web_search_tool.search(task, silent=True)
             
             # Process results
             processed_results = []

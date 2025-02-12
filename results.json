@@ -8,34 +8,34 @@
       "success": true,
       "results": [
         {
-          "title": "US companies and Chinese experts engaged in secret diplomacy ...",
-          "snippet": "OpenAI, Anthropic and Cohere have engaged in secret diplomacy with Chinese AI experts, amid shared concern about how the powerful technology may spread ...",
-          "link": "https://www.ft.com/content/f87b693f-9ba3-4929-8b95-a296b0278021",
-          "date": "Jan 11, 2024"
+          "title": "US companies, Chinese experts engaged in secret diplomacy on AI ...",
+          "snippet": "Artificial intelligence companies OpenAI, Anthropic and Cohere have engaged in secret diplomacy with Chinese AI experts, amid shared concern ...",
+          "link": "https://caliber.az/en/post/216321/",
+          "date": "Jan 12, 2024"
         },
         {
           "title": "Top US and Chinese officials begin talks on AI in Geneva | AP News",
-          "snippet": "... AI agreed during a meeting between U.S. President Joe Biden and Chinese President Xi Jinping in San Francisco. (Doug Mills/The New York ...",
+          "snippet": "The Geneva-based International Telecommunications Union \u2014 a U.N. agency currently headed by American Doreen Bogdan-Martin and previously run by ...",
           "link": "https://apnews.com/article/artificial-intelligence-china-united-states-geneva-switzerland-1aa4451f82f250a47039a213f3d72879",
           "date": "May 14, 2024"
         },
         {
-          "title": "US-based AI companies like OpenAI, Anthropic have been secretly ...",
-          "snippet": "North American AI studios like OpenAI, Anthropic, and Cohere met representatives of Tsinghua University and other Chinese state-backed ...",
-          "link": "https://www.firstpost.com/tech/us-based-ai-companies-like-openai-anthropic-have-been-secretly-engaging-chinese-experts-over-ai-safety-13605302.html",
+          "title": "DeepSeek and Other Chinese Firms Converge with Western ...",
+          "snippet": "Last month, DeepSeek joined sixteen other Chinese companies in signing onto the Artificial Intelligence Safety Commitments (\u4eba\u5de5\u667a\u80fd\u5b89\u5168\u627f\u8bfa).",
+          "link": "https://carnegieendowment.org/research/2025/01/deepseek-and-other-chinese-firms-converge-with-western-companies-on-ai-promises?lang=en",
+          "date": "Jan 28, 2025"
+        },
+        {
+          "title": "Secret talks among US companies and Chinese experts on AI safety",
+          "snippet": "Some big US AI companies like OpenAI, Anthropic and Cohere met up secretly with Chinese government AI experts in Geneva last year to chat about keeping AI safe.",
+          "link": "https://bensbites.beehiiv.com/p/secret-talks-among-us-companies-chinese-experts-ai-safety",
           "date": "Jan 12, 2024"
         },
         {
-          "title": "China and U.S. envoys to hold 1st top-level dialogue on artificial ...",
-          "snippet": "... between U.S. President Joe Biden and Chinese President Xi Jinping in San Francisco in November. Both the U.S. and China see AI as crucial ...",
-          "link": "https://www.pbs.org/newshour/politics/china-and-u-s-envoys-to-hold-1st-top-level-dialogue-on-artificial-intelligence",
-          "date": "May 13, 2024"
-        },
-        {
-          "title": "China and the United States Begin Official AI Dialogue - Richard Weitz",
-          "snippet": "China and the United States held their first intergovernmental meeting on artificial intelligence (AI) in Geneva, Switzerland on May 14, 2024.",
-          "link": "https://www.chinausfocus.com/peace-security/china-and-the-united-states-begin-official-ai-dialogue",
-          "date": "Jun 14, 2024"
+          "title": "[PDF] The ethics of artificial intelligence: Issues and initiatives",
+          "snippet": "This study deals with the ethical implications and moral questions that arise from the development and implementation of artificial intelligence (AI) ...",
+          "link": "https://www.europarl.europa.eu/RegData/etudes/STUD/2020/634452/EPRS_STU(2020)634452_EN.pdf",
+          "date": null
         }
       ]
     },
@@ -49,132 +49,27 @@
           "date": "Apr 5, 2024"
         },
         {
-          "title": "Data on Notable AI Models | Epoch AI",
-          "snippet": "Epoch AI's database contains over 800 notable ML models and 400 training compute estimates, offering a detailed exploration of trends in AI ...",
-          "link": "https://epoch.ai/data/notable-ai-models",
+          "title": "Data on Large-Scale AI Models - Epoch AI",
+          "snippet": "Our Large-Scale AI Models dataset documents over 200 models trained with more than 1023 floating point operations, at the leading edge of scale ...",
+          "link": "https://epoch.ai/data/large-scale-ai-models",
           "date": "Jun 19, 2024"
         },
         {
-          "title": "Finding the Best Training Data for Your AI Model - Keylabs",
-          "snippet": "Discover the top sources for AI model training data. Learn how to select high-quality data to train your models effectively.",
-          "link": "https://keylabs.ai/blog/finding-the-best-training-data-for-your-ai-model/",
-          "date": "Jan 29, 2024"
+          "title": "AI Terms Glossary: AI Terms To Know In 2024 | Moveworks",
+          "snippet": "AI Terms Explained. Your comprehensive guide to artificial intelligence terminology curated by the Moveworks AI team.",
+          "link": "https://www.moveworks.com/us/en/resources/ai-terms-glossary",
+          "date": "May 2, 2023"
         },
         {
-          "title": "Cumulative number of large-scale AI models by domain since 2017",
-          "snippet": "Multimodal systems are artificial intelligence frameworks that integrate and interpret more than one type of data input, such as text, images, and audio.",
-          "link": "https://ourworldindata.org/grapher/cumulative-number-of-large-scale-ai-models-by-domain",
-          "date": null
+          "title": "What is a foundation model? - Ada Lovelace Institute",
+          "snippet": "An emerging type of AI system is a 'foundation model', sometimes called a 'general-purpose AI' or 'GPAI' system. These are capable of a range of general tasks.",
+          "link": "https://www.adalovelaceinstitute.org/resource/foundation-models-explainer/",
+          "date": "Jul 17, 2023"
         },
         {
-          "title": "AI Models \u2014 Data Collection and Generation | Neural Concept",
-          "snippet": "In this article, we will show some data collection and management practices. This can help companies to build an accurate and reliable AI model.",
-          "link": "https://www.neuralconcept.com/post/data-collection-and-generation-for-ai-models",
-          "date": null
-        }
-      ]
-    },
-    {
-      "success": true,
-      "results": [
-        {
-          "title": "[PDF] Association Climate Review 2023 - Volkswagen Group",
-          "snippet": "SBTi has confirmed the aim of reducing CO\u2082 emissions\u00b9 by 30% in the use phase (Scope 3) to the Volkswagen Group as in line with the limitation of global ...",
-          "link": "https://www.volkswagen-group.com/en/publications/corporate/association-climate-review-2023-1810/download?disposition=attachment",
-          "date": null
-        },
-        {
-          "title": "Research and Development - VW Annual Report 2023",
-          "snippet": "The targets will be tightened as from 2025: the European Commission has thus stipulated a 15% reduction of CO2 emissions compared with 2021, which corresponds ...",
-          "link": "https://annualreport2023.volkswagen-group.com/group-management-report/sustainable-value-enhancement/research-and-development.html",
-          "date": null
-        },
-        {
-          "title": "Volkswagen sees carbon footprint jump despite vehicle intensity gains",
-          "snippet": "Volkswagen Group's carbon footprint increased by 17 million tonnes between 2022 and 2023 despite improvements in operational emissions and vehicle efficiency.",
-          "link": "https://www.csofutures.com/news/volkswagen-sees-carbon-footprint-jump-despite-vehicle-intensity-gains/",
-          "date": "Mar 13, 2024"
-        },
-        {
-          "title": "Our Decarbonization Commitments - Volkswagen",
-          "snippet": "30.8% VOC emissions on a per-car basis. 57.8% waste to landfill on a per-car basis. In line with the Volkswagen Group, we intend to be a net carbon neutral ...",
-          "link": "https://www.vw.com/en/our-decarbonization-commitments.html",
-          "date": null
-        },
-        {
-          "title": "Way to Zero: Volkswagen presents roadmap for climate-neutral ...",
-          "snippet": "The company intends to be net carbon neutral by 2050 at the latest. A new interim milestone is the targeted 40-percent reduction in CO 2 emissions per vehicle ...",
-          "link": "https://www.volkswagen-newsroom.com/en/press-releases/way-to-zero-volkswagen-presents-roadmap-for-climate-neutral-mobility-7081",
-          "date": "Apr 29, 2021"
-        }
-      ]
-    },
-    {
-      "success": true,
-      "results": [
-        {
-          "title": "Small Business and Entrepreneurs Exam 1 Flashcards - Quizlet",
-          "snippet": "You need to create a legal structure for your business. You would like some of the benefits enjoyed by large corporations, but do not want to be taxed twice ...",
-          "link": "https://quizlet.com/529416846/small-business-and-entrepreneurs-exam-1-flash-cards/",
-          "date": null
-        },
-        {
-          "title": "What Makes a Company a Great Place To Work: 15 Things - Indeed",
-          "snippet": "When searching for jobs, look for companies with happy employees, good benefits and a positive company culture. These are signs of a great place ...",
-          "link": "https://www.indeed.com/career-advice/finding-a-job/what-makes-a-company-a-great-place-to-work",
-          "date": "Dec 21, 2024"
-        },
-        {
-          "title": "Companies with strong reputations for quality follow certain ...",
-          "snippet": "Companies with strong reputations for quality follow certain guidelines, such as _____. A) establishing long-term relationships with suppliers.",
-          "link": "https://homework.study.com/explanation/companies-with-strong-reputations-for-quality-follow-certain-guidelines-such-as.html",
-          "date": null
-        },
-        {
-          "title": "Company core values: 25 inspiring examples - Achievers",
-          "snippet": "Company core values are the central, underlying philosophies that guide a business and its employees. Discover examples from top companies.",
-          "link": "https://www.achievers.com/blog/company-core-value-examples/",
-          "date": "Feb 20, 2024"
-        },
-        {
-          "title": "Solved Which of the following criteria relates to | Chegg.com",
-          "snippet": "Which of the following criteria relates to the company having the internal resources and commitment to feasibly and profitably create and maintain the brand ...",
-          "link": "https://www.chegg.com/homework-help/questions-and-answers/following-criteria-relates-company-internal-resources-commitment-feasibly-profitably-creat-q58774389",
-          "date": "Oct 19, 2020"
-        }
-      ]
-    },
-    {
-      "success": true,
-      "results": [
-        {
-          "title": "Easy to read \u2013 about the EU | European Union",
-          "snippet": "Today, 27 countries are part of the European Union. These countries are: Austria; Belgium; Bulgaria; Croatia; Cyprus; Czechia; Denmark; Estonia; Finland ...",
-          "link": "https://european-union.europa.eu/easy-read_en",
-          "date": null
-        },
-        {
-          "title": "Countries in the EU and EEA - GOV.UK",
-          "snippet": "The EU countries are: Austria, Belgium, Bulgaria, Croatia, Republic of Cyprus, Czech Republic, Denmark, Estonia, Finland, France, Germany, Greece, Hungary, ...",
-          "link": "https://www.gov.uk/eu-eea",
-          "date": null
-        },
-        {
-          "title": "ME | WHAT IS THE EUROPEAN UNION? - EU",
-          "snippet": "The European Union is a unique partnership between 27 European countries, known as Member States, or EU countries. Together they cover much of the European ...",
-          "link": "https://op.europa.eu/webpub/com/eu-and-me/en/WHAT_IS_THE_EUROPEAN_UNION.html",
-          "date": null
-        },
-        {
-          "title": "European Union - Wikipedia",
-          "snippet": "The European Union (EU) is a supranational political and economic union of 27 member states that are located primarily in Europe.",
-          "link": "https://en.wikipedia.org/wiki/European_Union",
-          "date": null
-        },
-        {
-          "title": "EU, EEA, EFTA and Schengen Area countries | European Union",
-          "snippet": "The EU is a political and economic union of Member States that are located in Europe. There are 27 Member States of the EU: Austria; Belgium; Bulgaria; Croatia ...",
-          "link": "https://www.government.nl/topics/european-union/eu-eea-efta-and-schengen-area-countries",
+          "title": "Large language model - Wikipedia",
+          "snippet": "A large language model (LLM) is a type of machine learning model designed for natural language processing tasks such as language generation.",
+          "link": "https://en.wikipedia.org/wiki/Large_language_model",
           "date": null
         }
       ]
@@ -182,175 +77,35 @@
     {
       "success": true,
       "results": [
+        {
+          "title": "[PDF] Compilation of Explanations January\u2014July 2024 - EFRAG",
+          "snippet": "EFRAG's mission is to serve the European public interest in both financial and sustainability reporting by developing and promoting European ...",
+          "link": "https://www.efrag.org/sites/default/files/media/document/2024-07/Compilation%20Explanations%20January%20-%20July%202024.pdf",
+          "date": "Jul 1, 2024"
+        },
+        {
+          "title": "[PDF] Compilation of Explanations: January \u2013 November 2024 - EFRAG",
+          "snippet": "EFRAG's mission is to serve the European public interest in both financial and sustainability reporting by developing and promoting European views in the field ...",
+          "link": "https://www.efrag.org/sites/default/files/media/document/2024-12/Explanations%20January%20-%20November%202024.pdf",
+          "date": null
+        },
         {
           "title": "[PDF] [Draft] ESRS SEC1 Sector classification standard - EFRAG",
-          "snippet": "This document is a technical working paper intended solely for the internal use of PTF- ESRS members, supporting debates in Plenary meetings.",
+          "snippet": "This document is a technical working paper intended solely for the internal use of PTF- ESRS members, supporting debates in Plenary meetings. It is not open ...",
           "link": "https://www.efrag.org/sites/default/files/sites/webpublishing/SiteAssets/Working%20Paper%20Draft%20ESRS%20SEC1%20Sector%20Classification%20Standard[1].pdf",
           "date": null
         },
         {
-          "title": "Building a sustainable automotive industry in Europe | Deloitte Insights",
-          "snippet": "Our research analyzes the current progress of European automotive companies on their sustainability journey.",
-          "link": "https://www2.deloitte.com/us/en/insights/environmental-social-governance/automotive-industry-sustainability.html",
-          "date": "Nov 6, 2024"
-        },
-        {
-          "title": "[PDF] SEC 1 Sector Classification \u2013 Exposure Draft - EFRAG",
-          "snippet": "This paper provides technical advice from the EFRAG SR TEG to the EFRAG SRB following the EFRAG SR TEG's public discussion.",
-          "link": "https://www.efrag.org/system/files/sites/webpublishing/Meeting%20Documents/2405070938330278/04-02%20-%20Sector%20Classification%20SEC%201%20-%20SRB%20240604.pdf",
-          "date": "Jun 4, 2024"
-        },
-        {
-          "title": "Sector-specific ESRS - EFRAG",
-          "snippet": "EFRAG is tasked to develop a set of sector-agnostic draft ESRS. This will be a multi-year exercise. In particular, EFRAG's mandate also includes the ...",
-          "link": "https://www.efrag.org/en/sustainability-reporting/esrs-workstreams/sectorspecific-esrs",
+          "title": "[PDF] ESRS Foundations - KPMG International",
+          "snippet": "This edition considers the requirements of the first set of ESRS as adopted by the European. Commission in July 2023. It also considers the related ...",
+          "link": "https://assets.kpmg.com/content/dam/kpmg/is/pdf/2024/10/isg-handbook-esrs-foundations.pdf",
           "date": null
         },
         {
-          "title": "EFRAG Sector Specific ESRS",
-          "snippet": "EFRAG is tasked to develop a set of sector-agnostic draft ESRS. This will be multi-year exercise. In particular, EFRAG's mandate also includes the development ...",
-          "link": "https://efrag-website.azurewebsites.net/lab5",
-          "date": null
-        }
-      ]
-    },
-    {
-      "success": true,
-      "results": [
-        {
-          "title": "Building a sustainable automotive industry in Europe | Deloitte Insights",
-          "snippet": "Our research analyzes the current progress of European automotive companies on their sustainability journey.",
-          "link": "https://www2.deloitte.com/us/en/insights/environmental-social-governance/automotive-industry-sustainability.html",
-          "date": "Nov 6, 2024"
-        },
-        {
-          "title": "Regulations for Emissions from Vehicles and Engines | US EPA",
-          "snippet": "EPA has finalized standards for passenger cars, light-duty trucks, medium-duty vehicles, and heavy-duty vehicles for model years 2027 through 2032 and beyond.",
-          "link": "https://www.epa.gov/regulations-emissions-vehicles-and-engines",
-          "date": "Nov 20, 2024"
-        },
-        {
-          "title": "Auto Repair Compliance Assistance Tools - EPA Archives",
-          "snippet": "Absorbant Fact Sheet is maintained by CCAR-Greenlink, the national automotive environmental assistance center and provides suggestions on managing absorbants.",
-          "link": "https://archive.epa.gov/region02/auto/web/html/tools.html",
-          "date": null
-        },
-        {
-          "title": "National Environmental Policy Act Center",
-          "snippet": "What do they provide? The NEPA Division offers expertise in the management and oversight of NEPA projects and in the implementation of new and streamlined ...",
-          "link": "https://www.afcec.af.mil/Home/Environment/National-Environmental-Policy-Act-Center/",
-          "date": null
-        },
-        {
-          "title": "National Environmental Policy Act (NEPA) Classes of Action",
-          "snippet": "The draft EIS provides a detailed description of the proposal, the purpose and need, reasonable alternatives, the affected environment, and presents ...",
-          "link": "https://www.environment.fhwa.dot.gov/nepa/classes_of_action.aspx",
-          "date": null
-        }
-      ]
-    },
-    {
-      "success": true,
-      "results": [
-        {
-          "title": "Greenhouse Gas Emissions from a Typical Passenger Vehicle",
-          "snippet": "A typical passenger vehicle emits about 4.6 metric tons of carbon dioxide per year. This number can vary based on a vehicle's fuel, fuel economy ...",
-          "link": "https://www.epa.gov/greenvehicles/greenhouse-gas-emissions-typical-passenger-vehicle",
-          "date": "Aug 23, 2024"
-        },
-        {
-          "title": "Highlights of the Automotive Trends Report | US EPA",
-          "snippet": "The average model year 2023 vehicle produced 319 grams per mile (g/mi) of CO2, which is 18 g/mi less than the previous model year, and the ...",
-          "link": "https://www.epa.gov/automotive-trends/highlights-automotive-trends-report",
-          "date": "Nov 25, 2024"
-        },
-        {
-          "title": "Revised 2023 and Later Model Year Light-Duty Vehicle Greenhouse ...",
-          "snippet": "EPA is revising the GHG standards to be more stringent than the SAFE rule standards in each model year from 2023 through 2026.",
-          "link": "https://www.federalregister.gov/documents/2021/12/30/2021-27854/revised-2023-and-later-model-year-light-duty-vehicle-greenhouse-gas-emissions-standards",
-          "date": "Dec 30, 2021"
-        },
-        {
-          "title": "Road to Better: Ford Releases 2023 Integrated Sustainability and ...",
-          "snippet": "The report shares new data that shows Ford on track to achieve carbon neutrality no later than 2050 across its vehicles, operations and supply chain.",
-          "link": "https://media.ford.com/content/fordmedia/fna/us/en/news/2023/04/03/road-to-better--ford-releases-2023-integrated-sustainability-and.html",
-          "date": "Apr 3, 2023"
-        },
-        {
-          "title": "CO2 Emissions in 2022 \u2013 Analysis - IEA",
-          "snippet": "Energy-related CO2 emissions grew by 0.9% to over 36.8 Gt in 2022. Global carbon dioxide (CO2) emissions from energy combustion and industrial ...",
-          "link": "https://www.iea.org/reports/co2-emissions-in-2022",
-          "date": "Mar 2, 2023"
-        }
-      ]
-    },
-    {
-      "success": true,
-      "results": [
-        {
-          "title": "The New York Times made more than $1 billion from digital ...",
-          "snippet": "Revenue from digital subscriptions totaled $1.09 billion in 2023. The New York Times, we've noted before, no longer features a news-only ...",
-          "link": "https://www.niemanlab.org/2024/02/the-new-york-times-made-more-than-1-billion-from-digital-subscriptions-in-2023/",
-          "date": "Feb 7, 2024"
-        },
-        {
-          "title": "Highest revenue companies 2023 - Statista",
-          "snippet": "With nearly 640 billion U.S. dollars in revenue, Walmart topped the ranking of the hundred largest companies globally, followed by Amazon.",
-          "link": "https://www.statista.com/statistics/263265/top-companies-in-the-world-by-revenue/",
-          "date": "Jul 4, 2024"
-        },
-        {
-          "title": "OpenAI on track to generate more than $1 bln revenue over 12 months",
-          "snippet": "OpenAI is on track to generate more than $1 billion in revenue over the next 12 months from the sale of artificial intelligence software and ...",
-          "link": "https://www.reuters.com/technology/openai-track-generate-more-than-1-bln-revenue-over-12-months-information-2023-08-29/",
-          "date": "Aug 29, 2023"
-        },
-        {
-          "title": "Fortune 500 made $2.9T in profits in 2023, 38% of it in the U.S.",
-          "snippet": "In the fiscal year ending March 31, 2023, the top 500 companies amassed a staggering $41 trillion in revenue, yielding a profound $2.9 trillion ...",
-          "link": "https://www.lanereport.com/170700/2024/01/fortune-500-made-2-9t-in-profits-in-2023-38-of-it-in-the-u-s/",
-          "date": "Jan 30, 2024"
-        },
-        {
-          "title": "America's Highest Earners And Their Taxes Revealed | ProPublica",
-          "snippet": "A trove of IRS data obtained by ProPublica has the definitive answers, revealing the incomes and tax rates of the 400 Americans with the highest incomes from ...",
-          "link": "https://projects.propublica.org/americas-highest-incomes-and-taxes-revealed",
-          "date": "Apr 13, 2022"
-        }
-      ]
-    },
-    {
-      "success": true,
-      "results": [
-        {
-          "title": "Subsidiary Company: Definition, Examples, Pros & Cons",
-          "snippet": "A subsidiary is a company that is more than 50% owned by another company. The owner is usually referred to as the parent company or holding company.",
-          "link": "https://www.investopedia.com/terms/s/subsidiary.asp",
-          "date": null
-        },
-        {
-          "title": "What is a holding company and why | Wolters Kluwer",
-          "snippet": "A holding company is a parent company \u2014 usually a corporation or LLC \u2014 that is created to buy and control the ownership interests of other companies.",
-          "link": "https://www.wolterskluwer.com/en/expert-insights/using-a-holding-company-operating-company-structure-to-help-mitigate-risk",
-          "date": null
-        },
-        {
-          "title": "Subsidiary vs. a Wholly-Owned Subsidiary: What's the Difference?",
-          "snippet": "A subsidiary is a company that is owned by another company. The owning company, which is called the parent or holding company, usually owns more than 50% of its ...",
-          "link": "https://www.investopedia.com/ask/answers/032615/what-difference-between-subsidiary-and-wholly-owned-subsidiary.asp",
-          "date": null
-        },
-        {
-          "title": "Holding Company - Defined, How it Works, Pros, Types",
-          "snippet": "A holding company is a company that doesn't conduct any operations, ventures, or other active tasks for itself. Instead, it exists for the purpose of owning ...",
-          "link": "https://corporatefinanceinstitute.com/resources/management/holding-company/",
-          "date": null
-        },
-        {
-          "title": "Holding Company vs. Parent | Holdings, Subsidiaries, & More",
-          "snippet": "A subsidiary is a company that is owned or controlled by another company, usually referred to as its holding company or parent company. A subsidiary company is ...",
-          "link": "https://wyomingllcattorney.com/Form-a-Wyoming-LLC/Holding-Company-Setup/vs-Parent",
-          "date": null
+          "title": "[PDF] Platform recommendations on Data and Usability",
+          "snippet": "This report does not address the application of the EU Taxonomy to Small and Medium-sized Enterprises (SMEs) or the treatment of SMEs within ...",
+          "link": "https://finance.ec.europa.eu/system/files/2022-10/221011-sustainable-finance-platform-finance-report-usability_en_1.pdf",
+          "date": "Oct 12, 2022"
         }
       ]
     }
