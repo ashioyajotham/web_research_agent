@@ -1,5 +1,4 @@
-from models.llm import LLMInterface
-from typing import List, Dict, Any
+from typing import Dict, List, Optional, Any
 from utils.helpers import logger
 import json
 import re
@@ -7,44 +6,106 @@ import re
 class Comprehension:
     def __init__(self, llm):
         self.llm = llm
-        self.knowledge_base = []
+        self.context = {}
 
-    def process_task(self, task):
-        processed_info = self._understand_task(task)
-        self.knowledge_base.append(processed_info)
-
-    async def synthesize_results(self, results: List[str]) -> str:
-        """Synthesize multiple results into a coherent response"""
+    async def analyze_task(self, task: str) -> Dict:
+        """Analyze task and break it down into subtasks"""
+        prompt = f"""
+        Analyze this task and break it down into subtasks:
+        {task}
+        
+        Return subtasks in this format:
+        - Subtask 1 description
+        - Subtask 2 description
+        etc.
+        
+        Focus on search and analysis steps needed.
+        """
+        
         try:
-            # Get task context from knowledge base
-            task_context = self.knowledge_base[-1] if self.knowledge_base else {}
-            
-            # Join results with proper line breaks
-            research_data = "\n".join(str(result) for result in results)
-            
-            prompt = f"""Synthesize these research results into a comprehensive response:
-
-Research Data:
-{research_data}
-
-Task Context:
-{json.dumps(task_context, indent=2)}
-
-Synthesis Requirements:
-1. Format output in clear Markdown with appropriate headers
-2. Provide specific sources for factual claims or quotes
-3. Adapt structure based on content type (data, statements, analysis, etc.)
-4. Include relevant context (dates, locations, organizations)
-5. Highlight key uncertainties or data gaps
-6. Add a "Methodology" section explaining how conclusions were reached
-7. End with a "Sources" section listing references with quality indicators"""
-
             response = await self.llm.generate(prompt)
-            return response
-
+            subtasks = [s.strip('- ') for s in response.text.split('\n') if s.strip().startswith('-')]
+            return {'subtasks': subtasks}
         except Exception as e:
-            logger.error(f"Failed to synthesize results: {str(e)}")
-            return "Error synthesizing results"
+            logger.error(f"Task analysis failed: {str(e)}")
+            return {'subtasks': []}
+
+    async def analyze_results(self, description: str, task_context: Dict) -> Dict:
+        """Analyze and filter search results"""
+        try:
+            if not self.context.get('search_results'):
+                return {'status': 'no_results'}
+                
+            prompt = f"""
+            Analyze these search results for relevant information about:
+            {description}
+            
+            Context: {json.dumps(task_context)}
+            Results: {json.dumps(self.context['search_results'])}
+            
+            Extract and summarize key findings.
+            """
+            
+            response = await self.llm.generate(prompt)
+            return {
+                'status': 'success',
+                'analysis': response.text,
+                'source_count': len(self.context.get('search_results', []))
+            }
+        except Exception as e:
+            logger.error(f"Results analysis failed: {str(e)}")
+            return {'status': 'error', 'message': str(e)}
+
+    async def synthesize_partial(self, description: str, task_context: Dict) -> Dict:
+        """Synthesize partial results during task execution"""
+        try:
+            if not self.context.get('analyzed_results'):
+                return {'status': 'no_analysis'}
+                
+            prompt = f"""
+            Create a partial synthesis of the analyzed information for:
+            {description}
+            
+            Context: {json.dumps(task_context)}
+            Analysis: {json.dumps(self.context['analyzed_results'])}
+            
+            Provide a structured summary of findings so far.
+            """
+            
+            response = await self.llm.generate(prompt)
+            return {
+                'status': 'success',
+                'synthesis': response.text
+            }
+        except Exception as e:
+            logger.error(f"Partial synthesis failed: {str(e)}")
+            return {'status': 'error', 'message': str(e)}
+
+    async def synthesize_results(self, results: List[Dict]) -> str:
+        """Create final synthesis of all results"""
+        try:
+            if not results:
+                return "No results to synthesize"
+                
+            # Store results in context
+            self.context['final_results'] = results
+            
+            prompt = f"""
+            Create a final synthesis of all results:
+            {json.dumps(results)}
+            
+            Provide a well-structured response that:
+            1. Summarizes key findings
+            2. Highlights important connections
+            3. Presents conclusions
+            """
+            
+            response = await self.llm.generate(prompt)
+            return response.text
+            
+        except Exception as e:
+            logger.error(f"Final synthesis failed: {str(e)}")
+            return f"Synthesis failed: {str(e)}"
 
     def _extract_sources(self, results: List[str]) -> List[str]:
         """Extract source information from results"""
@@ -61,53 +122,51 @@ Synthesis Requirements:
         return list(sources) or ["No specific sources identified"]
 
     async def _understand_task(self, task: str) -> Dict[str, Any]:
-        """Analyze and understand the task structure and requirements"""
+        """Analyze task structure and requirements dynamically"""
         try:
-            prompt = f"""Analyze this task and extract its structure:
-
-Task: {task}
-
-Return a JSON object with this structure:
-{{
-    "type": "simple" | "multi_criteria" | "comparative" | "time_series" | "data_analysis",
-    "components": ["subtask1", "subtask2"],
-    "dependencies": {{"subtask2": ["subtask1"]}},
-    "requirements": {{"data_needed": [], "source_types": []}},
-    "validation_needs": [],
-    "temporal_aspect": "none" | "historical" | "current" | "future",
-    "output_format": "list" | "analysis" | "comparison" | "timeline"
-}}"""
-
-            response = await self.llm.generate(prompt)
+            # Extract key task characteristics
+            characteristics = await self._extract_task_characteristics(task)
             
-            # Clean up response
-            cleaned_json = response.strip()
-            if cleaned_json.startswith('```json'):
-                cleaned_json = cleaned_json[7:]
-            if cleaned_json.endswith('```'):
-                cleaned_json = cleaned_json[:-3]
-            cleaned_json = cleaned_json.strip()
-            
-            # Parse and validate
-            task_understanding = json.loads(cleaned_json)
-            if not isinstance(task_understanding, dict):
-                raise ValueError("Task understanding must be a dictionary")
-                
-            # Store for later use
-            self.current_task_context = task_understanding
-            return task_understanding
+            # Build task context
+            task_context = {
+                "type": characteristics.get('type', 'simple'),
+                "components": characteristics.get('components', []),
+                "temporal_aspect": characteristics.get('temporal_aspect', 'current'),
+                "requirements": {
+                    "data_needed": characteristics.get('data_needed', []),
+                    "source_types": characteristics.get('source_types', []),
+                    "validation_criteria": characteristics.get('validation_criteria', [])
+                },
+                "constraints": characteristics.get('constraints', {}),
+                "output_format": characteristics.get('output_format', 'analysis')
+            }
+
+            return task_context
 
         except Exception as e:
             logger.error(f"Failed to understand task: {str(e)}")
-            return {
-                "type": "simple",
-                "components": [task],
-                "dependencies": {},
-                "requirements": {},
-                "validation_needs": [],
-                "temporal_aspect": "none",
-                "output_format": "analysis"
-            }
+            return self._get_default_context(task)
+
+    async def _extract_task_characteristics(self, task: str) -> Dict:
+        """Extract task characteristics using LLM"""
+        prompt = f"""Analyze this task and identify its key characteristics:
+Task: {task}
+
+Return a JSON object with these dynamic features:
+- type: The general type of task (research/analysis/comparison/etc)
+- components: Key elements that need to be investigated
+- temporal_aspect: Time relevance (historical/current/future)
+- data_needed: Types of information required
+- source_types: Preferred source categories
+- validation_criteria: How to verify information
+- constraints: Any limitations or requirements
+- output_format: How results should be presented"""
+
+        try:
+            response = await self.llm.generate(prompt)
+            return json.loads(response)
+        except Exception:
+            return {}
 
     def adapt_to_future_tasks(self, new_task):
         # Logic to adapt based on previous tasks

@@ -25,83 +25,86 @@ class WebResearchAgent:
         self.timer = Timer()
 
     async def process_task(self, task: str) -> Tuple[str, List[Dict]]:
-        """Process task with dynamic handling based on task type"""
+        """Process task with improved task status tracking"""
         try:
+            # Reset state
             self.browser.sources = []
+            results_cache = []
             
-            # Create execution plan
+            # Phase 1: Understanding
+            task_context = await self.comprehension._understand_task(task)
+            
+            # Phase 2: Planning
             plan = await self.planner.create_plan(task)
             logger.info(f"Created plan with {len(plan)} subtasks")
-
-            # Track results with context
-            task_results = {
-                'type': self.comprehension.current_task_context.get('type'),
-                'components': {},
-                'sources': [],
-                'validation': {}
-            }
-
-            # Execute subtasks
+            
+            # Phase 3: Execution with status tracking
             while not self.planner.is_plan_completed():
                 next_tasks = self.planner.get_next_tasks()
-                for subtask in next_tasks:
-                    result = await self._execute_subtask(subtask)
-                    task_id = next(k for k, v in self.planner.current_plan.items() if v == subtask)
+                
+                if not next_tasks:
+                    logger.info("No new tasks to process, moving to next phase")
+                    break
+                
+                # Execute tasks in parallel
+                tasks = [self._execute_subtask(task, task_context) for task in next_tasks]
+                results = await asyncio.gather(*tasks, return_exceptions=True)
+                
+                # Handle results and update task status
+                for task_def, result in zip(next_tasks, results):
+                    if isinstance(result, Exception):
+                        logger.error(f"Task failed: {str(result)}")
+                        self.planner.update_task_status(task_def['id'], {
+                            'completed': True,
+                            'success': False,
+                            'error': str(result)
+                        })
+                        continue
                     
-                    # Store result with context
-                    component = subtask.get('component', 'general')
-                    if component not in task_results['components']:
-                        task_results['components'][component] = []
-                    task_results['components'][component].append(result)
+                    # Store successful result
+                    results_cache.append(result)
+                    self.memory.store(f"{task}:{task_def['description']}", result)
                     
                     # Update task status
-                    self.planner.update_task_status(task_id, "completed", result)
-                    
-            # Dynamic synthesis based on task type
-            synthesis_prompt = f"""Synthesize results based on task type and requirements:
-
-Task: {task}
-Type: {task_results['type']}
-Results: {json.dumps(task_results['components'], indent=2)}
-Requirements: {json.dumps(self.comprehension.current_task_context.get('requirements', {}), indent=2)}
-
-Create a response that:
-1. Matches the task type's needs
-2. Validates all requirements
-3. Integrates component results appropriately
-4. Highlights relationships between findings
-5. Notes any gaps or uncertainties"""
-
-            final_result = await self.llm.generate(synthesis_prompt)
-            return final_result, self.browser.sources
+                    self.planner.update_task_status(task_def['id'], {
+                        'completed': True,
+                        'success': True,
+                        'result': result
+                    })
+                
+                # Rate limiting pause
+                await asyncio.sleep(1)
+            
+            # Phase 4: Synthesis
+            return await self.comprehension.synthesize_results(results_cache), self.browser.sources
 
         except Exception as e:
             logger.error(f"Task processing failed: {str(e)}")
             return f"Error processing task: {str(e)}", []
 
-    async def _execute_subtask(self, subtask):
-        """Execute a single subtask using appropriate tools"""
+    async def _execute_subtask(self, task_def: Dict, task_context: Dict):
+        """Execute subtask with improved error handling"""
         try:
+            task_type = task_def.get('type', 'search')
             result = None
-            for tool in subtask.tools_needed:
-                if tool == "web_search":
-                    result = await self.browser.search(subtask.description)
-                elif tool == "web_browse":
-                    # Only try to browse if description looks like a URL
-                    if self.browser._is_valid_url(subtask.description):
-                        result = await self.browser.browse(subtask.description)
-                    else:
-                        # Fall back to search for non-URL descriptions
-                        search_result = await self.browser.search(subtask.description)
-                        if search_result and 'organic' in search_result:
-                            result = search_result['organic'][0]['snippet']
-                elif tool == "code_generation":
-                    result = await self.llm.generate_code(subtask.description)
-                
-                if result:
-                    break
-                    
-            return result or f"No results found for: {subtask.description}"
+            
+            if task_type == 'search':
+                result = await self.browser.search(
+                    task_def['description'],
+                    task_context
+                )
+            elif task_type == 'analysis':
+                result = await self.comprehension.analyze_results(
+                    task_def['description'],
+                    task_context
+                )
+            elif task_type == 'synthesis':
+                result = await self.comprehension.synthesize_partial(
+                    task_def['description'],
+                    task_context
+                )
+            
+            return result or f"No results found for: {task_def['description']}"
             
         except Exception as e:
             logger.error(f"Failed to execute subtask: {str(e)}")

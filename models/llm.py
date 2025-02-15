@@ -5,6 +5,7 @@ import asyncio
 from typing import Optional, Dict, List, Any
 import google.generativeai as genai
 from utils.helpers import logger, truncate_text
+import time
 
 class LLMInterface(ABC):
     """Abstract base class for LLM implementations"""
@@ -19,6 +20,23 @@ class LLMInterface(ABC):
         """Generate code from prompt"""
         pass
 
+class RateLimiter:
+    def __init__(self, calls: int, period: float):
+        self.calls = calls
+        self.period = period
+        self.timestamps = []
+
+    async def acquire(self):
+        now = time.time()
+        self.timestamps = [t for t in self.timestamps if now - t <= self.period]
+        
+        if len(self.timestamps) >= self.calls:
+            sleep_time = self.timestamps[0] + self.period - now
+            if sleep_time > 0:
+                await asyncio.sleep(sleep_time)
+        
+        self.timestamps.append(now)
+
 class GeminiLLM(LLMInterface):
     def __init__(self, api_key: Optional[str] = None, 
                  max_retries: int = 3,
@@ -26,6 +44,7 @@ class GeminiLLM(LLMInterface):
         self.api_key = api_key or self._get_gemini_api_key()
         self.max_retries = max_retries
         self.temperature = temperature
+        self.rate_limiter = RateLimiter(calls=60, period=60.0)  # 60 calls per minute
         
         # Configure Gemini
         genai.configure(api_key=self.api_key)
@@ -69,6 +88,7 @@ class GeminiLLM(LLMInterface):
         """Generate text response using Gemini with retry logic"""
         for attempt in range(self.max_retries):
             try:
+                await self.rate_limiter.acquire()
                 response = await self.model.generate_content_async(prompt)
                 return response.text.strip()
             except Exception as e:

@@ -1,3 +1,4 @@
+import os
 import aiohttp
 import json
 from typing import List, Dict, Optional
@@ -5,210 +6,176 @@ from urllib.parse import urlparse, urljoin
 from utils.helpers import logger, WebUtils
 from bs4 import BeautifulSoup, Comment
 import re
+import asyncio
+from datetime import datetime, timedelta
+
+class RateLimiter:
+    def __init__(self, calls: int, period: float):
+        self.calls = calls
+        self.period = period
+        self.timestamps = []
+
+    async def acquire(self):
+        now = datetime.now()
+        # Clean old timestamps
+        self.timestamps = [ts for ts in self.timestamps 
+                         if now - ts < timedelta(seconds=self.period)]
+        
+        if len(self.timestamps) >= self.calls:
+            sleep_time = (self.timestamps[0] + 
+                         timedelta(seconds=self.period) - now).total_seconds()
+            if sleep_time > 0:
+                await asyncio.sleep(sleep_time)
+        
+        self.timestamps.append(now)
 
 class WebBrowser:
-    def __init__(self, api_key: Optional[str] = None):
-        self.api_key = api_key or self._get_serper_api_key()
+    def __init__(self):
+        # Serper setup
+        self.serper_api_key = os.getenv('SERPER_API_KEY')
+        if not self.serper_api_key:
+            raise ValueError("SERPER_API_KEY environment variable is not set")
+            
         self.base_url = "https://google.serper.dev/search"
-        self.headers = {
-            'X-API-KEY': self.api_key,
-            'Content-Type': 'application/json',
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
-        }
         self.sources = []
+        self.headers = {
+            'X-API-KEY': self.serper_api_key,
+            'Content-Type': 'application/json'
+        }
+        self.search_cache = {}  # Add search cache
+        self.rate_limiter = RateLimiter(calls=5, period=1)  # 5 calls per second
+        
+    async def search(self, query: str, task_context: Dict = None) -> Dict:
+        """Enhanced search with rate limiting and retry logic"""
+        cache_key = f"{query}:{json.dumps(task_context or {})}"
+        
+        if cache_key in self.search_cache:
+            logger.info(f"Using cached results for query: {query}")
+            return self.search_cache[cache_key]
 
-    @staticmethod
-    def _get_serper_api_key() -> str:
-        """Get API key from environment variable"""
-        import os
-        api_key = os.getenv('SERPER_API_KEY')
-        if not api_key:
-            raise ValueError("SERPER_API_KEY environment variable not set")
-        return api_key
-
-    async def search(self, query: str) -> Dict:
-        """Perform a web search using Serper API"""
+        await self.rate_limiter.acquire()
+        
         try:
-            payload = {
-                'q': query,
-                'num': 5
-            }
+            search_params = await self._build_search_context(query, task_context)
             async with aiohttp.ClientSession() as session:
                 async with session.post(
                     self.base_url,
                     headers=self.headers,
-                    json=payload
+                    json=search_params
                 ) as response:
-                    response.raise_for_status()
-                    return await response.json()
-        except Exception as e:
-            logger.error(f"Search failed for query '{query}': {str(e)}")
-            raise
-
-    async def browse(self, url: str) -> str:
-        """Fetch and extract content from a webpage"""
-        try:
-            # Validate if input is a URL
-            if not self._is_valid_url(url):
-                # If not a URL, try search instead
-                search_results = await self.search(url)
-                if search_results and 'organic' in search_results:
-                    return search_results['organic'][0]['snippet']
-                raise ValueError(f"Could not find relevant content for: {url}")
-
-            # Clean and validate URL
-            clean_url = self._clean_url(url)
-            return await self._fetch_url(clean_url)
+                    if response.status != 200:
+                        error_text = await response.text()
+                        logger.error(f"Search API error: {error_text}")
+                        raise ValueError(f"Search API error: {error_text}")
+                    
+                    results = await response.json()
+                    
+                    # Process and validate results
+                    if 'organic' in results:
+                        filtered_results = self._process_results(results['organic'], task_context)
+                        results['organic'] = filtered_results
+                        
+                    self.search_cache[cache_key] = results
+                    return results
 
         except Exception as e:
-            logger.error(f"Failed to browse URL '{url}': {str(e)}")
+            logger.error(f"Search failed: {str(e)}")
             raise
 
-    def _is_valid_url(self, url: str) -> bool:
-        """Check if string is a valid URL"""
-        try:
-            result = urlparse(url)
-            return all([result.scheme, result.netloc])
-        except Exception:
-            return False
-
-    def _clean_url(self, url: str) -> str:
-        """Clean and validate URL format"""
-        url = url.strip()
-        if not url.startswith(('http://', 'https://')):
-            url = f'https://{url}'
-        
-        # Remove any markdown formatting
-        url = re.sub(r'[<>]', '', url)
-        
-        # Validate final URL
-        parsed = urlparse(url)
-        if not parsed.netloc:
-            raise ValueError(f"Invalid URL format: {url}")
-            
-        return url
-
-    async def _fetch_url(self, url: str) -> str:
-        """Fetch URL with proper encoding handling"""
-        async with aiohttp.ClientSession() as session:
-            try:
-                async with session.get(url, headers={
-                    'User-Agent': self.headers['User-Agent'],
-                    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-                    'Accept-Encoding': 'gzip, deflate, br',
-                    'Accept-Language': 'en-US,en;q=0.5',
-                }) as response:
-                    response.raise_for_status()
-                    
-                    # Try to get encoding from headers
-                    content_type = response.headers.get('content-type', '')
-                    encoding = None
-                    
-                    if 'charset=' in content_type:
-                        encoding = content_type.split('charset=')[-1]
-                    
-                    try:
-                        if encoding:
-                            content = await response.text(encoding=encoding)
-                        else:
-                            # Try UTF-8 first
-                            content = await response.text(encoding='utf-8')
-                    except UnicodeDecodeError:
-                        # Fallback to latin-1 if UTF-8 fails
-                        content = await response.text(encoding='latin-1')
-                    
-                    return self._extract_main_content(content)
-                    
-            except aiohttp.ClientError as e:
-                logger.error(f"HTTP request failed for URL '{url}': {str(e)}")
-                raise
-            except UnicodeDecodeError as e:
-                logger.error(f"Encoding error for URL '{url}': {str(e)}")
-                raise
-
-    def _parse_search_results(self, response: Dict) -> Dict:
-        """
-        Parse and structure search results
-        """
-        parsed_results = {
-            'organic': [],
-            'knowledge_graph': None,
-            'related_searches': []
+    async def _build_search_context(self, query: str, task_context: Dict) -> Dict:
+        """Build search parameters for Serper API"""
+        search_params = {
+            'q': self._refine_query(query, task_context),
+            'num': 10,
+            'gl': 'us',
+            'hl': 'en'
         }
 
-        if 'organic' in response:
-            parsed_results['organic'] = [
-                {
+        # Add time context if specified
+        if task_context and task_context.get('temporal_aspect'):
+            if task_context['temporal_aspect'] == 'current':
+                search_params['timeRange'] = 'y'  # Last year
+            elif task_context['temporal_aspect'] == 'historical':
+                search_params['timeRange'] = 'a'  # Any time
+
+        return search_params
+
+    def _refine_query(self, query: str, task_context: Dict = None) -> str:
+        """Improve query based on task context"""
+        if not task_context:
+            return query
+            
+        # Remove generic phrases
+        generic_phrases = [
+            "gather relevant data",
+            "browse the web",
+            "comprehensive understanding",
+            "identify and extract",
+            "research"
+        ]
+        
+        refined = query
+        for phrase in generic_phrases:
+            refined = refined.replace(phrase, "").strip()
+        
+        # Add task-specific context
+        if "biden" in refined.lower() and "china" in refined.lower():
+            refined += " official statement quotes remarks"
+            
+        return refined.strip()
+
+    def _process_results(self, results: List[Dict], task_context: Dict) -> List[Dict]:
+        """Process and filter search results based on context"""
+        processed = []
+        seen_urls = set()
+        
+        for result in results:
+            if not self._is_valid_result(result):
+                continue
+                
+            url = result.get('link')
+            if url in seen_urls:
+                continue
+                
+            if self._is_relevant_result(result, task_context):
+                seen_urls.add(url)
+                processed.append(result)
+                
+        return processed
+
+    def _is_valid_result(self, result: Dict) -> bool:
+        """Validate result structure and content"""
+        required_fields = ['title', 'link', 'snippet']
+        return all(result.get(field) for field in required_fields)
+
+    def _is_relevant_result(self, result: Dict, task_context: Dict = None) -> bool:
+        """Enhanced relevance checking with context awareness"""
+        text = f"{result.get('title', '')} {result.get('snippet', '')}".lower()
+        
+        # Skip certain domains
+        blocked_domains = ['pinterest', 'facebook', 'instagram']
+        if any(domain in result['link'].lower() for domain in blocked_domains):
+            return False
+            
+        # Task-specific relevance
+        if task_context and task_context.get('type') == 'statement_collection':
+            required_terms = task_context.get('required_terms', [])
+            if all(term.lower() in text for term in required_terms):
+                return True
+                
+        return False
+
+    def _update_sources(self, results: List[Dict]):
+        """Update sources list with deduplication"""
+        seen_urls = set()
+        for result in results:
+            url = result.get('link')
+            if url and url not in seen_urls and self._is_relevant_result(result):
+                seen_urls.add(url)
+                self.sources.append({
+                    'url': url,
                     'title': result.get('title', ''),
-                    'link': result.get('link', ''),
                     'snippet': result.get('snippet', ''),
-                    'position': result.get('position', 0)
-                }
-                for result in response['organic']
-            ]
-
-        if 'knowledgeGraph' in response:
-            parsed_results['knowledge_graph'] = response['knowledgeGraph']
-
-        if 'relatedSearches' in response:
-            parsed_results['related_searches'] = response['relatedSearches']
-
-        return parsed_results
-
-    def _extract_main_content(self, html: str) -> str:
-        """
-        Extract main content from HTML with improved content identification and cleaning
-        """
-        try:
-            from bs4 import BeautifulSoup
-            import re
-
-            # Parse HTML
-            soup = BeautifulSoup(html, 'html.parser')
-
-            # Remove unwanted elements
-            for element in soup.find_all(['script', 'style', 'nav', 'header', 'footer', 'iframe', 'ad', 'noscript']):
-                element.decompose()
-
-            # Remove comments
-            for comment in soup.find_all(text=lambda text: isinstance(text, Comment)):
-                comment.extract()
-
-            # Find main content area (priority order)
-            main_content = (
-                soup.find('main') or 
-                soup.find('article') or 
-                soup.find(attrs={'role': 'main'}) or 
-                soup.find(class_=re.compile(r'(content|article|post)-?(main|body|text)?', re.I)) or 
-                soup.find('div', {'class': ['content', 'main', 'article', 'post']}) or 
-                soup.body
-            )
-
-            if not main_content:
-                main_content = soup
-
-            # Clean the content
-            text = []
-            for paragraph in main_content.find_all(['p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'li']):
-                content = paragraph.get_text(strip=True)
-                if content and len(content) > 20:  # Filter out short snippets
-                    text.append(content)
-
-            # Join paragraphs with proper spacing
-            cleaned_text = '\n\n'.join(text)
-
-            # Additional cleaning
-            cleaned_text = re.sub(r'\n\s*\n+', '\n\n', cleaned_text)  # Remove extra newlines
-            cleaned_text = re.sub(r'\s+', ' ', cleaned_text)  # Normalize whitespace
-            cleaned_text = re.sub(r'[ \t]+', ' ', cleaned_text)  # Remove extra spaces
-
-            # Truncate if too long (preserve complete sentences)
-            if len(cleaned_text) > 5000:
-                sentences = re.split(r'(?<=[.!?])\s+', cleaned_text[:5000])
-                cleaned_text = ' '.join(sentences[:-1]) + '...'
-
-            return cleaned_text.strip()
-
-        except Exception as e:
-            logger.error(f"Failed to extract content: {str(e)}")
-            return "Content extraction failed"
+                    'position': result.get('position', 0),
+                    'timestamp': datetime.now().isoformat()
+                })

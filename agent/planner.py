@@ -13,123 +13,96 @@ class SubTask:
     result: Optional[str] = None
 
 class TaskPlanner:
-    def __init__(self, llm, comprehension):
+    def __init__(self, llm=None, comprehension=None):
         self.llm = llm
         self.comprehension = comprehension
-        self.current_plan = {}
+        self.tasks = []
+        self.current_plan = None
+        self.task_status = {}
 
-    def _parse_plan(self, plan_json: str) -> Dict[str, SubTask]:
-        """Parse the LLM's JSON response into SubTask objects"""
-        try:
-            # Clean up the response
-            cleaned_json = plan_json.strip()
-            if cleaned_json.startswith('```json'):
-                cleaned_json = cleaned_json[7:]
-            if cleaned_json.endswith('```'):
-                cleaned_json = cleaned_json[:-3]
-            cleaned_json = cleaned_json.strip()
-            
-            # Parse JSON
-            plan_dict = json.loads(cleaned_json)
-            
-            # Ensure we have the expected structure
-            if not isinstance(plan_dict, dict):
-                raise ValueError("Expected JSON object at root level")
+    async def create_plan(self, task: str) -> List[Dict]:
+        """Create dynamic task plan based on task requirements"""
+        self.current_plan = []
+        self.task_status = {}
+
+        # Use LLM to analyze task if available
+        if self.llm and self.comprehension:
+            try:
+                # Get task analysis from LLM
+                analysis = await self.comprehension.analyze_task(task)
+                subtasks = analysis.get('subtasks', [])
                 
-            # Handle both possible structures
-            subtasks = plan_dict.get('subtasks', plan_dict)
-            if not isinstance(subtasks, dict):
-                raise ValueError("Subtasks must be a dictionary")
-            
-            # Convert to SubTask objects
-            parsed_plan = {}
-            for task_id, task_info in subtasks.items():
-                if not isinstance(task_info, dict):
-                    continue
-                    
-                tools = task_info.get('tools_needed', task_info.get('tools', []))
-                if isinstance(tools, str):
-                    tools = [tools]
-                    
-                parsed_plan[task_id] = SubTask(
-                    description=str(task_info.get('description', '')),
-                    tools_needed=list(tools),
-                    dependencies=list(task_info.get('dependencies', [])),
-                    status="pending"
-                )
-            
-            if not parsed_plan:
-                raise ValueError("No valid subtasks found in plan")
-                
-            logger.info(f"Successfully parsed plan with {len(parsed_plan)} subtasks")
-            return parsed_plan
-            
-        except json.JSONDecodeError as e:
-            logger.error(f"Failed to parse JSON plan: {e}\nInput was: {plan_json}")
-            raise
-        except Exception as e:
-            logger.error(f"Unexpected error parsing plan: {e}")
-            raise
+                # Convert subtasks to plan format
+                for idx, subtask in enumerate(subtasks):
+                    self.current_plan.append({
+                        'id': f'task_{idx}',
+                        'description': subtask,
+                        'type': 'search' if 'search' in subtask.lower() else 'analysis',
+                        'dependencies': [f'task_{i}' for i in range(idx)]
+                    })
+            except Exception as e:
+                logger.warning(f"Failed to create plan using LLM: {str(e)}")
+                # Fall back to default plan
+                self.current_plan = self._create_default_plan()
+        else:
+            # Use default plan if no LLM available
+            self.current_plan = self._create_default_plan()
 
-    async def create_plan(self, task: str) -> Dict[str, SubTask]:
-        """Creates a dynamic plan based on task understanding"""
-        try:
-            # Use comprehension service to understand task
-            task_context = await self.comprehension._understand_task(task)
-            
-            # Generate dynamic planning prompt based on task type
-            prompt = f"""Given this task analysis:
-{json.dumps(task_context, indent=2)}
+        # Initialize task status
+        self.task_status = {
+            task['id']: {'completed': False, 'result': None} 
+            for task in self.current_plan
+        }
+        
+        return self.current_plan
 
-Create a research plan with appropriate subtasks.
-Return as JSON with this structure:
-{{
-    "subtasks": {{
-        "task1": {{
-            "description": "...",
-            "tools_needed": ["web_search", "web_browse", "code_generation"],
-            "dependencies": []
-        }},
-        "task2": {{
-            "description": "...",
-            "tools_needed": ["..."],
-            "dependencies": ["task1"]
-        }}
-    }}
-}}"""
+    def _create_default_plan(self) -> List[Dict]:
+        """Create a default task plan"""
+        return [
+            {
+                'id': 'research',
+                'description': 'Search for relevant information',
+                'type': 'search',
+                'dependencies': []
+            },
+            {
+                'id': 'analyze',
+                'description': 'Analyze and filter search results',
+                'type': 'analysis',
+                'dependencies': ['research']
+            },
+            {
+                'id': 'synthesize',
+                'description': 'Compile findings into final format',
+                'type': 'synthesis',
+                'dependencies': ['analyze']
+            }
+        ]
 
-            plan_json = await self.llm.generate(prompt)
-            self.current_plan = self._parse_plan(plan_json)
-            return self.current_plan
+    def get_next_tasks(self) -> List[Dict]:
+        """Get tasks that are ready to execute (dependencies met)"""
+        if not self.current_plan:
+            return []
 
-        except Exception as e:
-            logger.error(f"Failed to create plan: {str(e)}")
-            raise
-
-    def get_next_tasks(self) -> List[SubTask]:
-        """Returns list of subtasks that are ready to be executed"""
         ready_tasks = []
-        for task_id, task in self.current_plan.items():
-            if task.status == "pending":
-                dependencies_met = all(
-                    self.current_plan[dep].status == "completed"
-                    for dep in task.dependencies
-                    if dep in self.current_plan
-                )
-                if dependencies_met:
+        for task in self.current_plan:
+            if not self.task_status[task['id']]['completed']:
+                if all(self.task_status[dep]['completed'] for dep in task['dependencies']):
                     ready_tasks.append(task)
+        
         return ready_tasks
 
-    def is_plan_completed(self) -> bool:
-        """Check if all subtasks in the current plan are completed"""
-        if not self.current_plan:
-            return False
-        return all(task.status == "completed" for task in self.current_plan.values())
+    def update_task_status(self, task_id: str, status: Dict):
+        """Update task status and results"""
+        if task_id in self.task_status:
+            self.task_status[task_id].update(status)
 
-    def update_task_status(self, task_id: str, status: str, result: Optional[str] = None):
-        """Updates the status and result of a subtask"""
-        if task_id in self.current_plan:
-            self.current_plan[task_id].status = status
-            if result:
-                self.current_plan[task_id].result = result
-            logger.info(f"Updated task {task_id} status to {status}")
+    def is_plan_completed(self) -> bool:
+        """Check if all tasks are completed"""
+        return all(status['completed'] for status in self.task_status.values())
+
+    def add_dynamic_task(self, task: Dict):
+        """Add new task dynamically during execution"""
+        if task['id'] not in self.task_status:
+            self.current_plan.append(task)
+            self.task_status[task['id']] = {'completed': False, 'result': None}
