@@ -1,116 +1,55 @@
-from typing import List, Dict
-import google.generativeai as genai
 from dataclasses import dataclass
-from .comprehension.task_analyzer import TaskIntent, TaskRequirements
+from typing import List, Dict, Optional
+from models.llm import LLMInterface
 
 @dataclass
-class Step:
-    tool: str
-    params: Dict
-    dependencies: List[int] = None
+class SubTask:
+    description: str
+    tools_needed: List[str]
+    dependencies: List[str]
+    status: str = "pending"
+    result: Optional[str] = None
 
-class Planner:
-    def __init__(self, model: genai.GenerativeModel):
-        self.model = model
-
-    async def create_plan(self, task: str, requirements: TaskRequirements) -> List[Dict]:
-        """Create a dynamic plan based on task requirements"""
+class TaskPlanner:
+    def __init__(self, llm: LLMInterface):
+        self.llm = llm
+        self.current_plan: Dict[str, SubTask] = {}
         
-        step_templates = {
-            TaskIntent.COMPILE: self._create_compilation_plan,
-            TaskIntent.FIND: self._create_fact_finding_plan,
-            TaskIntent.ANALYZE: self._create_analysis_plan,
-            TaskIntent.CALCULATE: self._create_calculation_plan,
-            TaskIntent.EXTRACT: self._create_extraction_plan,
-            TaskIntent.VERIFY: self._create_verification_plan
-        }
+    async def create_plan(self, task: str) -> Dict[str, SubTask]:
+        """
+        Creates a structured plan from a high-level task by breaking it down into subtasks
+        """
+        prompt = f"""
+        Given the following task: '{task}'
+        Break it down into logical subtasks. For each subtask specify:
+        1. A clear description of what needs to be done
+        2. Required tools (web_search, code_generation, web_browse)
+        3. Dependencies (IDs of other subtasks that must be completed first)
         
-        # Get appropriate planning function and execute without await
-        plan_creator = step_templates.get(requirements.intent, self._create_default_plan)
-        return plan_creator(task, requirements)  # Remove await since these are not async functions
-
-    def _create_compilation_plan(self, task: str, requirements: TaskRequirements) -> List[Dict]:
-        """Create plan for compilation tasks"""
-        return [{
-            'tool': 'web_search',
-            'params': {
-                'query': task,
-                'silent': True
-            }
-        }]
-
-    def _create_fact_finding_plan(self, task: str, requirements: TaskRequirements) -> List[Dict]:
-        return [{
-            'tool': 'web_search',
-            'params': {
-                'query': task,
-                'silent': True
-            }
-        }]
-
-    def _create_analysis_plan(self, task: str, requirements: TaskRequirements) -> List[Dict]:
-        steps = []
-        searches = self._break_down_analysis(task)
-        for search in searches:
-            steps.append({
-                'tool': 'web_search',
-                'params': {
-                    'query': search,
-                    'silent': True
-                }
-            })
-        return steps
-
-    def _create_calculation_plan(self, task: str, requirements: TaskRequirements) -> List[Dict]:
-        return [{
-            'tool': 'web_search',
-            'params': {
-                'query': task,
-                'silent': True
-            }
-        }]
-
-    def _create_extraction_plan(self, task: str, requirements: TaskRequirements) -> List[Dict]:
-        return [{
-            'tool': 'web_search',
-            'params': {
-                'query': task,
-                'silent': True
-            }
-        }]
-
-    def _create_verification_plan(self, task: str, requirements: TaskRequirements) -> List[Dict]:
-        return [{
-            'tool': 'web_search',
-            'params': {
-                'query': task,
-                'silent': True
-            }
-        }]
-
-    def _break_down_analysis(self, task: str) -> List[str]:
-        """Break down complex analysis tasks into subtasks"""
-        base_query = task.lower()
-        queries = [base_query]
+        Format: JSON with subtask IDs as keys and details as values
+        """
         
-        # Add supporting queries based on task content
-        if 'compare' in base_query:
-            parts = base_query.split('compare')
-            if len(parts) > 1:
-                queries.extend([f"statistics {p.strip()}" for p in parts[1].split('and')])
-                
-        elif 'trend' in base_query or 'over time' in base_query:
-            queries.append(f"{base_query} historical data")
-            queries.append(f"{base_query} latest statistics")
-            
-        return queries[:3]  # Limit to 3 searches
+        plan_json = await self.llm.generate(prompt)
+        self.current_plan = self._parse_plan(plan_json)
+        return self.current_plan
 
-    def _create_default_plan(self, task: str, requirements: TaskRequirements) -> List[Dict]:
-        """Create a basic plan for unspecified task types"""
-        return [{
-            'tool': 'web_search',
-            'params': {
-                'query': task,
-                'num_results': 5
-            }
-        }]
+    def get_next_tasks(self) -> List[SubTask]:
+        """Returns list of subtasks that are ready to be executed"""
+        ready_tasks = []
+        for task_id, task in self.current_plan.items():
+            if task.status == "pending":
+                dependencies_met = all(
+                    self.current_plan[dep].status == "completed"
+                    for dep in task.dependencies
+                    if dep in self.current_plan
+                )
+                if dependencies_met:
+                    ready_tasks.append(task)
+        return ready_tasks
+
+    def update_task_status(self, task_id: str, status: str, result: Optional[str] = None):
+        """Updates the status and result of a subtask"""
+        if task_id in self.current_plan:
+            self.current_plan[task_id].status = status
+            if result:
+                self.current_plan[task_id].result = result

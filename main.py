@@ -1,85 +1,97 @@
 import asyncio
 import argparse
+from typing import List
 from pathlib import Path
-from typing import List, Dict
-import json
-import sys
-import logging
-from colorama import Fore, Style
+from dotenv import load_dotenv
 
-from agent.agent import Agent
-from config.config_loader import ConfigLoader
-from utils.helpers import setup_logging
-from utils.formatters.output_formatter import OutputFormatter
-from utils.task_parser import TaskParser
+load_dotenv()
 
-async def process_tasks(task_file: Path, output_file: Path, config: Dict) -> None:
-    agent = Agent(
-        api_key=config['api_keys']['gemini'],
-        serper_api_key=config['api_keys']['serper']
-    )
-    
-    formatter = OutputFormatter()
-    parser = TaskParser()
-    results = []
-    
-    content = task_file.read_text()
-    tasks = parser.parse_tasks(content)
-    print(formatter.format_header())
-    
-    for i, task_data in enumerate(tasks, 1):
+from agent.planner import TaskPlanner
+from agent.browser import WebBrowser
+from agent.memory import Memory
+from agent.comprehension import Comprehension
+from models.llm import GeminiLLM
+from utils.helpers import parse_task_file, Timer, logger
+
+class WebResearchAgent:
+    def __init__(self):
+        self.llm = GeminiLLM()
+        self.planner = TaskPlanner(self.llm)
+        self.browser = WebBrowser()
+        self.memory = Memory()
+        self.comprehension = Comprehension(self.llm)
+        self.timer = Timer()
+
+    async def process_task(self, task: str) -> str:
+        """Process a single task and return the result"""
         try:
-            full_task = task_data['task']
-            if task_data['subtasks']:
-                subtasks_text = "\n    ".join(task_data['subtasks'])
-                full_task += f"\nCriteria:\n    {subtasks_text}"
-            
-            print(formatter.format_task_section(i, len(tasks), task_data['task']))
-            if task_data['subtasks']:
-                for subtask in task_data['subtasks']:
-                    print(f"    • {subtask}")
-                    
-            result = await agent.execute_task(full_task)
-            if result['success']:
-                print(formatter.format_search_results(result.get('results', [])))
-            else:
-                print(formatter._format_error(result.get('error', 'Unknown error occurred')))
-            results.append(result)
-        except Exception as e:
-            print(formatter._format_error(f"Error processing task {i}: {str(e)}"))
-            continue
-    
-    output_file.write_text(json.dumps({"searches": results}, indent=2))
+            # Create execution plan
+            plan = await self.planner.create_plan(task)
+            logger.info(f"Created plan with {len(plan)} subtasks")
 
-def main():
-    # Parse arguments
-    parser = argparse.ArgumentParser(description='LLM Agent Task Processor')
-    parser.add_argument('task_file', type=Path, help='Path to file containing tasks')
-    parser.add_argument('--output', type=Path, default=Path('results.json'),
-                      help='Path to output file')
-    parser.add_argument('--config', type=Path, default=Path('config/config.yaml'),
-                      help='Path to config file')
+            # Execute subtasks
+            while not self.planner.is_plan_completed():
+                next_tasks = self.planner.get_next_tasks()
+                for subtask in next_tasks:
+                    result = await self._execute_subtask(subtask)
+                    self.memory.store(f"{task}:{subtask.description}", result)
+                    
+            # Synthesize final response
+            final_result = await self.comprehension.synthesize_results(
+                self.memory.get_related(task)
+            )
+            return final_result
+
+        except Exception as e:
+            logger.error(f"Task processing failed: {str(e)}")
+            return f"Error processing task: {str(e)}"
+
+    async def _execute_subtask(self, subtask):
+        """Execute a single subtask using appropriate tools"""
+        for tool in subtask.tools_needed:
+            if tool == "web_search":
+                return await self.browser.search(subtask.description)
+            elif tool == "web_browse":
+                return await self.browser.browse(subtask.description)
+            elif tool == "code_generation":
+                return await self.llm.generate_code(subtask.description)
+        return "No appropriate tool found for subtask"
+
+async def main():
+    # Set up argument parser
+    parser = argparse.ArgumentParser(description="Web Research Agent")
+    parser.add_argument(
+        "task_file", 
+        type=str,
+        help="Path to file containing tasks"
+    )
+    parser.add_argument(
+        "--output", 
+        type=str,
+        default="results.txt",
+        help="Output file path"
+    )
     args = parser.parse_args()
 
-    # Validate task file
-    if not args.task_file.exists():
-        print(f"Task file not found: {args.task_file}")
-        sys.exit(1)
+    # Initialize agent
+    agent = WebResearchAgent()
+    agent.timer.start()
 
-    # Load configuration
-    config = ConfigLoader(args.config).config
+    # Process tasks
+    tasks = parse_task_file(args.task_file)
+    results = []
+
+    for task in tasks:
+        logger.info(f"Processing task: {task}")
+        result = await agent.process_task(task)
+        results.append(f"Task: {task}\nResult: {result}\n{'-'*50}")
+
+    # Write results
+    output_path = Path(args.output)
+    output_path.write_text("\n".join(results), encoding="utf-8")
     
-    # Setup logging
-    logger = setup_logging(config)
-    
-    try:
-        # Run task processing
-        asyncio.run(process_tasks(args.task_file, args.output, config))
-        logger.info(f"Results saved to {args.output}")
-        
-    except Exception as e:
-        logger.error(f"Error processing tasks: {e}")
-        sys.exit(1)
+    logger.info(f"Completed all tasks in {agent.timer.elapsed():.2f} seconds")
+    logger.info(f"Results written to {output_path}")
 
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())

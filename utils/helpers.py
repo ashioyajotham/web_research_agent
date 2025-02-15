@@ -1,75 +1,82 @@
-import logging
-from typing import Dict, Any, List
-from pathlib import Path
 import json
-import re
+from typing import Any, Dict, List
+import aiohttp
+import logging
+from datetime import datetime
 
-def setup_logging(config: Dict) -> logging.Logger:
-    """Configure logging based on config settings"""
-    log_path = Path(config['logging']['file'])
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
+
+class ResponseFormatter:
+    @staticmethod
+    def format_json(data: Any) -> str:
+        """Format data as pretty-printed JSON"""
+        return json.dumps(data, indent=2, ensure_ascii=False)
     
-    # Create logs directory if it doesn't exist
-    try:
-        log_path.parent.mkdir(parents=True, exist_ok=True)
+    @staticmethod
+    def format_list(items: List[Any]) -> str:
+        """Format list items with bullet points"""
+        return "\n".join(f"• {item}" for item in items)
+
+class WebUtils:
+    @staticmethod
+    async def make_http_request(url: str, method: str = "GET", headers: Dict = None) -> Dict:
+        """Make HTTP requests with error handling and logging"""
+        try:
+            async with aiohttp.ClientSession() as session:
+                async with session.request(method, url, headers=headers) as response:
+                    response.raise_for_status()
+                    return await response.json()
+        except Exception as e:
+            logger.error(f"HTTP request failed: {str(e)}")
+            raise
+
+class Timer:
+    def __init__(self):
+        self.start_time = None
         
-        # Create empty log file if it doesn't exist
-        if not log_path.exists():
-            log_path.touch()
+    def start(self):
+        """Start the timer"""
+        self.start_time = datetime.now()
+        
+    def elapsed(self) -> float:
+        """Get elapsed time in seconds"""
+        if not self.start_time:
+            return 0
+        return (datetime.now() - self.start_time).total_seconds()
+
+def truncate_text(text: str, max_length: int = 1000) -> str:
+    """Truncate text to specified length while preserving word boundaries"""
+    if len(text) <= max_length:
+        return text
+    truncated = text[:max_length].rsplit(' ', 1)[0]
+    return f"{truncated}..."
+
+def parse_task_file(file_path: str) -> List[str]:
+    """Parse tasks from a text file"""
+    try:
+        with open(file_path, 'r', encoding='utf-8') as f:
+            return [line.strip() for line in f if line.strip()]
     except Exception as e:
-        print(f"Error creating log file: {e}")
-        # Fallback to console only logging
-        logging.basicConfig(
-            level=config['logging']['level'],
-            format=config['logging']['format'],
-            handlers=[logging.StreamHandler()]
-        )
-        return logging.getLogger(__name__)
+        logger.error(f"Failed to parse task file: {str(e)}")
+        raise
 
-    logging.basicConfig(
-        level=config['logging']['level'],
-        format=config['logging']['format'],
-        handlers=[
-            logging.FileHandler(log_path),
-            logging.StreamHandler()
-        ]
-    )
-    return logging.getLogger(__name__)
-
-def clean_text(text: str) -> str:
-    """Clean and normalize text content"""
-    # Remove extra whitespace
-    text = re.sub(r'\s+', ' ', text.strip())
-    # Remove special characters
-    text = re.sub(r'[^\x00-\x7F]+', ' ', text)
-    return text
-
-def save_json(data: Any, filepath: Path) -> None:
-    """Save data to JSON file"""
-    filepath.parent.mkdir(parents=True, exist_ok=True)
-    with open(filepath, 'w', encoding='utf-8') as f:
-        json.dump(data, f, indent=2, ensure_ascii=False)
-
-def load_json(filepath: Path) -> Any:
-    """Load data from JSON file"""
-    if not filepath.exists():
-        return None
-    with open(filepath, 'r', encoding='utf-8') as f:
-        return json.load(f)
-
-def validate_task(task: str) -> bool:
-    """Validate task input"""
-    if not task or not isinstance(task, str):
-        return False
-    return len(task.strip()) > 0
-
-def chunk_text(text: str, chunk_size: int = 1000) -> List[str]:
-    """Split text into manageable chunks"""
-    return [text[i:i + chunk_size] for i in range(0, len(text), chunk_size)]
-
-def create_directory(path: Path) -> None:
-    """Create directory if it doesn't exist"""
-    path.mkdir(parents=True, exist_ok=True)
-
-def sanitize_filename(filename: str) -> str:
-    """Convert string to valid filename"""
-    return re.sub(r'[<>:"/\\|?*]', '_', filename)
+class MemoryCache:
+    def __init__(self, max_size: int = 1000):
+        self.cache: Dict[str, Any] = {}
+        self.max_size = max_size
+        
+    def get(self, key: str) -> Any:
+        """Get value from cache"""
+        return self.cache.get(key)
+        
+    def set(self, key: str, value: Any):
+        """Set value in cache with size limit enforcement"""
+        if len(self.cache) >= self.max_size:
+            # Remove oldest item
+            self.cache.pop(next(iter(self.cache)))
+        self.cache[key] = value
