@@ -17,38 +17,62 @@ from utils.helpers import parse_task_file, Timer, logger, setup_logging, RichPro
 class WebResearchAgent:
     def __init__(self):
         self.llm = GeminiLLM()
-        self.planner = TaskPlanner(self.llm)
+        self.comprehension = Comprehension(self.llm)
+        # Pass both llm and comprehension to TaskPlanner
+        self.planner = TaskPlanner(self.llm, self.comprehension)
         self.browser = WebBrowser()
         self.memory = Memory()
-        self.comprehension = Comprehension(self.llm)
         self.timer = Timer()
 
     async def process_task(self, task: str) -> Tuple[str, List[Dict]]:
-        """Process a single task and return the result with sources"""
+        """Process task with dynamic handling based on task type"""
         try:
-            # Reset browser sources for new task
             self.browser.sources = []
             
             # Create execution plan
             plan = await self.planner.create_plan(task)
             logger.info(f"Created plan with {len(plan)} subtasks")
 
+            # Track results with context
+            task_results = {
+                'type': self.comprehension.current_task_context.get('type'),
+                'components': {},
+                'sources': [],
+                'validation': {}
+            }
+
             # Execute subtasks
             while not self.planner.is_plan_completed():
                 next_tasks = self.planner.get_next_tasks()
                 for subtask in next_tasks:
                     result = await self._execute_subtask(subtask)
-                    task_id = next(
-                        k for k, v in self.planner.current_plan.items() 
-                        if v == subtask
-                    )
-                    self.planner.update_task_status(task_id, "completed", result)
-                    self.memory.store(f"{task}:{subtask.description}", result)
+                    task_id = next(k for k, v in self.planner.current_plan.items() if v == subtask)
                     
-            # Synthesize final response
-            final_result = await self.comprehension.synthesize_results(
-                self.memory.get_related(task)
-            )
+                    # Store result with context
+                    component = subtask.get('component', 'general')
+                    if component not in task_results['components']:
+                        task_results['components'][component] = []
+                    task_results['components'][component].append(result)
+                    
+                    # Update task status
+                    self.planner.update_task_status(task_id, "completed", result)
+                    
+            # Dynamic synthesis based on task type
+            synthesis_prompt = f"""Synthesize results based on task type and requirements:
+
+Task: {task}
+Type: {task_results['type']}
+Results: {json.dumps(task_results['components'], indent=2)}
+Requirements: {json.dumps(self.comprehension.current_task_context.get('requirements', {}), indent=2)}
+
+Create a response that:
+1. Matches the task type's needs
+2. Validates all requirements
+3. Integrates component results appropriately
+4. Highlights relationships between findings
+5. Notes any gaps or uncertainties"""
+
+            final_result = await self.llm.generate(synthesis_prompt)
             return final_result, self.browser.sources
 
         except Exception as e:

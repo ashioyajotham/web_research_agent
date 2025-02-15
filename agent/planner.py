@@ -13,68 +13,95 @@ class SubTask:
     result: Optional[str] = None
 
 class TaskPlanner:
-    def __init__(self, llm: LLMInterface):
+    def __init__(self, llm, comprehension):
         self.llm = llm
-        self.current_plan: Dict[str, SubTask] = {}
+        self.comprehension = comprehension
+        self.current_plan = {}
 
     def _parse_plan(self, plan_json: str) -> Dict[str, SubTask]:
         """Parse the LLM's JSON response into SubTask objects"""
         try:
-            # Clean up the response by removing markdown code block syntax
+            # Clean up the response
             cleaned_json = plan_json.strip()
             if cleaned_json.startswith('```json'):
-                cleaned_json = cleaned_json[7:]  # Remove ```json
+                cleaned_json = cleaned_json[7:]
             if cleaned_json.endswith('```'):
-                cleaned_json = cleaned_json[:-3]  # Remove ```
+                cleaned_json = cleaned_json[:-3]
             cleaned_json = cleaned_json.strip()
             
             # Parse JSON
             plan_dict = json.loads(cleaned_json)
             
-            # Convert each task definition into a SubTask object
+            # Ensure we have the expected structure
+            if not isinstance(plan_dict, dict):
+                raise ValueError("Expected JSON object at root level")
+                
+            # Handle both possible structures
+            subtasks = plan_dict.get('subtasks', plan_dict)
+            if not isinstance(subtasks, dict):
+                raise ValueError("Subtasks must be a dictionary")
+            
+            # Convert to SubTask objects
             parsed_plan = {}
-            for task_id, task_info in plan_dict.items():
-                # Handle both 'tools' and 'required_tools' keys
-                tools = task_info.get('tools', task_info.get('required_tools', []))
+            for task_id, task_info in subtasks.items():
+                if not isinstance(task_info, dict):
+                    continue
+                    
+                tools = task_info.get('tools_needed', task_info.get('tools', []))
+                if isinstance(tools, str):
+                    tools = [tools]
+                    
                 parsed_plan[task_id] = SubTask(
-                    description=task_info.get('description', ''),
-                    tools_needed=tools,
-                    dependencies=task_info.get('dependencies', [])
+                    description=str(task_info.get('description', '')),
+                    tools_needed=list(tools),
+                    dependencies=list(task_info.get('dependencies', [])),
+                    status="pending"
                 )
             
+            if not parsed_plan:
+                raise ValueError("No valid subtasks found in plan")
+                
             logger.info(f"Successfully parsed plan with {len(parsed_plan)} subtasks")
             return parsed_plan
             
         except json.JSONDecodeError as e:
-            logger.error(f"Failed to parse JSON plan: {e}")
-            raise ValueError(f"Invalid JSON response from LLM: {plan_json}")
-        except KeyError as e:
-            logger.error(f"Missing required field in plan: {e}")
-            raise ValueError(f"Incomplete task definition in plan: {plan_json}")
+            logger.error(f"Failed to parse JSON plan: {e}\nInput was: {plan_json}")
+            raise
         except Exception as e:
             logger.error(f"Unexpected error parsing plan: {e}")
             raise
 
     async def create_plan(self, task: str) -> Dict[str, SubTask]:
-        """Creates a structured plan from a high-level task"""
+        """Creates a dynamic plan based on task understanding"""
         try:
-            prompt = f"""
-            Given this task: '{task}'
-            Break it down into logical subtasks. For each subtask specify:
-            1. A clear description of what needs to be done
-            2. Required tools - Use ONLY these options:
-               - web_search: for finding information
-               - web_browse: for reading specific pages
-               - code_generation: ONLY for tasks requiring calculation, data processing, or analysis
-            3. Dependencies (IDs of other subtasks that must be completed first)
+            # Use comprehension service to understand task
+            task_context = await self.comprehension._understand_task(task)
             
-            Format: JSON with subtask IDs as keys and details as values.
-            Only use code_generation for computational tasks.
-            """
-            
+            # Generate dynamic planning prompt based on task type
+            prompt = f"""Given this task analysis:
+{json.dumps(task_context, indent=2)}
+
+Create a research plan with appropriate subtasks.
+Return as JSON with this structure:
+{{
+    "subtasks": {{
+        "task1": {{
+            "description": "...",
+            "tools_needed": ["web_search", "web_browse", "code_generation"],
+            "dependencies": []
+        }},
+        "task2": {{
+            "description": "...",
+            "tools_needed": ["..."],
+            "dependencies": ["task1"]
+        }}
+    }}
+}}"""
+
             plan_json = await self.llm.generate(prompt)
             self.current_plan = self._parse_plan(plan_json)
             return self.current_plan
+
         except Exception as e:
             logger.error(f"Failed to create plan: {str(e)}")
             raise

@@ -61,20 +61,53 @@ Synthesis Requirements:
         return list(sources) or ["No specific sources identified"]
 
     async def _understand_task(self, task: str) -> Dict[str, Any]:
-        """Analyze and understand the given task"""
+        """Analyze and understand the task structure and requirements"""
         try:
-            prompt = f"""Analyze this task and extract:
-1. Main objective
-2. Key requirements
-3. Potential challenges
+            prompt = f"""Analyze this task and extract its structure:
 
 Task: {task}
-Return as JSON."""
+
+Return a JSON object with this structure:
+{{
+    "type": "simple" | "multi_criteria" | "comparative" | "time_series" | "data_analysis",
+    "components": ["subtask1", "subtask2"],
+    "dependencies": {{"subtask2": ["subtask1"]}},
+    "requirements": {{"data_needed": [], "source_types": []}},
+    "validation_needs": [],
+    "temporal_aspect": "none" | "historical" | "current" | "future",
+    "output_format": "list" | "analysis" | "comparison" | "timeline"
+}}"""
+
             response = await self.llm.generate(prompt)
-            return json.loads(response)
+            
+            # Clean up response
+            cleaned_json = response.strip()
+            if cleaned_json.startswith('```json'):
+                cleaned_json = cleaned_json[7:]
+            if cleaned_json.endswith('```'):
+                cleaned_json = cleaned_json[:-3]
+            cleaned_json = cleaned_json.strip()
+            
+            # Parse and validate
+            task_understanding = json.loads(cleaned_json)
+            if not isinstance(task_understanding, dict):
+                raise ValueError("Task understanding must be a dictionary")
+                
+            # Store for later use
+            self.current_task_context = task_understanding
+            return task_understanding
+
         except Exception as e:
             logger.error(f"Failed to understand task: {str(e)}")
-            return {}
+            return {
+                "type": "simple",
+                "components": [task],
+                "dependencies": {},
+                "requirements": {},
+                "validation_needs": [],
+                "temporal_aspect": "none",
+                "output_format": "analysis"
+            }
 
     def adapt_to_future_tasks(self, new_task):
         # Logic to adapt based on previous tasks
