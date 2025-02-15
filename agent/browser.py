@@ -22,39 +22,37 @@ class WebBrowser:
         return api_key
 
     async def search(self, query: str) -> Dict:
-        """
-        Perform a web search using Serper API
-        """
+        """Perform a web search using Serper API"""
         try:
-            payload = {
+            data = {
                 'q': query,
-                'num': 5  # Number of results to return
+                'num': 5
             }
             
             response = await WebUtils.make_http_request(
                 url=self.base_url,
                 method="POST",
                 headers=self.headers,
-                data=json.dumps(payload)
+                data=data
             )
             
             return self._parse_search_results(response)
-
         except Exception as e:
             logger.error(f"Search failed for query '{query}': {str(e)}")
             raise
 
     async def browse(self, url: str) -> str:
-        """
-        Fetch and extract content from a webpage
-        """
+        """Fetch and extract content from a webpage"""
         try:
-            async with aiohttp.ClientSession() as session:
-                async with session.get(url) as response:
-                    response.raise_for_status()
-                    html = await response.text()
-                    return self._extract_main_content(html)
-
+            # Add http:// if not present
+            if not url.startswith(('http://', 'https://')):
+                url = f'https://{url}'
+                
+            response = await WebUtils.make_http_request(
+                url=url,
+                method="GET"
+            )
+            return response
         except Exception as e:
             logger.error(f"Failed to browse URL '{url}': {str(e)}")
             raise

@@ -34,6 +34,11 @@ class WebResearchAgent:
                 next_tasks = self.planner.get_next_tasks()
                 for subtask in next_tasks:
                     result = await self._execute_subtask(subtask)
+                    task_id = next(
+                        k for k, v in self.planner.current_plan.items() 
+                        if v == subtask
+                    )
+                    self.planner.update_task_status(task_id, "completed", result)
                     self.memory.store(f"{task}:{subtask.description}", result)
                     
             # Synthesize final response

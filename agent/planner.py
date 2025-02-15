@@ -20,15 +20,25 @@ class TaskPlanner:
     def _parse_plan(self, plan_json: str) -> Dict[str, SubTask]:
         """Parse the LLM's JSON response into SubTask objects"""
         try:
-            # Clean up the response to ensure valid JSON
-            plan_dict = json.loads(plan_json)
+            # Clean up the response by removing markdown code block syntax
+            cleaned_json = plan_json.strip()
+            if cleaned_json.startswith('```json'):
+                cleaned_json = cleaned_json[7:]  # Remove ```json
+            if cleaned_json.endswith('```'):
+                cleaned_json = cleaned_json[:-3]  # Remove ```
+            cleaned_json = cleaned_json.strip()
+            
+            # Parse JSON
+            plan_dict = json.loads(cleaned_json)
             
             # Convert each task definition into a SubTask object
             parsed_plan = {}
             for task_id, task_info in plan_dict.items():
+                # Handle both 'tools' and 'required_tools' keys
+                tools = task_info.get('tools', task_info.get('required_tools', []))
                 parsed_plan[task_id] = SubTask(
                     description=task_info.get('description', ''),
-                    tools_needed=task_info.get('tools_needed', []),
+                    tools_needed=tools,
                     dependencies=task_info.get('dependencies', [])
                 )
             
@@ -77,9 +87,16 @@ class TaskPlanner:
                     ready_tasks.append(task)
         return ready_tasks
 
+    def is_plan_completed(self) -> bool:
+        """Check if all subtasks in the current plan are completed"""
+        if not self.current_plan:
+            return False
+        return all(task.status == "completed" for task in self.current_plan.values())
+
     def update_task_status(self, task_id: str, status: str, result: Optional[str] = None):
         """Updates the status and result of a subtask"""
         if task_id in self.current_plan:
             self.current_plan[task_id].status = status
             if result:
                 self.current_plan[task_id].result = result
+            logger.info(f"Updated task {task_id} status to {status}")

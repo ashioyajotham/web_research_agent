@@ -24,11 +24,11 @@ class ResponseFormatter:
 
 class WebUtils:
     @staticmethod
-    async def make_http_request(url: str, method: str = "GET", headers: Dict = None) -> Dict:
+    async def make_http_request(url: str, method: str = "GET", headers: Dict = None, data: Dict = None) -> Dict:
         """Make HTTP requests with error handling and logging"""
         try:
             async with aiohttp.ClientSession() as session:
-                async with session.request(method, url, headers=headers) as response:
+                async with session.request(method, url, headers=headers, json=data) as response:
                     response.raise_for_status()
                     return await response.json()
         except Exception as e:
