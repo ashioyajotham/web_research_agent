@@ -1,6 +1,8 @@
 from dataclasses import dataclass
 from typing import List, Dict, Optional
 from models.llm import LLMInterface
+import json
+from utils.helpers import logger
 
 @dataclass
 class SubTask:
@@ -14,7 +16,35 @@ class TaskPlanner:
     def __init__(self, llm: LLMInterface):
         self.llm = llm
         self.current_plan: Dict[str, SubTask] = {}
-        
+
+    def _parse_plan(self, plan_json: str) -> Dict[str, SubTask]:
+        """Parse the LLM's JSON response into SubTask objects"""
+        try:
+            # Clean up the response to ensure valid JSON
+            plan_dict = json.loads(plan_json)
+            
+            # Convert each task definition into a SubTask object
+            parsed_plan = {}
+            for task_id, task_info in plan_dict.items():
+                parsed_plan[task_id] = SubTask(
+                    description=task_info.get('description', ''),
+                    tools_needed=task_info.get('tools_needed', []),
+                    dependencies=task_info.get('dependencies', [])
+                )
+            
+            logger.info(f"Successfully parsed plan with {len(parsed_plan)} subtasks")
+            return parsed_plan
+            
+        except json.JSONDecodeError as e:
+            logger.error(f"Failed to parse JSON plan: {e}")
+            raise ValueError(f"Invalid JSON response from LLM: {plan_json}")
+        except KeyError as e:
+            logger.error(f"Missing required field in plan: {e}")
+            raise ValueError(f"Incomplete task definition in plan: {plan_json}")
+        except Exception as e:
+            logger.error(f"Unexpected error parsing plan: {e}")
+            raise
+
     async def create_plan(self, task: str) -> Dict[str, SubTask]:
         """
         Creates a structured plan from a high-level task by breaking it down into subtasks
