@@ -20,22 +20,22 @@
           "date": "May 14, 2024"
         },
         {
-          "title": "DeepSeek and Other Chinese Firms Converge with Western ...",
-          "snippet": "Last month, DeepSeek joined sixteen other Chinese companies in signing onto the Artificial Intelligence Safety Commitments (\u4eba\u5de5\u667a\u80fd\u5b89\u5168\u627f\u8bfa).",
-          "link": "https://carnegieendowment.org/research/2025/01/deepseek-and-other-chinese-firms-converge-with-western-companies-on-ai-promises?lang=en",
-          "date": "Jan 28, 2025"
+          "title": "US/China cooperation on AI safety takes place behind closed doors",
+          "snippet": "The covert discussions were facilitated by the Shaikh Group, a private mediation organization specializing in fostering dialogue between key ...",
+          "link": "https://aibc.world/news/us-china-cooperation-on-ai-safety-takes-place-behind-closed-doors/",
+          "date": "Jan 11, 2024"
         },
         {
-          "title": "Secret talks among US companies and Chinese experts on AI safety",
-          "snippet": "Some big US AI companies like OpenAI, Anthropic and Cohere met up secretly with Chinese government AI experts in Geneva last year to chat about keeping AI safe.",
-          "link": "https://bensbites.beehiiv.com/p/secret-talks-among-us-companies-chinese-experts-ai-safety",
-          "date": "Jan 12, 2024"
+          "title": "China and U.S. envoys to hold 1st top-level dialogue on artificial ...",
+          "snippet": "High-level envoys from the United States and China are set to meet in Geneva on Tuesday for talks about artificial intelligence.",
+          "link": "https://www.pbs.org/newshour/politics/china-and-u-s-envoys-to-hold-1st-top-level-dialogue-on-artificial-intelligence",
+          "date": "May 13, 2024"
         },
         {
-          "title": "[PDF] The ethics of artificial intelligence: Issues and initiatives",
-          "snippet": "This study deals with the ethical implications and moral questions that arise from the development and implementation of artificial intelligence (AI) ...",
-          "link": "https://www.europarl.europa.eu/RegData/etudes/STUD/2020/634452/EPRS_STU(2020)634452_EN.pdf",
-          "date": null
+          "title": "[PDF] Chapter 5 - China and the Middle East",
+          "snippet": "In March 2023, media reporting claimed that China had success- fully brokered an agreement between Iran and Saudi Arabia to restore diplomatic ...",
+          "link": "https://www.uscc.gov/sites/default/files/2024-11/Chapter_5--China_and_the_Middle_East.pdf",
+          "date": "Nov 18, 2024"
         }
       ]
     },
@@ -55,22 +55,22 @@
           "date": "Jun 19, 2024"
         },
         {
+          "title": "AI Models \u2014 Data Collection and Generation | Neural Concept",
+          "snippet": "In this article, we will show some data collection and management practices. This can help companies to build an accurate and reliable AI model.",
+          "link": "https://www.neuralconcept.com/post/data-collection-and-generation-for-ai-models",
+          "date": null
+        },
+        {
+          "title": "Cumulative number of large-scale AI systems by country since 2017",
+          "snippet": "Epoch \u2013 Tracking Compute-Intensive AI Models. A dataset that tracks compute-intensive AI models, with training compute over 10\u00b2\u00b3 floating point operations (FLOP) ...",
+          "link": "https://ourworldindata.org/grapher/cumulative-number-of-large-scale-ai-systems-by-country",
+          "date": null
+        },
+        {
           "title": "AI Terms Glossary: AI Terms To Know In 2024 | Moveworks",
           "snippet": "AI Terms Explained. Your comprehensive guide to artificial intelligence terminology curated by the Moveworks AI team.",
           "link": "https://www.moveworks.com/us/en/resources/ai-terms-glossary",
           "date": "May 2, 2023"
-        },
-        {
-          "title": "What is a foundation model? - Ada Lovelace Institute",
-          "snippet": "An emerging type of AI system is a 'foundation model', sometimes called a 'general-purpose AI' or 'GPAI' system. These are capable of a range of general tasks.",
-          "link": "https://www.adalovelaceinstitute.org/resource/foundation-models-explainer/",
-          "date": "Jul 17, 2023"
-        },
-        {
-          "title": "Large language model - Wikipedia",
-          "snippet": "A large language model (LLM) is a type of machine learning model designed for natural language processing tasks such as language generation.",
-          "link": "https://en.wikipedia.org/wiki/Large_language_model",
-          "date": null
         }
       ]
     },
@@ -78,8 +78,20 @@
       "success": true,
       "results": [
         {
+          "title": "[PDF] [Draft] ESRS SEC1 Sector classification standard - EFRAG",
+          "snippet": "This document is a technical working paper intended solely for the internal use of PTF- ESRS members, supporting debates in Plenary meetings. It is not open ...",
+          "link": "https://www.efrag.org/sites/default/files/sites/webpublishing/SiteAssets/Working%20Paper%20Draft%20ESRS%20SEC1%20Sector%20Classification%20Standard[1].pdf",
+          "date": null
+        },
+        {
+          "title": "Building a sustainable automotive industry in Europe | Deloitte Insights",
+          "snippet": "Our research analyzes the current progress of European automotive companies on their sustainability journey.",
+          "link": "https://www2.deloitte.com/us/en/insights/environmental-social-governance/automotive-industry-sustainability.html",
+          "date": "Nov 6, 2024"
+        },
+        {
           "title": "[PDF] Compilation of Explanations January\u2014July 2024 - EFRAG",
-          "snippet": "EFRAG's mission is to serve the European public interest in both financial and sustainability reporting by developing and promoting European ...",
+          "snippet": "This Compilation of Explanations relates to the sector agnostic ESRS as adopted by the European Commission on 31 July 2023. Sector-specific ...",
           "link": "https://www.efrag.org/sites/default/files/media/document/2024-07/Compilation%20Explanations%20January%20-%20July%202024.pdf",
           "date": "Jul 1, 2024"
         },
@@ -90,22 +102,10 @@
           "date": null
         },
         {
-          "title": "[PDF] [Draft] ESRS SEC1 Sector classification standard - EFRAG",
-          "snippet": "This document is a technical working paper intended solely for the internal use of PTF- ESRS members, supporting debates in Plenary meetings. It is not open ...",
-          "link": "https://www.efrag.org/sites/default/files/sites/webpublishing/SiteAssets/Working%20Paper%20Draft%20ESRS%20SEC1%20Sector%20Classification%20Standard[1].pdf",
-          "date": null
-        },
-        {
           "title": "[PDF] ESRS Foundations - KPMG International",
           "snippet": "This edition considers the requirements of the first set of ESRS as adopted by the European. Commission in July 2023. It also considers the related ...",
           "link": "https://assets.kpmg.com/content/dam/kpmg/is/pdf/2024/10/isg-handbook-esrs-foundations.pdf",
           "date": null
-        },
-        {
-          "title": "[PDF] Platform recommendations on Data and Usability",
-          "snippet": "This report does not address the application of the EU Taxonomy to Small and Medium-sized Enterprises (SMEs) or the treatment of SMEs within ...",
-          "link": "https://finance.ec.europa.eu/system/files/2022-10/221011-sustainable-finance-platform-finance-report-usability_en_1.pdf",
-          "date": "Oct 12, 2022"
         }
       ]
     }

@@ -29,12 +29,16 @@ async def process_tasks(task_file: Path, output_file: Path, config: Dict) -> Non
     
     for i, task_data in enumerate(tasks, 1):
         try:
-            # Combine main task with subtasks for context
             full_task = task_data['task']
-            if (task_data['subtasks']):
-                full_task += "\nCriteria:\n" + "\n".join(task_data['subtasks'])
-                
+            if task_data['subtasks']:
+                subtasks_text = "\n    ".join(task_data['subtasks'])
+                full_task += f"\nCriteria:\n    {subtasks_text}"
+            
             print(formatter.format_task_section(i, len(tasks), task_data['task']))
+            if task_data['subtasks']:
+                for subtask in task_data['subtasks']:
+                    print(f"    • {subtask}")
+                    
             result = await agent.execute_task(full_task)
             if result['success']:
                 print(formatter.format_search_results(result.get('results', [])))

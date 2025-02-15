@@ -3,11 +3,11 @@ import re
 
 class TaskParser:
     def __init__(self):
-        self.criteria_markers = [
-            'following criteria:',
-            'criteria:',
-            'following requirements:',
-            'requirements:'
+        self.bullet_patterns = [
+            r'^\s+\w+',  # Indented text
+            r'^\s*•\s+',  # Bullet point
+            r'^\s*[-*]\s+',  # Hyphen or asterisk
+            r'^\s*\d+\.\s+'  # Numbered
         ]
 
     def parse_tasks(self, content: str) -> List[Dict]:
@@ -15,38 +15,43 @@ class TaskParser:
         tasks = []
         current_task = None
         current_criteria = []
-        collecting_criteria = False
+        in_criteria_block = False
+        prev_indent = 0
         
         for line in lines:
-            line = line.strip()
-            if not line:
+            if not line.strip():
                 continue
-                
-            # Check if this line indicates criteria collection should start
-            if any(marker in line.lower() for marker in self.criteria_markers):
-                collecting_criteria = True
-                current_task = line
+            
+            # Calculate indentation level
+            indent = len(line) - len(line.lstrip())
+            
+            # Check if this is a criteria list header
+            if 'criteria:' in line.lower():
+                in_criteria_block = True
+                current_task = line.strip()
+                prev_indent = indent
                 continue
-                
-            # If we're collecting criteria and line is indented or starts with criteria markers
-            if collecting_criteria and (line.startswith(('They ', 'It ', 'The '))):
-                current_criteria.append(line)
+            
+            # Handle criteria items
+            if in_criteria_block and indent > prev_indent:
+                current_criteria.append(line.strip())
                 continue
-                
-            # If this is a new main task
-            if not collecting_criteria or line[0].isupper():
-                # Save previous task if exists
+            
+            # New main task detected
+            if indent == 0:
                 if current_task:
                     tasks.append({
                         'task': current_task,
                         'subtasks': current_criteria,
                         'type': 'criteria' if current_criteria else 'single'
                     })
-                current_task = line
+                current_task = line.strip()
                 current_criteria = []
-                collecting_criteria = False
+                in_criteria_block = False
                 
-        # Add the last task
+            prev_indent = indent
+        
+        # Add final task
         if current_task:
             tasks.append({
                 'task': current_task,

@@ -42,8 +42,13 @@ class Agent:
             # Handle criteria-based tasks
             if "Criteria:\n" in task:
                 main_task, criteria = task.split("Criteria:\n", 1)
-                # Combine all criteria into a single search query
-                search_query = f"{main_task.strip()} {criteria.replace(chr(10), ' AND ')}"
+                criteria_list = [c.strip() for c in criteria.split('\n') if c.strip()]
+                
+                # Build a more focused search query
+                search_parts = [main_task.strip()]
+                search_parts.extend([f"AND {c}" for c in criteria_list])
+                search_query = " ".join(search_parts)
+                
                 search_result = await self._web_search_tool.search(search_query, silent=True)
             else:
                 search_result = await self._web_search_tool.search(task, silent=True)
