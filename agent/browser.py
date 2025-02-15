@@ -46,50 +46,68 @@ class WebBrowser:
             raise
 
     async def browse(self, url: str) -> str:
-        """Fetch and extract content from a webpage with fallback options"""
+        """Fetch and extract content from a webpage"""
         try:
-            parsed = urlparse(url)
-            if not parsed.scheme and not parsed.netloc:
-                search_results = await self.search(url)
-                if search_results and 'organic' in search_results:
-                    # Try multiple results if first one fails
-                    for result in search_results['organic'][:3]:
-                        try:
-                            content = await self._fetch_url(result['link'])
-                            self.sources.append({
-                                'url': result['link'],
-                                'title': result.get('title', ''),
-                                'snippet': result.get('snippet', '')
-                            })
-                            return content
-                        except aiohttp.ClientError:
-                            continue
-                    raise ValueError(f"All alternative sources failed for: {url}")
+            # Check if input is actually a URL
+            if not url.startswith(('http://', 'https://')):
+                if not any(char in url for char in ['/', '.', ':']):
+                    # This is probably a search query, not a URL
+                    search_results = await self.search(url)
+                    if search_results and 'organic' in search_results:
+                        url = search_results['organic'][0]['link']
+                    else:
+                        raise ValueError(f"Could not find valid URL for query: {url}")
                 else:
-                    raise ValueError(f"Could not find valid URL for: {url}")
-            
-            content = await self._fetch_url(url)
-            self.sources.append({'url': url})
-            return content
+                    # Add https:// if missing
+                    url = f'https://{url}'
+
+            # Validate URL
+            parsed = urlparse(url)
+            if not parsed.netloc:
+                raise ValueError(f"Invalid URL format: {url}")
+
+            return await self._fetch_url(url)
 
         except Exception as e:
             logger.error(f"Failed to browse URL '{url}': {str(e)}")
             raise
 
     async def _fetch_url(self, url: str) -> str:
-        """Fetch URL with proper headers and error handling"""
+        """Fetch URL with proper encoding handling"""
         async with aiohttp.ClientSession() as session:
             try:
                 async with session.get(url, headers={
                     'User-Agent': self.headers['User-Agent'],
-                    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+                    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+                    'Accept-Encoding': 'gzip, deflate, br',
                     'Accept-Language': 'en-US,en;q=0.5',
-                    'Connection': 'keep-alive',
                 }) as response:
                     response.raise_for_status()
-                    content = await response.text()
+                    
+                    # Try to get encoding from headers
+                    content_type = response.headers.get('content-type', '')
+                    encoding = None
+                    
+                    if 'charset=' in content_type:
+                        encoding = content_type.split('charset=')[-1]
+                    
+                    try:
+                        if encoding:
+                            content = await response.text(encoding=encoding)
+                        else:
+                            # Try UTF-8 first
+                            content = await response.text(encoding='utf-8')
+                    except UnicodeDecodeError:
+                        # Fallback to latin-1 if UTF-8 fails
+                        content = await response.text(encoding='latin-1')
+                    
                     return self._extract_main_content(content)
+                    
             except aiohttp.ClientError as e:
+                logger.error(f"HTTP request failed for URL '{url}': {str(e)}")
+                raise
+            except UnicodeDecodeError as e:
+                logger.error(f"Encoding error for URL '{url}': {str(e)}")
                 raise
 
     def _parse_search_results(self, response: Dict) -> Dict:

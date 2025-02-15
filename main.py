@@ -62,15 +62,16 @@ class WebResearchAgent:
                 if tool == "web_search":
                     return await self.browser.search(subtask.description)
                 elif tool == "web_browse":
-                    return await self.browser.browse(subtask.description)
+                    try:
+                        return await self.browser.browse(subtask.description)
+                    except UnicodeDecodeError:
+                        logger.warning(f"Encoding issue with URL, trying alternative approach")
+                        # Try to get content through search instead
+                        search_results = await self.browser.search(subtask.description)
+                        if search_results and 'organic' in search_results:
+                            return search_results['organic'][0]['snippet']
                 elif tool == "code_generation":
-                    # Only use code generation for specific coding tasks
-                    if any(keyword in subtask.description.lower() 
-                          for keyword in ['calculate', 'extract', 'process', 'analyze', 'compute']):
-                        return await self.llm.generate_code(subtask.description)
-                    else:
-                        # For non-coding tasks, use regular text generation
-                        return await self.llm.generate(subtask.description)
+                    return await self.llm.generate_code(subtask.description)
             return "No appropriate tool found for subtask"
         except Exception as e:
             logger.error(f"Failed to execute subtask: {str(e)}")

@@ -129,21 +129,36 @@ class RichProgress:
     def __exit__(self, *args):
         return self.progress.__exit__(*args)
 
-def print_task_result(task: str, result: str, sources: List[Dict] = None):
-    """Print task result with rich formatting and sources"""
+def print_task_result(task: str, result: str, sources: List[Dict]):
+    """Print task result with rich formatting and validated sources"""
     task_text = Text(task, style="bold cyan")
-    result_text = Text(result, style="green")
     
+    # Parse markdown content
+    from rich.markdown import Markdown
+    result_md = Markdown(result)
+    
+    # Add source validation info
+    source_text = Text("\nSource Validation:", style="bold yellow")
     if sources:
-        source_text = Text("\nSources:", style="bold yellow")
         for source in sources:
-            source_text.append(f"\n- {source['url']}")
-            if 'title' in source:
-                source_text.append(f"\n  {source['title']}")
-        result_text.append(source_text)
+            date = source.get('date', 'No date')
+            url = source.get('link', '')
+            title = source.get('title', '')
+            
+            source_text.append(f"\n- [{date}] {title}")
+            source_text.append(f"\n  {url}")
+    else:
+        source_text.append("\n- No sources provided")
+    
+    # Combine content
+    import rich.table
+    from rich.table import Table
+    content = Table.grid()
+    content.add_row(result_md)
+    content.add_row(source_text)
     
     panel = Panel(
-        result_text,
+        content,
         title=task_text,
         border_style="blue",
         padding=(1, 2)
