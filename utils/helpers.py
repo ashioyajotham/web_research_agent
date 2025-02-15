@@ -3,6 +3,11 @@ from typing import Any, Dict, List
 import aiohttp
 import logging
 from datetime import datetime
+from rich.console import Console
+from rich.progress import Progress, SpinnerColumn, TextColumn, TimeElapsedColumn
+from rich.panel import Panel
+from rich.text import Text
+from pathlib import Path
 
 # Configure logging
 logging.basicConfig(
@@ -10,6 +15,32 @@ logging.basicConfig(
     format='%(asctime)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
+
+console = Console()
+
+def setup_logging(verbose: bool = False) -> logging.Logger:
+    """Setup logging configuration"""
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    log_dir = Path("logs")
+    log_dir.mkdir(exist_ok=True)
+    
+    # Always log everything to file
+    file_handler = logging.FileHandler(f"logs/run_{timestamp}.log")
+    file_handler.setLevel(logging.INFO)
+    file_handler.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s'))
+    
+    # Console handler with conditional level
+    console_handler = logging.StreamHandler()
+    console_handler.setLevel(logging.INFO if verbose else logging.WARNING)
+    console_handler.setFormatter(logging.Formatter('%(message)s' if not verbose else '%(levelname)s: %(message)s'))
+    
+    # Setup root logger
+    root_logger = logging.getLogger()
+    root_logger.setLevel(logging.INFO)
+    root_logger.addHandler(file_handler)
+    root_logger.addHandler(console_handler)
+    
+    return root_logger
 
 class ResponseFormatter:
     @staticmethod
@@ -80,3 +111,42 @@ class MemoryCache:
             # Remove oldest item
             self.cache.pop(next(iter(self.cache)))
         self.cache[key] = value
+
+class RichProgress:
+    def __init__(self, verbose: bool = False):
+        self.verbose = verbose
+        self.progress = Progress(
+            SpinnerColumn(),
+            TextColumn("[bold blue]{task.description}"),
+            TimeElapsedColumn(),
+            console=console,
+            disable=verbose  # Disable progress bar in verbose mode
+        )
+    
+    def __enter__(self):
+        return self.progress.__enter__()
+    
+    def __exit__(self, *args):
+        return self.progress.__exit__(*args)
+
+def print_task_result(task: str, result: str, sources: List[Dict] = None):
+    """Print task result with rich formatting and sources"""
+    task_text = Text(task, style="bold cyan")
+    result_text = Text(result, style="green")
+    
+    if sources:
+        source_text = Text("\nSources:", style="bold yellow")
+        for source in sources:
+            source_text.append(f"\n- {source['url']}")
+            if 'title' in source:
+                source_text.append(f"\n  {source['title']}")
+        result_text.append(source_text)
+    
+    panel = Panel(
+        result_text,
+        title=task_text,
+        border_style="blue",
+        padding=(1, 2)
+    )
+    console.print(panel)
+    console.print("─" * console.width, style="dim")

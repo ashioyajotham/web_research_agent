@@ -10,7 +10,7 @@ class LLMInterface(ABC):
     """Abstract base class for LLM implementations"""
     
     @abstractmethod
-    async def generate(self, prompt: str, **kwargs) -> str:
+    async def generate(self, prompt: str) -> str:
         """Generate text response from prompt"""
         pass
     
@@ -30,7 +30,7 @@ class GeminiLLM(LLMInterface):
         # Configure Gemini
         genai.configure(api_key=self.api_key)
         
-        # Initialize models with specific configurations
+        # Initialize model with configurations
         generation_config = {
             "temperature": self.temperature,
             "top_p": 0.8,
@@ -65,16 +65,12 @@ class GeminiLLM(LLMInterface):
             raise ValueError("GEMINI_API_KEY environment variable not set")
         return api_key
 
-    async def generate(self, prompt: str, **kwargs) -> str:
+    async def generate(self, prompt: str) -> str:
         """Generate text response using Gemini with retry logic"""
         for attempt in range(self.max_retries):
             try:
-                response = await self.model.generate_content_async(
-                    prompt,
-                    safety_settings=kwargs.get('safety_settings'),
-                    generation_config=kwargs.get('generation_config')
-                )
-                return response.text
+                response = await self.model.generate_content_async(prompt)
+                return response.text.strip()
             except Exception as e:
                 if attempt == self.max_retries - 1:
                     logger.error(f"Gemini generation failed after {self.max_retries} attempts: {str(e)}")
@@ -85,15 +81,15 @@ class GeminiLLM(LLMInterface):
         """Generate code using Gemini with language-specific formatting"""
         try:
             code_prompt = f"""
-            Generate {language} code based on this request: {prompt}
-            Requirements:
-            - Include comprehensive docstrings and comments
-            - Follow {language} best practices and style guides
-            - Include error handling where appropriate
-            - Only return the code, no explanations
+            Write code in {language} for the following task.
+            Only return the code, no explanations.
+            Include proper error handling and comments.
+            Don't include markdown code blocks.
+
+            Task: {prompt}
             """
-            response = await self.code_model.generate_content_async(code_prompt)
-            return self._format_code_response(response.text, language)
+            response = await self.model.generate_content_async(code_prompt)
+            return self._clean_code_response(response.text)
         except Exception as e:
             logger.error(f"Code generation failed: {str(e)}")
             raise
@@ -146,6 +142,18 @@ class GeminiLLM(LLMInterface):
         except Exception as e:
             logger.error(f"Key points extraction failed: {str(e)}")
             raise
+
+    def _clean_code_response(self, text: str) -> str:
+        """Clean up code response by removing markdown and extra whitespace"""
+        lines = text.strip().split('\n')
+        if lines[0].startswith('```'):
+            lines = lines[1:]
+        if lines[-1].startswith('```'):
+            lines = lines[:-1]
+        # Remove language identifier if present
+        if lines[0].startswith('python') or lines[0].startswith('javascript'):
+            lines = lines[1:]
+        return '\n'.join(line for line in lines if line.strip()).strip()
 
     def _format_code_response(self, code: str, language: str) -> str:
         """Format code response with proper indentation and styling"""

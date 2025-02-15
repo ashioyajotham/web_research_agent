@@ -56,22 +56,28 @@ class TaskPlanner:
             raise
 
     async def create_plan(self, task: str) -> Dict[str, SubTask]:
-        """
-        Creates a structured plan from a high-level task by breaking it down into subtasks
-        """
-        prompt = f"""
-        Given the following task: '{task}'
-        Break it down into logical subtasks. For each subtask specify:
-        1. A clear description of what needs to be done
-        2. Required tools (web_search, code_generation, web_browse)
-        3. Dependencies (IDs of other subtasks that must be completed first)
-        
-        Format: JSON with subtask IDs as keys and details as values
-        """
-        
-        plan_json = await self.llm.generate(prompt)
-        self.current_plan = self._parse_plan(plan_json)
-        return self.current_plan
+        """Creates a structured plan from a high-level task"""
+        try:
+            prompt = f"""
+            Given this task: '{task}'
+            Break it down into logical subtasks. For each subtask specify:
+            1. A clear description of what needs to be done
+            2. Required tools - Use ONLY these options:
+               - web_search: for finding information
+               - web_browse: for reading specific pages
+               - code_generation: ONLY for tasks requiring calculation, data processing, or analysis
+            3. Dependencies (IDs of other subtasks that must be completed first)
+            
+            Format: JSON with subtask IDs as keys and details as values.
+            Only use code_generation for computational tasks.
+            """
+            
+            plan_json = await self.llm.generate(prompt)
+            self.current_plan = self._parse_plan(plan_json)
+            return self.current_plan
+        except Exception as e:
+            logger.error(f"Failed to create plan: {str(e)}")
+            raise
 
     def get_next_tasks(self) -> List[SubTask]:
         """Returns list of subtasks that are ready to be executed"""
