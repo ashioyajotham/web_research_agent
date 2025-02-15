@@ -58,21 +58,27 @@ class WebResearchAgent:
     async def _execute_subtask(self, subtask):
         """Execute a single subtask using appropriate tools"""
         try:
+            result = None
             for tool in subtask.tools_needed:
                 if tool == "web_search":
-                    return await self.browser.search(subtask.description)
+                    result = await self.browser.search(subtask.description)
                 elif tool == "web_browse":
-                    try:
-                        return await self.browser.browse(subtask.description)
-                    except UnicodeDecodeError:
-                        logger.warning(f"Encoding issue with URL, trying alternative approach")
-                        # Try to get content through search instead
-                        search_results = await self.browser.search(subtask.description)
-                        if search_results and 'organic' in search_results:
-                            return search_results['organic'][0]['snippet']
+                    # Only try to browse if description looks like a URL
+                    if self.browser._is_valid_url(subtask.description):
+                        result = await self.browser.browse(subtask.description)
+                    else:
+                        # Fall back to search for non-URL descriptions
+                        search_result = await self.browser.search(subtask.description)
+                        if search_result and 'organic' in search_result:
+                            result = search_result['organic'][0]['snippet']
                 elif tool == "code_generation":
-                    return await self.llm.generate_code(subtask.description)
-            return "No appropriate tool found for subtask"
+                    result = await self.llm.generate_code(subtask.description)
+                
+                if result:
+                    break
+                    
+            return result or f"No results found for: {subtask.description}"
+            
         except Exception as e:
             logger.error(f"Failed to execute subtask: {str(e)}")
             raise

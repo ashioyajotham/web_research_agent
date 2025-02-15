@@ -48,29 +48,45 @@ class WebBrowser:
     async def browse(self, url: str) -> str:
         """Fetch and extract content from a webpage"""
         try:
-            # Check if input is actually a URL
-            if not url.startswith(('http://', 'https://')):
-                if not any(char in url for char in ['/', '.', ':']):
-                    # This is probably a search query, not a URL
-                    search_results = await self.search(url)
-                    if search_results and 'organic' in search_results:
-                        url = search_results['organic'][0]['link']
-                    else:
-                        raise ValueError(f"Could not find valid URL for query: {url}")
-                else:
-                    # Add https:// if missing
-                    url = f'https://{url}'
+            # Validate if input is a URL
+            if not self._is_valid_url(url):
+                # If not a URL, try search instead
+                search_results = await self.search(url)
+                if search_results and 'organic' in search_results:
+                    return search_results['organic'][0]['snippet']
+                raise ValueError(f"Could not find relevant content for: {url}")
 
-            # Validate URL
-            parsed = urlparse(url)
-            if not parsed.netloc:
-                raise ValueError(f"Invalid URL format: {url}")
-
-            return await self._fetch_url(url)
+            # Clean and validate URL
+            clean_url = self._clean_url(url)
+            return await self._fetch_url(clean_url)
 
         except Exception as e:
             logger.error(f"Failed to browse URL '{url}': {str(e)}")
             raise
+
+    def _is_valid_url(self, url: str) -> bool:
+        """Check if string is a valid URL"""
+        try:
+            result = urlparse(url)
+            return all([result.scheme, result.netloc])
+        except Exception:
+            return False
+
+    def _clean_url(self, url: str) -> str:
+        """Clean and validate URL format"""
+        url = url.strip()
+        if not url.startswith(('http://', 'https://')):
+            url = f'https://{url}'
+        
+        # Remove any markdown formatting
+        url = re.sub(r'[<>]', '', url)
+        
+        # Validate final URL
+        parsed = urlparse(url)
+        if not parsed.netloc:
+            raise ValueError(f"Invalid URL format: {url}")
+            
+        return url
 
     async def _fetch_url(self, url: str) -> str:
         """Fetch URL with proper encoding handling"""

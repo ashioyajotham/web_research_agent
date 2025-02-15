@@ -5,7 +5,7 @@ import json
 import re
 
 class Comprehension:
-    def __init__(self, llm: LLMInterface):
+    def __init__(self, llm):
         self.llm = llm
         self.knowledge_base = []
 
@@ -19,11 +19,13 @@ class Comprehension:
             # Get task context from knowledge base
             task_context = self.knowledge_base[-1] if self.knowledge_base else {}
             
-            # Build dynamic prompt based on task requirements
+            # Join results with proper line breaks
+            research_data = "\n".join(str(result) for result in results)
+            
             prompt = f"""Synthesize these research results into a comprehensive response:
 
 Research Data:
-{'\n'.join(results)}
+{research_data}
 
 Task Context:
 {json.dumps(task_context, indent=2)}
@@ -35,20 +37,9 @@ Synthesis Requirements:
 4. Include relevant context (dates, locations, organizations)
 5. Highlight key uncertainties or data gaps
 6. Add a "Methodology" section explaining how conclusions were reached
-7. End with a "Sources" section listing references with quality indicators
+7. End with a "Sources" section listing references with quality indicators"""
 
-Focus on {task_context.get('main_objective', 'providing comprehensive analysis')}
-"""
             response = await self.llm.generate(prompt)
-            
-            # Ensure minimum response structure
-            if not any(header in response for header in ['# ', '## ', '**']):
-                response = f"# Research Summary\n\n{response}"
-            
-            if "Sources:" not in response:
-                found_sources = self._extract_sources(results)
-                response += "\n\n## Sources\n" + "\n".join(f"- {source}" for source in found_sources)
-                
             return response
 
         except Exception as e:
@@ -79,10 +70,11 @@ Focus on {task_context.get('main_objective', 'providing comprehensive analysis')
 
 Task: {task}
 Return as JSON."""
-            return await self.llm.generate(prompt)
+            response = await self.llm.generate(prompt)
+            return json.loads(response)
         except Exception as e:
-            logger.error(f"Task understanding failed: {str(e)}")
-            raise
+            logger.error(f"Failed to understand task: {str(e)}")
+            return {}
 
     def adapt_to_future_tasks(self, new_task):
         # Logic to adapt based on previous tasks
