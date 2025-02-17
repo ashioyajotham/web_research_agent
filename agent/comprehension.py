@@ -24,11 +24,52 @@ class Comprehension:
         
         try:
             response = await self.llm.generate(prompt)
-            subtasks = [s.strip('- ') for s in response.text.split('\n') if s.strip().startswith('-')]
-            return {'subtasks': subtasks}
+            # Handle different response formats
+            content = response if isinstance(response, str) else getattr(response, 'text', str(response))
+            
+            # Extract subtasks using regex for more robust parsing
+            subtask_pattern = r'[-*•]\s*(.+?)(?=\n[-*•]|\n\n|$)'
+            subtasks = re.findall(subtask_pattern, content, re.MULTILINE)
+            
+            # Clean and validate subtasks
+            valid_subtasks = [
+                subtask.strip()
+                for subtask in subtasks
+                if subtask.strip() and len(subtask.strip()) > 10
+            ]
+            
+            if not valid_subtasks:
+                # Fallback to simple line-based extraction
+                valid_subtasks = [
+                    line.strip('- *•').strip()
+                    for line in content.split('\n')
+                    if line.strip().startswith(('-', '*', '•'))
+                ]
+            
+            logger.info(f"Generated {len(valid_subtasks)} subtasks")
+            return {'subtasks': valid_subtasks}
+            
         except Exception as e:
             logger.error(f"Task analysis failed: {str(e)}")
-            return {'subtasks': []}
+            # Return default subtasks instead of empty list
+            return {
+                'subtasks': [
+                    "Search for relevant information",
+                    "Analyze and filter results",
+                    "Compile findings into required format"
+                ]
+            }
+
+    def _extract_content(self, response: Any) -> str:
+        """Extract text content from LLM response"""
+        if isinstance(response, str):
+            return response
+        elif hasattr(response, 'text'):
+            return response.text
+        elif hasattr(response, 'content'):
+            return response.content
+        else:
+            return str(response)
 
     async def analyze_results(self, description: str, task_context: Dict) -> Dict:
         """Analyze and filter search results"""
@@ -47,9 +88,11 @@ class Comprehension:
             """
             
             response = await self.llm.generate(prompt)
+            content = self._extract_content(response)
+            
             return {
                 'status': 'success',
-                'analysis': response.text,
+                'analysis': content,
                 'source_count': len(self.context.get('search_results', []))
             }
         except Exception as e:
@@ -73,9 +116,11 @@ class Comprehension:
             """
             
             response = await self.llm.generate(prompt)
+            content = self._extract_content(response)
+            
             return {
                 'status': 'success',
-                'synthesis': response.text
+                'synthesis': content
             }
         except Exception as e:
             logger.error(f"Partial synthesis failed: {str(e)}")
@@ -101,7 +146,7 @@ class Comprehension:
             """
             
             response = await self.llm.generate(prompt)
-            return response.text
+            return self._extract_content(response)
             
         except Exception as e:
             logger.error(f"Final synthesis failed: {str(e)}")
@@ -148,7 +193,7 @@ class Comprehension:
             return self._get_default_context(task)
 
     async def _extract_task_characteristics(self, task: str) -> Dict:
-        """Extract task characteristics using LLM"""
+        """Extract task characteristics using LLM with improved error handling"""
         prompt = f"""Analyze this task and identify its key characteristics:
 Task: {task}
 
@@ -164,9 +209,43 @@ Return a JSON object with these dynamic features:
 
         try:
             response = await self.llm.generate(prompt)
-            return json.loads(response)
-        except Exception:
-            return {}
+            content = response if isinstance(response, str) else getattr(response, 'text', str(response))
+            
+            # Try to parse JSON from response
+            try:
+                return json.loads(content)
+            except json.JSONDecodeError:
+                # If JSON parsing fails, extract characteristics using regex
+                characteristics = {}
+                patterns = {
+                    'type': r'type"?\s*:?\s*"?([^",\n]+)',
+                    'temporal_aspect': r'temporal_aspect"?\s*:?\s*"?([^",\n]+)',
+                    'output_format': r'output_format"?\s*:?\s*"?([^",\n]+)'
+                }
+                
+                for key, pattern in patterns.items():
+                    match = re.search(pattern, content, re.IGNORECASE)
+                    if match:
+                        characteristics[key] = match.group(1).strip()
+                
+                return characteristics or self._get_default_characteristics()
+                
+        except Exception as e:
+            logger.error(f"Failed to extract task characteristics: {str(e)}")
+            return self._get_default_characteristics()
+
+    def _get_default_characteristics(self) -> Dict:
+        """Provide default task characteristics"""
+        return {
+            "type": "research",
+            "components": ["information gathering", "analysis"],
+            "temporal_aspect": "current",
+            "data_needed": ["facts", "sources"],
+            "source_types": ["web"],
+            "validation_criteria": ["multiple sources"],
+            "constraints": {},
+            "output_format": "summary"
+        }
 
     def adapt_to_future_tasks(self, new_task):
         # Logic to adapt based on previous tasks
