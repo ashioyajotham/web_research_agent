@@ -65,13 +65,13 @@ class GeminiLLM(LLMInterface):
         ]
         
         self.model = genai.GenerativeModel(
-            'gemini-pro',
+            'gemini-1.5-pro',
             generation_config=generation_config,
             safety_settings=safety_settings
         )
         
         self.code_model = genai.GenerativeModel(
-            'gemini-pro-code',
+            'gemini-1.5-pro',
             generation_config=generation_config,
             safety_settings=safety_settings
         )
