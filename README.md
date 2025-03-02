@@ -118,5 +118,5 @@ python main.py tasks.txt --verbose
 5. Open a Pull Request
 
 ## License
-MIT License - see LICENSE file for details
+MIT License - see [LICENSE](LICENSE) for details
 ```
