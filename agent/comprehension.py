@@ -250,3 +250,15 @@ Return a JSON object with these dynamic features:
     def adapt_to_future_tasks(self, new_task):
         # Logic to adapt based on previous tasks
         return f"Adapting to new task: {new_task}"
+
+class ResultProcessor:
+    def __init__(self):
+        self.processors = {
+            'search': self._process_search,
+            'list': self._process_list,
+            'analysis': self._process_analysis
+        }
+        
+    async def process(self, task_type: str, raw_results: List[Dict]) -> Dict:
+        processor = self.processors.get(task_type, self._process_default)
+        return await processor(raw_results)
