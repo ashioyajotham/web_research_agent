@@ -13,48 +13,52 @@ class SubTask:
     result: Optional[str] = None
 
 class TaskPlanner:
-    def __init__(self, llm=None, comprehension=None):
+    def __init__(self, llm, comprehension):
         self.llm = llm
         self.comprehension = comprehension
-        self.tasks = []
-        self.current_plan = None
-        self.task_status = {}
-
-    async def create_plan(self, task: str) -> List[Dict]:
-        """Create dynamic task plan based on task requirements"""
         self.current_plan = []
         self.task_status = {}
+        self.results_cache = {}
 
-        # Use LLM to analyze task if available
-        if self.llm and self.comprehension:
-            try:
-                # Get task analysis from LLM
-                analysis = await self.comprehension.analyze_task(task)
-                subtasks = analysis.get('subtasks', [])
-                
-                # Convert subtasks to plan format
-                for idx, subtask in enumerate(subtasks):
-                    self.current_plan.append({
-                        'id': f'task_{idx}',
-                        'description': subtask,
-                        'type': 'search' if 'search' in subtask.lower() else 'analysis',
-                        'dependencies': [f'task_{i}' for i in range(idx)]
-                    })
-            except Exception as e:
-                logger.warning(f"Failed to create plan using LLM: {str(e)}")
-                # Fall back to default plan
-                self.current_plan = self._create_default_plan()
-        else:
-            # Use default plan if no LLM available
-            self.current_plan = self._create_default_plan()
-
-        # Initialize task status
-        self.task_status = {
-            task['id']: {'completed': False, 'result': None} 
-            for task in self.current_plan
-        }
+    async def create_plan(self, task: str) -> List[Dict]:
+        """Create execution plan with result handling strategy"""
+        # Analyze task requirements
+        task_analysis = await self.comprehension.analyze_task(task)
         
-        return self.current_plan
+        # Determine result handling needs
+        needs_sources = 'search' in task.lower() or 'find' in task.lower()
+        needs_structured = 'list' in task.lower() or 'compile' in task.lower()
+        
+        base_tasks = [
+            {
+                'id': 'search',
+                'description': task,
+                'type': 'search',
+                'dependencies': [],
+                'needs_sources': needs_sources,
+                'needs_structured': needs_structured
+            }
+        ]
+
+        # Add result processing task
+        if needs_sources:
+            base_tasks.append({
+                'id': 'process',
+                'description': 'Process and validate sources',
+                'type': 'process',
+                'dependencies': ['search'],
+                'output_format': task_analysis.get('format', 'default')
+            })
+
+        return base_tasks
+
+    def update_task_status(self, task_id: str, result: Dict):
+        """Track results through processing"""
+        if task_id in self.task_status:
+            self.task_status[task_id]['completed'] = True
+            self.task_status[task_id]['result'] = result
+            # Cache results for dependent tasks
+            self.results_cache[task_id] = result
 
     def _create_default_plan(self) -> List[Dict]:
         """Create a default task plan"""
@@ -79,23 +83,43 @@ class TaskPlanner:
             }
         ]
 
-    def get_next_tasks(self) -> List[Dict]:
-        """Get tasks that are ready to execute (dependencies met)"""
+    async def get_next_tasks(self) -> List[Dict]:
         if not self.current_plan:
             return []
 
         ready_tasks = []
         for task in self.current_plan:
-            if not self.task_status[task['id']]['completed']:
-                if all(self.task_status[dep]['completed'] for dep in task['dependencies']):
+            task_id = task['id']
+            if not self.task_status[task_id]['completed']:
+                # Check dependencies and maintain result context
+                if self._are_dependencies_met(task):
+                    # Attach previous results context if needed
+                    task['context'] = self._build_task_context(task)
                     ready_tasks.append(task)
-        
         return ready_tasks
 
-    def update_task_status(self, task_id: str, status: Dict):
-        """Update task status and results"""
-        if task_id in self.task_status:
-            self.task_status[task_id].update(status)
+    def _are_dependencies_met(self, task: Dict) -> bool:
+        for dep in task['dependencies']:
+            if not self.task_status[dep]['completed']:
+                return False
+            # Ensure required results exist
+            if dep in self.results_cache:
+                return True
+        return True
+
+    def _build_task_context(self, task: Dict) -> Dict:
+        context = {
+            'task_type': task.get('type', 'default'),
+            'requirements': task.get('requirements', {}),
+            'previous_results': {}
+        }
+        
+        # Gather results from dependencies
+        for dep in task['dependencies']:
+            if dep in self.results_cache:
+                context['previous_results'][dep] = self.results_cache[dep]
+        
+        return context
 
     def is_plan_completed(self) -> bool:
         """Check if all tasks are completed"""

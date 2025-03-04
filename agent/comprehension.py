@@ -252,13 +252,51 @@ Return a JSON object with these dynamic features:
         return f"Adapting to new task: {new_task}"
 
 class ResultProcessor:
-    def __init__(self):
+    def __init__(self, llm):
+        self.llm = llm
         self.processors = {
             'search': self._process_search,
             'list': self._process_list,
             'analysis': self._process_analysis
         }
+
+    async def process(self, results: List[Dict], context: Dict) -> Dict:
+        task_type = context.get('task_type', 'search')
+        processor = self.processors.get(task_type, self._process_search)
         
-    async def process(self, task_type: str, raw_results: List[Dict]) -> Dict:
-        processor = self.processors.get(task_type, self._process_default)
-        return await processor(raw_results)
+        processed_results = await processor(results, context)
+        
+        return {
+            'processed': processed_results,
+            'raw_results': results,
+            'context': context
+        }
+
+    async def _process_search(self, results: List[Dict], context: Dict) -> Dict:
+        extracted_data = []
+        for result in results:
+            extracted = {
+                'content': result.get('snippet', ''),
+                'source': result.get('link', ''),
+                'title': result.get('title', ''),
+                'date': result.get('date', '')
+            }
+            if 'quote' in context.get('requirements', {}):
+                quotes = self._extract_quotes(result.get('snippet', ''))
+                if quotes:
+                    extracted['quotes'] = quotes
+            extracted_data.append(extracted)
+
+        synthesis = await self.llm.generate(
+            task=context.get('task_description'),
+            data=extracted_data
+        )
+
+        return {
+            'synthesis': synthesis,
+            'sources': extracted_data
+        }
+
+    def _extract_quotes(self, text: str) -> List[str]:
+        import re
+        return [q.strip() for q in re.findall(r'"([^"]*)"', text) if q.strip()]
