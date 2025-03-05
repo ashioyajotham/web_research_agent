@@ -13,7 +13,7 @@ class Comprehension:
         """Initialize the comprehension module."""
         config = get_config()
         genai.configure(api_key=config.get("gemini_api_key"))
-        self.model = genai.GenerativeModel('gemini-pro')
+        self.model = genai.GenerativeModel('gemini-1.5-flash')  # Updated model name
     
     def analyze_task(self, task_description):
         """
@@ -43,6 +43,7 @@ class Comprehension:
         """
         
         try:
+            # Updated API call format
             response = self.model.generate_content(prompt)
             analysis = self._extract_json(response.text)
             return analysis
@@ -80,6 +81,7 @@ class Comprehension:
         """
         
         try:
+            # Updated API call format
             response = self.model.generate_content(prompt)
             return response.text.strip()
         except Exception as e:
@@ -125,7 +127,7 @@ class Comprehension:
         else:
             # Try to find JSON without code blocks
             json_match = re.search(r'({[\s\S]*})', text)
-            if json_match:
+            if (json_match):
                 json_str = json_match.group(1)
             else:
                 raise ValueError("Could not extract JSON from response")

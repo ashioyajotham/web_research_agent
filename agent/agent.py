@@ -4,6 +4,7 @@ from .comprehension import Comprehension
 from tools.tool_registry import ToolRegistry
 from utils.formatters import format_results
 from utils.logger import get_logger
+import re
 
 logger = get_logger(__name__)
 
@@ -55,7 +56,7 @@ class WebResearchAgent:
         
         # Execute the plan
         results = []
-        for step in plan.steps:
+        for step_index, step in enumerate(plan.steps):
             logger.info(f"Executing step: {step.description}")
             
             # Get the appropriate tool
@@ -66,9 +67,12 @@ class WebResearchAgent:
                 results.append({"step": step.description, "status": "error", "output": error_msg})
                 continue
             
+            # Prepare parameters with variable substitution
+            parameters = self._substitute_parameters(step.parameters, results)
+            
             # Execute the tool
             try:
-                output = tool.execute(step.parameters, self.memory)
+                output = tool.execute(parameters, self.memory)
                 results.append({"step": step.description, "status": "success", "output": output})
                 self.memory.add_result(step.description, output)
             except Exception as e:
@@ -78,3 +82,40 @@ class WebResearchAgent:
         # Format the results
         formatted_results = format_results(task_description, plan, results)
         return formatted_results
+    
+    def _substitute_parameters(self, parameters, previous_results):
+        """
+        Substitute variables in parameters using results from previous steps.
+        
+        Args:
+            parameters (dict): Step parameters with potential variables
+            previous_results (list): Results from previous steps
+            
+        Returns:
+            dict: Parameters with variables substituted
+        """
+        substituted = {}
+        
+        for key, value in parameters.items():
+            if isinstance(value, str):
+                # Handle search result URL placeholders
+                if re.match(r"\{search_result_(\d+)_url\}", value):
+                    index = int(re.search(r"\{search_result_(\d+)_url\}", value).group(1))
+                    # Find the most recent search result
+                    for result in reversed(previous_results):
+                        if result["status"] == "success" and "output" in result["output"] and "results" in result["output"]:
+                            if index < len(result["output"]["results"]):
+                                substituted[key] = result["output"]["results"][index]["link"]
+                                logger.info(f"Substituted parameter {key}: {value} -> {substituted[key]}")
+                                break
+                    # If not found, keep original
+                    if key not in substituted:
+                        substituted[key] = value
+                else:
+                    # Handle other variable types if needed
+                    substituted[key] = value
+            else:
+                # Non-string values pass through unchanged
+                substituted[key] = value
+        
+        return substituted

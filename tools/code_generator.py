@@ -17,7 +17,7 @@ class CodeGeneratorTool(BaseTool):
         )
         config = get_config()
         genai.configure(api_key=config.get("gemini_api_key"))
-        self.model = genai.GenerativeModel('gemini-pro')
+        self.model = genai.GenerativeModel('gemini-1.5-flash')  # Updated model name
         
     def execute(self, parameters: Dict[str, Any], memory: Any) -> str:
         """
@@ -63,28 +63,28 @@ class CodeGeneratorTool(BaseTool):
     
     def _generate_code(self, prompt: str, language: str) -> str:
         """Generate code based on a prompt."""
-        system_prompt = f"""You are an expert {language} programmer. 
+        # Create combined prompt with system and user instructions
+        combined_prompt = f"""You are an expert {language} programmer. 
         Generate well-commented, efficient, and readable {language} code based on the user's requirements.
         Include docstrings, error handling, and follow best practices for {language}.
-        Return ONLY the code without additional explanation."""
+        Return ONLY the code without additional explanation.
         
-        user_prompt = f"Generate {language} code for the following: {prompt}"
+        Generate {language} code for the following: {prompt}
+        """
         
-        response = self.model.generate_content([
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": user_prompt}
-        ])
+        # Updated API call format
+        response = self.model.generate_content(combined_prompt)
         
         code = self._extract_code_from_response(response.text, language)
         return code
     
     def _debug_code(self, prompt: str, code: str, language: str) -> str:
         """Debug existing code based on a description of the issue."""
-        system_prompt = f"""You are an expert {language} debugger.
+        # Create combined prompt
+        combined_prompt = f"""You are an expert {language} debugger.
         Analyze the provided code and fix any issues based on the problem description.
-        Explain the issues you found and how you fixed them."""
+        Explain the issues you found and how you fixed them.
         
-        user_prompt = f"""
         Problem description: {prompt}
         
         Code to debug:
@@ -93,38 +93,35 @@ class CodeGeneratorTool(BaseTool):
         ```
         """
         
-        response = self.model.generate_content([
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": user_prompt}
-        ])
+        # Updated API call format
+        response = self.model.generate_content(combined_prompt)
         
         return response.text
     
     def _explain_code(self, code: str, language: str) -> str:
         """Provide an explanation for what the code does."""
-        system_prompt = "You are an expert code explainer. Analyze the provided code and explain what it does in a clear, detailed manner."
+        # Create combined prompt
+        combined_prompt = f"""You are an expert code explainer. 
+        Analyze the provided code and explain what it does in a clear, detailed manner.
         
-        user_prompt = f"""
         Explain the following {language} code:
         ```{language}
         {code}
         ```
         """
         
-        response = self.model.generate_content([
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": user_prompt}
-        ])
+        # Updated API call format
+        response = self.model.generate_content(combined_prompt)
         
         return response.text
     
     def _optimize_code(self, code: str, requirements: str, language: str) -> str:
         """Optimize existing code for better performance or readability."""
-        system_prompt = f"""You are an expert {language} optimizer.
+        # Create combined prompt
+        combined_prompt = f"""You are an expert {language} optimizer.
         Analyze the provided code and optimize it according to the requirements.
-        Provide both the optimized code and an explanation of your changes."""
+        Provide both the optimized code and an explanation of your changes.
         
-        user_prompt = f"""
         Optimization requirements: {requirements}
         
         Code to optimize:
@@ -133,31 +130,27 @@ class CodeGeneratorTool(BaseTool):
         ```
         """
         
-        response = self.model.generate_content([
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": user_prompt}
-        ])
+        # Updated API call format
+        response = self.model.generate_content(combined_prompt)
         
         return response.text
     
     def _convert_code(self, code: str, source_language: str, target_language: str) -> str:
         """Convert code from one language to another."""
-        system_prompt = f"""You are an expert programmer. 
+        # Create combined prompt
+        combined_prompt = f"""You are an expert programmer. 
         Convert the provided {source_language} code to equivalent {target_language} code.
         Ensure the converted code maintains the same functionality.
-        Include any necessary language-specific adjustments."""
+        Include any necessary language-specific adjustments.
         
-        user_prompt = f"""
         Convert this {source_language} code to {target_language}:
         ```{source_language}
         {code}
         ```
         """
         
-        response = self.model.generate_content([
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": user_prompt}
-        ])
+        # Updated API call format
+        response = self.model.generate_content(combined_prompt)
         
         converted_code = self._extract_code_from_response(response.text, target_language)
         return converted_code

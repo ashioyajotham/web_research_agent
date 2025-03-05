@@ -17,7 +17,7 @@ class PlanStep:
 class Plan:
     """A complete execution plan."""
     task: str
-    steps: List<PlanStep]
+    steps: List[PlanStep]
 
 class Planner:
     """Creates execution plans for tasks."""
@@ -26,7 +26,7 @@ class Planner:
         """Initialize the planner."""
         config = get_config()
         genai.configure(api_key=config.get("gemini_api_key"))
-        self.model = genai.GenerativeModel('gemini-pro')
+        self.model = genai.GenerativeModel('gemini-1.5-flash')
     
     def create_plan(self, task_description, task_analysis):
         """
@@ -43,6 +43,8 @@ class Planner:
         
         # Use LLM to generate a plan
         prompt = self._create_planning_prompt(task_description, task_analysis)
+        
+        # Updated API call format
         response = self.model.generate_content(prompt)
         
         try:
@@ -112,7 +114,7 @@ class Planner:
         else:
             # Try to find JSON without code blocks
             json_match = re.search(r'({[\s\S]*"steps"[\s\S]*})', response_text)
-            if json_match:
+            if (json_match):
                 plan_json = json_match.group(1)
             else:
                 raise ValueError("Could not extract JSON from response")

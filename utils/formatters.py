@@ -2,6 +2,13 @@ from typing import Dict, List, Any
 import json
 from config.config import get_config
 
+def _truncate_content(content, max_length=2000):
+    """Truncate content to a maximum length."""
+    if not content or len(content) <= max_length:
+        return content
+    
+    return content[:max_length] + f"... [Content truncated, {len(content) - max_length} more characters]"
+
 def format_results(task_description: str, plan: Any, results: List[Dict[str, Any]]) -> str:
     """
     Format the results of a task into a well-structured output.
@@ -188,9 +195,3 @@ def _format_as_html(task_description: str, plan: Any, results: List[Dict[str, An
     html.append("</html>")
     
     return "\n".join(html)
-
-def _truncate_content(content: str, max_length: int) -> str:
-    """Truncate content to a maximum length."""
-    if len(content) > max_length:
-        return content[:max_length] + "..."
-    return content
