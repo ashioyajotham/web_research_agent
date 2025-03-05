@@ -11,6 +11,7 @@ class Memory:
         self.past_tasks = []
         self.web_content_cache = {}
         self.conversation_history = []
+        self.search_results = []  # New property to store search results directly
     
     def add_task(self, task_description):
         """

@@ -75,12 +75,17 @@ class WebResearchAgent:
                 output = tool.execute(parameters, self.memory)
                 results.append({"step": step.description, "status": "success", "output": output})
                 self.memory.add_result(step.description, output)
+                
+                # Store search results specifically for easy reference
+                if step.tool_name == "search" and isinstance(output, dict) and "results" in output:
+                    self.memory.search_results = output["results"]
+                    logger.info(f"Stored {len(self.memory.search_results)} search results in memory")
             except Exception as e:
                 logger.error(f"Error executing tool {step.tool_name}: {str(e)}")
                 results.append({"step": step.description, "status": "error", "output": str(e)})
         
         # Format the results
-        formatted_results = format_results(task_description, plan, results)
+        formatted_results = self._format_results(task_description, plan, results)
         return formatted_results
     
     def _substitute_parameters(self, parameters, previous_results):
@@ -99,23 +104,52 @@ class WebResearchAgent:
         for key, value in parameters.items():
             if isinstance(value, str):
                 # Handle search result URL placeholders
-                if re.match(r"\{search_result_(\d+)_url\}", value):
-                    index = int(re.search(r"\{search_result_(\d+)_url\}", value).group(1))
-                    # Find the most recent search result
-                    for result in reversed(previous_results):
-                        if result["status"] == "success" and "output" in result["output"] and "results" in result["output"]:
-                            if index < len(result["output"]["results"]):
-                                substituted[key] = result["output"]["results"][index]["link"]
-                                logger.info(f"Substituted parameter {key}: {value} -> {substituted[key]}")
-                                break
-                    # If not found, keep original
-                    if key not in substituted:
-                        substituted[key] = value
+                search_placeholder_match = re.match(r"\{search_result_(\d+)_url\}", value)
+                if search_placeholder_match:
+                    index = int(search_placeholder_match.group(1))
+                    
+                    # Try to get search results from memory
+                    search_results = getattr(self.memory, 'search_results', None)
+                    
+                    if search_results and index < len(search_results):
+                        # Direct access to stored search results
+                        substituted[key] = search_results[index]["link"]
+                        logger.info(f"Substituted parameter using memory: {key}={substituted[key]}")
+                    else:
+                        # Fall back to searching previous results
+                        url_found = False
+                        for result in reversed(previous_results):
+                            if result["status"] == "success":
+                                output = result.get("output", {})
+                                if isinstance(output, dict) and "results" in output:
+                                    results_list = output["results"]
+                                    if index < len(results_list):
+                                        substituted[key] = results_list[index]["link"]
+                                        url_found = True
+                                        logger.info(f"Substituted parameter from results: {key}={substituted[key]}")
+                                        break
+                        
+                        if not url_found:
+                            logger.warning(f"Could not substitute placeholder {value}, using original")
+                            substituted[key] = value
                 else:
-                    # Handle other variable types if needed
                     substituted[key] = value
             else:
-                # Non-string values pass through unchanged
                 substituted[key] = value
         
         return substituted
+    
+    def _format_results(self, task_description, plan, results):
+        """
+        Format results using the formatter utility.
+        
+        Args:
+            task_description (str): Original task description
+            plan (Plan): The plan that was executed
+            results (list): Results from each step of the plan
+            
+        Returns:
+            str: Formatted results
+        """
+        from utils.formatters import format_results
+        return format_results(task_description, plan, results)
