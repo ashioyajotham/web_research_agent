@@ -40,7 +40,7 @@
    The US and China will meet in Geneva to discuss artificial intelligence on Tuesday and US officials stressed that Washington's policies would not be up for ...
 
 7. [In first AI dialogue, US cites 'misuse' of AI by China, Beijing protests ...](https://apnews.com/article/artificial-intelligence-china-united-states-biden-xi-geneva-506da7b5fa72d5fe1bcd54fb8ec4f898)
-   GENEVA (AP) — U.S. officials raised concerns about China's “misuse of AI” while Beijing's representatives rebuked Washington over “restrictions ...
+   GENEVA (AP) ï¿½ U.S. officials raised concerns about China's ï¿½misuse of AIï¿½ while Beijing's representatives rebuked Washington over ï¿½restrictions ...
 
 8. [U.S.-China talks on AI risks set to begin in Geneva](https://www.washingtonpost.com/technology/2024/05/13/us-china-ai-talks/)
    The United States and China will hold their first high-level talks over the risks of artificial intelligence on Tuesday in Geneva.
@@ -143,7 +143,7 @@ def extract_coo_name(text):
 **Found**: 9 results
 
 1. [[PDF] Strategic competition in the age of AI: Emerging risks and ... - RAND](https://www.rand.org/content/dam/rand/pubs/research_reports/RRA3200/RRA3295-1/RAND_RRA3295-1.pdf)
-   The goal was to provide an initial exploration of ways in which military use of AI might generate risks and opportunities at the strategic level – conscious ...
+   The goal was to provide an initial exploration of ways in which military use of AI might generate risks and opportunities at the strategic level ï¿½ conscious ...
 
 2. [Top US and Chinese officials begin talks on AI in Geneva | AP News](https://apnews.com/article/artificial-intelligence-china-united-states-geneva-switzerland-1aa4451f82f250a47039a213f3d72879)
    Top envoys from the U.S. and China huddled Tuesday in closed-door talks in Geneva to discuss ways to ensure that emerging artificial ...
@@ -155,9 +155,9 @@ def extract_coo_name(text):
    Statement from NSC Spokesperson Adrienne Watson on the U.S.-PRC Talks on AI Risk and Safety. May 15, 2024.
 
 5. [The AI Diffusion Framework: Securing U.S. AI Leadership While ...](https://www.csis.org/analysis/ai-diffusion-framework-securing-us-ai-leadership-while-preempting-strategic-drift)
-   This white paper unpacks one of the Biden administration's final acts—the AI Diffusion Rule—analyzing which countries stand to gain, ...
+   This white paper unpacks one of the Biden administration's final actsï¿½the AI Diffusion Ruleï¿½analyzing which countries stand to gain, ...
 
-6. [[PDF] Promising Topics for US–China Dialogues on AI](https://oms-www.files.svdcdn.com/production/downloads/academic/Final%20Promising%20Topics%20for%20US-China%20Dialogues%20on%20AI%20Governance%20and%20Safety.pdf?dm=1737452069)
+6. [[PDF] Promising Topics for USï¿½China Dialogues on AI](https://oms-www.files.svdcdn.com/production/downloads/academic/Final%20Promising%20Topics%20for%20US-China%20Dialogues%20on%20AI%20Governance%20and%20Safety.pdf?dm=1737452069)
    In 2023, both the US and China signed the Bletchley Declaration, acknowledging the po- tential for serious harm from advanced AI systems as ...
 
 7. [From Competition to Cooperation: Can US-China Engagement ...](https://techpolicy.press/from-competition-to-cooperation-can-uschina-engagement-overcome-geopolitical-barriers-in-ai-governance)

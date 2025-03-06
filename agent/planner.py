@@ -3,6 +3,8 @@ from typing import List, Dict, Any
 from utils.logger import get_logger
 from config.config import get_config
 import google.generativeai as genai
+import re
+import json
 
 logger = get_logger(__name__)
 
@@ -17,7 +19,7 @@ class PlanStep:
 class Plan:
     """A complete execution plan."""
     task: str
-    steps: List[PlanStep]
+    steps: List<PlanStep]
 
 class Planner:
     """Creates execution plans for tasks."""
@@ -117,53 +119,48 @@ class Planner:
     def _parse_plan_response(self, response_text):
         """Parse the LLM response into a structured plan."""
         # Extract JSON from the response
-        import re
-        import json
-        
         json_match = re.search(r'```(?:json)?\s*({.*?})\s*```', response_text, re.DOTALL)
         if json_match:
             plan_json = json_match.group(1)
         else:
             # Try to find JSON without code blocks
             json_match = re.search(r'({[\s\S]*"steps"[\s\S]*})', response_text)
-            if (json_match):
+            if json_match:
                 plan_json = json_match.group(1)
             else:
+                logger.warning(f"Could not extract JSON from response, using default plan. Response: {response_text[:200]}...")
                 raise ValueError("Could not extract JSON from response")
         
-        # Parse the JSON
+        # Log the extracted JSON for debugging
+        logger.debug(f"Extracted JSON: {plan_json[:200]}...")
+        
+        # Parse the JSON with enhanced error handling
         try:
             return json.loads(plan_json)
-        except json.JSONDecodeError:
-            # Try to fix common JSON errors
+        except json.JSONDecodeError as e:
+            logger.warning(f"JSON parsing error: {str(e)}. Attempting to fix...")
+            
+            # Common JSON formatting issues to fix
+            # 1. Replace single quotes with double quotes
             plan_json = plan_json.replace("'", '"')
-            return json.loads(plan_json)
-    
-    def _create_default_plan(self, task_description):
-        """Create a simple default plan if the LLM planning fails."""
-        search_query = task_description
-        
-        steps = [
-            PlanStep(
-                description=f"Search for information about: {search_query}",
-                tool_name="search",
-                parameters={"query": search_query, "num_results": 5}
-            ),
-            PlanStep(
-                description="Browse the first search result to gather information",
+            
+            # 2. Fix missing commas between objects in arrays
+            plan_json = re.sub(r'}\s*{', '},{', plan_json)
+            
+            # 3. Fix trailing commas in arrays and objects
+            plan_json = re.sub(r',\s*}', '}', plan_json)
+            plan_json = re.sub(r',\s*]', ']', plan_json)
+            
+            # 4. Fix missing quotes around keys
+            plan_json = re.sub(r'(\s*)(\w+)(\s*):', r'\1"\2"\3:', plan_json)
+            
+            # 5. Remove comments
+            plan_json = re.sub(r'//.*?(\n|$)', '', plan_json)
+            
+            try:
+                return json.loads(plan_json)
+            except json.JSONDecodeError as e2:
                 logger.error(f"Failed to fix JSON: {str(e2)}. Final attempt with jsonlib...")
-                tool_name="browser",
-                parameters={"url": "{search_result_0_url}", "extract_type": "main_content"}
-            ),
-            PlanStep(
-                description="Generate a summary report",
-                tool_name="code",
-                parameters={"prompt": f"Generate a detailed report for the task: {task_description}", "language": "markdown"}
-            )
-        ]
-        
-        return Plan(task=task_description, steps=steps)
-
                 
                 try:
                     # Last resort: try a more lenient parser if available
