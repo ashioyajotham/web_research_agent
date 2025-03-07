@@ -19,7 +19,7 @@ class PlanStep:
 class Plan:
     """A complete execution plan."""
     task: str
-    steps: List<PlanStep]
+    steps: List[PlanStep]
 
 class Planner:
     """Creates execution plans for tasks."""
