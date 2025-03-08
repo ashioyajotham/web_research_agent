@@ -133,12 +133,12 @@ class Comprehension:
     
     def extract_entities(self, text, entity_types=None):
         """
-        Extract named entities from text content.
+        Extract named entities from text content with advanced formatting.
         
         Args:
             text (str): The text to analyze
             entity_types (list, optional): Types of entities to extract (e.g., 'person', 'organization', 'role')
-                If None, extract all entity types
+                If None, extract all common entity types
                 
         Returns:
             dict: Dictionary of entity types and their extracted values
@@ -147,43 +147,85 @@ class Comprehension:
         
         # Default entity types if none specified
         if entity_types is None:
-            entity_types = ['person', 'organization', 'role', 'location', 'date', 'title']
+            entity_types = ['person', 'organization', 'role', 'location', 'date', 'title', 'event']
         
         # Cap text length to avoid token limits
         text_sample = text[:25000] if len(text) > 25000 else text
         
         prompt = f"""
-        Extract the following entity types from the text below:
+        Carefully analyze and extract the following entity types from the text below:
         {', '.join(entity_types)}
         
         For each entity type, provide a list of unique values found in the text.
-        If multiple entities refer to the same thing (e.g., "John Smith" and "Mr. Smith"), list them together.
-        For role entities, include the person and organization they relate to when possible.
+        Be thorough and precise in your extraction, focusing especially on unique identifiers.
+        
+        Special extraction instructions:
+        
+        1. PERSON: Extract full names when possible. Include titles only if they help identify the person.
+        2. ORGANIZATION: Extract complete organization names. Include both full names and well-known abbreviations.
+        3. ROLE: For roles/positions, use the format "Role: Person @ Organization" when that information is available.
+        4. DATE: Extract specific dates mentioned, including year information when available.
+        5. LOCATION: Extract specific locations including cities, countries, and venues.
         
         TEXT:
         {text_sample}
         
         Return the results as a JSON object with entity types as keys and arrays of found entities as values.
-        For roles, include the format "role: person @ organization" when that information is available.
+        Only include entity types that have at least one match. Return ONLY the JSON without additional text.
         
         Example format:
         {{
             "person": ["John Smith", "Jane Doe"],
-            "organization": ["Acme Corp", "Epoch AI"],
-            "role": ["CEO: John Smith @ Acme Corp", "COO: Jane Doe @ Epoch AI"]
+            "organization": ["Acme Corp", "Future AI Initiative"],
+            "role": ["CEO: John Smith @ Acme Corp", "Director: Jane Doe @ Future AI Initiative"],
+            "location": ["Geneva, Switzerland", "Washington DC"]
         }}
-        
-        Only include entity types that have at least one match. Return ONLY the JSON without additional text.
         """
         
         try:
             response = self.model.generate_content(prompt)
             entities = self._extract_json(response.text)
-            logger.info(f"Extracted entities: {entities}")
-            return entities
+            
+            # Post-process the extracted entities
+            cleaned_entities = self._clean_entities(entities)
+            
+            logger.info(f"Extracted entities: {cleaned_entities}")
+            return cleaned_entities
         except Exception as e:
             logger.error(f"Error extracting entities: {str(e)}")
             return {entity_type: [] for entity_type in entity_types}
+
+    def _clean_entities(self, entities):
+        """Clean and normalize extracted entities."""
+        cleaned = {}
+        
+        for entity_type, values in entities.items():
+            if not values:
+                continue
+                
+            # Remove duplicates (case insensitive)
+            unique_values = []
+            seen = set()
+            
+            for value in values:
+                value_lower = value.lower()
+                if value_lower not in seen:
+                    seen.add(value_lower)
+                    unique_values.append(value)
+            
+            # Remove very short entities (likely not useful)
+            unique_values = [v for v in unique_values if len(v) > 1]
+            
+            # For organization names, remove very generic terms
+            if entity_type == 'organization':
+                generic_orgs = {'company', 'organization', 'corporation', 'agency', 'department', 'office', 'association'}
+                unique_values = [org for org in unique_values if org.lower() not in generic_orgs]
+            
+            # Add clean values if any remain
+            if unique_values:
+                cleaned[entity_type] = unique_values
+        
+        return cleaned
     
     def _extract_json(self, text):
         """Extract and parse JSON from text."""

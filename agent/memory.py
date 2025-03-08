@@ -115,7 +115,7 @@ class Memory:
 
     def add_entities(self, entities):
         """
-        Add or update extracted entities in memory.
+        Add or update extracted entities in memory intelligently.
         
         Args:
             entities (dict): Dictionary of entity types and values
@@ -125,10 +125,59 @@ class Memory:
             if entity_type not in self.extracted_entities:
                 self.extracted_entities[entity_type] = []
             
-            # Add new unique entities
+            # Add new unique entities with deduplication
             for value in values:
-                if value not in self.extracted_entities[entity_type]:
+                # Skip very short entities as they're often false positives
+                if len(str(value)) < 3:
+                    continue
+                    
+                # Check if this or a similar entity already exists
+                exists = False
+                value_lower = value.lower()
+                
+                for existing in self.extracted_entities[entity_type]:
+                    # Check for exact match or if one contains the other
+                    if (existing.lower() == value_lower or 
+                        existing.lower() in value_lower or 
+                        value_lower in existing.lower()):
+                        exists = True
+                        break
+                
+                if not exists:
                     self.extracted_entities[entity_type].append(value)
+
+    def get_related_entities(self, entity_value):
+        """
+        Find related entities across different entity types.
+        
+        Args:
+            entity_value (str): Entity value to find relationships for
+            
+        Returns:
+            dict: Dictionary of related entities by type
+        """
+        related = {}
+        entity_value_lower = entity_value.lower()
+        
+        for entity_type, values in self.extracted_entities.items():
+            related_entities = []
+            
+            for value in values:
+                # For roles, check if the entity is mentioned in the role
+                if entity_type == "role" and entity_value_lower in value.lower():
+                    related_entities.append(value)
+                # For complex role entries like "CEO: John @ Acme"
+                elif ":" in value and "@" in value:
+                    parts = value.split("@")
+                    if len(parts) >= 2:
+                        role_org = parts[1].strip()
+                        if entity_value_lower in role_org.lower():
+                            related_entities.append(value)
+            
+            if related_entities:
+                related[entity_type] = related_entities
+        
+        return related
 
     def get_entities(self, entity_type=None):
         """
