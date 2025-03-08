@@ -19,7 +19,7 @@ class PlanStep:
 class Plan:
     """A complete execution plan."""
     task: str
-    steps: List[PlanStep]
+    steps: List[PlanStep]  # Fixed: using proper square brackets for type annotation
 
 class Planner:
     """Creates execution plans for tasks."""
@@ -195,21 +195,25 @@ class Planner:
         search_query = task_description
         
         # Determine if this looks like a coding task
-        coding_keywords = ["write", "code", "program", "script", "function", "implement", "develop", "create a program"]
+        coding_keywords = ["write", "code", "program", "script", "function", "implement", "develop", "algorithm"]
         requires_coding = any(keyword in task_description.lower() for keyword in coding_keywords)
         
         steps = [
             PlanStep(
                 description=f"Search for information about: {search_query}",
                 tool_name="search",
-                parameters={"query": search_query, "num_results": 5}
-            ),
+                parameters={"query": search_query, "num_results": 10}
+            )
+        ]
+        
+        # Add browser step with specific URL structure
+        steps.append(
             PlanStep(
                 description="Browse the first search result to gather information",
                 tool_name="browser",
                 parameters={"url": "{search_result_0_url}", "extract_type": "main_content"}
             )
-        ]
+        )
         
         # Add the final step based on whether the task appears to require coding
         if requires_coding:
@@ -217,16 +221,20 @@ class Planner:
                 PlanStep(
                     description="Generate code based on gathered information",
                     tool_name="code",
-                    parameters={"prompt": f"Generate code for the task: {task_description}", "language": "python"}
+                    parameters={
+                        "prompt": f"Based on the gathered information, generate code for: {task_description}",
+                        "language": "python"
+                    }
                 )
             )
         else:
+            # For non-coding tasks, use the presentation tool
             steps.append(
                 PlanStep(
-                    description="Present the gathered information",
+                    description="Organize and present the gathered information",
                     tool_name="present",
                     parameters={
-                        "prompt": f"Organize and present information for the task: {task_description}",
+                        "prompt": f"Organize and present the information for the task: {task_description}",
                         "format_type": "summary",
                         "title": "Research Results"
                     }

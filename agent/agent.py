@@ -105,42 +105,79 @@ class WebResearchAgent:
         
         for key, value in parameters.items():
             if isinstance(value, str):
-                # Handle search result URL placeholders
+                # Different pattern matches for URL placeholders and variables
+                
+                # Pattern 1: {search_result_X_url}
                 search_placeholder_match = re.match(r"\{search_result_(\d+)_url\}", value)
                 if search_placeholder_match:
                     index = int(search_placeholder_match.group(1))
+                    substituted[key] = self._get_search_result_url(index, previous_results)
+                    continue
                     
-                    # Try to get search results from memory
-                    search_results = getattr(self.memory, 'search_results', None)
-                    
-                    if search_results and index < len(search_results):
-                        # Direct access to stored search results
-                        substituted[key] = search_results[index]["link"]
-                        logger.info(f"Substituted parameter using memory: {key}={substituted[key]}")
-                    else:
-                        # Fall back to searching previous results
-                        url_found = False
-                        for result in reversed(previous_results):
-                            if result["status"] == "success":
-                                output = result.get("output", {})
-                                if isinstance(output, dict) and "results" in output:
-                                    results_list = output["results"]
-                                    if index < len(results_list):
-                                        substituted[key] = results_list[index]["link"]
-                                        url_found = True
-                                        logger.info(f"Substituted parameter from results: {key}={substituted[key]}")
-                                        break
-                        
-                        if not url_found:
-                            logger.warning(f"Could not substitute placeholder {value}, using original")
-                            substituted[key] = value
-                else:
-                    substituted[key] = value
+                # Pattern 2: [Insert URL from search result X]
+                placeholder_match = re.search(r"\[.*search result\s*(\d+).*\]", value, re.IGNORECASE)
+                if placeholder_match:
+                    try:
+                        index = int(placeholder_match.group(1))
+                        substituted[key] = self._get_search_result_url(index, previous_results)
+                        continue
+                    except (ValueError, IndexError):
+                        logger.warning(f"Failed to extract index from placeholder: {value}")
+                
+                # Pattern 3: [Insert URL from search results]
+                if re.match(r"\[.*URL.*search results.*\]", value, re.IGNORECASE) or \
+                   re.match(r"\[Insert.*\]", value, re.IGNORECASE):
+                    # Default to first result
+                    substituted[key] = self._get_search_result_url(0, previous_results)
+                    continue
+                
+                # If no special pattern is matched, use the original value
+                substituted[key] = value
             else:
+                # Non-string values pass through unchanged
                 substituted[key] = value
         
         return substituted
-    
+
+    def _get_search_result_url(self, index, previous_results):
+        """
+        Get a URL from search results at the specified index.
+        
+        Args:
+            index (int): Index of the search result
+            previous_results (list): Previous step results
+            
+        Returns:
+            str: URL or original placeholder if not found
+        """
+        # First try memory's stored search results
+        search_results = getattr(self.memory, 'search_results', None)
+        
+        if search_results and index < len(search_results):
+            url = search_results[index].get("link", "")
+            logger.info(f"Found URL in memory search results at index {index}: {url}")
+            return url
+        
+        # Fall back to searching in previous results
+        for result in reversed(previous_results):
+            if result["status"] == "success":
+                output = result.get("output", {})
+                if isinstance(output, dict) and "results" in output:
+                    results_list = output["results"]
+                    if index < len(results_list):
+                        url = results_list[index].get("link", "")
+                        logger.info(f"Found URL in previous results at index {index}: {url}")
+                        return url
+        
+        # If we couldn't find a URL, log a warning and return a fallback
+        logger.warning(f"Could not find URL at index {index}, using memory's first result as fallback")
+        
+        # Last resort: try to use the first result
+        if search_results and len(search_results) > 0:
+            return search_results[0].get("link", "No URL found") 
+        
+        return f"No URL found at index {index}"
+
     def _format_results(self, task_description, plan, results):
         """
         Format results using the formatter utility.

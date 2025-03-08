@@ -2,6 +2,7 @@ from typing import Dict, Any, Optional
 import requests
 from bs4 import BeautifulSoup
 import html2text
+import re
 from .tool_registry import BaseTool
 from utils.logger import get_logger
 from config.config import get_config
@@ -44,22 +45,10 @@ class BrowserTool(BaseTool):
         if not url:
             return {"error": "No URL provided for browsing"}
         
-        # Handle variable substitution for search result URLs
-        if url.startswith("{search_result_") and url.endswith("_url}"):
-            try:
-                # Extract the index from the placeholder
-                idx_str = url.replace("{search_result_", "").replace("_url}", "")
-                idx = int(idx_str)
-                
-                # Look for most recent search results in memory
-                search_results = memory.task_results.get("Search for information", {}).get("results", [])
-                if idx < len(search_results):
-                    url = search_results[idx]["link"]
-                    logger.info(f"Resolved URL placeholder to: {url}")
-                else:
-                    return {"error": f"Search result index {idx} out of range"}
-            except Exception as e:
-                return {"error": f"Failed to resolve URL placeholder: {str(e)}"}
+        # Enhanced URL handling for various placeholder formats
+        url = self._process_url_parameter(url, memory)
+        if url.startswith("Error:"):
+            return {"error": url}
         
         extract_type = parameters.get("extract_type", "main_content")
         selector = parameters.get("selector", "")
@@ -108,6 +97,49 @@ class BrowserTool(BaseTool):
             logger.error(error_message)
             return {"error": error_message}
     
+    def _process_url_parameter(self, url: str, memory: Any) -> str:
+        """
+        Process URL parameter to handle various placeholder formats.
+        
+        Args:
+            url (str): URL or placeholder
+            memory (Memory): Agent's memory
+            
+        Returns:
+            str: Processed URL or error message
+        """
+        # Handle variable substitution for search result URLs in various formats
+        if url.startswith("{search_result_") and "url}" in url:
+            # Format: {search_result_0_url}
+            try:
+                idx_str = re.search(r"search_result_(\d+)", url).group(1)
+                idx = int(idx_str)
+                
+                if hasattr(memory, 'search_results') and memory.search_results:
+                    if idx < len(memory.search_results):
+                        return memory.search_results[idx].get("link", "")
+                    else:
+                        return f"Error: Search result index {idx} out of range"
+                else:
+                    return f"Error: No search results available in memory"
+            except Exception as e:
+                return f"Error: Failed to process URL placeholder: {str(e)}"
+        
+        elif re.match(r"\[.*URL.*\]", url, re.IGNORECASE) or re.match(r"\[Insert.*\]", url, re.IGNORECASE):
+            # Format: [Insert URL from search results] or similar
+            logger.warning(f"Found placeholder URL: {url}")
+            
+            # Try to use the first search result as fallback
+            if hasattr(memory, 'search_results') and memory.search_results:
+                first_url = memory.search_results[0].get("link", "")
+                logger.info(f"Substituting placeholder with first search result: {first_url}")
+                return first_url
+            else:
+                return f"Error: Cannot resolve placeholder URL: {url}"
+        
+        # If it seems like a valid URL, return it
+        return url
+    
     def _fetch_url(self, url: str) -> str:
         """
         Fetch content from a URL.
@@ -118,6 +150,11 @@ class BrowserTool(BaseTool):
         Returns:
             str: Raw HTML content
         """
+        # Add scheme if missing
+        if not url.startswith(('http://', 'https://')):
+            url = 'https://' + url
+            logger.info(f"Added https:// prefix to URL: {url}")
+        
         timeout = self.config.get("timeout", 30)
         response = requests.get(url, headers=self.headers, timeout=timeout)
         response.raise_for_status()  # Raise exception for 4XX/5XX responses

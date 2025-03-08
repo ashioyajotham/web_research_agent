@@ -4,203 +4,320 @@
 
 ## Plan
 
-1. **Define the specific criteria for selecting companies** (using null)
-2. **Construct search queries using the defined criteria and suggested search query templates** (using null)
-3. **Execute the search queries using the 'search' tool** (using search)
-4. **Extract company names and relevant details from the search results** (using browser)
-5. **Repeat steps 3 and 4 for other generated search queries** (using search)
-6. **Consolidate the extracted company information from all search queries, removing duplicates** (using null)
-7. **Present the consolidated list of company names and relevant details using the 'present' tool** (using present)
+1. **Define the specific criteria for company selection.  Replace [criteria 1], [criteria 2], [criteria 3], and [criteria 4] with actual criteria.** (using manual)
+2. **Formulate search queries using the defined criteria and the provided search query templates.** (using manual)
+3. **Execute the search queries using the 'search' tool.  Start with a smaller number of results (e.g., num_results=10) to test and refine queries.** (using search)
+4. **Refine search queries based on initial results. Adjust keywords or phrasing to improve relevance.** (using manual)
+5. **Rerun searches with refined queries and increased num_results (e.g., num_results=50).** (using search)
+6. **Repeat steps 3-4 with the remaining search queries.  Prioritize queries with the most specific criteria.** (using search)
+7. **Consolidate the results from all searches into a single list of company names. Remove duplicates.** (using manual)
+8. **Verify that each company on the list meets ALL specified criteria.  This may involve using the 'browser' tool to visit company websites.** (using browser)
+9. **Remove companies that do not meet all criteria from the consolidated list.** (using manual)
+10. **Present the final list of company names that meet all criteria using the 'present' tool.** (using present)
 
 ## Results
 
-### 1. Define the specific criteria for selecting companies
+### 1. Define the specific criteria for company selection.  Replace [criteria 1], [criteria 2], [criteria 3], and [criteria 4] with actual criteria.
 **Status**: error
 
-**Error**: Tool 'null' not found
+**Error**: Tool 'manual' not found
 
-### 2. Construct search queries using the defined criteria and suggested search query templates
+### 2. Formulate search queries using the defined criteria and the provided search query templates.
 **Status**: error
 
-**Error**: Tool 'null' not found
+**Error**: Tool 'manual' not found
 
-### 3. Execute the search queries using the 'search' tool
+### 3. Execute the search queries using the 'search' tool.  Start with a smaller number of results (e.g., num_results=10) to test and refine queries.
 **Status**: success
 
-**Search Query**: [Insert Specific Criteria Here] companies list
-**Found**: 50 results
+**Search Query**: list of companies meeting criteria [criteria 1]
+**Found**: 10 results
 
-1. [Email Marketing Tool - Company list as a Contact list criteria](https://community.hubspot.com/t5/Email-Marketing-Tool/Company-list-as-a-Contact-list-criteria/m-p/761586)
-   It is possible to suppress contacts in HubSpot who are tied to a company on your company list. One way to do this is by using the HubSpot workflow tool.
+1. [Listing Rule 5605 - Rules | The Nasdaq Stock Market](https://listingcenter.nasdaq.com/rulebook/nasdaq/rules/nasdaq-5600-series)
+   (A) Each Company must have, and certify that it has and will continue to have, an audit committee of at least three members, each of whom must: (i) be an ...
 
-2. [Examples of query criteria - Microsoft Support](https://support.microsoft.com/en-us/office/examples-of-query-criteria-3197228c-8684-4552-ac03-aba746fb29d8)
-   To add criteria to an Access query, open the query in Design view and identify the fields (columns) you want to specify criteria for. If the field is not in the ...
+2. [Corporation Meeting Requirements: Your Essential Guide](https://rcmycpa.com/corporation-meeting-requirements-your-essential-guide/)
+   You must meet specific corporate responsibilities to stay in good standing as an entity. One of them is to hold regular meetings, documented with minutes.
 
-3. [Use Like criterion to locate data - Microsoft Support](https://support.microsoft.com/en-us/office/use-like-criterion-to-locate-data-65b07c8a-b314-435a-8b48-2b911856d4f9)
-   The Like criteria or operator is used in an Access query to find data that matches a specific pattern.
+3. [Listing Requirements: Definition and Criteria for Stock Exchanges](https://www.investopedia.com/terms/l/listingrequirements.asp)
+   Listing requirements are the minimum standards that must be met by a company before it can list its shares on a stock exchange.
 
-4. [Q. How can I create a list of companies by industry, location, or size?](https://business-answers-yale.libanswers.com/faq/142732)
-   To search for companies by their size or revenue, select Financials. Next, choose Key Financials and Employees. Click edit to select specific ...
+4. [Formal Meeting Requirements for Corporations - Active Filings](https://www.activefilings.com/information/guides/corporate-meetings/)
+   Corporations typically hold several required formal meetings each year. The exact requirements vary depending on state laws and your corporation's bylaws.
 
-5. [Set up score properties to qualify contacts, companies, and deals](https://knowledge.hubspot.com/properties/set-up-score-properties-to-qualify-leads)
-   You can use the HubSpot score property to set up attributes that add or deduct points from contacts when they meet certain criteria.
+5. [RULES AND PROCEDURES OF BOARD OF DIRECTORS MEETINGS](https://www.sec.gov/Archives/edgar/data/1046179/000119312513137651/d505546dex32.htm)
+   Board Meetings shall be held at least once every quarter but may be held at any time in case of urgent circumstances.
 
-6. [How to Build a Target List of Companies Using AI](https://newsletter.jobsearch.guide/p/how-to-build-a-target-list-of-companies)
-   Discover how to leverage AI to create a customized list of target companies for your job search. Uncover hidden opportunities and stand out from other ...
+6. [Policies on Corporate Governance - Council of Institutional Investors](https://www.cii.org/corp_gov_policies)
+   Companies should make shareowners' expense and convenience primary criteria when selecting the time, format and location of shareowner meetings.
 
-7. [A Better Way to Add Long Lists of Values to Rule Criteria in Pardot ...](https://thespotforpardot.com/2019/06/22/a-better-way-to-add-long-lists-of-values-to-rule-criteria-in-pardot-dynamic-lists/)
-   Voila! The Creuz Your Data app creates little data batches perfectly sized for your Pardot rule criteria. You can start using it here.
+7. [Learn about the large operating company exemption under the ...](https://www.wolterskluwer.com/en/expert-insights/what-is-the-large-operating-company-exemption-under-the-corporate-transparency-act)
+   The entity must meet all three to qualify. The criteria have to do with (1) the entity's number of employees, (2) its operating presence, and (3) its gross ...
 
-8. [Creating a List Within List Builder | Agency Access Help Center](http://help.agencyaccess.com/en/articles/4720993-creating-a-list-within-list-builder)
-   Create your perfect marketing list based on a range of criteria including, specialties, role, location, and more.
+8. [[PDF] Annual Meeting Handbook - Latham & Watkins LLP](https://www.lw.com/admin/upload/SiteAttachments/2024-LW-annual-meeting-handbook.pdf)
+   Each of these entities has requirements that listed companies hold annual meetings — found in Section 302 of the NYSE Listed Company Manual and Rule. 5620 of ...
 
-9. [Advanced User Criteria for Catalog Item - "specifi... - ServiceNow](https://www.servicenow.com/community/developer-forum/advanced-user-criteria-for-catalog-item-quot-specific-company/m-p/1424545)
-   I'm trying to create a User Criteria script for a catalog item that checks if the user is a manager and if he belongs to a particular company.
+9. [[PDF] Requirements for Public Company Boards](https://www.weil.com/~/media/files/pdfs/Chart_of_Board_Requirements_October_2013.pdf)
+   Disclosure of Code of. Conduct and Ethics. Company's website must include code Proxy statement or annual report on Form. 10-K must state that code is available ...
 
-10. [How to Query Using Specific Letters in a Name - YouTube](https://www.youtube.com/watch?v=B5Jka-XzgrI)
-   How to Query Using Specific Letters in a Name. 186K views · 12 ... Criteria for Text fields in Query in MS Access - Office 365. Find ...
+10. [[PDF] Nasdaq Initial Listing Guide](https://listingcenter.nasdaq.com/assets/initialguide.pdf)
+   Companies listing in connection with a Direct Listing must meet all of the criteria under at least one of the four standards below.
 
-11. [iSite+ Help - Searching for Entities](https://isiteplus.naic.org/help/html/help_search.htm)
-   More search criteria is available for you to narrow your search and focus on specific companies. Clicking the Show more search criteria link ...
-
-12. [Create a segment of contacts by choosing specific criteria](https://knowledgebase.constantcontact.com/email-digital-marketing/articles/KnowledgeBase/25205-Define-Your-Own-List-Segments?lang=en_US)
-   Group your contacts into segments based on a combination of multiple criteria, like their email activity, list membership, contact details, tags, and ecommerce ...
-
-13. [Target List: screen for companies by industry, location, and size](https://asklib.library.hbs.edu/faq/47374)
-   From the home page, you can view the menu of search criteria. Click on location to select a particular country, region, state, city, or zip code ...
-
-14. [Create a customer list - Google Ads Help](https://support.google.com/google-ads/answer/6276125?hl=en)
-   Once you opt into conversion-based customer lists, Google will generate Customer Match lists for each specific conversion goal (e.g. purchases). These lists ...
-
-15. [Requirements for company targeting lists in Campaign Manager](https://www.linkedin.com/help/lms/answer/a423102)
-   You can use company targeting to build audience segments based on lists of companies and organizations, so you can tailor your advertising campaigns.
-
-16. [Customer list formatting guidelines for custom audiences - Facebook](https://www.facebook.com/business/help/2082575038703844)
-   A customer list is a file containing information about your customers, such as names and email addresses, which are called identifiers.
-
-17. [Table of size standards | U.S. Small Business Administration](https://www.sba.gov/document/support-table-size-standards)
-   In order to qualify, businesses must satisfy SBA's definition of a small business concern, along with the size standards for small business.
-
-18. [Choose a business category for your Business Profile - Google Help](https://support.google.com/business/answer/7249669?hl=en)
-   Choose a primary category that describes your business as a whole, and be specific. When you start to enter your category, choose a category from a dropdown ...
-
-19. [Companies taking action - Science Based Targets Initiative](https://sciencebasedtargets.org/companies-taking-action)
-   The SBTi's target dashboard shows companies and financial institutions that have set science-based targets, or have committed to developing targets.
-
-20. [Select inclusion criteria - Oracle Help Center](https://docs.oracle.com/en/industries/life-sciences/argus-safety/8.4.3/aeoaf/select-inclusion-criteria-ich-psur.html)
-   The Inclusion Criteria tab allows you to select search parameters for inclusion of cases in a periodic report. The top section of the dialog box allows you ...
-
-21. [Microsoft Access tips: Search criteria - Allen Browne's](http://allenbrowne.com/ser-62.html)
-   A flexible search form provides several boxes where a user can enter criteria. An efficient search form creates the criteria from only those boxes where the ...
-
-22. [Additional Sanctions Lists | Office of Foreign Assets Control](https://ofac.treasury.gov/other-ofac-sanctions-lists)
-   OFAC has released its new Sanctions List Service (SLS) application. SLS is now the primary application OFAC will use to deliver sanctions list files and ...
-
-23. [Lists of Parties of Concern - Bureau of Industry and Security](https://www.bis.doc.gov/index.php/policy-guidance/lists-of-parties-of-concern)
-   The Entity List identifies foreign parties that are prohibited from receiving some or all items subject to the EAR unless the exporter secures a license.
-
-24. [List Custom Audiences - X Business](https://business.x.com/en/help/campaign-setup/campaign-targeting/custom-audiences/lists)
-   On this page, click "Create audience" then select “List” from the “Choose an audience type” pop-up module. Add your list. Set an audience name and description ( ...
-
-25. [Beneficial Ownership Information | FinCEN.gov](https://www.fincen.gov/boi-faqs)
-   1. What is beneficial ownership information? A. 2. Why do companies have to report beneficial ownership information to the US Department of the Treasury?
-
-26. [Targeting options for LinkedIn Ads | Marketing Solutions Help](https://www.linkedin.com/help/lms/answer/a424655)
-   Upload a list of companies or contacts. Retarget member accounts that: Visited a page on your website; Engaged with your single image ad; Engaged with your ...
-
-27. [Entity List - Bureau of Industry and Security](https://www.bis.doc.gov/index.php/policy-guidance/lists-of-parties-of-concern/entity-list)
-   The Entity List specifies the license requirements that it imposes on each listed person. Those license requirements are independent of, and in addition to, ...
-
-28. [1904.7 - General recording criteria. | Occupational Safety and Health ...](http://www.osha.gov/laws-regs/regulations/standardnumber/1904/1904.7)
-   You must consider an injury or illness to meet the general recording criteria, and therefore to be recordable, if it results in any of the following: death, ...
-
-29. [UFLPA Entity List - Homeland Security](https://www.dhs.gov/uflpa-entity-list)
-   A list of entities in Xinjiang that mine, produce, or manufacture wholly or in part any goods, wares, articles and merchandise with forced labor.
-
-30. [MIC | Frequently Asked Questions - Fast Company Help Center](https://fastcompany.zendesk.com/hc/en-us/articles/115002962246-MIC-Frequently-Asked-Questions)
-   Credibility – Companies chosen for the Most Innovative Companies list will appear in the March/April 2025 issue of Fast Company magazine and on fastcompany.com.
-
-31. [Data Reporting FAQs - ACCME](https://accme.org/data-reporting/data-reporting-quick-answers/)
-   There are four activity statuses: Draft, Active, Ready to Close, and Closed. Below is a description of the data fields required for each activity status:.
-
-32. [B-1 Temporary Business Visitor - USCIS](https://www.uscis.gov/working-in-the-united-states/temporary-visitors-for-business/b-1-temporary-business-visitor)
-   You may be eligible for a B-1 visa if you will be participating in business activities of a commercial or professional nature in the United States.
-
-33. [HUD Lender List | HUD.gov / U.S. Department of Housing and ...](https://www.hud.gov/program_offices/housing/sfh/lender/lenderlist)
-   This page allows you to search for lenders using various selection criteria. If you need help, take a look at our help screen.
-
-34. [Entities Owned by Blocked Persons (50% Rule)](https://ofac.treasury.gov/faqs/topic/1521)
-   OFAC's 50 Percent Rule states that the property and interests in property of entities directly or indirectly owned 50 percent or more in the aggregate by one ...
-
-35. [EU list of non-cooperative jurisdictions for tax purposes - Consilium](https://www.consilium.europa.eu/en/policies/eu-list-of-non-cooperative-jurisdictions/)
-   The EU list of non-cooperative jurisdictions includes non-EU countries or territories that didn't make sufficient commitments to EU concerns on tax ...
-
-36. [Industry-Based Certification (IBC) - Louisiana Workforce Commission](https://www.laworks.net/PublicRelations/WIC_IndustryBasedCertification.asp)
-   An IBC is tangible evidence that an individual has successfully demonstrated skill competencies in a specific set of work-related tasks.
-
-37. [[PDF] Small Entity Compliance Guide - FinCEN](https://www.fincen.gov/sites/default/files/shared/BOI_Small_Compliance_Guide.v1.1-FINAL.pdf)
-   FinCEN is publishing this Small Entity Compliance Guide (Guide)1 to help small entities comply with the requirements of the Beneficial Ownership Information ...
-
-38. [App Review Guidelines - Apple Developer](https://developer.apple.com/app-store/review/guidelines/)
-   On the following pages you will find our latest guidelines arranged into five clear sections: Safety, Performance, Business, Design, and Legal.
-
-39. [[PDF] GHG Protocol Scope 2 Guidance](https://ghgprotocol.org/sites/default/files/2022-12/Scope2_ExecSum_Final.pdf)
-   Those companies without specified purchases must use a residual mix—a type of emission factor representing the average emissions from all unclaimed energy.
-
-40. [ACR Appropriateness Criteria - American College of Radiology](https://www.acr.org/Clinical-Resources/Clinical-Tools-and-Reference/Appropriateness-Criteria)
-   Evidence-based guidelines to assist referring physicians and other providers in making the most appropriate imaging or treatment decision.
-
-41. [Proposal to List Nine Per- and Polyfluoroalkyl Compounds as ...](https://www.epa.gov/hw/proposal-list-nine-and-polyfluoroalkyl-compounds-resource-conservation-and-recovery-act)
-   EPA proposed changes to the Resource Conservation and Recovery Act regulations by adding nine particular per- and polyfluoroalkyl compounds, their salts, and ...
-
-42. [New Medical Services and New Technologies | CMS](https://www.cms.gov/medicare/payment/prospective-payment-systems/acute-inpatient-pps/new-medical-services-and-new-technologies)
-   ... (insert technology name)”. These comments must ... For current requirements regarding the IPPS NTAP, including the NTAP eligibility criteria ...
-
-43. [WHD Fact Sheets | U.S. Department of Labor](https://www.dol.gov/agencies/whd/fact-sheets)
-   You can filter fact sheets by typing a search term related to the Title, Fact Sheet Number, Year, or Topic into the “Search” box. The list of fact sheets ...
-
-44. [Part 52 - Solicitation Provisions and Contract Clauses](https://www.acquisition.gov/far/part-52)
-   (d) An agency may develop a group listing of provisions and clauses that apply to a specific category of contracts. ... (2) The small business size standard is ...
-
-45. [CTPAT: Customs Trade Partnership Against Terrorism](https://www.cbp.gov/border-security/ports-entry/cargo-security/CTPAT)
-   ... specific security measures and best practices. ... The first step is for the company to review the CTPAT Minimum Security Criteria for their ...
-
-46. [Body Armor - New York State Department of State](https://dos.ny.gov/body-armor)
-   Upon determining that a profession satisfies the criteria set forth in section 905.3 of this Part, the department may add the profession to the list of eligible ...
-
-47. [Write your business plan | U.S. Small Business Administration](https://www.sba.gov/business-guide/plan-your-business/write-your-business-plan)
-   Be specific, and list out the consumers, organization, or businesses your company plans to serve. Explain the competitive advantages that ...
-
-48. [Listings Criteria - CoinMarketCap](https://support.coinmarketcap.com/hc/en-us/articles/360043659351-Listings-Criteria)
-   Provide direct URLs to the specific pairs/assets. Include the full name of the asset to minimize confusion. We will not add markets that have ...
-
-49. [B Corp Certification demonstrates a company's entire social and ...](https://www.bcorporation.net/en-us/certification)
-   Please see here for a list of affected countries. B Lab Global remains ... Once eligibility is determined, you enter the Evaluation phase. An analyst ...
-
-50. [Very Highly Qualified Workers - Migration.gv](https://www.migration.gv.at/en/types-of-immigration/permanent-immigration/very-highly-qualified-workers/)
-   Reaching a minimum of 70 points according to the following list of criteria is a prerequisite for a Job Seeker Visa and for a Red-White-Red card: ...
-
-### 4. Extract company names and relevant details from the search results
-**Status**: success
-
-**Error**: Error accessing URL [URL of search result page]: Failed to parse: [URL of search result page]
-
-### 5. Repeat steps 3 and 4 for other generated search queries
-**Status**: success
-
-**Error**: No search query provided
-
-### 6. Consolidate the extracted company information from all search queries, removing duplicates
+### 4. Refine search queries based on initial results. Adjust keywords or phrasing to improve relevance.
 **Status**: error
 
-**Error**: Tool 'null' not found
+**Error**: Tool 'manual' not found
 
-### 7. Present the consolidated list of company names and relevant details using the 'present' tool
+### 5. Rerun searches with refined queries and increased num_results (e.g., num_results=50).
 **Status**: success
 
-# Companies Meeting Specified Criteria
+**Search Query**: [refined_query1]
+**Found**: 44 results
 
-List of companies satisfying the specified criteria
+1. [Conversational product filtering | Vertex AI Search for commerce](https://cloud.google.com/retail/docs/conversational-filtering)
+   refined_query tells the retailer what the current query is. This changes during the course of the conversation if a shopper chooses free text input. This should ...
+
+2. [Youtube-Tutorials/Langchain Chatbot/main.py at main - GitHub](https://github.com/PradipNichite/Youtube-Tutorials/blob/main/Langchain%20Chatbot/main.py)
+   ... Refined Query:") st.write(refined_query) context = find_match(refined_query) # print(context) response = conversation.predict(input=f"Context:\n {context} ...
+
+3. [Google Cloud Retail V2 Client - Class ConversationalSearchResult ...](https://cloud.google.com/php/docs/reference/cloud-retail/2.1.1/V2.SearchResponse.ConversationalSearchResult)
+   This field will be used in customer UI that the query in the search bar should be replaced with the refined query. For example, if SearchRequest.query is ...
+
+4. [8. Text-to-SQL Conversion | Multimodal RAG Chatbot Powered by ...](https://infohub.delltechnologies.com/l/multimodal-rag-chatbot-powered-by-dell-data-lakehouse/8-text-to-sql-conversion-1/)
+   The LLM translates the SQL components into executable SQL queries. These queries are designed to retrieve specific information from the structured data.
+
+5. [Query Refinement in SharePoint - Microsoft Learn](https://learn.microsoft.com/en-us/sharepoint/dev/general-development/query-refinement-in-sharepoint)
+   Learn how to use SharePoint query refinement features programmatically when you are working with search queries and results.
+
+6. [Improve RAG Output With Enhanced Retrieval Techniques](https://www.nb-data.com/p/improve-rag-output-with-enhanced)
+   In this article, we will discuss how we can enhance the query input itself to improve the retrieval result.
+
+7. [RAG (Retrieval Augmented Generation) | by Adnan Writes - Medium](https://medium.com/@adnanwritess/rag-retrieval-augmented-generation-de5c07c2034c)
+   Retrieval Augmented Generation (RAG) techniques are addressing their limitations, making AI responses more accurate and reliable.
+
+8. [ChatGPT for Search Engines - Packt](https://www.packtpub.com/en-us/learning/how-to-tutorials/chatgpt-for-search-engines?srsltid=AfmBOoqRPuJZ3Sp32GdyCZpELGMm-etPEzcXoKqdZe18FTSg6hNDMSha)
+   We demonstrate a code search engine. It's the user's query related to coding, and it will refine this query with help of a model that simulates code searching.
+
+9. [How to add memory using langgrapg.checkpoint in ... - GitHub](https://github.com/langchain-ai/langgraph/discussions/1427)
+   I want to enhance the current flow by adding memory so that when a user asks about previous information, the system can respond accordingly.
+
+10. [How to Build a Powerful RAG Knowledge Base Agent with Pydantic AI](https://www.brainforge.ai/blog/how-to-build-a-powerful-rag-knowledge-base-agent-with-pydantic-ai)
+   Learn how Retrieval-Augmented Generation transforms AI reliability by cutting down hallucinations and errors.
+
+11. [Enhancing Search With AI GPT API - Restack](https://www.restack.io/p/ai-powered-search-engines-answer-enhancing-search-with-ai-gpt-api-cat-ai)
+   Enhanced Query Refinement · More accurate results: The AI will analyze the context of queries to deliver results that are not only relevant but ...
+
+12. [Pagination errors in ruby on rails report - Stack Overflow](https://stackoverflow.com/questions/56144089/pagination-errors-in-ruby-on-rails-report)
+   You are getting this error because join() is the method of Array class . But your parameter value is of string type.
+
+13. [How to Conformalize a Large Language Model - Taija](https://www.taija.org/ConformalPrediction.jl/stable/how_to_guides/llm/)
+   The more refined version of the prompt yields a smaller prediction set: less ambiguous prompts result in lower predictive uncertainty. refined_query = "I tried ...
+
+14. [Async RAG System with FastAPI, Qdrant & LangChain](https://blog.futuresmart.ai/rag-system-with-async-fastapi-qdrant-langchain-and-openai)
+   This blog walks you through building a scalable and efficient RAG system using FastAPI, Qdrant, LangChain, and OpenAI, all while leveraging asynchronous ...
+
+15. [Meta Query Filter By Date | WordPress.org](https://wordpress.org/support/topic/meta-query-filter-by-date/)
+   I'm using the “Extended Filters & Sorting — Filter by Meta Queries” feature to pull only posts in my custom post type with an 'end_date' in the future ...
+
+16. [Building a principled RAG system: An experiment in AI integration ...](https://polarlabs.ca/stories/building-principled-rag-experiment-ai-integration)
+   Explores building a Retrieval-Augmented Generation (RAG) system using software engineering principles, focusing on decoupling AI from data ...
+
+17. [Revolutionizing AI Development: A Intro to Self-Reflective Systems ...](https://medium.com/@nabilw/revolutionizing-ai-development-a-intro-to-self-reflective-systems-and-langsmiths-pioneering-87493c8776fd)
+   Self-reflective RAG (Retrieval-Augmented Generation) applications stand at the forefront of AI research, pushing the boundaries of how machines understand, ...
+
+18. [Text-to-SQL Agent - survival8](http://survival8.blogspot.com/2025/03/agentic-text-to-sql-engine.html?m=1)
+   ... refined_query=state.get("refined_query", "")) response = self.model(prompt) return {"feedback": response.strip()} def further_refine_query ...
+
+19. [Using Refiners in the Query Web Service - Microsoft Learn](https://learn.microsoft.com/en-us/previous-versions/office/developer/sharepoint-2010/gg984546(v=office.14))
+   The Query Web service uses the Refiner Element in Microsoft.Search.Query Schema to specify which refiners to return in the query result.
+
+20. [Terminal Outputs | Multimodal RAG Chatbot Powered by Dell Data ...](https://infohub.delltechnologies.com/nl-nl/l/multimodal-rag-chatbot-powered-by-dell-data-lakehouse/terminal-outputs-1/)
+   Displays the decomposition of user queries into SQL and non-SQL components. Below image shows the highlights of the RAG flow, suer query, refined query, ...
+
+21. [Completing our AI Data Assistant with Custom Knowledge using a ...](https://www.digilab.co.uk/posts/completing-our-ai-data-assistant-with-custom-knowledge-using-a-pinecone-vector-database)
+   In this last part of our series Building an AI Data Assistant with Streamlit, LangChain and OpenAI we are delving into the creation of a chatbox.
+
+22. [How do you tackle a “time aware” RAG use case? - Reddit](https://www.reddit.com/r/LangChain/comments/1enk2hx/how_do_you_tackle_a_time_aware_rag_use_case/)
+   I'm working through a RAG solution (not my first) and stumbled into a problem I hadn't thought of yet: retrieving documents based on time.
+
+23. [Adaptive AI in Action: Understanding LlamaIndex Workflows](https://blog.stackademic.com/adaptive-ai-in-action-understanding-llamaindex-workflows-4aa801cc40ca)
+   LlamaIndex workflows provide a structured approach to combining various AI components, such as document processing, question-answering, and strategic analysis.
+
+24. [Building a Conformal Chatbot in Julia | Towards Data Science](https://towardsdatascience.com/building-a-conformal-chatbot-in-julia-1ed23363a280/)
+   In this tutorial, we will show how to conformalize a transformer language model for text classification using ConformalPrediction.jl.
+
+25. [Multi-Agent RAG: Iteration & Collaboration - by Ravi Naarla - Substack](https://substack.com/home/post/p-156795638?utm_campaign=post&utm_medium=web)
+   I was looking to solve a problem: how to enable AI systems not merely to generate responses but to iteratively refine them until they ...
+
+26. [A framework for query refinement with user feedback - ScienceDirect](https://www.sciencedirect.com/science/article/abs/pii/S0164121213000265)
+   Finally, the system should refine the original query in a way so that the refined query better fulfills the user's information need. This paradigm of ...
+
+27. [Myriam Jessier - just type Refined Query Semantic Class… - LinkedIn](https://www.linkedin.com/posts/myriamjessier_amazing-free-opportunity-just-type-refined-activity-7289285933256892416-7fC-)
+   Want access to a free tool that can accurately predict which semantic query class Google will assign to any search term? You're in luck!
+
+28. [Im using pinecone for my agent for RAG! but when im using it in ...](https://community.pinecone.io/t/im-using-pinecone-for-my-agent-for-rag-but-when-im-using-it-in-django-app-im-getting-this-error/5733)
+   Im using pinecone for my agent for RAG! but when im using it in Django app im getting this error. Support serverless, semantic-search, embeddings, vector- ...
+
+29. [Information Retrieval Basic Concepts | Restackio](https://www.restack.io/p/information-retrieval-answer-basic-concepts-cat-ai)
+   ... refined_query. This code demonstrates a basic structure for an iterative retrieval system, where the query is refined based on the results obtained in each ...
+
+30. [Diff - b08bd9b643..22f062d604 - chromium/src - Git at Google](https://chromium.googlesource.com/chromium/src/+/b08bd9b643..22f062d604)
+   ... refined_query = default_provider->ReplaceSearchTermsInURL( - current_url, TemplateURLRef::SearchTermsArgs(query), - template_url_service_->search_terms_data ...
+
+31. [(PDF) A framework for query refinement with user feedback](https://www.researchgate.net/publication/254256113_A_framework_for_query_refinement_with_user_feedback)
+   We also provide algorithms to handle both soft and hard requirements for the refinement of initial imprecise queries. Experimental results ...
+
+32. [ChatGPT | 113 articles | Tech News, Tutorials & Expert Insights - Packt](https://www.packtpub.com/en-gb/learning/how-to-tutorials/tag/chatgpt?page=2&srsltid=AfmBOoqFki4RVL8pUFeWyLGlusdwSx-c1j7QLO5Ye_7FfB0l5iR-qIqp)
+   Get unlimited access to 7500+ expert-authored eBooks and video courses covering every tech area you can think of. Renews at $19.99/month. Cancel anytime.
+
+33. [User Feedback Based Query Refinement by Exploiting Skyline ...](https://link.springer.com/content/pdf/10.1007/978-3-642-34002-4_33.pdf)
+   Once the feedback is given by the user, our framework refines the initial query by exploiting skyline operator to minimize the unexpected information as well as ...
+
+34. [Optimasi Pertanyaan Menggunakan Refined Query Dalam Sistem ...](http://jurnal.sar.ac.id/index.php/satin/article/view/1116)
+   Results demonstrate that Refined Query significantly improves the system's capacity to produce accurate and contextually relevant responses.
+
+35. [RAG Design Patterns - Dr.Q.Writes](https://drqwrites.com/rag-design-patterns-e000ccbfcd50)
+   Use the initial retrieval results to refine the query and retrieve again. Repeat until reaching a stopping criterion. Pseudocode
+
+36. [Yahoo!新功能解读：优化您的网络生活](https://www.showapi.com/news/article/66bdbd9c4ddd79f11a0007f1)
+   Yahoo!的新邮件通知系统旨在提高用户的效率和安全性。该系统不仅能够及时提醒用户收到新邮件，还具备智能过滤垃圾邮件的功能，确保用户只接收到重要的信息。
+
+37. [deepseek提示词指令 - CSDN文库](https://wenku.csdn.net/answer/3av6aofdkk)
+   ... refined_query = base_prompt return refined_query ``` 此代码片段展示了如何构造既包含核心询问又考虑到了辅助资料在内的完整提示语句。这样做有助 ...
+
+38. [探索自查询检索器：如何利用API代理服务打造稳定的AI应用 - 稀土掘金](https://juejin.cn/post/7437356491676041251)
+   自查询检索器是一种能够自我识别相关信息以改进检索结果的技术。它通过理解上下文和主动获取额外数据来优化搜索性能。这种检索器可以广泛应用于搜索、推荐 ...
+
+39. [随着OpenIM的发展，技术和产品的咨询支持对国内、外的用户变得越 ...](https://www.53ai.com/news/OpenSourceLLM/2024052835106.html)
+   随着OpenIM的发展，技术和产品的咨询支持对国内、外的用户变得越来越重要。用户数量的迅速增加，使得OpenIM团队的支持人员面临巨大压力，因为支持人员的 ...
+
+40. [TowardsDataScience-2023-博客中文翻译-八- - 绝不原创的飞龙](https://www.cnblogs.com/apachecn/p/18461345)
+   本文介绍了增强（上采样）采样策略数据的交叉验证及其在Python 中的实现。 增强采样通常用于针对（高度）不平衡数据集中的少数类标签 ...
+
+41. [qwen大模型问答报错 - CSDN文库](https://wenku.csdn.net/answer/5ag9xa9qha)
+   ... (refined_query)) generated_response = generate(retrieved_docs, refined_query) return postprocess(generated_response) 登录后复制. 相关推荐. 大 ...
+
+42. [法令 Deep Research ツール Lawsy を OSS として公開しました - note](https://note.com/tatsuyashirakawa/n/nbda706503902)
+   ... refined_query = dspy.OutputField(desc="あなたの作成したクエリー", format=str). copy. この RefineQuery を使うと、こんな感じでユーザーのクエリー ...
+
+43. [[PDF] Bryzhko_mag_rob.pdf - Сумський державний університет](https://essuir.sumdu.edu.ua/bitstream/123456789/94472/1/Bryzhko_mag_rob.pdf)
+   refined_query = f"{query} when:{recent_days}d" url = f"https://news.google.com/rss/search?q={refined_query}&hl=en-. US&gl=US&ceid=US:en ...
+
+44. [OpenIM Bot: 用LLM构建企业专属的智能客服 - 腾讯云](https://cloud.tencent.com/developer/article/2422838)
+   ... refined_query: ret = search_documents(current_query, k) results = filter_documents(ret, min_relevance_score) return results with ...
+
+### 6. Repeat steps 3-4 with the remaining search queries.  Prioritize queries with the most specific criteria.
+**Status**: success
+
+**Search Query**: [refined_query2]
+**Found**: 4 results
+
+1. [[Query Manager] Refining query setup area · Issue #10896 - GitHub](https://github.com/ToolJet/ToolJet/issues/10896)
+   The setup area of query manager is very busy even at the empty state and the interactions for adding and updating key value pair is ...
+
+2. [[PDF] WeTune: Automatic Discovery and Verification of Query Rewrite Rules](https://ipads.se.sjtu.edu.cn/zh/publications/WangSIGMOD22.pdf)
+   Abstract. Query rewriting transforms a relational database query into an equivalent but more efficient one, which is crucial for the perfor-.
+
+3. [[PDF] 10753807.pdf - Enlighten Theses](https://theses.gla.ac.uk/73995/1/10753807.pdf)
+   the refined query2 that may have been generated and resubmitted to the IIR system within the interactive session such as in the case of the relevance ...
+
+4. [TowardsDataScience 2023 博客中文翻译（五十九） 原创](https://blog.csdn.net/wizardforcel/article/details/142409870)
+   在这个故事中，我将讲述一种非常流行的数据转换任务执行方式——批量数据处理。当我们需要以块状方式处理数据时，这种数据管道设计模式变得极其有用，非常适合 ...
+
+### 7. Consolidate the results from all searches into a single list of company names. Remove duplicates.
+**Status**: error
+
+**Error**: Tool 'manual' not found
+
+### 8. Verify that each company on the list meets ALL specified criteria.  This may involve using the 'browser' tool to visit company websites.
+**Status**: success
+
+**Source**: [[Query Manager] Refining query setup area · Issue #10896 · ToolJet/ToolJet · GitHub](https://github.com/ToolJet/ToolJet/issues/10896)
+
+
+[ ToolJet ](/ToolJet) / **[ToolJet](/ToolJet/ToolJet) ** Public
+
+  * [ Notifications ](/login?return_to=%2FToolJet%2FToolJet) You must be signed in to change notification settings
+  * [ Fork 4.5k ](/login?return_to=%2FToolJet%2FToolJet)
+  * [ Star  34.9k ](/login?return_to=%2FToolJet%2FToolJet)
+
+# [Query Manager] Refining query setup area #10896
+
+[New issue](/login?return_to=)
+
+Copy link
+
+[New issue](/login?return_to=)
+
+Copy link
+
+Closed
+
+[#11527](https://github.com/ToolJet/ToolJet/pull/11527)
+
+Closed
+
+[Query Manager] Refining query setup area#10896
+
+[#11527](https://github.com/ToolJet/ToolJet/pull/11527)
+
+Copy link
+
+Assignees
+
+[](/devanshu052000)
+
+Labels
+
+[appbuilder](https://github.com/ToolJet/ToolJet/issues?q=state%3Aopen%20label%3A%22appbuilder%22)[feature
+request](https://github.com/ToolJet/ToolJet/issues?q=state%3Aopen%20label%3A%22feature%20request%22)[roadmap](https://github.com/ToolJet/ToolJet/issues?q=state%3Aopen%20label%3A%22roadmap%22)
+
+[](/DevangAgarwal93)
+
+## Description
+
+[](/DevangAgarwal93)
+
+[DevangAgarwal93](https://github.com/DevangAgarwal93)
+
+opened [on Oct 7,
+2024](https://github.com/ToolJet/ToolJet/issues/10896#issue-2569545312)
+
+Issue body actions
+
+The setup area of query manager is very busy even at the empty state and the
+interactions for adding and updating key value pair is inconsistent with the
+other api management tools like postman and hopscotch
+
+### Why are we doing this
+
+To offer familiar and consistent experience for the user that it will be
+easier for the to adapt to and they don’t need to learn a different tool.
+
+### Solutions
+
+Add an empty state when key value pairs are not add  
+Make the adding interaction consistent with the commonly used api platform
+
+[Design](https://www.figma.com/design/98yBvWcXJ6Obn8swxk0zQi/Query-
+editor-2.0?node-id=2622-174752&node-type=canvas&t=QLLKB6y6EhZw6hWt-0)
+
+## Activity
+
+[Sign up for free](/signup?return_to=)** to join this conversation on
+GitHub.** Already have an account? [Sign in to comment](/lo... [Content truncated, 577 more characters]
+
+### 9. Remove companies that do not meet all criteria from the consolidated list.
+**Status**: error
+
+**Error**: Tool 'manual' not found
+
+### 10. Present the final list of company names that meet all criteria using the 'present' tool.
+**Status**: success
+
+# Companies Meeting Criteria
+
+List of companies meeting all specified criteria:
 
 
 
