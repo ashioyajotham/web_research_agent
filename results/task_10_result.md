@@ -4,205 +4,125 @@
 
 ## Plan
 
-1. **Search for companies with over €1B revenue in 2023 using a broad query.** (using search)
-2. **Process search results to identify potential candidates and extract company names.** (using browser)
-3. **Refine search using individual company names identified in the previous step.** (using search)
-4. **Verify revenue figures from reputable financial news sources and company reports.** (using browser)
-5. **Extract relevant information: company name, revenue amount, source, and date of reporting.** (using browser)
-6. **Organize the extracted information into a list.** (using present)
+1. **Search for companies with over €1 billion revenue in 2023 using a broad search query** (using search)
+2. **Process search results to identify potential companies and their associated URLs** (using browser)
+3. **Iterate through identified URLs, fetching and extracting revenue information for each company** (using browser)
+4. **Verify the revenue information found for each company (checking multiple sources if possible)** (using browser)
+5. **Compile a list of companies that meet the criteria (revenue > €1 billion in 2023) along with their data source(s)** (using present)
 
 ## Results
 
-### 1. Search for companies with over €1B revenue in 2023 using a broad query.
+### 1. Search for companies with over €1 billion revenue in 2023 using a broad search query
 **Status**: success
 
-**Search Query**: company revenue 2023 over 1 billion euros
-**Found**: 9 results
+**Search Query**: companies revenue over 1 billion euros 2023
+**Found**: 10 results
 
-1. [VusionGroup: EUR 1 billion adjusted revenue I Strong improvement ...](https://www.actusnews.com/en/vusiongroup/pr/2025/02/26/vusiongroup-eur-1-billion-adjusted-revenue-i-strong-improvement-in-profitability-i-record-free-cash-flow-generation)
-   Revenue of €1,011m on an adjusted basis1, up 25% (€955m in IFRS) · Order intake at €1.6bn, up 71% · Adjusted1 Variable Cost Margin (VCM) of €297m, ...
+1. [List of largest companies in Europe by revenue - Wikipedia](https://en.wikipedia.org/wiki/List_of_largest_companies_in_Europe_by_revenue)
+   Breakdown by country ; 1, Volkswagen, Automotive ; 2, Shell, Oil and gas ; 3, TotalEnergies, Oil and gas ; 4, Glencore, Conglomerate ...
 
-2. [Boskalis annual results 2023: Historic record-breaking year with ...](https://boskalis.com/press/press-releases-and-company-news/boskalis-annual-results-2023-historic-record-breaking-year-with-more-than-eur-1-billion-ebitda-and-eur-600-million-net-profit)
-   Boskalis annual results 2023: Historic record-breaking year with more than EUR 1 billion EBITDA and EUR 600 million net profit.
+2. [Companies ranked by revenue - CompaniesMarketCap.com](https://companiesmarketcap.com/largest-companies-by-revenue/)
+   Ranking of the world's top publicly traded stock companies by revenue (TTM)
 
-3. [Loxam Group achieves revenue of €2.6 billion for the first time, and ...](https://loxam.com/en/results-2023-revenue/)
+3. [Largest European companies based on revenue 2024 | Statista](https://www.statista.com/statistics/973337/largest-european-based-revenue/)
+   In 2024, Volkswagen, the German car manufacturer, led all European companies in revenue, generating 348.41 billion U.S. dollars.
+
+4. [Fortune 500 Europe](https://fortune.com/europe/ranking/fortune500-europe/)
+   Fortune 500 Europe companies represent 57% of Europe's GDP with $14.5 trillion in revenues, $1 trillion in profits, and $14 trillion in market value.
+
+5. [Revenues of over 1 billion euros - Operating margin higher than ...](https://press.beneteau-group.com/news/revenues-of-over-1-billion-euros-operating-margin-higher-than-expected-in-2024-a3502-49529.html)
+   Revenues of over 1 billion euros - Operating margin higher than expected in 2024 · Revenues of €298m for the fourth quarter of 2024, better than ...
+
+6. [Most valuable companies 2023 - Statista](https://www.statista.com/statistics/263264/top-companies-in-the-world-by-market-capitalization/)
+   Rounding out the top five were some of the world's most recognizable brands: Apple, NVIDIA, Google's parent company Alphabet, and Amazon. Saudi ...
+
+7. [Mango achieves record sales in 2023 and presents new Strategic ...](https://www.mangofashiongroup.com/en/w/mango-bate-r%C3%A9cord-de-ventas-en-2023-y-presenta-un-nuevo-plan-estrat%C3%A9gico-para-superar-los-4.000-millones-en-2026)
+   Mango increased its turnover by 15%, achieving more than 3.1 billion euros for the first time in 2023. At a constant exchange rate, it rose ...
+
+8. [Top 20 pharma companies by 2023 revenue](https://www.fiercepharma.com/pharma/top-20-pharma-companies-2023-revenue)
+   Novo Nordisk and Eli Lilly had huge revenue gains in 2023, while sellers of COVID products Pfizer, Moderna and BioNTech saw major sales ...
+
+9. [Fortune 500 Europe 2023](https://fortune.com/europe/ranking/fortune500-europe/2023/)
+   Together, the 500 Europe companies brought in revenue of $13.94 trillion in their most recent fiscal year. Europe's corporations, like its economy more broadly, ...
+
+10. [Loxam Group achieves revenue of €2.6 billion for the first time, and ...](https://loxam.com/en/results-2023-revenue/)
    Group revenue of 2.6 billion euros in 2023, up 6.2%. For the first time, revenue of over 1 billion euros in France, up 6.6% on 2022.
 
-4. [SIXT Exceeds the Four-billion-euro Revenue Mark for the First Time](https://www.businesswire.com/news/home/20250227925793/en/SIXT-Exceeds-the-Four-billion-euro-Revenue-Mark-for-the-First-Time-Third-Record-Year-in-a-Row)
-   Continued growth: revenue increase of 10.5% to EUR 4.00 billion sets a new record; expansion continues in all three regional segments ...
-
-5. [DHL Group: Strong fourth quarter with revenue and earnings growth](https://group.dhl.com/en/media-relations/press-releases/2025/dhl-group-annual-earnings-2024.html)
-   Group revenue up 3 percent year-on-year in 2024, at EUR 84.2 billion; EBIT at EUR 5.9 billion (2023: EUR 6.3 billion) and FCF (excluding M&A) at EUR 3.0 billion ...
-
-6. [Mango achieves record sales in 2023 and presents new Strategic ...](https://www.mangofashiongroup.com/en/w/mango-bate-r%C3%A9cord-de-ventas-en-2023-y-presenta-un-nuevo-plan-estrat%C3%A9gico-para-superar-los-4.000-millones-en-2026)
-   Thanks to Mango's differential value proposition, the company's turnover in 2023 amounted to 3.104 billion euros, 15% more than in 2022.
-
-7. [Bertelsmann Grows Group profit by more than 25 percent to €1.3 ...](https://www.bertelsmann.com/news-and-media/news/bertelsmann-grows-group-profit-by-more-than-25-percent-to-1.3-billion-in-2023.jsp)
-   We grew our Group profit by more than 25 percent to 1.3 billion euros. This put it above one billion euros for the ninth consecutive year.
-
-8. [List of largest companies in Europe by revenue - Wikipedia](https://en.wikipedia.org/wiki/List_of_largest_companies_in_Europe_by_revenue)
-   In 2023, largest company in Europe was the Volkswagen Group with revenue of US$348 billion.
-
-9. [Revenue of the Unilever Group worldwide 2023, by product segment](https://www.statista.com/statistics/269200/revenue-of-the-unilever-group-worldwide-by-product-segment/)
-   In 2023, the global revenue generated by the Unilever Group's personal care product segment added up to about 13.8 billion euros.
-
-### 2. Process search results to identify potential candidates and extract company names.
-**Status**: error
-
-**Error**: Error accessing URL https://www.actusnews.com/en/vusiongroup/pr/2025/02/26/vusiongroup-eur-1-billion-adjusted-revenue-i-strong-improvement-in-profitability-i-record-free-cash-flow-generation: 403 Client Error: Forbidden for url: https://www.actusnews.com/en/vusiongroup/pr/2025/02/26/vusiongroup-eur-1-billion-adjusted-revenue-i-strong-improvement-in-profitability-i-record-free-cash-flow-generation
-
-### 3. Refine search using individual company names identified in the previous step.
+### 2. Process search results to identify potential companies and their associated URLs
 **Status**: success
 
-**Search Query**: [Company Name] 2023 revenue
-**Found**: 3 results
+**Source**: [List of largest companies in Europe by revenue - Wikipedia](https://en.wikipedia.org/wiki/List_of_largest_companies_in_Europe_by_revenue)
 
-1. [Highest revenue companies 2023 - Statista](https://www.statista.com/statistics/263265/top-companies-in-the-world-by-revenue/)
-   With nearly 640 billion U.S. dollars in revenue, Walmart topped the ranking of the hundred largest companies globally, followed by Amazon.
 
-2. [Fortune Global 500 – The largest companies in the world by revenue](https://fortune.com/ranking/global500/)
-   The corporations on our annual list of the world's 500 largest companies posted near-flat, but still record-breaking aggregate revenues of $41 trillion in 2023.
+This Wikipedia list ranks Europe's largest companies by 2023 revenue, using Fortune 500 and Forbes data.  Volkswagen Group leads with US$348 billion.  Germany, France, and the UK have the most companies on the list.  The top 100 companies are detailed, spanning various industries like automotive, oil & gas, and finance.  Many large private companies are excluded.
 
-3. [List of largest companies in the United States by revenue - Wikipedia](https://en.wikipedia.org/wiki/List_of_largest_companies_in_the_United_States_by_revenue)
-   Below are the 10 largest private companies by revenue in 2023 (mostly for fiscal year 2022), according to Forbes. Rank, Name, Industry, Revenue (USD ...
-
-### 4. Verify revenue figures from reputable financial news sources and company reports.
+### 3. Iterate through identified URLs, fetching and extracting revenue information for each company
 **Status**: success
 
-**Source**: [Highest revenue companies 2023 | Statista](https://www.statista.com/statistics/263265/top-companies-in-the-world-by-revenue/)
+**Source**: [List of largest companies in Europe by revenue - Wikipedia](https://en.wikipedia.org/wiki/List_of_largest_companies_in_Europe_by_revenue)
 
 
-  * [Economy & Politics](/markets/2535/economy-politics/)›
-  * [Economy](/markets/2535/topic/970/economy/)
+# List of largest companies in Europe by revenue
 
-[](/accounts/pa) Premium
+5 languages
 
-**Premium statistics**
+  * [العربية](https://ar.wikipedia.org/wiki/%D9%82%D8%A7%D8%A6%D9%85%D8%A9_%D8%A3%D9%83%D8%A8%D8%B1_%D8%A7%D9%84%D8%B4%D8%B1%D9%83%D8%A7%D8%AA_%D8%A7%D9%84%D8%A3%D9%88%D8%B1%D9%88%D8%A8%D9%8A%D8%A9_%D9%81%D9%8A_%D8%A7%D9%84%D8%A5%D9%8A%D8%B1%D8%A7%D8%AF%D8%A7%D8%AA "قائمة أكبر الشركات الأوروبية في الإيرادات – Arabic")
+  * [Boarisch](https://bar.wikipedia.org/wiki/Listn_vo_de_gresstn_Firmen_in_Eiropa "Listn vo de gresstn Firmen in Eiropa – Bavarian")
+  * [Deutsch](https://de.wikipedia.org/wiki/Liste_der_gr%C3%B6%C3%9Ften_Unternehmen_in_Europa "Liste der größten Unternehmen in Europa – German")
+  * [فارسی](https://fa.wikipedia.org/wiki/%D9%81%D9%87%D8%B1%D8%B3%D8%AA_%D8%A8%D8%B2%D8%B1%DA%AF%D8%AA%D8%B1%DB%8C%D9%86_%D8%B4%D8%B1%DA%A9%D8%AA%E2%80%8C%D9%87%D8%A7%DB%8C_%D8%A7%D8%B1%D9%88%D9%BE%D8%A7 "فهرست بزرگترین شرکت‌های اروپا – Persian")
+  * [Français](https://fr.wikipedia.org/wiki/Liste_des_plus_grandes_entreprises_europ%C3%A9ennes "Liste des plus grandes entreprises européennes – French")
 
-Industry-specific and extensively researched technical data (partially from
-exclusive partnerships).  
-  
-A paid subscription is required for full access.
+[Edit
+links](https://www.wikidata.org/wiki/Special:EntityPage/Q261259#sitelinks-
+wikipedia "Edit interlanguage links")
 
-[__Read more](/accounts/pa)
+From Wikipedia, the free encyclopedia
 
-#  Top companies in the world by revenue 2023
+This list comprises the **largest companies** currently in Europe by
+**[revenue](/wiki/Revenue "Revenue")** as of 2023, according to the [Fortune
+500](/wiki/Fortune_500 "Fortune 500") tally of companies and
+[Forbes](/wiki/Forbes "Forbes").
 
-Published by
+In 2023, largest company in Europe was the [Volkswagen
+Group](/wiki/Volkswagen_Group "Volkswagen Group") with revenue of US$348
+billion.[1]
 
-[Einar H. Dyvik](/aboutus/our-research-commitment/3018/einar-h-dyvik),
+[](/wiki/File:Wolfsburg_VWHochhaus.jpg)[Volkswagen
+Group](/wiki/Volkswagen_Group "Volkswagen Group") headquarters in
+[Wolfsburg](/wiki/Wolfsburg "Wolfsburg"), [Germany](/wiki/Germany "Germany").
+Volkswagen is Europe's largest and the world's twelfth-largest company by
+revenue
 
-Jul 4, 2024
+## 2024 _Fortune_ Global 500 List
 
-With nearly 640 billion U.S. dollars in revenue, Walmart topped the ranking of
-the hundred largest companies globally, followed by Amazon. Walmart was also
-the [largest company in the world based on its number of employees](
-/statistics/264671/top-20-companies-based-on-number-of-employees/ ), with some
-2.3 million all over the world.  
-  
-**Largest corporations based on revenue - additional information**  
-  
-The concept of revenue itself might slightly differ depending on country or
-even from one company to another. It usually refers to the income resulted
-from normal business activities, such as the sale of goods and services to
-customers.  
-  
+[[edit](/w/index.php?title=List_of_largest_companies_in_Europe_by_revenue&acti... [Content truncated, 16659 more characters]
 
-## Walmart
-
-The American-based multinational corporation Walmart was founded in 1962 and
-currently operates [over 10,600 stores worldwide](/statistics/256172/total-
-number-of-walmart-stores-worldwide/), out of which [4,700 are in the United
-States alone](  /statistics/269425/total-number-of-walmart-stores-in-the-
-united-states-by-type/ ). In 2023, Walmart was ranked the [third most valuable
-retail brand in the world](  /statistics/267870/brand-value-of-the-
-leading-20-most-valuable-retailers-worldwide/ ), with a brand value of about
-60 billion U.S. dollars.  
-  
-[Follow this link to get access to the top 500 companies from all industries
-list.](/study/30881/top-500-companies-from-all-industries-global/)
-
-Read more
-
-##  The 100 largest companies in the world ranked by revenue in 2023  (in
-billion U.S. dollars)
-
-Characteristic| Revenue in billio... [Content truncated, 22171 more characters]
-
-### 5. Extract relevant information: company name, revenue amount, source, and date of reporting.
+### 4. Verify the revenue information found for each company (checking multiple sources if possible)
 **Status**: success
 
-**Source**: [Highest revenue companies 2023 | Statista](https://www.statista.com/statistics/263265/top-companies-in-the-world-by-revenue/)
+**Source**: [List of largest companies in Europe by revenue - Wikipedia](https://en.wikipedia.org/wiki/List_of_largest_companies_in_Europe_by_revenue)
 
 
-  * [Economy & Politics](/markets/2535/economy-politics/)›
-  * [Economy](/markets/2535/topic/970/economy/)
+This Wikipedia list ranks Europe's largest companies by 2023 revenue, using Fortune 500 and Forbes data.  Volkswagen Group tops the list at $348 billion.  Germany, France, and the UK have the most companies in the top 500, with a breakdown by country also provided.  The list includes the top 50 companies, detailing their industry, revenue, and headquarters.
 
-[](/accounts/pa) Premium
-
-**Premium statistics**
-
-Industry-specific and extensively researched technical data (partially from
-exclusive partnerships).  
-  
-A paid subscription is required for full access.
-
-[__Read more](/accounts/pa)
-
-#  Top companies in the world by revenue 2023
-
-Published by
-
-[Einar H. Dyvik](/aboutus/our-research-commitment/3018/einar-h-dyvik),
-
-Jul 4, 2024
-
-With nearly 640 billion U.S. dollars in revenue, Walmart topped the ranking of
-the hundred largest companies globally, followed by Amazon. Walmart was also
-the [largest company in the world based on its number of employees](
-/statistics/264671/top-20-companies-based-on-number-of-employees/ ), with some
-2.3 million all over the world.  
-  
-**Largest corporations based on revenue - additional information**  
-  
-The concept of revenue itself might slightly differ depending on country or
-even from one company to another. It usually refers to the income resulted
-from normal business activities, such as the sale of goods and services to
-customers.  
-  
-
-## Walmart
-
-The American-based multinational corporation Walmart was founded in 1962 and
-currently operates [over 10,600 stores worldwide](/statistics/256172/total-
-number-of-walmart-stores-worldwide/), out of which [4,700 are in the United
-States alone](  /statistics/269425/total-number-of-walmart-stores-in-the-
-united-states-by-type/ ). In 2023, Walmart was ranked the [third most valuable
-retail brand in the world](  /statistics/267870/brand-value-of-the-
-leading-20-most-valuable-retailers-worldwide/ ), with a brand value of about
-60 billion U.S. dollars.  
-  
-[Follow this link to get access to the top 500 companies from all industries
-list.](/study/30881/top-500-companies-from-all-industries-global/)
-
-Read more
-
-##  The 100 largest companies in the world ranked by revenue in 2023  (in
-billion U.S. dollars)
-
-Characteristic| Revenue in billio... [Content truncated, 22171 more characters]
-
-### 6. Organize the extracted information into a list.
+### 5. Compile a list of companies that meet the criteria (revenue > €1 billion in 2023) along with their data source(s)
 **Status**: success
 
-# Companies with over €1B Revenue in 2023
+# Companies with Revenue > €1 Billion in 2023
 
-[Extracted data]
+Create a list of companies with revenue exceeding €1 billion in 2023, including the source of this information for each company
 
 - **search_results**:
-  - {'title': 'Highest revenue companies 2023 - Statista', 'link': 'https://www.statista.com/statistics/263265/top-companies-in-the-world-by-revenue/', 'snippet': 'With nearly 640 billion U.S. dollars in revenue, Walmart topped the ranking of the hundred largest companies globally, followed by Amazon.'}
-  - {'title': 'Fortune Global 500 – The largest companies in the world by revenue', 'link': 'https://fortune.com/ranking/global500/', 'snippet': "The corporations on our annual list of the world's 500 largest companies posted near-flat, but still record-breaking aggregate revenues of $41 trillion in 2023."}
-  - {'title': 'List of largest companies in the United States by revenue - Wikipedia', 'link': 'https://en.wikipedia.org/wiki/List_of_largest_companies_in_the_United_States_by_revenue', 'snippet': 'Below are the 10 largest private companies by revenue in 2023 (mostly for fiscal year 2022), according to Forbes. Rank, Name, Industry, Revenue (USD ...'}
+  - {'title': 'List of largest companies in Europe by revenue - Wikipedia', 'link': 'https://en.wikipedia.org/wiki/List_of_largest_companies_in_Europe_by_revenue', 'snippet': 'Breakdown by country ; 1, Volkswagen, Automotive ; 2, Shell, Oil and gas ; 3, TotalEnergies, Oil and gas ; 4, Glencore, Conglomerate ...'}
+  - {'title': 'Companies ranked by revenue - CompaniesMarketCap.com', 'link': 'https://companiesmarketcap.com/largest-companies-by-revenue/', 'snippet': "Ranking of the world's top publicly traded stock companies by revenue (TTM)"}
+  - {'title': 'Largest European companies based on revenue 2024 | Statista', 'link': 'https://www.statista.com/statistics/973337/largest-european-based-revenue/', 'snippet': 'In 2024, Volkswagen, the German car manufacturer, led all European companies in revenue, generating 348.41 billion U.S. dollars.'}
+  - {'title': 'Fortune 500 Europe', 'link': 'https://fortune.com/europe/ranking/fortune500-europe/', 'snippet': "Fortune 500 Europe companies represent 57% of Europe's GDP with $14.5 trillion in revenues, $1 trillion in profits, and $14 trillion in market value."}
+  - {'title': 'Revenues of over 1 billion euros - Operating margin higher than ...', 'link': 'https://press.beneteau-group.com/news/revenues-of-over-1-billion-euros-operating-margin-higher-than-expected-in-2024-a3502-49529.html', 'snippet': 'Revenues of over 1 billion euros - Operating margin higher than expected in 2024 · Revenues of €298m for the fourth quarter of 2024, better than ...'}
+  - {'title': 'Most valuable companies 2023 - Statista', 'link': 'https://www.statista.com/statistics/263264/top-companies-in-the-world-by-market-capitalization/', 'snippet': "Rounding out the top five were some of the world's most recognizable brands: Apple, NVIDIA, Google's parent company Alphabet, and Amazon. Saudi ..."}
+  - {'title': 'Mango achieves record sales in 2023 and presents new Strategic ...', 'link': 'https://www.mangofashiongroup.com/en/w/mango-bate-r%C3%A9cord-de-ventas-en-2023-y-presenta-un-nuevo-plan-estrat%C3%A9gico-para-superar-los-4.000-millones-en-2026', 'snippet': 'Mango increased its turnover by 15%, achieving more than 3.1 billion euros for the first time in 2023. At a constant exchange rate, it rose ...'}
+  - {'title': 'Top 20 pharma companies by 2023 revenue', 'link': 'https://www.fiercepharma.com/pharma/top-20-pharma-companies-2023-revenue', 'snippet': 'Novo Nordisk and Eli Lilly had huge revenue gains in 2023, while sellers of COVID products Pfizer, Moderna and BioNTech saw major sales ...'}
+  - {'title': 'Fortune 500 Europe 2023', 'link': 'https://fortune.com/europe/ranking/fortune500-europe/2023/', 'snippet': "Together, the 500 Europe companies brought in revenue of $13.94 trillion in their most recent fiscal year. Europe's corporations, like its economy more broadly, ..."}
+  - {'title': 'Loxam Group achieves revenue of €2.6 billion for the first time, and ...', 'link': 'https://loxam.com/en/results-2023-revenue/', 'snippet': 'Group revenue of 2.6 billion euros in 2023, up 6.2%. For the first time, revenue of over 1 billion euros in France, up 6.6% on 2022.'}
 
 
 ## Summary

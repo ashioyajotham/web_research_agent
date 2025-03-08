@@ -1,0 +1,36 @@
+from setuptools import setup, find_packages
+
+setup(
+    name="web-research-agent",
+    version="1.0.0",
+    packages=find_packages(),
+    include_package_data=True,
+    py_modules=["cli"],  # To include cli.py as a root module
+    install_requires=[
+        "click>=8.0.0",
+        "requests>=2.25.0",
+        "beautifulsoup4>=4.9.0",
+        "html2text>=2020.1.16",
+        "google-generativeai>=0.3.0",
+        "python-dotenv>=0.19.0",
+        "prompt_toolkit>=3.0.0",
+        "rich>=10.0.0"
+    ],
+    entry_points={
+        'console_scripts': [
+            'web-research=cli:cli',
+        ],
+    },
+    author="Victor Jotham Ashioya",
+    author_email="victorashioya960@gmail.com",
+    description="An intelligent AI agent for web-based research tasks",
+    long_description=open("README.md").read(),
+    long_description_content_type="text/markdown",
+    url="https://github.com/ashioyajotham/web-research-agent",
+    classifiers=[
+        "Programming Language :: Python :: 3",
+        "License :: OSI Approved :: MIT License",
+        "Operating System :: OS Independent",
+    ],
+    python_requires=">=3.9",
+)
