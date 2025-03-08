@@ -61,6 +61,17 @@ class WebResearchAgent:
         for step_index, step in enumerate(plan.steps):
             logger.info(f"Executing step: {step.description}")
             
+            # Check if dependencies are met
+            can_execute, reason = self._can_execute_step(step_index, results)
+            if not can_execute:
+                logger.warning(f"Skipping step {step_index+1}: {reason}")
+                results.append({
+                    "step": step.description, 
+                    "status": "error", 
+                    "output": f"Skipped step due to previous failures: {reason}"
+                })
+                continue
+            
             # Get the appropriate tool
             tool = self.tool_registry.get_tool(step.tool_name)
             if not tool:
@@ -181,9 +192,51 @@ class WebResearchAgent:
     def _format_results(self, task_description, plan, results):
         """
         Format results using the formatter utility.
+            task_description (str): Original task description
         
         Args:
             task_description (str): Original task description
+            plan (Plan): The plan that was executed
+            results (list): Results from each step of the plan
+            
+        Returns:
+            str: Formatted results
+        """
+        from utils.formatters import format_results
+        return format_results(task_description, plan, results)
+            results (list): Results from each step of the plan
+            
+        Returns:
+            str: Formatted results
+        """
+        from utils.formatters import format_results
+        return format_results(task_description, plan, results)
+
+    def _can_execute_step(self, step_index, results):
+        """
+        Determine if a step can be executed based on previous step results.
+        
+        Args:
+            step_index (int): Current step index
+            results (list): Previous results
+            
+        Returns:
+            if isinstance(result.get("output"), dict) and "error" in result["output"]:
+                return False, f"Previous step {i+1} returned error: {result['output']['error']}"
+        
+        # If all previous steps are successful, we can execute this step
+        return True, ""
+            tuple: (can_execute, reason)
+        """
+        # Steps before current
+        previous_steps = results[:step_index]
+        
+        # Check if any previous step has failed
+        for i, result in enumerate(previous_steps):
+            if result["status"] == "error":
+                return False, f"Previous step {i+1} failed: {result.get('output', 'Unknown error')}"
+            
+            # Check if output is a dictionary with an error key
             plan (Plan): The plan that was executed
             results (list): Results from each step of the plan
             

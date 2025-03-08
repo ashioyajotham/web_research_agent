@@ -63,13 +63,24 @@ def process_tasks(task_file_path, output_dir="results"):
                 # Execute the tool
                 try:
                     output = tool.execute(parameters, agent.memory)
-                    results.append({"step": step.description, "status": "success", "output": output})
-                    agent.memory.add_result(step.description, output)
                     
-                    # Store search results specifically for easy reference
-                    if step.tool_name == "search" and isinstance(output, dict) and "results" in output:
-                        agent.memory.search_results = output["results"]
+                    # Check if the output is an error dictionary
+                    if isinstance(output, dict) and "error" in output:
+                        # Tool executed but returned an error
+                        error_msg = output["error"]
+                        results.append({"step": step.description, "status": "error", "output": error_msg})
+                        logger.warning(f"Tool execution returned error: {error_msg}")
+                    else:
+                        # Tool executed successfully
+                        results.append({"step": step.description, "status": "success", "output": output})
+                        agent.memory.add_result(step.description, output)
+                        
+                        # Store search results specifically for easy reference
+                        if step.tool_name == "search" and isinstance(output, dict) and "results" in output:
+                            agent.memory.search_results = output["results"]
                 except Exception as e:
+                    # Exception during tool execution
+                    logger.error(f"Error executing tool {step.tool_name}: {str(e)}")
                     results.append({"step": step.description, "status": "error", "output": str(e)})
                 
                 # Display the result of this step

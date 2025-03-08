@@ -41,14 +41,44 @@ class BrowserTool(BaseTool):
         Returns:
             dict: Extracted content and metadata
         """
-        url = parameters.get("url")
+        url = parameters.get("url", "")
         if not url:
             return {"error": "No URL provided for browsing"}
         
-        # Enhanced URL handling for various placeholder formats
-        url = self._process_url_parameter(url, memory)
-        if url.startswith("Error:"):
-            return {"error": url}
+        # Enhanced URL validation and normalization
+        if not isinstance(url, str) or len(url) < 3:
+            return {"error": f"Invalid URL format: {url}"}
+        
+        # Check for obvious placeholder patterns and try to resolve them
+        placeholder_patterns = [
+            r"\[.*\]",  # Anything in square brackets
+            r"placeholder",
+            r"URL_from",
+            r"FILL_IN",
+            r"<URL>",
+            r"{.*}"  # Anything in curly braces
+        ]
+        
+        for pattern in placeholder_patterns:
+            if re.search(pattern, url, re.IGNORECASE):
+                # This is clearly a placeholder that wasn't resolved, try to get a URL from memory
+                if hasattr(memory, 'search_results') and memory.search_results:
+                    first_url = memory.search_results[0].get("link", "")
+                    if first_url:
+                        logger.warning(f"URL '{url}' appears to be an unresolved placeholder. Using first search result URL: {first_url}")
+                        url = first_url
+                        break
+                else:
+                    return {"error": f"Could not resolve placeholder URL: {url}"}
+        
+        # Add scheme if missing
+        if not url.startswith(('http://', 'https://')):
+            url = 'https://' + url
+            logger.info(f"Added https:// prefix to URL: {url}")
+        
+        # URL validation - check basic URL structure
+        if not re.match(r"https?://[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)+(:[0-9]+)?(/.*)?$", url):
+            return {"error": f"URL format appears invalid: {url}"}
         
         extract_type = parameters.get("extract_type", "main_content")
         selector = parameters.get("selector", "")

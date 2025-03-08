@@ -48,18 +48,22 @@ def _format_as_markdown(task_description: str, plan: Any, results: List[Dict[str
     for i, result in enumerate(results):
         step_desc = result.get("step", f"Step {i+1}")
         status = result.get("status", "unknown")
-        step_output = result.get("output", {})
+        step_output = result.get("output", "")
         
         output.append(f"### {i+1}. {step_desc}")
         output.append(f"**Status**: {status}")
         
+        # Format output based on status
         if status == "error":
-            output.append(f"\n**Error**: {step_output}\n")
+            # Format error message clearly
+            error_msg = step_output if isinstance(step_output, str) else str(step_output)
+            output.append(f"\n**Error**: {error_msg}\n")
             continue
         
         # Format the output based on the type
         if isinstance(step_output, dict):
             if "error" in step_output:
+                # This is an error result that wasn't caught earlier
                 output.append(f"\n**Error**: {step_output['error']}\n")
             elif "content" in step_output:  # Browser results
                 output.append(f"\n**Source**: [{step_output.get('title', 'Web content')}]({step_output.get('url', '#')})\n")

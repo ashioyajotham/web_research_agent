@@ -34,6 +34,28 @@ class PresentationTool(BaseTool):
         prompt = parameters.get("prompt", "")
         data = parameters.get("data", {})
         
+        # Check if we have search results but no data
+        if not data and hasattr(memory, 'search_results') and memory.search_results:
+            logger.info("No data provided, using search results from memory")
+            data = {"search_results": memory.search_results}
+        
+        # Check if we have any previous results
+        if not data:
+            past_results = []
+            for key, value in memory.task_results.items():
+                if isinstance(value, dict):
+                    past_results.append(value)
+            
+            if past_results:
+                logger.info("Using past results as data source")
+                data = {"past_results": past_results}
+        
+        # If we have no data and no reference, generate appropriate message
+        if not data:
+            logger.warning("No data available for presentation")
+            if prompt:
+                return f"# {title}\n\n{prompt}\n\n*Note: I wasn't able to gather sufficient information to provide a detailed response. Please try refining your search or browse more specific sources.*"
+        
         # Construct the formatted output based on the format type
         if format_type == "table":
             return self._format_as_table(title, prompt, data)
