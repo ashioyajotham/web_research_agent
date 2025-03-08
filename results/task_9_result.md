@@ -4,187 +4,69 @@
 
 ## Plan
 
-1. **Search for the company's sustainability report or environmental report containing greenhouse gas emission data.** (using search)
-2. **Iterate through the search results and identify the most relevant report likely to contain the required data.** (using browser)
-3. **Extract the total greenhouse gas emissions for 2021, 2022, and 2023 from the report. Note the units of measurement.** (using browser)
-4. **Organize the extracted data into a table with 'Year' and 'Total Greenhouse Gas Emissions' columns.** (using present)
+1. **Search for relevant corporate sustainability reports and environmental impact reports using Google Search via serper.dev** (using search)
+2. **Iterate through the search results and identify reports containing greenhouse gas emission data for automotive operations.** (using browser)
+3. **Extract the total greenhouse gas emissions for automotive operations for 2021, 2022, and 2023 from the selected reports.** (using browser)
+4. **Organize the extracted data into a structured format suitable for creating a table.** (using present)
 
 ## Results
 
-### 1. Search for the company's sustainability report or environmental report containing greenhouse gas emission data.
+### 1. Search for relevant corporate sustainability reports and environmental impact reports using Google Search via serper.dev
 **Status**: success
 
-**Search Query**: [Company Name] environmental report
-**Found**: 5 results
+**Search Query**: [Company Name] environmental impact report
+**Found**: 10 results
 
-1. [ESG reporting and preparation of a Sustainability Report - PwC](https://www.pwc.com/sk/en/environmental-social-and-corporate-governance-esg/esg-reporting.html)
-   An ESG report is a report published by a company or organization about environmental, social and governance (ESG) impacts. It enables the company to be more ...
-
-2. [Top 5 ESG Report Examples from Leading Organizations - Lythouse](https://www.lythouse.com/blog/esg-report-examples-from-leading-organizations-in-multiple-industries)
+1. [Top 5 ESG Report Examples from Leading Organizations - Lythouse](https://www.lythouse.com/blog/esg-report-examples-from-leading-organizations-in-multiple-industries)
    Top-notch ESG Report Examples from leading organizations across diverse industries. Gain insights into sustainability, social responsibility & governance.
 
-3. [ESG, Sustainability or Impact Report: What to Consider Before You ...](https://www.isosgroup.com/blog/2024/3/26/esg-sustainability-or-impact-report-what-to-consider-before-you-rename-your-report)
+2. [Annual Environmental Impact and Sustainability Reports](https://ecoproducts.com/impact-report?srsltid=AfmBOoqatLi1M9rBag4_s8Y3UAp6rHLEFyv2sedTU0ibqQr3gs1LboPq)
+   See the measurable impact of sustainability efforts from Eco-Products. Download the latest Environmental Impact and Sustainability Report.
+
+3. [40 Companies Making Positive Environmental Impact - PowerToFly](https://powertofly.com/up/40-companies-making-positive-environmental-impact)
+   We asked some of our partner companies to share what they do to promote positive environmental impact and sustainability.
+
+4. [[PDF] Environmental Impact Report - Dell](https://www.delltechnologies.com/asset/pl-pl/services/deployment/briefs-summaries/environmental-impact-report-example.pdf)
+   The information provided in this document ref ects a summary of. Asset Recovery Services activity and calculated savings for the date.
+
+5. [Environmental Impact Statement (EIS) Database|USEPA](https://cdxapps.epa.gov/cdx-enepa-II/public/action/eis/search)
+   The Environmental Impact Statement (EIS) Database provides information about EISs prepared by federal agencies, as well as EPA's comments concerning the EISs.
+
+6. [ESG, Sustainability or Impact Report: What to Consider Before You ...](https://www.isosgroup.com/blog/2024/3/26/esg-sustainability-or-impact-report-what-to-consider-before-you-rename-your-report)
    Let's start with a rundown of the most common report names and their definitions before diving into our recommendations.
 
-4. [Corporate Sustainability Reports - Sustainable Business](https://libguides.udayton.edu/c.php?g=1385965&p=10282314)
-   Environmental reporting database containing comprehensive data submitted by over 23,000 companies. Requires free account; search by company ...
+7. [100 Top Environmental Impact Assessment Companies · March 2025](https://www.f6s.com/companies/environmental-impact-assessment/mo)
+   Detailed info and reviews on 100 top Environmental Impact Assessment companies and startups in 2025. Get the latest updates on their ...
 
-5. [Sustainability Reports & Case Studies](https://sustainability.google/reports/)
-   Access Google's sustainability reports, including environmental, product, and supplier responsibility reports and case studies in PDF format.
+8. [[PDF] Tesla 2021 Impact Report](https://www.tesla.com/ns_videos/2021-tesla-impact-report.pdf)
+   It's easy to see why some oil & gas companies rank higher than Tesla on “Environmental Impact.” “The most striking feature of the [ESG rating] system is how ...
 
-### 2. Iterate through the search results and identify the most relevant report likely to contain the required data.
+9. [America's Top 10 Companies for Environmental Performance in 2023](https://justcapital.com/news/earth-day-2023-top-companies-for-the-environment/)
+   America's Top 10 Companies for Environmental Performance in 2023 · Workday · Hewlett Packard Enterprise · Akamai Technologies · Microsoft · The ...
+
+10. [[PDF] 2024 Environmental Progress Report - Apple](https://www.apple.com/environment/pdf/Apple_Environmental_Progress_Report_2024.pdf)
+   We're also building our products with more recycled and renewable material than ever — work that helps to drive down our carbon footprint.
+
+### 2. Iterate through the search results and identify reports containing greenhouse gas emission data for automotive operations.
+**Status**: error
+
+**Error**: Error accessing URL https://www.lythouse.com/blog/esg-report-examples-from-leading-organizations-in-multiple-industries: 500 Server Error: Internal Server Error for url: https://www.lythouse.com/blog/esg-report-examples-from-leading-organizations-in-multiple-industries
+
+### 3. Extract the total greenhouse gas emissions for automotive operations for 2021, 2022, and 2023 from the selected reports.
+**Status**: error
+
+**Error**: Error accessing URL https://www.lythouse.com/blog/esg-report-examples-from-leading-organizations-in-multiple-industries: 500 Server Error: Internal Server Error for url: https://www.lythouse.com/blog/esg-report-examples-from-leading-organizations-in-multiple-industries
+
+### 4. Organize the extracted data into a structured format suitable for creating a table.
 **Status**: success
 
-**Source**: [ESG reporting and preparation of a Sustainability Report | PwC Slovakia](https://www.pwc.com/sk/en/environmental-social-and-corporate-governance-esg/esg-reporting.html)
+# Automotive Greenhouse Gas Emissions (2021-2023)
 
-
-[ ](/sk/en.html)
-
-Search
-
-Menu
-
-Our Services
-
-[Our Services](https://www.pwc.com/sk/en/our-services.html)
-
-Menu
-
-Our Services
-
-[Audit](https://www.pwc.com/sk/en/tomorrows-audit-today.html)
-
-Menu
-
-Our Services
-
-[Actuarial Services](https://www.pwc.com/sk/en/our-services/actuarial-
-services.html)
-
-Menu
-
-Our Services
-
-[Risk & Regulatory](https://www.pwc.com/sk/en/risk-assurance-slovakia.html)
-
-Menu
-
-Our Services
-
-[Accounting Advice and Treasury](https://www.pwc.com/sk/en/tomorrows-audit-
-today/accounting-advice.html)
-
-Menu
-
-Our Services
-
-[Environmental, Social, and Corporate Governance
-(ESG)](https://www.pwc.com/sk/en/environmental-social-and-corporate-
-governance-esg.html)
-
-Menu
-
-Our Services
-
-[Finance of the Future](https://www.pwc.com/sk/en/future-of-finance.html)
-
-Menu
-
-Our Services
-
-[The Academy - PwC Educational
-Institute](https://www.pwc.com/sk/en/academy.html)
-
-Menu
-
-Our Services
-
-[Tax Services](https://www.pwc.com/sk/en/tax-services.html)
-
-Menu
-
-Our Services
-
-[Automated tax compliance ](https://www.pwc.com/sk/en/tax-services/automated-
-tax-compliance.html)
-
-Menu
-
-Our Services
-
-[Law firm PwC Legal](https://www.pwc.com/sk/en/our-services/pwc-legal.html)
-
-Menu
-
-Our Services
-
-[Intelligent Processing Centre](https://www.pwc.com/sk/en/our-
-services/intelligent-processing-centre.html)
-
-Menu
-
-Our Services
-
-[Investments, R&D and innovation support in
-Slovakia](https://www.pwc.com/sk/en/investments-and-radi-support-in-sk.html)
-
-Menu
-
-Our Services
-
-[Workforce](https://www.pwc.com/sk/en/workforce.html)
-
-Menu
-
-Our Services
-
-[Deals - Transaction services](https://www.pwc.com/sk/en/transakcie.html)
-
-Menu
-
-Our Services
-
-[Operational Excellence](https://www.pwc.com/sk/en/advisory/operational-
-excellence.html)
-
-Menu
-
-Our Services
-
-[Corporate Management Consulting](https://www.pwc.com/sk/en/corporate-
-management.html)
-
-Menu
-
-Our Services
-
-[Advanced Technology Solutions](https://www.pwc.com/sk/en/advanced-technology-
-solutions.html)
-
-Menu
-
-Digital Solutions
-
-[Digital Solutions](h... [Content truncated, 21984 more characters]
-
-### 3. Extract the total greenhouse gas emissions for 2021, 2022, and 2023 from the report. Note the units of measurement.
-**Status**: success
-
-**Source**: [ESG reporting and preparation of a Sustainability Report | PwC Slovakia](https://www.pwc.com/sk/en/environmental-social-and-corporate-governance-esg/esg-reporting.html)
-
-
-PwC Slovakia offers audit, tax, legal, consulting, and digital solutions.  They highlight services in ESG, including sustainability reporting,  compliant with CSRD, EU Taxonomy, and GRI standards.  Their services support businesses in meeting increasing regulatory demands for ESG disclosures and creating comprehensive sustainability reports.
-
-### 4. Organize the extracted data into a table with 'Year' and 'Total Greenhouse Gas Emissions' columns.
-**Status**: success
-
-# Greenhouse Gas Emissions from Automotive Operations
-
-Create a table with columns 'Year' and 'Total Greenhouse Gas Emissions'.  The data should include: Year: 2021, Total Greenhouse Gas Emissions: [Value from report]; Year: 2022, Total Greenhouse Gas Emissions: [Value from report]; Year: 2023, Total Greenhouse Gas Emissions: [Value from report].  Include units of measurement in the table header or as a footnote.
+Organize the following data into a table with columns 'Year' and 'Total Greenhouse Gas Emissions': 2021: [Value], 2022: [Value], 2023: [Value]
 
 | Key | Value |
 | --- | --- |
-| search_results | [{'title': 'ESG reporting and preparation of a Sustainability Report - PwC', 'link': 'https://www.pwc.com/sk/en/environmental-social-and-corporate-governance-esg/esg-reporting.html', 'snippet': 'An ESG report is a report published by a company or organization about environmental, social and governance (ESG) impacts. It enables the company to be more ...'}, {'title': 'Top 5 ESG Report Examples from Leading Organizations - Lythouse', 'link': 'https://www.lythouse.com/blog/esg-report-examples-from-leading-organizations-in-multiple-industries', 'snippet': 'Top-notch ESG Report Examples from leading organizations across diverse industries. Gain insights into sustainability, social responsibility & governance.'}, {'title': 'ESG, Sustainability or Impact Report: What to Consider Before You ...', 'link': 'https://www.isosgroup.com/blog/2024/3/26/esg-sustainability-or-impact-report-what-to-consider-before-you-rename-your-report', 'snippet': "Let's start with a rundown of the most common report names and their definitions before diving into our recommendations."}, {'title': 'Corporate Sustainability Reports - Sustainable Business', 'link': 'https://libguides.udayton.edu/c.php?g=1385965&p=10282314', 'snippet': 'Environmental reporting database containing comprehensive data submitted by over 23,000 companies. Requires free account; search by company ...'}, {'title': 'Sustainability Reports & Case Studies', 'link': 'https://sustainability.google/reports/', 'snippet': "Access Google's sustainability reports, including environmental, product, and supplier responsibility reports and case studies in PDF format."}] |
+| search_results | [{'title': 'Top 5 ESG Report Examples from Leading Organizations - Lythouse', 'link': 'https://www.lythouse.com/blog/esg-report-examples-from-leading-organizations-in-multiple-industries', 'snippet': 'Top-notch ESG Report Examples from leading organizations across diverse industries. Gain insights into sustainability, social responsibility & governance.'}, {'title': 'Annual Environmental Impact and Sustainability Reports', 'link': 'https://ecoproducts.com/impact-report?srsltid=AfmBOoqatLi1M9rBag4_s8Y3UAp6rHLEFyv2sedTU0ibqQr3gs1LboPq', 'snippet': 'See the measurable impact of sustainability efforts from Eco-Products. Download the latest Environmental Impact and Sustainability Report.'}, {'title': '40 Companies Making Positive Environmental Impact - PowerToFly', 'link': 'https://powertofly.com/up/40-companies-making-positive-environmental-impact', 'snippet': 'We asked some of our partner companies to share what they do to promote positive environmental impact and sustainability.'}, {'title': '[PDF] Environmental Impact Report - Dell', 'link': 'https://www.delltechnologies.com/asset/pl-pl/services/deployment/briefs-summaries/environmental-impact-report-example.pdf', 'snippet': 'The information provided in this document ref ects a summary of. Asset Recovery Services activity and calculated savings for the date.'}, {'title': 'Environmental Impact Statement (EIS) Database|USEPA', 'link': 'https://cdxapps.epa.gov/cdx-enepa-II/public/action/eis/search', 'snippet': "The Environmental Impact Statement (EIS) Database provides information about EISs prepared by federal agencies, as well as EPA's comments concerning the EISs."}, {'title': 'ESG, Sustainability or Impact Report: What to Consider Before You ...', 'link': 'https://www.isosgroup.com/blog/2024/3/26/esg-sustainability-or-impact-report-what-to-consider-before-you-rename-your-report', 'snippet': "Let's start with a rundown of the most common report names and their definitions before diving into our recommendations."}, {'title': '100 Top Environmental Impact Assessment Companies · March 2025', 'link': 'https://www.f6s.com/companies/environmental-impact-assessment/mo', 'snippet': 'Detailed info and reviews on 100 top Environmental Impact Assessment companies and startups in 2025. Get the latest updates on their ...'}, {'title': '[PDF] Tesla 2021 Impact Report', 'link': 'https://www.tesla.com/ns_videos/2021-tesla-impact-report.pdf', 'snippet': "It's easy to see why some oil & gas companies rank higher than Tesla on “Environmental Impact.” “The most striking feature of the [ESG rating] system is how ..."}, {'title': "America's Top 10 Companies for Environmental Performance in 2023", 'link': 'https://justcapital.com/news/earth-day-2023-top-companies-for-the-environment/', 'snippet': "America's Top 10 Companies for Environmental Performance in 2023 · Workday · Hewlett Packard Enterprise · Akamai Technologies · Microsoft · The ..."}, {'title': '[PDF] 2024 Environmental Progress Report - Apple', 'link': 'https://www.apple.com/environment/pdf/Apple_Environmental_Progress_Report_2024.pdf', 'snippet': "We're also building our products with more recycled and renewable material than ever — work that helps to drive down our carbon footprint."}] |
 
 
 ## Summary

@@ -49,7 +49,7 @@ class ToolRegistry:
             logger.warning(f"Tool '{name}' already registered. Overwriting.")
         
         self.tools[name] = tool
-        logger.info(f"Registered tool: {name}")
+        logger.debug(f"Registered tool: {name}")
     
     def get_tool(self, name: str) -> Optional[BaseTool]:
         """
