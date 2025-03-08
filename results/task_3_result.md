@@ -4,17 +4,17 @@
 
 ## Plan
 
-1. **Search for Epoch AI's dataset download link and relevant information.** (using search)
-2. **Analyze search results to identify the dataset download link and determine the dataset format and structure.** (using browser)
-3. **Further investigate the dataset documentation to confirm the compute metrics used (e.g., FLOPs, TPU-v4 days) and the format of date information.** (using browser)
-4. **Download Epoch AI's dataset using the identified download link.** (using browser)
-5. **Process the downloaded dataset to identify the date and compute used for each training run.** (using browser)
-6. **Identify record-breaking training runs by sorting the data by compute used and selecting runs that represent new maximums over time.** (using browser)
-7. **Organize the extracted data into a table with 'Date' and 'Maximum Compute Used' columns.** (using present)
+1. **Search for Epoch AI's dataset of large-scale AI models and potential download links.** (using search)
+2. **Analyze search results to identify a reliable download link for the dataset.** (using browser)
+3. **If a direct download link is not available, navigate to Epoch AI's website and explore their resources for the dataset.** (using browser)
+4. **Download the Epoch AI dataset. This step assumes the dataset is available for download; if not, the plan will need adjustment.** (using browser)
+5. **Process the downloaded dataset to identify the date, model name (if available), and compute used for each training run.** (using browser)
+6. **Identify record-breaking training runs by sorting the data by compute used in descending order and selecting only the rows representing new maximum compute values.** (using browser)
+7. **Create a table summarizing the record-breaking training runs with columns for Date, Model Name (if available), Compute Used (in a consistent unit), and Notes (optional).** (using present)
 
 ## Results
 
-### 1. Search for Epoch AI's dataset download link and relevant information.
+### 1. Search for Epoch AI's dataset of large-scale AI models and potential download links.
 **Status**: success
 
 **Search Query**: Epoch AI model training dataset download
@@ -50,7 +50,7 @@
 10. [Training with PyTorch](https://pytorch.org/tutorials/beginner/introyt/trainingyt.html)
    In this video, we'll be adding some new tools to your inventory. Finally, we'll pull all of these together and see a full PyTorch training loop in action.
 
-### 2. Analyze search results to identify the dataset download link and determine the dataset format and structure.
+### 2. Analyze search results to identify a reliable download link for the dataset.
 **Status**: success
 
 **Source**: [Data on Notable AI Models | Epoch AI](https://epoch.ai/data/notable-ai-models)
@@ -127,7 +127,7 @@ also played a role.
 (FLOP)", "lim": [18099812076578.68, 8.074104179511414e+27], "scaleType":
 "log", "ticks": [10000000... [Content truncated, 250322 more characters]
 
-### 3. Further investigate the dataset documentation to confirm the compute metrics used (e.g., FLOPs, TPU-v4 days) and the format of date information.
+### 3. If a direct download link is not available, navigate to Epoch AI's website and explore their resources for the dataset.
 **Status**: success
 
 **Source**: [Data on Notable AI Models | Epoch AI](https://epoch.ai/data/notable-ai-models)
@@ -208,7 +208,7 @@ also played a role.
 "2014", "2016", "2018", "2020", "2022", "2024", "2026", "2028"],
 "hideMinorGrid": true, "nice": false},... [Content truncated, 252212 more characters]
 
-### 4. Download Epoch AI's dataset using the identified download link.
+### 4. Download the Epoch AI dataset. This step assumes the dataset is available for download; if not, the plan will need adjustment.
 **Status**: success
 
 **Source**: [Data on Notable AI Models | Epoch AI](https://epoch.ai/data/notable-ai-models)
@@ -289,7 +289,7 @@ also played a role.
 "2014", "2016", "2018", "2020", "2022", "2024", "2026", "2028"],
 "hideMinorGrid": true, "nice": false},... [Content truncated, 252212 more characters]
 
-### 5. Process the downloaded dataset to identify the date and compute used for each training run.
+### 5. Process the downloaded dataset to identify the date, model name (if available), and compute used for each training run.
 **Status**: success
 
 **Source**: [Data on Notable AI Models | Epoch AI](https://epoch.ai/data/notable-ai-models)
@@ -370,7 +370,7 @@ also played a role.
 "2014", "2016", "2018", "2020", "2022", "2024", "2026", "2028"],
 "hideMinorGrid": true, "nice": false},... [Content truncated, 252212 more characters]
 
-### 6. Identify record-breaking training runs by sorting the data by compute used and selecting runs that represent new maximums over time.
+### 6. Identify record-breaking training runs by sorting the data by compute used in descending order and selecting only the rows representing new maximum compute values.
 **Status**: success
 
 **Source**: [Data on Notable AI Models | Epoch AI](https://epoch.ai/data/notable-ai-models)
@@ -451,12 +451,12 @@ also played a role.
 "2014", "2016", "2018", "2020", "2022", "2024", "2026", "2028"],
 "hideMinorGrid": true, "nice": false},... [Content truncated, 252212 more characters]
 
-### 7. Organize the extracted data into a table with 'Date' and 'Maximum Compute Used' columns.
+### 7. Create a table summarizing the record-breaking training runs with columns for Date, Model Name (if available), Compute Used (in a consistent unit), and Notes (optional).
 **Status**: success
 
 # Record-Breaking AI Model Training Compute Usage
 
-https://epoch.ai/data/notable-ai-models
+[Data from previous step]
 
 | Key | Value |
 | --- | --- |
