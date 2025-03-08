@@ -192,18 +192,10 @@ class WebResearchAgent:
     def _format_results(self, task_description, plan, results):
         """
         Format results using the formatter utility.
-            task_description (str): Original task description
         
         Args:
             task_description (str): Original task description
             plan (Plan): The plan that was executed
-            results (list): Results from each step of the plan
-            
-        Returns:
-            str: Formatted results
-        """
-        from utils.formatters import format_results
-        return format_results(task_description, plan, results)
             results (list): Results from each step of the plan
             
         Returns:
@@ -221,11 +213,6 @@ class WebResearchAgent:
             results (list): Previous results
             
         Returns:
-            if isinstance(result.get("output"), dict) and "error" in result["output"]:
-                return False, f"Previous step {i+1} returned error: {result['output']['error']}"
-        
-        # If all previous steps are successful, we can execute this step
-        return True, ""
             tuple: (can_execute, reason)
         """
         # Steps before current
@@ -237,11 +224,8 @@ class WebResearchAgent:
                 return False, f"Previous step {i+1} failed: {result.get('output', 'Unknown error')}"
             
             # Check if output is a dictionary with an error key
-            plan (Plan): The plan that was executed
-            results (list): Results from each step of the plan
-            
-        Returns:
-            str: Formatted results
-        """
-        from utils.formatters import format_results
-        return format_results(task_description, plan, results)
+            if isinstance(result.get("output"), dict) and "error" in result["output"]:
+                return False, f"Previous step {i+1} returned error: {result['output']['error']}"
+        
+        # If all previous steps are successful, we can execute this step
+        return True, ""
