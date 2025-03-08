@@ -41,7 +41,7 @@ BANNER = """
 def display_banner():
     """Display the ASCII art banner."""
     console.print(BANNER)
-    console.print("\n[dim]Version 1.0.0 - Type 'help' for commands[/dim]\n")
+    console.print("\n[dim]Version 1.0.1 - Type 'help' for commands[/dim]\n")
 
 def display_intro():
     """Display introduction info."""
@@ -114,7 +114,7 @@ def _extract_preview_sections(content, max_length=2000):
     return preview
 
 @click.group()
-@click.version_option(version="1.0.0")
+@click.version_option(version="1.0.1")
 @click.option('--verbose', '-v', is_flag=True, help="Enable verbose logging")
 def cli(verbose):
     """Web Research Agent - An intelligent tool for web-based research tasks."""
@@ -380,7 +380,7 @@ def shell(verbose):
                 continue
                 
             if user_input.lower() == 'version':
-                console.print("[cyan]Web Research Agent v1.0.0[/cyan]")
+                console.print("[cyan]Web Research Agent v1.0.1[/cyan]")
                 continue
             
             if user_input.lower() == 'help':

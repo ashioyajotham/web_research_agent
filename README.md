@@ -215,4 +215,4 @@ Logs are stored in the `logs/` directory for debugging.
 
 ## Contributing
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+Contributions are welcome! Please feel free to submit a Pull Request. Check out the [CONTRIBUTING.md](CONTRIBUTING.md) file for more details.
