@@ -4,163 +4,187 @@
 
 ## Plan
 
-1. **Search for relevant company sustainability reports and environmental data using a combination of keywords.** (using search)
-2. **Review search results for credible sources like official company websites, sustainability reports, or reputable news articles.** (using browser)
-3. **Extract the total greenhouse gas emissions from automotive operations for 2021, 2022, and 2023 from the identified reliable sources.** (using browser)
-4. **Organize the extracted data into a structured format.** (using present)
+1. **Search for the company's sustainability report or environmental report containing greenhouse gas emission data.** (using search)
+2. **Iterate through the search results and identify the most relevant report likely to contain the required data.** (using browser)
+3. **Extract the total greenhouse gas emissions for 2021, 2022, and 2023 from the report. Note the units of measurement.** (using browser)
+4. **Organize the extracted data into a table with 'Year' and 'Total Greenhouse Gas Emissions' columns.** (using present)
 
 ## Results
 
-### 1. Search for relevant company sustainability reports and environmental data using a combination of keywords.
+### 1. Search for the company's sustainability report or environmental report containing greenhouse gas emission data.
 **Status**: success
 
-**Search Query**: [Company Name] environmental report 2021 2022 2023
-**Found**: 10 results
+**Search Query**: [Company Name] environmental report
+**Found**: 5 results
 
-1. [Environmental Sustainability Reports | Capgemini](https://www.capgemini.com/about-us/csr/environmental-sustainability/environmental-sustainability-reports/)
-   Our 2022/2023 Group Environmental Report shares progress on our sustainability commitments, in particular our actions to decarbonize the business, in line with ...
+1. [ESG reporting and preparation of a Sustainability Report - PwC](https://www.pwc.com/sk/en/environmental-social-and-corporate-governance-esg/esg-reporting.html)
+   An ESG report is a report published by a company or organization about environmental, social and governance (ESG) impacts. It enables the company to be more ...
 
-2. [Environmental, Social and Governance Reports | Lenovo](https://investor.lenovo.com//en/sustainability/sustainability_reports.php)
-   Lenovo's Sustainability Report provides an overview of the Group's efforts and performance in pursuing our sustainability vision.
+2. [Top 5 ESG Report Examples from Leading Organizations - Lythouse](https://www.lythouse.com/blog/esg-report-examples-from-leading-organizations-in-multiple-industries)
+   Top-notch ESG Report Examples from leading organizations across diverse industries. Gain insights into sustainability, social responsibility & governance.
 
-3. [Sustainability Reports & Case Studies](https://sustainability.google/reports/)
+3. [ESG, Sustainability or Impact Report: What to Consider Before You ...](https://www.isosgroup.com/blog/2024/3/26/esg-sustainability-or-impact-report-what-to-consider-before-you-rename-your-report)
+   Let's start with a rundown of the most common report names and their definitions before diving into our recommendations.
+
+4. [Corporate Sustainability Reports - Sustainable Business](https://libguides.udayton.edu/c.php?g=1385965&p=10282314)
+   Environmental reporting database containing comprehensive data submitted by over 23,000 companies. Requires free account; search by company ...
+
+5. [Sustainability Reports & Case Studies](https://sustainability.google/reports/)
    Access Google's sustainability reports, including environmental, product, and supplier responsibility reports and case studies in PDF format.
 
-4. [Annual Sustainability Report 2023 - Onsemi](https://www.onsemi.com/company/environmental-social-and-governance/annual-sustainability-report)
-   In this 2023 Sustainability Report, we are proud to share the many operational improvements and progress we have made towards the journey in meeting our Net ...
-
-5. [Reports - Amazon Sustainability](https://sustainability.aboutamazon.com/reports)
-   Reports · 2023. Carbon Methodology. PDF, 136.47 KB · 2023. Renewable Energy Methodology. PDF, 97.26 KB · 2022. Supply Chain Standards. PDF, 239.81 KB · 2023. Modern ...
-
-6. [Sustainability Reports | Environmental Stewardship - Eastman](https://www.eastman.com/en/sustainability/sustainability-reports)
-   Access our comprehensive annual report on Eastman's sustainability goals and progress, which shows our commitment to transparency and accountability.
-
-7. [Sustainability Report - ExxonMobil](https://corporate.exxonmobil.com/sustainability-and-reports/sustainability)
-   The Advancing Climate Solutions Report includes 2022 greenhouse gas emissions performance data and Scope 3 Category 11 estimates for full-year 2022 as of March ...
-
-8. [Environmental, Social and Governance (ESG) Report - Nielsen](https://www.nielsen.com/about-us/responsibility-and-sustainability/esg-report/)
-   Nielsen's global annual environmental, social and governance (ESG) report shares information around our six key ESG topic areas.
-
-9. [Sustainability - Cleveland-Cliffs Inc.](https://www.clevelandcliffs.com/sustainability)
-   The Cleveland-Cliffs Sustainability Report 2023 covers information and data for calendar year 2023, unless otherwise noted. This report is structured around ...
-
-10. [Sustainability Report Archives - ConocoPhillips](https://www.conocophillips.com/company-reports-resources/sustainability-reporting/sustainability-report-regional-archives/)
-   2022 Sustainability PDF Report · 2022 Climate Change PDF Report · 2022-2023 Plan for the Net Zero Energy Transition PDF · 2021 Sustainability PDF Report · 2021 ...
-
-### 2. Review search results for credible sources like official company websites, sustainability reports, or reputable news articles.
+### 2. Iterate through the search results and identify the most relevant report likely to contain the required data.
 **Status**: success
 
-**Source**: [Environmental Sustainability Reports | Capgemini](https://www.capgemini.com/about-us/csr/environmental-sustainability/environmental-sustainability-reports/)
+**Source**: [ESG reporting and preparation of a Sustainability Report | PwC Slovakia](https://www.pwc.com/sk/en/environmental-social-and-corporate-governance-esg/esg-reporting.html)
 
 
-# Our environmental sustainability reports
+[ ](/sk/en.html)
 
-## Each year we produce an environmental sustainability report providing a
-transparent overview of our environmental performance and continued evolution
-of our approach to environmental sustainability.
+Search
 
-##
+Menu
 
-### [Group Environmental Sustainability Report
-2023](https://www.capgemini.com/wp-content/uploads/2024/07/2023-Report-
-published-in-July-2024.pdf)
+Our Services
 
-Our 2023 Group Environmental Report shares progress on our net zero ambition
-and commitment to address wider sustainability challenges. The report focuses
-both on our carbon reduction progress across our largest impact areas, as well
-as our actions to reduce our negative impacts beyond carbon, including water
-consumption, waste & circularity, as well as our approach to biodiversity.
+[Our Services](https://www.pwc.com/sk/en/our-services.html)
 
-### [Group Environmental Sustainability Report
-2022/2023](https://www.capgemini.com/wp-content/uploads/2023/07/ES-
-Report-25th-July-i-2023.pdf)
+Menu
 
-Our 2022/2023 Group Environmental Report shares progress on our sustainability
-commitments, in particular our actions to decarbonize the business, in line
-with our Science Based Targets initiative net-zero target. We also highlight
-our approach to sustainability commitments beyond carbon, including water,
-waste and biodiversity.
+Our Services
 
-### [Group Environmental Sustainability Report 2021/2022](/wp-
-content/uploads/2022/08/EnvironmentalSustainabilityReport-Final1-27th-
-July.pdf)
+[Audit](https://www.pwc.com/sk/en/tomorrows-audit-today.html)
 
-Our 2021/22 Group Environmental Report shares our strengthened net zero
-ambition in line with the Science Based Target initiative’s new Net-Zero
-Standard, and highlights key actions during 2021/2022
+Menu
 
-### [2020/2021 review of our first year on our road to net zero ](/wp-
-content/uploads/2021/12/Net-zero-Review-2020-2021-July-2021-Compressed-and-
-Linked-v210.pdf)
+Our Services
 
-In July 2020, we announced a strengthened commitment to sustainability with a
-new ambition to achieve carbon neutrality across our operations no later than
-2025, and to be a net zero business by 2030.
+[Actuarial Services](https://www.pwc.com/sk/en/our-services/actuarial-
+services.html)
 
-### [Group Environmental ... [Content truncated, 980 more characters]
+Menu
 
-### 3. Extract the total greenhouse gas emissions from automotive operations for 2021, 2022, and 2023 from the identified reliable sources.
+Our Services
+
+[Risk & Regulatory](https://www.pwc.com/sk/en/risk-assurance-slovakia.html)
+
+Menu
+
+Our Services
+
+[Accounting Advice and Treasury](https://www.pwc.com/sk/en/tomorrows-audit-
+today/accounting-advice.html)
+
+Menu
+
+Our Services
+
+[Environmental, Social, and Corporate Governance
+(ESG)](https://www.pwc.com/sk/en/environmental-social-and-corporate-
+governance-esg.html)
+
+Menu
+
+Our Services
+
+[Finance of the Future](https://www.pwc.com/sk/en/future-of-finance.html)
+
+Menu
+
+Our Services
+
+[The Academy - PwC Educational
+Institute](https://www.pwc.com/sk/en/academy.html)
+
+Menu
+
+Our Services
+
+[Tax Services](https://www.pwc.com/sk/en/tax-services.html)
+
+Menu
+
+Our Services
+
+[Automated tax compliance ](https://www.pwc.com/sk/en/tax-services/automated-
+tax-compliance.html)
+
+Menu
+
+Our Services
+
+[Law firm PwC Legal](https://www.pwc.com/sk/en/our-services/pwc-legal.html)
+
+Menu
+
+Our Services
+
+[Intelligent Processing Centre](https://www.pwc.com/sk/en/our-
+services/intelligent-processing-centre.html)
+
+Menu
+
+Our Services
+
+[Investments, R&D and innovation support in
+Slovakia](https://www.pwc.com/sk/en/investments-and-radi-support-in-sk.html)
+
+Menu
+
+Our Services
+
+[Workforce](https://www.pwc.com/sk/en/workforce.html)
+
+Menu
+
+Our Services
+
+[Deals - Transaction services](https://www.pwc.com/sk/en/transakcie.html)
+
+Menu
+
+Our Services
+
+[Operational Excellence](https://www.pwc.com/sk/en/advisory/operational-
+excellence.html)
+
+Menu
+
+Our Services
+
+[Corporate Management Consulting](https://www.pwc.com/sk/en/corporate-
+management.html)
+
+Menu
+
+Our Services
+
+[Advanced Technology Solutions](https://www.pwc.com/sk/en/advanced-technology-
+solutions.html)
+
+Menu
+
+Digital Solutions
+
+[Digital Solutions](h... [Content truncated, 21984 more characters]
+
+### 3. Extract the total greenhouse gas emissions for 2021, 2022, and 2023 from the report. Note the units of measurement.
 **Status**: success
 
-**Source**: [Environmental Sustainability Reports | Capgemini](https://www.capgemini.com/about-us/csr/environmental-sustainability/environmental-sustainability-reports/)
+**Source**: [ESG reporting and preparation of a Sustainability Report | PwC Slovakia](https://www.pwc.com/sk/en/environmental-social-and-corporate-governance-esg/esg-reporting.html)
 
 
-# Our environmental sustainability reports
+PwC Slovakia offers audit, tax, legal, consulting, and digital solutions.  They highlight services in ESG, including sustainability reporting,  compliant with CSRD, EU Taxonomy, and GRI standards.  Their services support businesses in meeting increasing regulatory demands for ESG disclosures and creating comprehensive sustainability reports.
 
-## Each year we produce an environmental sustainability report providing a
-transparent overview of our environmental performance and continued evolution
-of our approach to environmental sustainability.
-
-##
-
-### [Group Environmental Sustainability Report
-2023](https://www.capgemini.com/wp-content/uploads/2024/07/2023-Report-
-published-in-July-2024.pdf)
-
-Our 2023 Group Environmental Report shares progress on our net zero ambition
-and commitment to address wider sustainability challenges. The report focuses
-both on our carbon reduction progress across our largest impact areas, as well
-as our actions to reduce our negative impacts beyond carbon, including water
-consumption, waste & circularity, as well as our approach to biodiversity.
-
-### [Group Environmental Sustainability Report
-2022/2023](https://www.capgemini.com/wp-content/uploads/2023/07/ES-
-Report-25th-July-i-2023.pdf)
-
-Our 2022/2023 Group Environmental Report shares progress on our sustainability
-commitments, in particular our actions to decarbonize the business, in line
-with our Science Based Targets initiative net-zero target. We also highlight
-our approach to sustainability commitments beyond carbon, including water,
-waste and biodiversity.
-
-### [Group Environmental Sustainability Report 2021/2022](/wp-
-content/uploads/2022/08/EnvironmentalSustainabilityReport-Final1-27th-
-July.pdf)
-
-Our 2021/22 Group Environmental Report shares our strengthened net zero
-ambition in line with the Science Based Target initiative’s new Net-Zero
-Standard, and highlights key actions during 2021/2022
-
-### [2020/2021 review of our first year on our road to net zero ](/wp-
-content/uploads/2021/12/Net-zero-Review-2020-2021-July-2021-Compressed-and-
-Linked-v210.pdf)
-
-In July 2020, we announced a strengthened commitment to sustainability with a
-new ambition to achieve carbon neutrality across our operations no later than
-2025, and to be a net zero business by 2030.
-
-### [Group Environmental ... [Content truncated, 980 more characters]
-
-### 4. Organize the extracted data into a structured format.
+### 4. Organize the extracted data into a table with 'Year' and 'Total Greenhouse Gas Emissions' columns.
 **Status**: success
 
-# Greenhouse Gas Emissions from Automotive Operations (2021-2023)
+# Greenhouse Gas Emissions from Automotive Operations
 
-Organize the following data into a table with columns 'Year' and 'Total Greenhouse Gas Emissions': 2021: [Value 2021], 2022: [Value 2022], 2023: [Value 2023]
+Create a table with columns 'Year' and 'Total Greenhouse Gas Emissions'.  The data should include: Year: 2021, Total Greenhouse Gas Emissions: [Value from report]; Year: 2022, Total Greenhouse Gas Emissions: [Value from report]; Year: 2023, Total Greenhouse Gas Emissions: [Value from report].  Include units of measurement in the table header or as a footnote.
 
 | Key | Value |
 | --- | --- |
-| search_results | [{'title': 'Environmental Sustainability Reports | Capgemini', 'link': 'https://www.capgemini.com/about-us/csr/environmental-sustainability/environmental-sustainability-reports/', 'snippet': 'Our 2022/2023 Group Environmental Report shares progress on our sustainability commitments, in particular our actions to decarbonize the business, in line with ...'}, {'title': 'Environmental, Social and Governance Reports | Lenovo', 'link': 'https://investor.lenovo.com//en/sustainability/sustainability_reports.php', 'snippet': "Lenovo's Sustainability Report provides an overview of the Group's efforts and performance in pursuing our sustainability vision."}, {'title': 'Sustainability Reports & Case Studies', 'link': 'https://sustainability.google/reports/', 'snippet': "Access Google's sustainability reports, including environmental, product, and supplier responsibility reports and case studies in PDF format."}, {'title': 'Annual Sustainability Report 2023 - Onsemi', 'link': 'https://www.onsemi.com/company/environmental-social-and-governance/annual-sustainability-report', 'snippet': 'In this 2023 Sustainability Report, we are proud to share the many operational improvements and progress we have made towards the journey in meeting our Net ...'}, {'title': 'Reports - Amazon Sustainability', 'link': 'https://sustainability.aboutamazon.com/reports', 'snippet': 'Reports · 2023. Carbon Methodology. PDF, 136.47 KB · 2023. Renewable Energy Methodology. PDF, 97.26 KB · 2022. Supply Chain Standards. PDF, 239.81 KB · 2023. Modern ...'}, {'title': 'Sustainability Reports | Environmental Stewardship - Eastman', 'link': 'https://www.eastman.com/en/sustainability/sustainability-reports', 'snippet': "Access our comprehensive annual report on Eastman's sustainability goals and progress, which shows our commitment to transparency and accountability."}, {'title': 'Sustainability Report - ExxonMobil', 'link': 'https://corporate.exxonmobil.com/sustainability-and-reports/sustainability', 'snippet': 'The Advancing Climate Solutions Report includes 2022 greenhouse gas emissions performance data and Scope 3 Category 11 estimates for full-year 2022 as of March ...'}, {'title': 'Environmental, Social and Governance (ESG) Report - Nielsen', 'link': 'https://www.nielsen.com/about-us/responsibility-and-sustainability/esg-report/', 'snippet': "Nielsen's global annual environmental, social and governance (ESG) report shares information around our six key ESG topic areas."}, {'title': 'Sustainability - Cleveland-Cliffs Inc.', 'link': 'https://www.clevelandcliffs.com/sustainability', 'snippet': 'The Cleveland-Cliffs Sustainability Report 2023 covers information and data for calendar year 2023, unless otherwise noted. This report is structured around ...'}, {'title': 'Sustainability Report Archives - ConocoPhillips', 'link': 'https://www.conocophillips.com/company-reports-resources/sustainability-reporting/sustainability-report-regional-archives/', 'snippet': '2022 Sustainability PDF Report · 2022 Climate Change PDF Report · 2022-2023 Plan for the Net Zero Energy Transition PDF · 2021 Sustainability PDF Report · 2021 ...'}] |
+| search_results | [{'title': 'ESG reporting and preparation of a Sustainability Report - PwC', 'link': 'https://www.pwc.com/sk/en/environmental-social-and-corporate-governance-esg/esg-reporting.html', 'snippet': 'An ESG report is a report published by a company or organization about environmental, social and governance (ESG) impacts. It enables the company to be more ...'}, {'title': 'Top 5 ESG Report Examples from Leading Organizations - Lythouse', 'link': 'https://www.lythouse.com/blog/esg-report-examples-from-leading-organizations-in-multiple-industries', 'snippet': 'Top-notch ESG Report Examples from leading organizations across diverse industries. Gain insights into sustainability, social responsibility & governance.'}, {'title': 'ESG, Sustainability or Impact Report: What to Consider Before You ...', 'link': 'https://www.isosgroup.com/blog/2024/3/26/esg-sustainability-or-impact-report-what-to-consider-before-you-rename-your-report', 'snippet': "Let's start with a rundown of the most common report names and their definitions before diving into our recommendations."}, {'title': 'Corporate Sustainability Reports - Sustainable Business', 'link': 'https://libguides.udayton.edu/c.php?g=1385965&p=10282314', 'snippet': 'Environmental reporting database containing comprehensive data submitted by over 23,000 companies. Requires free account; search by company ...'}, {'title': 'Sustainability Reports & Case Studies', 'link': 'https://sustainability.google/reports/', 'snippet': "Access Google's sustainability reports, including environmental, product, and supplier responsibility reports and case studies in PDF format."}] |
 
 
 ## Summary

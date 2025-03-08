@@ -5,13 +5,13 @@
 ## Plan
 
 1. **Search for Volkswagen's 2023 Sustainability Report** (using search)
-2. **Fetch the Volkswagen 2023 Sustainability Report** (using browser)
+2. **Fetch the 2023 Sustainability Report URL from search results** (using browser)
 3. **Extract Scope 1 and Scope 2 emissions data for 2023 from the report** (using browser)
 4. **Search for Volkswagen's 2021 Sustainability Report or relevant emissions data** (using search)
-5. **Fetch Volkswagen's 2021 emissions data** (using browser)
+5. **Fetch the 2021 report/data URL from search results** (using browser)
 6. **Extract Scope 1 and Scope 2 emissions data for 2021 from the report** (using browser)
 7. **Calculate the sum of Scope 1 and Scope 2 emissions for both 2021 and 2023** (using present)
-8. **Present the percentage reduction** (using present)
+8. **Present the final percentage reduction** (using present)
 
 ## Results
 
@@ -24,7 +24,7 @@
 1. [Group Sustainability Report 2023 - Volkswagen Group](https://www.volkswagen-group.com/en/publications/more/group-sustainability-report-2023-2674)
    Group Sustainability Report 2023 ... The specified fuel consumption and emission data does not refer to a single vehicle and is not part of the ...
 
-### 2. Fetch the Volkswagen 2023 Sustainability Report
+### 2. Fetch the 2023 Sustainability Report URL from search results
 **Status**: success
 
 **Source**: [Group Sustainability Report 2023 | Volkswagen Group](https://www.volkswagen-group.com/en/publications/more/group-sustainability-report-2023-2674)
@@ -64,7 +64,7 @@ report-2023-2674%0A%0A)
 **Source**: [Group Sustainability Report 2023 | Volkswagen Group](https://www.volkswagen-group.com/en/publications/more/group-sustainability-report-2023-2674)
 
 
-Volkswagen Group's 2023 Sustainability Report is now available for download.  The report details the company's environmental, social, and governance performance.
+Volkswagen Group's 2023 Sustainability Report is now available for download.  The report details the group's environmental and social performance.  Downloadable links and social media sharing options are provided.
 
 ### 4. Search for Volkswagen's 2021 Sustainability Report or relevant emissions data
 **Status**: success
@@ -75,7 +75,7 @@ Volkswagen Group's 2023 Sustainability Report is now available for download.  Th
 1. [Volkswagen Passenger Cars again significantly exceeds European ...](https://www.volkswagen-newsroom.com/en/press-releases/volkswagen-passenger-cars-again-significantly-exceeds-european-co2-fleet-targets-for-2021-7710)
    Volkswagen Passenger Cars has exceeded the ambitious European CO 2 fleet targets for 2021 and produced around 5.5 million grams fewer CO 2 than required by law.
 
-### 5. Fetch Volkswagen's 2021 emissions data
+### 5. Fetch the 2021 report/data URL from search results
 **Status**: success
 
 **Source**: [Volkswagen Passenger Cars again significantly exceeds European CO2 fleet targets for 2021 | Volkswagen Newsroom](https://www.volkswagen-newsroom.com/en/press-releases/volkswagen-passenger-cars-again-significantly-exceeds-european-co2-fleet-targets-for-2021-7710)
@@ -119,32 +119,32 @@ will be more than €1 billion for hybridizat... [Content truncated, 1698 more c
 **Source**: [Volkswagen Passenger Cars again significantly exceeds European CO2 fleet targets for 2021 | Volkswagen Newsroom](https://www.volkswagen-newsroom.com/en/press-releases/volkswagen-passenger-cars-again-significantly-exceeds-european-co2-fleet-targets-for-2021-7710)
 
 
-Volkswagen significantly exceeded EU's 2021 CO2 emission targets for new passenger cars, achieving 113 g/km vs. the 119 g/km target.  All-electric vehicle deliveries doubled in 2021,  and the company plans to further accelerate its e-mobility strategy with new models and increased investment (€18 billion, €14 billion for e-mobility).  Volkswagen aims for net carbon neutrality by 2050 and at least 70% all-electric vehicle sales in Europe by 2030.
+Volkswagen significantly exceeded EU's 2021 CO2 emission targets for new cars, emitting 5.5 million grams less than the legal limit.  EV deliveries doubled in 2021, and the electric offensive continues with new models and €18 billion in planned investments, primarily in e-mobility.  The company aims for net carbon neutrality by 2050.
 
 ### 7. Calculate the sum of Scope 1 and Scope 2 emissions for both 2021 and 2023
 **Status**: success
 
 # Information
 
-Calculate percentage reduction: 2021 emissions = [SUM_2021], 2023 emissions = [SUM_2023]
+Calculate the percentage reduction in total emissions (Scope 1 + Scope 2) from 2021 to 2023 using the extracted data.  Provide the formula and the result.
 
 ## Summary
 
-This is a summary based on the request: 'Calculate percentage reduction: 2021 emissions = [SUM_2021], 2023 emissions = [SUM_2023]'
+This is a summary based on the request: 'Calculate the percentage reduction in total emissions (Scope 1 + Scope 2) from 2021 to 2023 using the extracted data.  Provide the formula and the result.'
 
 ### Key Points
 - **search_results**: [{'title': 'Volkswagen Passenger Cars again significantly exceeds European ...', 'link': 'https://www.volkswagen-newsroom.com/en/press-releases/volkswagen-passenger-cars-again-significantly-exceeds-european-co2-fleet-targets-for-2021-7710', 'snippet': 'Volkswagen Passenger Cars has exceeded the ambitious European CO 2 fleet targets for 2021 and produced around 5.5 million grams fewer CO 2 than required by law.'}]
 
-### 8. Present the percentage reduction
+### 8. Present the final percentage reduction
 **Status**: success
 
-# Volkswagen Greenhouse Gas Emission Reduction
+# Volkswagen Greenhouse Gas Emission Reduction (2021-2023)
 
-The percentage reduction in Volkswagen's Scope 1 and Scope 2 greenhouse gas emissions from 2021 to 2023 is: [PERCENTAGE_REDUCTION]
+Present the final percentage reduction in Scope 1 and Scope 2 emissions from 2021 to 2023 as a single number.
 
 ## Summary
 
-This is a summary based on the request: 'The percentage reduction in Volkswagen's Scope 1 and Scope 2 greenhouse gas emissions from 2021 to 2023 is: [PERCENTAGE_REDUCTION]'
+This is a summary based on the request: 'Present the final percentage reduction in Scope 1 and Scope 2 emissions from 2021 to 2023 as a single number.'
 
 ### Key Points
 - **search_results**: [{'title': 'Volkswagen Passenger Cars again significantly exceeds European ...', 'link': 'https://www.volkswagen-newsroom.com/en/press-releases/volkswagen-passenger-cars-again-significantly-exceeds-european-co2-fleet-targets-for-2021-7710', 'snippet': 'Volkswagen Passenger Cars has exceeded the ambitious European CO 2 fleet targets for 2021 and produced around 5.5 million grams fewer CO 2 than required by law.'}]

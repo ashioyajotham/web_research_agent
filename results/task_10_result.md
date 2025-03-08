@@ -4,194 +4,205 @@
 
 ## Plan
 
-1. **Identify the company name.  This step is crucial as the task lacks a specified company.** (using null)
-2. **Perform initial search for company revenue information using a general query.** (using search)
-3. **Analyze search results to identify potential candidate companies that may have exceeded €1B in revenue in 2023.** (using null)
-4. **Select a company from the candidate list for verification.  Prioritize companies appearing in multiple search results.** (using null)
-5. **Refine the search using the selected company's name.** (using search)
-6. **Check top search results for official financial statements or news articles confirming 2023 revenue.** (using browser)
-7. **Extract the 2023 revenue figure from the source identified in the previous step.** (using null)
-8. **Note the source of the revenue information (e.g., company website, financial news article).** (using null)
-9. **Summarize the findings, stating whether the company earned more than €1B in revenue in 2023 and providing the source of the information.** (using present)
+1. **Search for companies with over €1B revenue in 2023 using a broad query.** (using search)
+2. **Process search results to identify potential candidates and extract company names.** (using browser)
+3. **Refine search using individual company names identified in the previous step.** (using search)
+4. **Verify revenue figures from reputable financial news sources and company reports.** (using browser)
+5. **Extract relevant information: company name, revenue amount, source, and date of reporting.** (using browser)
+6. **Organize the extracted information into a list.** (using present)
 
 ## Results
 
-### 1. Identify the company name.  This step is crucial as the task lacks a specified company.
-**Status**: error
-
-**Error**: Tool 'null' not found
-
-### 2. Perform initial search for company revenue information using a general query.
+### 1. Search for companies with over €1B revenue in 2023 using a broad query.
 **Status**: success
 
-**Search Query**: Company revenue 2023
-**Found**: 5 results
+**Search Query**: company revenue 2023 over 1 billion euros
+**Found**: 9 results
 
-1. [List of largest companies by revenue - Wikipedia](https://en.wikipedia.org/wiki/List_of_largest_companies_by_revenue)
-   List ; 1, Walmart · $648,125 ; 2, Amazon · $574,785 ; 3, State Grid Corporation of China · $545,948 ; 4, Saudi Aramco · $488,980 ; 5, China Petrochemical Corporation ...
+1. [VusionGroup: EUR 1 billion adjusted revenue I Strong improvement ...](https://www.actusnews.com/en/vusiongroup/pr/2025/02/26/vusiongroup-eur-1-billion-adjusted-revenue-i-strong-improvement-in-profitability-i-record-free-cash-flow-generation)
+   Revenue of €1,011m on an adjusted basis1, up 25% (€955m in IFRS) · Order intake at €1.6bn, up 71% · Adjusted1 Variable Cost Margin (VCM) of €297m, ...
 
-2. [Highest revenue companies 2023 - Statista](https://www.statista.com/statistics/263265/top-companies-in-the-world-by-revenue/)
-   With nearly 640 billion U.S. dollars in revenue, Walmart topped the ranking of the hundred largest companies globally, followed by Amazon.
+2. [Boskalis annual results 2023: Historic record-breaking year with ...](https://boskalis.com/press/press-releases-and-company-news/boskalis-annual-results-2023-historic-record-breaking-year-with-more-than-eur-1-billion-ebitda-and-eur-600-million-net-profit)
+   Boskalis annual results 2023: Historic record-breaking year with more than EUR 1 billion EBITDA and EUR 600 million net profit.
 
-3. [Ranked: The World's Largest Companies by Revenue (2019-2024)](https://www.visualcapitalist.com/worlds-10-largest-companies-by-revenue-2019-2024/)
-   The world's 10 largest companies by revenue generate roughly $4.6 trillion in annual sales, exceeding the GDP of countries like Japan and Germany.
+3. [Loxam Group achieves revenue of €2.6 billion for the first time, and ...](https://loxam.com/en/results-2023-revenue/)
+   Group revenue of 2.6 billion euros in 2023, up 6.2%. For the first time, revenue of over 1 billion euros in France, up 6.6% on 2022.
 
-4. [Fortune Global 500 – The largest companies in the world by revenue](https://fortune.com/ranking/global500/)
-   The corporations on our annual list of the world's 500 largest companies posted near-flat, but still record-breaking aggregate revenues of $41 trillion in 2023.
+4. [SIXT Exceeds the Four-billion-euro Revenue Mark for the First Time](https://www.businesswire.com/news/home/20250227925793/en/SIXT-Exceeds-the-Four-billion-euro-Revenue-Mark-for-the-First-Time-Third-Record-Year-in-a-Row)
+   Continued growth: revenue increase of 10.5% to EUR 4.00 billion sets a new record; expansion continues in all three regional segments ...
 
-5. [Companies ranked by revenue - CompaniesMarketCap.com](https://companiesmarketcap.com/largest-companies-by-revenue/)
-   Ranking of the world's top publicly traded stock companies by revenue (TTM)
+5. [DHL Group: Strong fourth quarter with revenue and earnings growth](https://group.dhl.com/en/media-relations/press-releases/2025/dhl-group-annual-earnings-2024.html)
+   Group revenue up 3 percent year-on-year in 2024, at EUR 84.2 billion; EBIT at EUR 5.9 billion (2023: EUR 6.3 billion) and FCF (excluding M&A) at EUR 3.0 billion ...
 
-### 3. Analyze search results to identify potential candidate companies that may have exceeded €1B in revenue in 2023.
+6. [Mango achieves record sales in 2023 and presents new Strategic ...](https://www.mangofashiongroup.com/en/w/mango-bate-r%C3%A9cord-de-ventas-en-2023-y-presenta-un-nuevo-plan-estrat%C3%A9gico-para-superar-los-4.000-millones-en-2026)
+   Thanks to Mango's differential value proposition, the company's turnover in 2023 amounted to 3.104 billion euros, 15% more than in 2022.
+
+7. [Bertelsmann Grows Group profit by more than 25 percent to €1.3 ...](https://www.bertelsmann.com/news-and-media/news/bertelsmann-grows-group-profit-by-more-than-25-percent-to-1.3-billion-in-2023.jsp)
+   We grew our Group profit by more than 25 percent to 1.3 billion euros. This put it above one billion euros for the ninth consecutive year.
+
+8. [List of largest companies in Europe by revenue - Wikipedia](https://en.wikipedia.org/wiki/List_of_largest_companies_in_Europe_by_revenue)
+   In 2023, largest company in Europe was the Volkswagen Group with revenue of US$348 billion.
+
+9. [Revenue of the Unilever Group worldwide 2023, by product segment](https://www.statista.com/statistics/269200/revenue-of-the-unilever-group-worldwide-by-product-segment/)
+   In 2023, the global revenue generated by the Unilever Group's personal care product segment added up to about 13.8 billion euros.
+
+### 2. Process search results to identify potential candidates and extract company names.
 **Status**: error
 
-**Error**: Tool 'null' not found
+**Error**: Error accessing URL https://www.actusnews.com/en/vusiongroup/pr/2025/02/26/vusiongroup-eur-1-billion-adjusted-revenue-i-strong-improvement-in-profitability-i-record-free-cash-flow-generation: 403 Client Error: Forbidden for url: https://www.actusnews.com/en/vusiongroup/pr/2025/02/26/vusiongroup-eur-1-billion-adjusted-revenue-i-strong-improvement-in-profitability-i-record-free-cash-flow-generation
 
-### 4. Select a company from the candidate list for verification.  Prioritize companies appearing in multiple search results.
-**Status**: error
-
-**Error**: Tool 'null' not found
-
-### 5. Refine the search using the selected company's name.
+### 3. Refine search using individual company names identified in the previous step.
 **Status**: success
 
-**Search Query**: [Company Name] financial report 2023
+**Search Query**: [Company Name] 2023 revenue
 **Found**: 3 results
 
-1. [Annual Reports](https://www.annualreports.com/)
-   Annual reports for 10,336 international companies. Search 144,484 annual reports from 10,336 global companies help you make the right investment decision.
+1. [Highest revenue companies 2023 - Statista](https://www.statista.com/statistics/263265/top-companies-in-the-world-by-revenue/)
+   With nearly 640 billion U.S. dollars in revenue, Walmart topped the ranking of the hundred largest companies globally, followed by Amazon.
 
-2. [[PDF] Amazon.com, Inc. 2023 Annual Report](https://s2.q4cdn.com/299287126/files/doc_financials/2024/ar/Amazon-com-Inc-2023-Annual-Report.pdf)
-   Operating income in 2023 improved 201% YoY from $12.2B (an operating margin of 2.4%) to $36.9B (an operating margin of 6.4%).
+2. [Fortune Global 500 – The largest companies in the world by revenue](https://fortune.com/ranking/global500/)
+   The corporations on our annual list of the world's 500 largest companies posted near-flat, but still record-breaking aggregate revenues of $41 trillion in 2023.
 
-3. [Annual Report and Accounts 2023 | Unilever](https://www.unilever.com/investors/annual-report-and-accounts/)
-   Annual Report and Accounts 2023. Stepping up our execution to deliver improved performance. Download our latest report. Annual Report and Accounts (PDF 14.76 MB) ...
+3. [List of largest companies in the United States by revenue - Wikipedia](https://en.wikipedia.org/wiki/List_of_largest_companies_in_the_United_States_by_revenue)
+   Below are the 10 largest private companies by revenue in 2023 (mostly for fiscal year 2022), according to Forbes. Rank, Name, Industry, Revenue (USD ...
 
-### 6. Check top search results for official financial statements or news articles confirming 2023 revenue.
+### 4. Verify revenue figures from reputable financial news sources and company reports.
 **Status**: success
 
-**Source**: [AnnualReports.com](https://www.annualreports.com/)
+**Source**: [Highest revenue companies 2023 | Statista](https://www.statista.com/statistics/263265/top-companies-in-the-world-by-revenue/)
 
 
-# Annual reports for 10,336 international companies
+  * [Economy & Politics](/markets/2535/economy-politics/)›
+  * [Economy](/markets/2535/topic/970/economy/)
 
-Search 144,484 annual reports from 10,336 global companies help you make the
-right investment decision
+[](/accounts/pa) Premium
 
-Search for a Report
+**Premium statistics**
 
-AnnualReports.com is the most complete and up-to-date listing of annual report
-on the internet.
+Industry-specific and extensively researched technical data (partially from
+exclusive partnerships).  
+  
+A paid subscription is required for full access.
 
-## Featured Reports
+[__Read more](/accounts/pa)
 
-  * Financial Columbia Property Trust Inc [View Report](/Company/columbia-property-trust-inc)
-  * Basic Materials Teck [View Report](/Company/teck)
-  * Financial Primerica, Inc. [View Report](/Company/primerica-inc)
-  * Healthcare MSA Safety Inc. [View Report](/Company/msa-safety-inc)
+#  Top companies in the world by revenue 2023
 
-[Browse Reports](/Featured/Reports)
+Published by
 
-## Featured Companies
+[Einar H. Dyvik](/aboutus/our-research-commitment/3018/einar-h-dyvik),
 
-  * [](/Company/workiva-inc)
+Jul 4, 2024
 
-Ticker : WK
+With nearly 640 billion U.S. dollars in revenue, Walmart topped the ranking of
+the hundred largest companies globally, followed by Amazon. Walmart was also
+the [largest company in the world based on its number of employees](
+/statistics/264671/top-20-companies-based-on-number-of-employees/ ), with some
+2.3 million all over the world.  
+  
+**Largest corporations based on revenue - additional information**  
+  
+The concept of revenue itself might slightly differ depending on country or
+even from one company to another. It usually refers to the income resulted
+from normal business activities, such as the sale of goods and services to
+customers.  
+  
 
-  * [](/Company/timberland-bancorp-inc)
+## Walmart
 
-Ticker : TSBK
+The American-based multinational corporation Walmart was founded in 1962 and
+currently operates [over 10,600 stores worldwide](/statistics/256172/total-
+number-of-walmart-stores-worldwide/), out of which [4,700 are in the United
+States alone](  /statistics/269425/total-number-of-walmart-stores-in-the-
+united-states-by-type/ ). In 2023, Walmart was ranked the [third most valuable
+retail brand in the world](  /statistics/267870/brand-value-of-the-
+leading-20-most-valuable-retailers-worldwide/ ), with a brand value of about
+60 billion U.S. dollars.  
+  
+[Follow this link to get access to the top 500 companies from all industries
+list.](/study/30881/top-500-companies-from-all-industries-global/)
 
-  * [](/Company/avis-budget-group-inc)
+Read more
 
-Ticker : CAR
+##  The 100 largest companies in the world ranked by revenue in 2023  (in
+billion U.S. dollars)
 
-  * [](/Company/air-transport-services-group-inc)
+Characteristic| Revenue in billio... [Content truncated, 22171 more characters]
 
-Ticker : ATSG
-
-  * [](/Company/ambac-financial-group-inc-1)
-
-Ticker : AMBC
-
-  * [](/Company/google-inc)
-
-Ticker : GOOG
-
-Find Companies & Annual Reports
-
-  * ## Popular Industries
-
-  * ## Alphabetically
-
-    * [#](/Companies?a=#)
-    * [A](/Companies?a=A)
-    * [B](/Companies?a=B)
-    * [C](/Companies?a=C)
-    * [D](/Companies?a=D)
-    * [E](/Companies?a=E)
-    * [F](/Companies?a=F)
-    * [G](/Companies?a=G)
-    * [H](/Companies?a=H)
-    * [I](/Companies?a=I)
-    * [J](/Companies?a=J)
-    * [K](/Companies?a=K)
-    * [L](/Companies?a=L)
-    * [M](/Companies?a=M)
-    * [N](/Companies?a=N)
-    * [O](/Companies?a=O)
-    * [P](/Companies?a=P)
-    * [Q](/Companies?a=Q)
-    * [R](/Companies?a=R)
-    * [S](/Companies?a=S)
-    * [T](/Companies?a=T)
-    * [U](/Companies?a=U)
-    * [V](/Companies?a=V)
-    * [W](/Companies?a=W)
-    * [X](/Companies?a=X)
-    * [Y](/Companies?a=Y)
-    * [Z](/Companies?a=Z)
-  * ## Search by Stock Exchange
-
-    * [](/Companies?exch=1)
-
-    * [](/Companies?exch=7)
-
-    * [](/Companies?exch=5)
-
-    * [](/Companies?exch=2)
-
-    * [](/Companies?exch=9)
-
-    * [](/Companies?exch=8)
-
-    * [](/Companies?exch=3)
-
-    * [](/Co... [Content truncated, 592 more characters]
-
-### 7. Extract the 2023 revenue figure from the source identified in the previous step.
-**Status**: error
-
-**Error**: Tool 'null' not found
-
-### 8. Note the source of the revenue information (e.g., company website, financial news article).
-**Status**: error
-
-**Error**: Tool 'null' not found
-
-### 9. Summarize the findings, stating whether the company earned more than €1B in revenue in 2023 and providing the source of the information.
+### 5. Extract relevant information: company name, revenue amount, source, and date of reporting.
 **Status**: success
 
-# Information
+**Source**: [Highest revenue companies 2023 | Statista](https://www.statista.com/statistics/263265/top-companies-in-the-world-by-revenue/)
 
-Summarize whether [Company Name] earned more than €1B in revenue in 2023 based on the information gathered. Include the source.
 
-## Summary
+  * [Economy & Politics](/markets/2535/economy-politics/)›
+  * [Economy](/markets/2535/topic/970/economy/)
 
-This is a summary based on the request: 'Summarize whether [Company Name] earned more than €1B in revenue in 2023 based on the information gathered. Include the source.'
+[](/accounts/pa) Premium
 
-### Key Points
-- **search_results**: [{'title': 'Annual Reports', 'link': 'https://www.annualreports.com/', 'snippet': 'Annual reports for 10,336 international companies. Search 144,484 annual reports from 10,336 global companies help you make the right investment decision.'}, {'title': '[PDF] Amazon.com, Inc. 2023 Annual Report', 'link': 'https://s2.q4cdn.com/299287126/files/doc_financials/2024/ar/Amazon-com-Inc-2023-Annual-Report.pdf', 'snippet': 'Operating income in 2023 improved 201% YoY from $12.2B (an operating margin of 2.4%) to $36.9B (an operating margin of 6.4%).'}, {'title': 'Annual Report and Accounts 2023 | Unilever', 'link': 'https://www.unilever.com/investors/annual-report-and-accounts/', 'snippet': 'Annual Report and Accounts 2023. Stepping up our execution to deliver improved performance. Download our latest report. Annual Report and Accounts (PDF 14.76 MB) ...'}]
+**Premium statistics**
+
+Industry-specific and extensively researched technical data (partially from
+exclusive partnerships).  
+  
+A paid subscription is required for full access.
+
+[__Read more](/accounts/pa)
+
+#  Top companies in the world by revenue 2023
+
+Published by
+
+[Einar H. Dyvik](/aboutus/our-research-commitment/3018/einar-h-dyvik),
+
+Jul 4, 2024
+
+With nearly 640 billion U.S. dollars in revenue, Walmart topped the ranking of
+the hundred largest companies globally, followed by Amazon. Walmart was also
+the [largest company in the world based on its number of employees](
+/statistics/264671/top-20-companies-based-on-number-of-employees/ ), with some
+2.3 million all over the world.  
+  
+**Largest corporations based on revenue - additional information**  
+  
+The concept of revenue itself might slightly differ depending on country or
+even from one company to another. It usually refers to the income resulted
+from normal business activities, such as the sale of goods and services to
+customers.  
+  
+
+## Walmart
+
+The American-based multinational corporation Walmart was founded in 1962 and
+currently operates [over 10,600 stores worldwide](/statistics/256172/total-
+number-of-walmart-stores-worldwide/), out of which [4,700 are in the United
+States alone](  /statistics/269425/total-number-of-walmart-stores-in-the-
+united-states-by-type/ ). In 2023, Walmart was ranked the [third most valuable
+retail brand in the world](  /statistics/267870/brand-value-of-the-
+leading-20-most-valuable-retailers-worldwide/ ), with a brand value of about
+60 billion U.S. dollars.  
+  
+[Follow this link to get access to the top 500 companies from all industries
+list.](/study/30881/top-500-companies-from-all-industries-global/)
+
+Read more
+
+##  The 100 largest companies in the world ranked by revenue in 2023  (in
+billion U.S. dollars)
+
+Characteristic| Revenue in billio... [Content truncated, 22171 more characters]
+
+### 6. Organize the extracted information into a list.
+**Status**: success
+
+# Companies with over €1B Revenue in 2023
+
+[Extracted data]
+
+- **search_results**:
+  - {'title': 'Highest revenue companies 2023 - Statista', 'link': 'https://www.statista.com/statistics/263265/top-companies-in-the-world-by-revenue/', 'snippet': 'With nearly 640 billion U.S. dollars in revenue, Walmart topped the ranking of the hundred largest companies globally, followed by Amazon.'}
+  - {'title': 'Fortune Global 500 – The largest companies in the world by revenue', 'link': 'https://fortune.com/ranking/global500/', 'snippet': "The corporations on our annual list of the world's 500 largest companies posted near-flat, but still record-breaking aggregate revenues of $41 trillion in 2023."}
+  - {'title': 'List of largest companies in the United States by revenue - Wikipedia', 'link': 'https://en.wikipedia.org/wiki/List_of_largest_companies_in_the_United_States_by_revenue', 'snippet': 'Below are the 10 largest private companies by revenue in 2023 (mostly for fiscal year 2022), according to Forbes. Rank, Name, Industry, Revenue (USD ...'}
 
 
 ## Summary

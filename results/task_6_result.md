@@ -4,25 +4,24 @@
 
 ## Plan
 
-1. **Search for a list of EU countries using Google** (using search)
-2. **Extract the list of EU countries from the top search result** (using browser)
-3. **Clean and format the extracted list of countries** (using present)
-4. **Further refine the definition of 'based in the EU'** (using search)
-5. **Extract and present the definition** (using browser)
-6. **Present the final list of EU countries and the definition of 'based in the EU'** (using present)
+1. **Search for a list of EU member states** (using search)
+2. **Extract the list of EU member states from the top search result** (using browser)
+3. **Search for definitions of 'based in' for businesses in the EU context** (using search)
+4. **Extract relevant definitions of 'based in' from the search results** (using browser)
+5. **Organize the list of EU member states and the definitions of 'based in'** (using present)
 
 ## Results
 
-### 1. Search for a list of EU countries using Google
+### 1. Search for a list of EU member states
 **Status**: success
 
-**Search Query**: list of EU countries
+**Search Query**: EU member states
 **Found**: 1 results
 
 1. [EU countries | European Union](https://european-union.europa.eu/principles-countries-history/eu-countries_en)
-   The 27 countries of the European Union · Austria · Belgium · Bulgaria · Croatia · Cyprus · Czechia · Denmark · Estonia ...
+   The 27 countries of the European Union · Austria · Belgium · Bulgaria · Croatia · Cyprus · Czechia · Denmark · Estonia; Finland; France; Germany ...
 
-### 2. Extract the list of EU countries from the top search result
+### 2. Extract the list of EU member states from the top search result
 **Status**: success
 
 **Source**: [EU countries | European Union](https://european-union.europa.eu/principles-countries-history/eu-countries_en)
@@ -97,42 +96,42 @@ since 2007 and more about Estonia’s participation in the EU.
 EU Member State since 1995, Euro area member since 1999, Schengen area member
 since 2001 and more about Finland’s participation ... [Content truncated, 2316 more characters]
 
-### 3. Clean and format the extracted list of countries
+### 3. Search for definitions of 'based in' for businesses in the EU context
 **Status**: success
 
-# European Union Member States
+**Search Query**: definitions of 'based in' for EU businesses
+**Found**: 3 results
 
-Convert the extracted text into a neatly formatted list of EU countries. Remove any duplicates and ensure each country is on a new line.
+1. [SME definition - Internal Market, Industry, Entrepreneurship and SMEs](https://single-market-economy.ec.europa.eu/smes/sme-fundamentals/sme-definition_en)
+   Small and medium-sized enterprises (SMEs) represent 99% of all businesses in the EU. The definition of an SME is important for access to finance and EU support ...
+
+2. [Setting up a European Company (SE) - Your Europe](https://europa.eu/youreurope/business/running-business/developing-business/setting-up-european-company/index_en.htm)
+   A type of public limited-liability company that allows you to run your business in different European countries using a single set of rules.
+
+3. [What does “where are you based?” Mean : r/ENGLISH - Reddit](https://www.reddit.com/r/ENGLISH/comments/16a7xee/what_does_where_are_you_based_mean/)
+   It means where are you geographically located, often where do you work, what city you work from. Some companies have locations all over the ...
+
+### 4. Extract relevant definitions of 'based in' from the search results
+**Status**: success
+
+**Source**: [SME definition - European Commission](https://single-market-economy.ec.europa.eu/smes/sme-fundamentals/sme-definition_en)
+
+
+EU SMEs (99% of EU businesses) are defined by staff count, turnover, or balance sheet total.  Size categories (micro, small, medium) have specific thresholds.  SME status grants access to EU support programs and may reduce administrative burdens.  The EU regularly monitors and evaluates the SME definition.
+
+### 5. Organize the list of EU member states and the definitions of 'based in'
+**Status**: success
+
+# EU Member States and Clarification on 'Based in'
+
+Present the following information as a list:
+EU Member States: [LIST_FROM_STEP_2]
+Definitions of 'based in': [SUMMARY_FROM_STEP_4]
 
 - **search_results**:
-  - {'title': 'EU countries | European Union', 'link': 'https://european-union.europa.eu/principles-countries-history/eu-countries_en', 'snippet': 'The 27 countries of the European Union · Austria · Belgium · Bulgaria · Croatia · Cyprus · Czechia · Denmark · Estonia ...'}
-
-### 4. Further refine the definition of 'based in the EU'
-**Status**: success
-
-**Search Query**: 'based in the EU' definition
-**Found**: 1 results
-
-1. [Founding agreements | European Union](https://european-union.europa.eu/principles-countries-history/principles-and-values/founding-agreements_en)
-   The European Union is based on the rule of law. This means that every action taken by the EU is founded on treaties that have been approved voluntarily and ...
-
-### 5. Extract and present the definition
-**Status**: success
-
-**Source**: [Founding agreements | European Union](https://european-union.europa.eu/principles-countries-history/principles-and-values/founding-agreements_en)
-
-
-The EU operates under the rule of law, with actions based on treaties democratically approved by member states.  Treaties define EU objectives, institutional rules, decision-making, and member state relations.  Key treaties, chronologically from Lisbon (2009) to the founding Treaties of Rome (1957), have evolved the EU, expanding powers, improving efficiency, and adding members.  These treaties are legally binding and available online.
-
-### 6. Present the final list of EU countries and the definition of 'based in the EU'
-**Status**: success
-
-# Information
-
-Combine the list of EU countries and the definition of 'based in the EU'. Present this information clearly and concisely.
-
-- **search_results**:
-  - {'title': 'Founding agreements | European Union', 'link': 'https://european-union.europa.eu/principles-countries-history/principles-and-values/founding-agreements_en', 'snippet': 'The European Union is based on the rule of law. This means that every action taken by the EU is founded on treaties that have been approved voluntarily and ...'}
+  - {'title': 'SME definition - Internal Market, Industry, Entrepreneurship and SMEs', 'link': 'https://single-market-economy.ec.europa.eu/smes/sme-fundamentals/sme-definition_en', 'snippet': 'Small and medium-sized enterprises (SMEs) represent 99% of all businesses in the EU. The definition of an SME is important for access to finance and EU support ...'}
+  - {'title': 'Setting up a European Company (SE) - Your Europe', 'link': 'https://europa.eu/youreurope/business/running-business/developing-business/setting-up-european-company/index_en.htm', 'snippet': 'A type of public limited-liability company that allows you to run your business in different European countries using a single set of rules.'}
+  - {'title': 'What does “where are you based?” Mean : r/ENGLISH - Reddit', 'link': 'https://www.reddit.com/r/ENGLISH/comments/16a7xee/what_does_where_are_you_based_mean/', 'snippet': 'It means where are you geographically located, often where do you work, what city you work from. Some companies have locations all over the ...'}
 
 
 ## Summary

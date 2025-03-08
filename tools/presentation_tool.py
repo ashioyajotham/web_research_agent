@@ -142,7 +142,7 @@ class PresentationTool(BaseTool):
             output.append(f"  - Based on: {prompt}")
             output.append("- No structured data was provided")
         
-        return "\n.join(output)
+        return "\n".join(output)
     
     def _format_as_summary(self, title: str, prompt: str, data: Any) -> str:
         """Format information as a markdown summary."""

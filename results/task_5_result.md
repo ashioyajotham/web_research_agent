@@ -4,117 +4,75 @@
 
 ## Plan
 
-1. **Define the specific criteria for company selection.  This needs to be filled in based on the actual criteria for the task.** (using manual)
-2. **Construct search queries based on the defined criteria.** (using manual)
-3. **Search Google using the constructed queries.** (using search)
-4. **Process the search results from Google, extracting company names and relevant details.** (using browser)
-5. **Repeat step 4 for other relevant search results obtained in step 3.** (using browser)
-6. **Consolidate the extracted company names and details from all search results.** (using manual)
-7. **Remove duplicate company entries.** (using manual)
-8. **Present the final list of companies meeting the specified criteria.** (using present)
+1. **Define the specific criteria for company selection.  This will need to be filled in with the actual criteria.** (using manual)
+2. **Generate initial search queries based on the defined criteria.** (using manual)
+3. **Perform Google searches using the generated queries.** (using search)
+4. **Iterate through the remaining search queries, accumulating results.** (using search)
+5. **Consolidate the results from all searches into a single list of company names.** (using manual)
+6. **Gather additional company details (as needed) from reputable sources using the browser tool.** (using browser)
+7. **Present the final list of company names that meet all specified criteria.** (using present)
 
 ## Results
 
-### 1. Define the specific criteria for company selection.  This needs to be filled in based on the actual criteria for the task.
+### 1. Define the specific criteria for company selection.  This will need to be filled in with the actual criteria.
 **Status**: error
 
 **Error**: Tool 'manual' not found
 
-### 2. Construct search queries based on the defined criteria.
+### 2. Generate initial search queries based on the defined criteria.
 **Status**: error
 
 **Error**: Tool 'manual' not found
 
-### 3. Search Google using the constructed queries.
+### 3. Perform Google searches using the generated queries.
 **Status**: success
 
-**Search Query**: list of companies meeting criteria [insert specific criteria here]
-**Found**: 10 results
+**Search Query**: https://www.volkswagen-newsroom.com/en/press-releases/volkswagen-passenger-cars-again-significantly-exceeds-european-co2-fleet-targets-for-2021-7710
+**Found**: 5 results
 
-1. [How do I create a list of names based on specific criteria?](https://answers.microsoft.com/en-us/msoffice/forum/all/how-do-i-create-a-list-of-names-based-on-specific/408c5e14-ded9-4f83-998e-298039df9f0f)
-   Here are two options that work for different versions of Excel: Option 1: Using Advanced Filter (Works in all Excel versions)
+1. [Volkswagen Passenger Cars again significantly exceeds European ...](https://www.volkswagen-newsroom.com/en/press-releases/volkswagen-passenger-cars-again-significantly-exceeds-european-co2-fleet-targets-for-2021-7710)
+   Volkswagen Passenger Cars has exceeded the ambitious European CO 2 fleet targets for 2021 and produced around 5.5 million grams fewer CO 2 than required by law.
 
-2. [Examples of query criteria - Microsoft Support](https://support.microsoft.com/en-us/office/examples-of-query-criteria-3197228c-8684-4552-ac03-aba746fb29d8)
-   To add criteria to an Access query, open the query in Design view and identify the fields (columns) you want to specify criteria for. If the field is not in the ...
+2. [25 Jan 2022 | BMW iX Excels On Autobahn High ... - EV News Daily](https://www.evnewsdaily.com/2022/01/25/25-jan-2022-bmw-ix-excels-on-autobahn-high-speed-test/)
+   Based on preliminary figures, Volkswagen Passenger Cars has exceeded the ambitious European CO2 fleet targets for 2021 and produced around 5.5 million grams ...
 
-3. [Create and use lists - HubSpot Knowledge Base](https://knowledge.hubspot.com/lists/create-active-or-static-lists)
-   Create a list to segment records based on property values and other characteristics. This article includes steps to creating new lists.
+3. [[PDF] COLLECTION OF THE CASE STUDIES WRITTEN BY THE ...](https://ec.europa.eu/programmes/erasmus-plus/project-result-content/db21a6d0-ac95-41ad-ad25-6350a6cee2bc/COLLECTION_OF_CASE_STUDIES.pdf)
+   https://www.volkswagen-newsroom.com/en/press- releases/volkswagen-passenger-cars-again-significantly-exceeds-european-co2-fleet-targets- for-2021-7710. 20 ...
 
-4. [Set up score properties to qualify contacts, companies, and deals](https://knowledge.hubspot.com/properties/set-up-score-properties-to-qualify-leads)
-   You can use the HubSpot score property to set up attributes that add or deduct points from contacts when they meet certain criteria.
+4. [大眾乘用車再次大幅超過歐洲2021 年二氧化碳排放目標](https://smaev.com.tw/news/3763/)
+   根據初步數據，大眾乘用車已經超過了歐洲2021 年CO 2的車隊目標，產生的CO 2 比法律要求少了約550 萬克。歐盟新車乘用車車隊的平均CO 2排放量為113 g/km——該 ...
 
-5. [Create a segment of contacts by choosing specific criteria](https://knowledgebase.constantcontact.com/email-digital-marketing/articles/KnowledgeBase/25205-Define-Your-Own-List-Segments?lang=en_US)
-   Group your contacts into segments based on a combination of multiple criteria, like their email activity, list membership, contact details, tags, and ecommerce ...
+5. [Transformacja energetyczna - OZE / paliwa kopalne / CO2 / ceny ...](https://forum.pclab.pl/topic/1340132-transformacja-energetyczna-oze-fit-for-55-paliwa-kopalne-ceny-energii-limity-co2-samochody-elektryczne/page/110/)
+   https://www.volkswagen-newsroom.com/en/press-releases/volkswagen-passenger-cars-again-significantly-exceeds-european-co2-fleet-targets-for-2021-7710.
 
-6. [Business eligibility and ownership guidelines - Google Help](https://support.google.com/business/answer/13763036?hl=en)
-   Not all businesses are eligible for a Business Profile on Google. To be eligible for a Business Profile, any business must meet the criteria as listed below.
+### 4. Iterate through the remaining search queries, accumulating results.
+**Status**: error
 
-7. [Beneficial Ownership Information | FinCEN.gov](https://www.fincen.gov/boi-faqs)
-   Carefully review the qualifying criteria before concluding that your company is exempt.
+**Error**: No search query provided
 
-8. [12 Requirements & Guidelines for Effective Meetings - Fellow.app](https://fellow.app/blog/meetings/requirements-for-productive-and-effective-meetings/)
-   Here are our 12 requirements for a productive meeting: Decide if a meeting is necessary; Only include people that are actually needed; Create ...
-
-9. [Requirements of an Annual General Meeting - MeetingPulse](https://meetingpulse.net/blog/requirements-of-an-annual-general-meeting/)
-   The annual financial report; The Director's report; Auditors report; Voting: Election of directors; Passing of resolutions; The appointing of the auditor ...
-
-10. [[PDF] How to Apply the National Register Criteria for Evaluation](https://www.nps.gov/subjects/nationalregister/upload/NRB-15_web508.pdf)
-   It should be used by anyone who must decide if a particular property qualifies for the National Register of. Historic Places. Listing properties in the National.
-
-### 4. Process the search results from Google, extracting company names and relevant details.
-**Status**: success
-
-**Source**: [Redirecting](https://answers.microsoft.com/en-us/msoffice/forum/all/how-do-i-create-a-list-of-names-based-on-specific/408c5e14-ded9-4f83-998e-298039df9f0f)
-
-
-
-  *[v]: View this template
-  *[t]: Discuss this template
-  *[e]: Edit this template
-
-
-
-### 5. Repeat step 4 for other relevant search results obtained in step 3.
-**Status**: success
-
-**Source**: [Redirecting](https://answers.microsoft.com/en-us/msoffice/forum/all/how-do-i-create-a-list-of-names-based-on-specific/408c5e14-ded9-4f83-998e-298039df9f0f)
-
-
-
-  *[v]: View this template
-  *[t]: Discuss this template
-  *[e]: Edit this template
-
-
-
-### 6. Consolidate the extracted company names and details from all search results.
+### 5. Consolidate the results from all searches into a single list of company names.
 **Status**: error
 
 **Error**: Tool 'manual' not found
 
-### 7. Remove duplicate company entries.
+### 6. Gather additional company details (as needed) from reputable sources using the browser tool.
 **Status**: error
 
-**Error**: Tool 'manual' not found
+**Error**: No URL provided for browsing
 
-### 8. Present the final list of companies meeting the specified criteria.
+### 7. Present the final list of company names that meet all specified criteria.
 **Status**: success
 
-# List of Companies Meeting Specified Criteria
+# Companies Meeting Specified Criteria
 
-Present the following data as a list: [insert consolidated company data]
+Present the following list of companies in a list format: [Insert the compiled list of company names]
 
 - **search_results**:
-  - {'title': 'How do I create a list of names based on specific criteria?', 'link': 'https://answers.microsoft.com/en-us/msoffice/forum/all/how-do-i-create-a-list-of-names-based-on-specific/408c5e14-ded9-4f83-998e-298039df9f0f', 'snippet': 'Here are two options that work for different versions of Excel: Option 1: Using Advanced Filter (Works in all Excel versions)'}
-  - {'title': 'Examples of query criteria - Microsoft Support', 'link': 'https://support.microsoft.com/en-us/office/examples-of-query-criteria-3197228c-8684-4552-ac03-aba746fb29d8', 'snippet': 'To add criteria to an Access query, open the query in Design view and identify the fields (columns) you want to specify criteria for. If the field is not in the ...'}
-  - {'title': 'Create and use lists - HubSpot Knowledge Base', 'link': 'https://knowledge.hubspot.com/lists/create-active-or-static-lists', 'snippet': 'Create a list to segment records based on property values and other characteristics. This article includes steps to creating new lists.'}
-  - {'title': 'Set up score properties to qualify contacts, companies, and deals', 'link': 'https://knowledge.hubspot.com/properties/set-up-score-properties-to-qualify-leads', 'snippet': 'You can use the HubSpot score property to set up attributes that add or deduct points from contacts when they meet certain criteria.'}
-  - {'title': 'Create a segment of contacts by choosing specific criteria', 'link': 'https://knowledgebase.constantcontact.com/email-digital-marketing/articles/KnowledgeBase/25205-Define-Your-Own-List-Segments?lang=en_US', 'snippet': 'Group your contacts into segments based on a combination of multiple criteria, like their email activity, list membership, contact details, tags, and ecommerce ...'}
-  - {'title': 'Business eligibility and ownership guidelines - Google Help', 'link': 'https://support.google.com/business/answer/13763036?hl=en', 'snippet': 'Not all businesses are eligible for a Business Profile on Google. To be eligible for a Business Profile, any business must meet the criteria as listed below.'}
-  - {'title': 'Beneficial Ownership Information | FinCEN.gov', 'link': 'https://www.fincen.gov/boi-faqs', 'snippet': 'Carefully review the qualifying criteria before concluding that your company is exempt.'}
-  - {'title': '12 Requirements & Guidelines for Effective Meetings - Fellow.app', 'link': 'https://fellow.app/blog/meetings/requirements-for-productive-and-effective-meetings/', 'snippet': 'Here are our 12 requirements for a productive meeting: Decide if a meeting is necessary; Only include people that are actually needed; Create ...'}
-  - {'title': 'Requirements of an Annual General Meeting - MeetingPulse', 'link': 'https://meetingpulse.net/blog/requirements-of-an-annual-general-meeting/', 'snippet': "The annual financial report; The Director's report; Auditors report; Voting: Election of directors; Passing of resolutions; The appointing of the auditor ..."}
-  - {'title': '[PDF] How to Apply the National Register Criteria for Evaluation', 'link': 'https://www.nps.gov/subjects/nationalregister/upload/NRB-15_web508.pdf', 'snippet': 'It should be used by anyone who must decide if a particular property qualifies for the National Register of. Historic Places. Listing properties in the National.'}
+  - {'title': 'Volkswagen Passenger Cars again significantly exceeds European ...', 'link': 'https://www.volkswagen-newsroom.com/en/press-releases/volkswagen-passenger-cars-again-significantly-exceeds-european-co2-fleet-targets-for-2021-7710', 'snippet': 'Volkswagen Passenger Cars has exceeded the ambitious European CO 2 fleet targets for 2021 and produced around 5.5 million grams fewer CO 2 than required by law.'}
+  - {'title': '25 Jan 2022 | BMW iX Excels On Autobahn High ... - EV News Daily', 'link': 'https://www.evnewsdaily.com/2022/01/25/25-jan-2022-bmw-ix-excels-on-autobahn-high-speed-test/', 'snippet': 'Based on preliminary figures, Volkswagen Passenger Cars has exceeded the ambitious European CO2 fleet targets for 2021 and produced around 5.5 million grams ...'}
+  - {'title': '[PDF] COLLECTION OF THE CASE STUDIES WRITTEN BY THE ...', 'link': 'https://ec.europa.eu/programmes/erasmus-plus/project-result-content/db21a6d0-ac95-41ad-ad25-6350a6cee2bc/COLLECTION_OF_CASE_STUDIES.pdf', 'snippet': 'https://www.volkswagen-newsroom.com/en/press- releases/volkswagen-passenger-cars-again-significantly-exceeds-european-co2-fleet-targets- for-2021-7710. 20 ...'}
+  - {'title': '大眾乘用車再次大幅超過歐洲2021 年二氧化碳排放目標', 'link': 'https://smaev.com.tw/news/3763/', 'snippet': '根據初步數據，大眾乘用車已經超過了歐洲2021 年CO 2的車隊目標，產生的CO 2 比法律要求少了約550 萬克。歐盟新車乘用車車隊的平均CO 2排放量為113 g/km——該 ...'}
+  - {'title': 'Transformacja energetyczna - OZE / paliwa kopalne / CO2 / ceny ...', 'link': 'https://forum.pclab.pl/topic/1340132-transformacja-energetyczna-oze-fit-for-55-paliwa-kopalne-ceny-energii-limity-co2-samochody-elektryczne/page/110/', 'snippet': 'https://www.volkswagen-newsroom.com/en/press-releases/volkswagen-passenger-cars-again-significantly-exceeds-european-co2-fleet-targets-for-2021-7710.'}
 
 
 ## Summary
