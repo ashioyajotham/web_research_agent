@@ -5,6 +5,10 @@ from utils.console_ui import (
     console, configure_logging, display_title, display_task_header,
     create_progress_context, display_plan, display_result, display_completion_message
 )
+from utils.logger import get_logger
+
+# Initialize the logger 
+logger = get_logger(__name__)  # Add this line
 
 def process_tasks(task_file_path, output_dir="results"):
     """Process tasks from a file and write results to output directory."""

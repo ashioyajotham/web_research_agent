@@ -82,7 +82,7 @@ class Comprehension:
         Returns:
             str: Summarized content
         """
-        if len(content) <= max_length:
+        if (len(content) <= max_length):
             return content
         
         prompt = f"""
@@ -130,6 +130,60 @@ class Comprehension:
         except Exception as e:
             logger.error(f"Error extracting information: {str(e)}")
             return "Failed to extract relevant information."
+    
+    def extract_entities(self, text, entity_types=None):
+        """
+        Extract named entities from text content.
+        
+        Args:
+            text (str): The text to analyze
+            entity_types (list, optional): Types of entities to extract (e.g., 'person', 'organization', 'role')
+                If None, extract all entity types
+                
+        Returns:
+            dict: Dictionary of entity types and their extracted values
+        """
+        logger.info(f"Extracting entities from text of length {len(text)}")
+        
+        # Default entity types if none specified
+        if entity_types is None:
+            entity_types = ['person', 'organization', 'role', 'location', 'date', 'title']
+        
+        # Cap text length to avoid token limits
+        text_sample = text[:25000] if len(text) > 25000 else text
+        
+        prompt = f"""
+        Extract the following entity types from the text below:
+        {', '.join(entity_types)}
+        
+        For each entity type, provide a list of unique values found in the text.
+        If multiple entities refer to the same thing (e.g., "John Smith" and "Mr. Smith"), list them together.
+        For role entities, include the person and organization they relate to when possible.
+        
+        TEXT:
+        {text_sample}
+        
+        Return the results as a JSON object with entity types as keys and arrays of found entities as values.
+        For roles, include the format "role: person @ organization" when that information is available.
+        
+        Example format:
+        {{
+            "person": ["John Smith", "Jane Doe"],
+            "organization": ["Acme Corp", "Epoch AI"],
+            "role": ["CEO: John Smith @ Acme Corp", "COO: Jane Doe @ Epoch AI"]
+        }}
+        
+        Only include entity types that have at least one match. Return ONLY the JSON without additional text.
+        """
+        
+        try:
+            response = self.model.generate_content(prompt)
+            entities = self._extract_json(response.text)
+            logger.info(f"Extracted entities: {entities}")
+            return entities
+        except Exception as e:
+            logger.error(f"Error extracting entities: {str(e)}")
+            return {entity_type: [] for entity_type in entity_types}
     
     def _extract_json(self, text):
         """Extract and parse JSON from text."""

@@ -83,10 +83,49 @@ class WebResearchAgent:
             # Prepare parameters with variable substitution
             parameters = self._substitute_parameters(step.parameters, results)
             
+            # Add entity extraction for certain step types
+            if "identify" in step.description.lower() or "find" in step.description.lower():
+                if step.tool_name == "browser":
+                    parameters["extract_entities"] = True
+                    entity_types = []
+                    if "person" in step.description.lower():
+                        entity_types.append("person")
+                    if "organization" in step.description.lower():
+                        entity_types.append("organization")
+                    if "role" in step.description.lower() or "coo" in step.description.lower() or "ceo" in step.description.lower():
+                        entity_types.append("role")
+                    if entity_types:
+                        parameters["entity_types"] = entity_types
+            
             # Execute the tool
             try:
                 output = tool.execute(parameters, self.memory)
-                results.append({"step": step.description, "status": "success", "output": output})
+                
+                # Check if the step actually accomplished its objective
+                verified, message = self._verify_step_completion(step, output)
+                if not verified:
+                    logger.warning(f"Step {step_index+1} did not achieve its objective: {message}")
+                    
+                    # Try to recover with more specific parameters if appropriate
+                    if step.tool_name == "search" and step_index > 0:
+                        # If previous steps found relevant entities, use them to refine the search
+                        entities = self.memory.get_entities()
+                        refined_query = self._refine_query_with_entities(step.parameters.get("query", ""), entities)
+                        logger.info(f"Refining search query to: {refined_query}")
+                        
+                        # Re-run with refined query
+                        parameters["query"] = refined_query
+                        output = tool.execute(parameters, self.memory)
+                
+                # Record the result with verification status
+                results.append({
+                    "step": step.description, 
+                    "status": "success", 
+                    "output": output,
+                    "verified": verified,
+                    "verification_message": message
+                })
+                
                 self.memory.add_result(step.description, output)
                 
                 # Store search results specifically for easy reference
@@ -229,3 +268,83 @@ class WebResearchAgent:
         
         # If all previous steps are successful, we can execute this step
         return True, ""
+
+    def _verify_step_completion(self, step, result_output):
+        """
+        Verify if a step achieved its intended objective.
+        
+        Args:
+            step (PlanStep): The step that was executed
+            result_output (Any): Output from the step execution
+            
+        Returns:
+            tuple: (success, message) - whether the step was successful and why/why not
+        """
+        # Basic verification - check if there's no error
+        if isinstance(result_output, dict) and "error" in result_output:
+            return False, f"Step returned an error: {result_output['error']}"
+        
+        # Specific verifications based on step type
+        if step.tool_name == "search":
+            # Check if search returned results
+            if isinstance(result_output, dict) and "results" in result_output:
+                if len(result_output["results"]) == 0:
+                    return False, "Search returned no results"
+            else:
+                return False, "Search did not return expected result format"
+        
+        elif step.tool_name == "browser":
+            # Check if content was extracted
+            if isinstance(result_output, dict) and "content" in result_output:
+                if not result_output["content"] or len(result_output["content"]) < 50:
+                    return False, "Browser returned minimal or no content"
+            else:
+                return False, "Browser did not return expected content"
+        
+        # For steps that should produce specific entities
+        if "identify" in step.description.lower() or "find" in step.description.lower():
+            entity_types = []
+            if "person" in step.description.lower() or "who" in step.description.lower():
+                entity_types.append("person")
+            if "organization" in step.description.lower():
+                entity_types.append("organization")
+            if "role" in step.description.lower() or "coo" in step.description.lower() or "ceo" in step.description.lower():
+                entity_types.append("role")
+            
+            # Check if we have any of the expected entity types in memory
+            if entity_types and hasattr(self.memory, 'extracted_entities'):
+                for entity_type in entity_types:
+                    if entity_type in self.memory.extracted_entities and self.memory.extracted_entities[entity_type]:
+                        return True, f"Found {entity_type} entities: {self.memory.extracted_entities[entity_type]}"
+        
+        # Default to success if no specific checks failed
+        return True, "Step completed successfully"
+
+    def _refine_query_with_entities(self, original_query, entities):
+        """
+        Refine a search query using extracted entities.
+        
+        Args:
+            original_query (str): Original search query
+            entities (dict): Extracted entities
+            
+        Returns:
+            str: Refined search query
+        """
+        refined_query = original_query
+        
+        # Add organization names if available
+        if "organization" in entities and entities["organization"]:
+            org_names = " OR ".join([f'"{org}"' for org in entities["organization"][:2]])
+            if org_names and org_names not in refined_query:
+                refined_query += f" ({org_names})"
+        
+        # Add roles if available
+        if "role" in entities and entities["role"]:
+            for role in entities["role"][:2]:
+                if "COO" in role and "COO" not in refined_query:
+                    refined_query += " COO"
+                elif "CEO" in role and "CEO" not in refined_query:
+                    refined_query += " CEO"
+        
+        return refined_query

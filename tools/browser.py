@@ -121,6 +121,19 @@ class BrowserTool(BaseTool):
                 "content": processed_content
             }
             
+            # Extract entities if requested
+            if parameters.get("extract_entities", False):
+                from agent.comprehension import Comprehension
+                comprehension = Comprehension()
+                entity_types = parameters.get("entity_types", None)
+                entities = comprehension.extract_entities(processed_content, entity_types)
+                
+                # Add extracted entities to memory
+                memory.add_entities(entities)
+                
+                # Include entities in result
+                result["entities"] = entities
+            
             return result
         except Exception as e:
             error_message = f"Error processing content from {url}: {str(e)}"

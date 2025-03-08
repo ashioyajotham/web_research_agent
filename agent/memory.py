@@ -11,7 +11,8 @@ class Memory:
         self.past_tasks = []
         self.web_content_cache = {}
         self.conversation_history = []
-        self.search_results = []  # New property to store search results directly
+        self.search_results = []  # Store search results directly
+        self.extracted_entities = {} # New property to track extracted entities
     
     def add_task(self, task_description):
         """
@@ -111,3 +112,35 @@ class Memory:
                 if len(matches) >= max_results:
                     break
         return matches
+
+    def add_entities(self, entities):
+        """
+        Add or update extracted entities in memory.
+        
+        Args:
+            entities (dict): Dictionary of entity types and values
+        """
+        # For each entity type
+        for entity_type, values in entities.items():
+            if entity_type not in self.extracted_entities:
+                self.extracted_entities[entity_type] = []
+            
+            # Add new unique entities
+            for value in values:
+                if value not in self.extracted_entities[entity_type]:
+                    self.extracted_entities[entity_type].append(value)
+
+    def get_entities(self, entity_type=None):
+        """
+        Get extracted entities from memory.
+        
+        Args:
+            entity_type (str, optional): Type of entity to retrieve
+                If None, return all entity types
+                
+        Returns:
+            dict or list: Extracted entities
+        """
+        if entity_type:
+            return self.extracted_entities.get(entity_type, [])
+        return self.extracted_entities

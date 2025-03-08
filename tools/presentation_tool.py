@@ -34,6 +34,14 @@ class PresentationTool(BaseTool):
         prompt = parameters.get("prompt", "")
         data = parameters.get("data", {})
         
+        # Check if we have entities to present
+        if hasattr(memory, 'extracted_entities') and memory.extracted_entities:
+            if not data:  # Only use entities if no other data provided
+                data = {"entities": memory.extracted_entities}
+            else:
+                # Add entities to existing data
+                data["entities"] = memory.extracted_entities
+        
         # Check if we have search results but no data
         if not data and hasattr(memory, 'search_results') and memory.search_results:
             logger.info("No data provided, using search results from memory")
@@ -56,7 +64,11 @@ class PresentationTool(BaseTool):
             if prompt:
                 return f"# {title}\n\n{prompt}\n\n*Note: I wasn't able to gather sufficient information to provide a detailed response. Please try refining your search or browse more specific sources.*"
         
-        # Construct the formatted output based on the format type
+        # Format specifically for entities if they exist
+        if "entities" in data:
+            return self._format_entities(title, prompt, data["entities"])
+        
+        # Otherwise use standard formatting
         if format_type == "table":
             return self._format_as_table(title, prompt, data)
         elif format_type == "list":
@@ -228,5 +240,50 @@ class PresentationTool(BaseTool):
             output.append(f"Based on the request: '{prompt}'")
             output.append("")
             output.append("No structured data was provided. Here's a generic presentation of the information.")
+        
+        return "\n".join(output)
+    
+    def _format_entities(self, title: str, prompt: str, entities: Dict[str, List[str]]) -> str:
+        """
+        Format extracted entities in a readable way.
+        
+        Args:
+            title (str): Title for the presentation
+            prompt (str): Description of what to present
+            entities (dict): Dictionary of entity types and values
+            
+        Returns:
+            str: Formatted entity presentation
+        """
+        output = [f"# {title}", "", prompt, "", "## Extracted Information", ""]
+        
+        # Format roles first as they're often the most important
+        if "role" in entities and entities["role"]:
+            output.append("### Roles and Positions")
+            for role in entities["role"]:
+                output.append(f"- {role}")
+            output.append("")
+        
+        # Format organizations
+        if "organization" in entities and entities["organization"]:
+            output.append("### Organizations")
+            for org in entities["organization"]:
+                output.append(f"- {org}")
+            output.append("")
+        
+        # Format persons
+        if "person" in entities and entities["person"]:
+            output.append("### People")
+            for person in entities["person"]:
+                output.append(f"- {person}")
+            output.append("")
+        
+        # Format other entity types
+        for entity_type, values in entities.items():
+            if entity_type not in ["role", "organization", "person"] and values:
+                output.append(f"### {entity_type.title()}")
+                for value in values:
+                    output.append(f"- {value}")
+                output.append("")
         
         return "\n".join(output)
