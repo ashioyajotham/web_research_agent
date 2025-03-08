@@ -1,0 +1,8 @@
+
+include README.md
+include LICENSE
+include requirements.txt
+recursive-include agent *.py
+recursive-include tools *.py
+recursive-include utils *.py
+recursive-include config *.py

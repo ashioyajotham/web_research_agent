@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import os
 import sys
+import re
 import click
 from pathlib import Path
 import time
@@ -8,8 +9,8 @@ import time
 # Add the parent directory to sys.path to enable imports
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-# Now we can import from our modules
-from utils.logger import get_logger
+# Now we can import from our modules using absolute imports
+from utils.logger import get_logger, set_log_level  # Changed from relative import
 from agent.agent import WebResearchAgent
 from config.config import get_config, init_config
 from rich.console import Console
@@ -54,32 +55,78 @@ def display_intro():
     
     console.print(Panel(table, border_style="blue", title="Web Research Agent"))
 
+def _sanitize_filename(query):
+    """Sanitize a query string to create a valid filename."""
+    # First, strip surrounding quotes if present
+    if (query.startswith('"') and query.endswith('"')) or (query.startswith("'") and query.endswith("'")):
+        query = query[1:-1]
+    
+    # Remove quotes and other invalid filename characters more aggressively
+    invalid_chars = '"\'\\/:*?<>|'
+    sanitized = ''.join(c for c in query if c not in invalid_chars)
+    
+    # Replace spaces with underscores
+    sanitized = sanitized.replace(' ', '_')
+    
+    # Normalize multiple underscores
+    while "__" in sanitized:
+        sanitized = sanitized.replace("__", "_")
+    
+    # Limit length and trim whitespace
+    sanitized = sanitized.strip()[:30]
+    
+    # Don't return an empty string
+    if not sanitized:
+        sanitized = "research_result"
+        
+    return sanitized
+
+def _extract_preview_sections(content, max_length=2000):
+    """Extract key sections from research results for preview."""
+    # Get the plan section
+    plan_match = re.search(r'(?i)## Plan\s+(.*?)(?:##|$)', content, re.DOTALL)
+    plan = plan_match.group(1).strip() if plan_match else ""
+    
+    # Get the results/findings section (might be called Results, Findings, or Summary)
+    results_match = re.search(r'(?i)## (?:Results|Findings|Summary)\s+(.*?)(?:##|$)', content, re.DOTALL)
+    results = results_match.group(1).strip() if results_match else ""
+    
+    # If we don't find a specific section, try to find any content after the plan
+    if not results:
+        # Look for any section after the plan
+        after_plan_match = re.search(r'(?i)## Plan.*?(?:##\s+(.*?)(?:##|$))', content, re.DOTALL)
+        if after_plan_match:
+            results = after_plan_match.group(1).strip()
+    
+    # Create preview with both plan and results (if found)
+    preview = "## Plan\n\n" + plan[:max_length//3]  # 1/3 of space for plan
+    
+    if results:
+        preview += "\n\n## Results\n\n" + results[:max_length*2//3]  # 2/3 of space for results
+    else:
+        # If no results section found, use more of the full content
+        preview += "\n\n## Content\n\n" + content[len(plan)+100:max_length*2//3] if len(content) > len(plan)+100 else ""
+    
+    # Add ellipsis if we had to trim content
+    if len(preview) < len(content):
+        preview += "\n\n..."
+        
+    return preview
+
 @click.group()
 @click.version_option(version="1.0.0")
 @click.option('--verbose', '-v', is_flag=True, help="Enable verbose logging")
 def cli(verbose):
     """Web Research Agent - An intelligent tool for web-based research tasks."""
     # Set log level based on verbose flag
-    from utils.logger import set_log_level
     import logging
     
     if verbose:
-        set_log_level(logging.INFO)
+        set_log_level(logging.INFO)  # Using the non-relative import
         
     # We'll keep the banner display only for the main CLI, but skip it for subcommands
     if len(sys.argv) == 1 or sys.argv[1] not in ['shell', 'search', 'batch', 'config']:
         display_banner()
-
-def _sanitize_filename(query):
-    """Sanitize a query string to create a valid filename."""
-    # Remove quotes and other invalid filename characters
-    invalid_chars = '"\'\\/:*?<>|'
-    sanitized = ''.join(c for c in query if c not in invalid_chars)
-    # Replace spaces with underscores
-    sanitized = sanitized.replace(' ', '_')
-    # Limit length and trim whitespace
-    sanitized = sanitized.strip()[:30]
-    return sanitized
 
 @cli.command()
 @click.argument('query', required=True)
@@ -135,10 +182,13 @@ def search(query, output, format):
         with open(filename, 'r', encoding='utf-8') as f:
             content = f.read()
             if format == 'markdown':
-                console.print(Panel(Markdown(content[:500] + "..." if len(content) > 500 else content), 
-                             title="Results Preview", border_style="cyan"))
+                # Use our smart preview extraction
+                preview = _extract_preview_sections(content)
+                console.print(Panel(Markdown(preview), 
+                             title="Research Results Preview", border_style="cyan"))
             else:
-                syntax = Syntax(content[:500] + "..." if len(content) > 500 else content, 
+                # Use the default syntax highlighting for non-markdown formats
+                syntax = Syntax(content[:1000] + "..." if len(content) > 1000 else content, 
                                 format, theme="monokai", line_numbers=True)
                 console.print(Panel(syntax, title="Results Preview", border_style="cyan"))
     except Exception as e:
@@ -268,11 +318,10 @@ def config(api_key, serper_key, timeout, format, show):
 def shell(verbose):
     """Start an interactive shell for research tasks."""
     # Set log level based on verbose flag
-    from utils.logger import set_log_level
     import logging
     
     if verbose:
-        set_log_level(logging.INFO)
+        set_log_level(logging.INFO)  # Using the non-relative import
     
     from prompt_toolkit import PromptSession
     from prompt_toolkit.history import FileHistory
@@ -371,6 +420,13 @@ def shell(verbose):
             else:
                 query = user_input[7:]
             
+            # Strip surrounding quotes from the query
+            if (query.startswith('"') and query.endswith('"')) or (query.startswith("'") and query.endswith("'")):
+                # Only strip quotes for filename, leave original query for searching
+                filename_query = query[1:-1]
+            else:
+                filename_query = query
+
             if query:
                 console.print(Panel(f"[bold cyan]Researching:[/bold cyan] {query}", border_style="blue"))
                 
@@ -405,15 +461,16 @@ def shell(verbose):
                 if result:
                     # Save result to file in results directory
                     os.makedirs("results", exist_ok=True)
-                    filename = f"results/result_{_sanitize_filename(query)}.md"
+                    filename = f"results/result_{_sanitize_filename(filename_query)}.md"
                     with open(filename, 'w', encoding='utf-8') as f:
                         f.write(result)
                     
                     console.print(f"[bold green]✓[/bold green] Research complete! Results saved to [cyan]{filename}[/cyan]")
+
                     
                     # Show a preview of the results
                     try:
-                        preview = result[:500] + "..." if len(result) > 500 else result
+                        preview = _extract_preview_sections(result)
                         console.print(Panel(Markdown(preview), title="Results Preview", border_style="cyan"))
                     except Exception as e:
                         console.print(f"[yellow]Could not display preview: {str(e)}[/yellow]")
@@ -440,10 +497,14 @@ def _get_file_extension(format):
     else:
         return 'md'
 
-if __name__ == '__main__':
+def main():
+    """Entry point for the CLI."""
     try:
         cli()
     except KeyboardInterrupt:
         console.print("\n[yellow]Operation cancelled by user[/yellow]")
     except Exception as e:
         console.print(f"\n[bold red]Error:[/bold red] {str(e)}")
+
+if __name__ == '__main__':
+    main()  # Call main() instead of cli() directly
