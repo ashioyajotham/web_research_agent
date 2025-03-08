@@ -317,8 +317,41 @@ class WebResearchAgent:
                     if entity_type in self.memory.extracted_entities and self.memory.extracted_entities[entity_type]:
                         return True, f"Found {entity_type} entities: {self.memory.extracted_entities[entity_type]}"
         
+        # Check if the content seems relevant to our task
+        keywords = self._extract_keywords_from_step(step.description)
+        if keywords and step.tool_name == "browser":
+            content = result_output.get("content", "")
+            if any(keyword.lower() in content.lower() for keyword in keywords):
+                return True, "Content appears relevant to the task"
+        
         # Default to success if no specific checks failed
         return True, "Step completed successfully"
+
+    def _verify_code_results(self, step, result_output):
+        """Verify code generation results."""
+        if isinstance(result_output, str):
+            if len(result_output) < 10:
+                return False, "Generated code is too short"
+            
+            if "```" not in result_output and "def " not in result_output and "class " not in result_output:
+                return False, "Output does not appear to contain code"
+        
+        return True, "Code generation completed"
+
+    def _extract_keywords_from_step(self, step_description):
+        """Extract relevant keywords from step description for verification."""
+        # Remove common stop words and extract potential keywords
+        stop_words = {"a", "an", "the", "and", "or", "but", "if", "for", "not", "from", "to", 
+                      "search", "find", "look", "browse", "extract", "identify", "determine"}
+        
+        words = step_description.lower().split()
+        keywords = [word for word in words if word not in stop_words and len(word) > 3]
+        
+        # Extract quoted phrases which are often important
+        quoted = re.findall(r'"([^"]*)"', step_description)
+        quoted.extend(re.findall(r"'([^']*)'", step_description))
+        
+        return list(set(keywords + quoted))
 
     def _refine_query_with_entities(self, original_query, entities):
         """
@@ -332,19 +365,45 @@ class WebResearchAgent:
             str: Refined search query
         """
         refined_query = original_query
+        entity_additions = []
         
-        # Add organization names if available
+        # Add organization names if available and relevant
         if "organization" in entities and entities["organization"]:
-            org_names = " OR ".join([f'"{org}"' for org in entities["organization"][:2]])
-            if org_names and org_names not in refined_query:
-                refined_query += f" ({org_names})"
+            # Sort by length - longer names are often more specific/relevant
+            orgs = sorted(entities["organization"], key=len, reverse=True)[:2]
+            for org in orgs:
+                if len(org) > 3 and org.lower() not in original_query.lower():
+                    entity_additions.append(f'"{org}"')
         
-        # Add roles if available
+        # Add role specifics if available and relevant
         if "role" in entities and entities["role"]:
-            for role in entities["role"][:2]:
-                if "COO" in role and "COO" not in refined_query:
-                    refined_query += " COO"
-                elif "CEO" in role and "CEO" not in refined_query:
-                    refined_query += " CEO"
+            role_keywords = []
+            for role in entities["role"]:
+                # Extract just the role part (e.g., "CEO" from "CEO: John Smith @ Acme")
+                role_parts = role.split(":")
+                if len(role_parts) > 0:
+                    role_title = role_parts[0].strip()
+                    if role_title not in original_query and role_title not in role_keywords:
+                        role_keywords.append(role_title)
+            
+            for role in role_keywords[:2]:  # Limit to top 2 roles
+                entity_additions.append(role)
         
+        # Add person names if the query seems to be about finding information on people
+        if "person" in entities and entities["person"] and any(term in original_query.lower() for term in ["who", "person", "name"]):
+            # Sort by length - longer names are often more specific/relevant
+            persons = sorted(entities["person"], key=len, reverse=True)[:1]
+            for person in persons:
+                if len(person) > 3 and person.lower() not in original_query.lower():
+                    entity_additions.append(f'"{person}"')
+        
+        # Add entity additions if we have any
+        if entity_additions:
+            # Check if the query already ends with a question mark
+            if original_query.strip().endswith('?'):
+                refined_query = original_query.strip()[:-1] + " " + " ".join(entity_additions) + "?"
+            else:
+                refined_query = original_query + " " + " ".join(entity_additions)
+        
+        logger.info(f"Refined query: '{original_query}' -> '{refined_query}'")
         return refined_query

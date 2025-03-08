@@ -142,7 +142,7 @@ class PresentationTool(BaseTool):
             output.append(f"  - Based on: {prompt}")
             output.append("- No structured data was provided")
         
-        return "\n".join(output)
+        return "\n.join(output)
     
     def _format_as_summary(self, title: str, prompt: str, data: Any) -> str:
         """Format information as a markdown summary."""
@@ -245,7 +245,7 @@ class PresentationTool(BaseTool):
     
     def _format_entities(self, title: str, prompt: str, entities: Dict[str, List[str]]) -> str:
         """
-        Format extracted entities in a readable way.
+        Format extracted entities in a readable way with relationships highlighted.
         
         Args:
             title (str): Title for the presentation
@@ -257,25 +257,80 @@ class PresentationTool(BaseTool):
         """
         output = [f"# {title}", "", prompt, "", "## Extracted Information", ""]
         
-        # Format roles first as they're often the most important
-        if "role" in entities and entities["role"]:
-            output.append("### Roles and Positions")
-            for role in entities["role"]:
-                output.append(f"- {role}")
-            output.append("")
-        
-        # Format organizations
+        # Find key organizations (if any)
+        key_orgs = []
         if "organization" in entities and entities["organization"]:
-            output.append("### Organizations")
-            for org in entities["organization"]:
-                output.append(f"- {org}")
+            key_orgs = entities["organization"]
+        
+        # Format roles first with organization context
+        if "role" in entities and entities["role"]:
+            output.append("### Key Roles and Positions")
+            
+            # Extract role-person-organization relationships
+            role_info = []
+            for role_entry in entities["role"]:
+                # Handle different role formats
+                if ":" in role_entry and "@" in role_entry:
+                    # Format: "Role: Person @ Organization"
+                    parts = role_entry.split(":")
+                    if len(parts) >= 2:
+                        role = parts[0].strip()
+                        person_org = parts[1].strip().split("@")
+                        if len(person_org) >= 2:
+                            person = person_org[0].strip()
+                            org = person_org[1].strip()
+                            role_info.append({"role": role, "person": person, "organization": org})
+                        else:
+                            role_info.append({"role": role, "description": parts[1].strip()})
+                else:
+                    # Simple role format
+                    role_info.append({"role": role_entry})
+            
+            # Display role information
+            for info in role_info:
+                if "person" in info and "organization" in info:
+                    output.append(f"- **{info['role']}**: {info['person']} at {info['organization']}")
+                elif "description" in info:
+                    output.append(f"- **{info['role']}**: {info['description']}")
+                else:
+                    output.append(f"- {info['role']}")
+            
             output.append("")
         
-        # Format persons
+        # Display organizations with context
+        if key_orgs:
+            output.append("### Organizations")
+            for org in key_orgs:
+                # Look for roles associated with this organization
+                org_roles = []
+                if "role" in entities:
+                    for role in entities["role"]:
+                        if org.lower() in role.lower():
+                            org_roles.append(role)
+                
+                output.append(f"- **{org}**")
+                if org_roles:
+                    output.append("  - Associated roles:")
+                    for role in org_roles:
+                        output.append(f"    - {role}")
+            output.append("")
+        
+        # Format persons with context
         if "person" in entities and entities["person"]:
             output.append("### People")
             for person in entities["person"]:
-                output.append(f"- {person}")
+                # Look for roles associated with this person
+                person_roles = []
+                if "role" in entities:
+                    for role in entities["role"]:
+                        if person.lower() in role.lower():
+                            person_roles.append(role)
+                
+                output.append(f"- **{person}**")
+                if person_roles:
+                    output.append("  - Roles:")
+                    for role in person_roles:
+                        output.append(f"    - {role}")
             output.append("")
         
         # Format other entity types
@@ -285,5 +340,25 @@ class PresentationTool(BaseTool):
                 for value in values:
                     output.append(f"- {value}")
                 output.append("")
+        
+        # Provide a structured summary if we have organization and role information
+        if "organization" in entities and "role" in entities:
+            org_role_map = {}
+            
+            # Map organizations to roles
+            for role_entry in entities.get("role", []):
+                for org in entities.get("organization", []):
+                    if org.lower() in role_entry.lower():
+                        if org not in org_role_map:
+                            org_role_map[org] = []
+                        org_role_map[org].append(role_entry)
+            
+            if org_role_map:
+                output.append("## Summary of Findings")
+                for org, roles in org_role_map.items():
+                    output.append(f"### {org}")
+                    for role in roles:
+                        output.append(f"- {role}")
+                    output.append("")
         
         return "\n".join(output)
