@@ -2,10 +2,10 @@ from setuptools import setup, find_packages
 
 setup(
     name="web-research-agent",
-    version="1.0.0",
+    version="1.0.1",
     packages=find_packages(),
     include_package_data=True,
-    py_modules=["cli"],  # To include cli.py as a root module
+    py_modules=["cli"],
     install_requires=[
         "click>=8.0.0",
         "requests>=2.25.0",
@@ -18,7 +18,7 @@ setup(
     ],
     entry_points={
         'console_scripts': [
-            'web-research=cli:cli',
+            'web-research=cli:main',
         ],
     },
     author="Victor Jotham Ashioya",
@@ -26,11 +26,21 @@ setup(
     description="An intelligent AI agent for web-based research tasks",
     long_description=open("README.md").read(),
     long_description_content_type="text/markdown",
-    url="https://github.com/ashioyajotham/web-research-agent",
+    url="https://github.com/ashioyajotham/web_research_agent",
+    project_urls={
+        "Bug Tracker": "https://github.com/ashioyajotham/web_research_agent/issues",
+        "Documentation": "https://github.com/ashioyajotham/web_research_agent#readme",
+        "Source Code": "https://github.com/ashioyajotham/web_research_agent",
+    },
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
+        "Development Status :: 4 - Beta",
+        "Intended Audience :: Developers",
+        "Intended Audience :: Science/Research",
+        "Topic :: Scientific/Engineering :: Artificial Intelligence",
     ],
+    keywords="ai, research, web, agent, search",
     python_requires=">=3.9",
 )
