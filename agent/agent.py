@@ -26,10 +26,12 @@ class WebResearchAgent:
         from tools.search import SearchTool
         from tools.browser import BrowserTool
         from tools.code_generator import CodeGeneratorTool
+        from tools.presentation_tool import PresentationTool
         
         self.tool_registry.register_tool("search", SearchTool())
         self.tool_registry.register_tool("browser", BrowserTool())
         self.tool_registry.register_tool("code", CodeGeneratorTool())
+        self.tool_registry.register_tool("present", PresentationTool())
     
     def execute_task(self, task_description):
         """

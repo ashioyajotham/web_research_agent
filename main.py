@@ -83,7 +83,7 @@ def process_tasks(task_file_path, output_dir="results"):
         
         # Write result to file
         output_file = os.path.join(output_dir, f"task_{i+1}_result.md")
-        with open(output_file, "w") as f:
+        with open(output_file, "w", encoding="utf-8") as f:  # Added encoding="utf-8"
             f.write(f"# Task: {task}\n\n")
             f.write(formatted_results)
         

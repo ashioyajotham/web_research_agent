@@ -71,6 +71,11 @@ class Planner:
     
     def _create_planning_prompt(self, task_description, task_analysis):
         """Create a prompt for the LLM to generate a plan."""
+        
+        # Check if task requires coding
+        requires_coding = task_analysis.get("requires_coding", False)
+        presentation_format = task_analysis.get("presentation_format", "report")
+        
         return f"""
         As an AI research assistant, create a detailed execution plan for the following task:
         
@@ -85,8 +90,17 @@ class Planner:
         2. browser - Fetches and processes web content
            Parameters: url (str), extract_type (str, optional: 'full', 'main_content', 'summary')
         
-        3. code - Generates or analyzes code
-           Parameters: prompt (str), language (str, optional)
+        3. code - Generates or analyzes code. Only use this tool if the task explicitly requires writing code.
+           Parameters: prompt (str), language (str, optional), operation (str, optional: 'generate', 'debug', 'explain')
+        
+        4. present - Organizes and formats information without writing code
+           Parameters: prompt (str), format_type (str, optional: 'table', 'list', 'summary', 'comparison'), title (str, optional)
+        
+        IMPORTANT: 
+        - Only use the 'code' tool when the task explicitly requires writing computer code or programming.
+        - Use the 'present' tool for tasks that need data organization or presentation of results.
+        - This task {'' if requires_coding else 'does not '} appear to require coding based on analysis.
+        - The suggested presentation format is '{presentation_format}'.
         
         Create a step-by-step plan in valid JSON format. Follow these JSON formatting rules strictly:
         - Use double quotes for strings, not single quotes
@@ -180,6 +194,10 @@ class Planner:
         """Create a simple default plan if the LLM planning fails."""
         search_query = task_description
         
+        # Determine if this looks like a coding task
+        coding_keywords = ["write", "code", "program", "script", "function", "implement", "develop", "create a program"]
+        requires_coding = any(keyword in task_description.lower() for keyword in coding_keywords)
+        
         steps = [
             PlanStep(
                 description=f"Search for information about: {search_query}",
@@ -190,12 +208,29 @@ class Planner:
                 description="Browse the first search result to gather information",
                 tool_name="browser",
                 parameters={"url": "{search_result_0_url}", "extract_type": "main_content"}
-            ),
-            PlanStep(
-                description="Generate a summary report",
-                tool_name="code",
-                parameters={"prompt": f"Generate a detailed report for the task: {task_description}", "language": "markdown"}
             )
         ]
+        
+        # Add the final step based on whether the task appears to require coding
+        if requires_coding:
+            steps.append(
+                PlanStep(
+                    description="Generate code based on gathered information",
+                    tool_name="code",
+                    parameters={"prompt": f"Generate code for the task: {task_description}", "language": "python"}
+                )
+            )
+        else:
+            steps.append(
+                PlanStep(
+                    description="Present the gathered information",
+                    tool_name="present",
+                    parameters={
+                        "prompt": f"Organize and present information for the task: {task_description}",
+                        "format_type": "summary",
+                        "title": "Research Results"
+                    }
+                )
+            )
         
         return Plan(task=task_description, steps=steps)

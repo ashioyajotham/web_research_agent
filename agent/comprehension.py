@@ -33,11 +33,24 @@ class Comprehension:
         TASK: {task_description}
         
         Please provide a structured analysis in JSON format with the following fields:
-        1. "task_type": The general category of the task (e.g., "information_gathering", "code_generation", "problem_solving", etc.)
-        2. "key_entities": List of important entities, concepts, or technologies mentioned in the task
-        3. "search_queries": Suggested search queries to gather information for this task
-        4. "required_information": Types of information that need to be gathered
-        5. "expected_output": What the final output should look like (e.g., code, report, analysis, etc.)
+        1. "task_type": The general category of the task (e.g., "information_gathering", "code_generation", "problem_solving", "data_analysis")
+        2. "requires_coding": Boolean (true/false) indicating if this task actually requires writing or generating code
+        3. "key_entities": List of important entities, concepts, or technologies mentioned in the task
+        4. "search_queries": Suggested search queries to gather information for this task
+        5. "required_information": Types of information that need to be gathered
+        6. "presentation_format": How the information should be presented (e.g., "table", "list", "report", "code", "summary")
+        7. "expected_output": What the final output should look like
+        
+        For the "requires_coding" field, only mark as true if the task explicitly asks for:
+        - Writing a program, script, or function
+        - Implementing an algorithm 
+        - Creating code in a specific language
+        
+        Do NOT mark as true if the task is just about:
+        - Finding information
+        - Creating a report
+        - Showing data in a table/chart
+        - Summarizing information
         
         Return ONLY the JSON without additional explanation or formatting.
         """
