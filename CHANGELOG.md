@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.0.5] - 2025-03-12
+
+### Added
+- Interactive API Key Configuration: The agent now prompts for missing Gemini and Serper API keys during configuration, storing them using the configuration manager.
+
 ## [1.0.4] - 2025-03-11
 
 ### Fixed
