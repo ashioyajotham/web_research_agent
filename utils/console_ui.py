@@ -7,6 +7,7 @@ from rich.syntax import Syntax
 from rich.text import Text
 import logging
 from typing import List, Dict, Any, Optional
+import json
 
 # Create a global console object
 console = Console()
