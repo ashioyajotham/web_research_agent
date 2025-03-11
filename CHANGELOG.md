@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.0.6] - 2025-03-15
+
+### Added
+- Secure credential management: API keys are now stored securely in the system's keyring
+- Interactive consent flow for storing credentials
+- Visual indicators showing where credentials are stored
+- Fallback to .env file when system keyring is unavailable
+- Added keyring as an optional dependency
+
+### Changed
+- Key configuration now happens at the earliest point needed in command execution
+
 ## [1.0.5] - 2025-03-12
 
 ### Added

@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="web-research-agent",
-    version="1.0.5",
+    version="1.0.6",
     packages=find_packages(),
     include_package_data=True,
     py_modules=["cli"],
@@ -14,7 +14,8 @@ setup(
         "google-generativeai>=0.3.0",
         "python-dotenv>=0.19.0",
         "prompt_toolkit>=3.0.0",
-        "rich>=10.0.0"
+        "rich>=10.0.0",
+        "keyring>=23.0.0"
     ],
     entry_points={
         'console_scripts': [
