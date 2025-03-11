@@ -1,5 +1,22 @@
 # Changelog
 
+## [1.0.3] - 2025-03-10
+
+### Fixed
+- Fixed a import in utils.py that caused a circular import issue
+
+### Added
+-
+
+## [1.0.2] - 2025-03-09
+
+### Fixed
+- Fixed layout issues with the preview section
+- Fixed a bug in the search tool that caused incorrect results
+
+### Added
+- Added a new tool for generating code snippets from search results
+
 ## [1.0.1] - 2025-03-08
 
 ### Fixed
