@@ -1,12 +1,14 @@
 # Changelog
 
+## [1.0.4] - 2025-03-11
+
+### Fixed
+- Refactored the output formatters by converting the "utils/formatters" module into a package. The new __init__.py file now re-exports the format_results function, ensuring consistent imports between editable and installed versions.
+
 ## [1.0.3] - 2025-03-10
 
 ### Fixed
-- Fixed a import in utils.py that caused a circular import issue
-
-### Added
--
+- Fixed a bug in the search tool that caused incorrect results
 
 ## [1.0.2] - 2025-03-09
 
