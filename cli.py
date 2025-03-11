@@ -283,18 +283,25 @@ def config(api_key, serper_key, timeout, format, show):
     if show:
         click.echo("Current configuration:")
         for key, value in config.items():
-            # Don't show full API keys, just a preview if they exist
             if key.endswith('_api_key') and value:
                 value = f"{value[:4]}...{value[-4:]}"
             click.echo(f"  {key}: {value}")
         return
     
-    # Update config with provided values
-    if api_key:
+    # Prompt for missing API keys interactively
+    if not api_key and not config.get("gemini_api_key"):
+        api_key = click.prompt("Gemini API key is missing, please enter it", hide_input=True)
+        config.update('gemini_api_key', api_key)
+        click.echo("✅ Updated Gemini API key")
+    elif api_key:
         config.update('gemini_api_key', api_key)
         click.echo("✅ Updated Gemini API key")
     
-    if serper_key:
+    if not serper_key and not config.get("serper_api_key"):
+        serper_key = click.prompt("Serper API key is missing, please enter it", hide_input=True)
+        config.update('serper_api_key', serper_key)
+        click.echo("✅ Updated Serper API key")
+    elif serper_key:
         config.update('serper_api_key', serper_key)
         click.echo("✅ Updated Serper API key")
     
@@ -306,12 +313,11 @@ def config(api_key, serper_key, timeout, format, show):
         config.update('output_format', format)
         click.echo(f"✅ Updated default output format to {format}")
     
-    # Verify required configuration
+    # Verify required configuration again after interactive prompts
     required_keys = ['gemini_api_key', 'serper_api_key']
     missing_keys = [key for key in required_keys if not config.get(key)]
-    
     if missing_keys:
-        click.echo(f"⚠️  Missing required configuration: {', '.join(missing_keys)}")
+        click.echo(f"⚠️  Still missing: {', '.join(missing_keys)}")
         click.echo("Please set these with 'web-research config --api-key=\"...\" --serper-key=\"...\"'")
 
 @cli.command()
@@ -508,4 +514,4 @@ def main():
         console.print(f"\n[bold red]Error:[/bold red] {str(e)}")
 
 if __name__ == '__main__':
-    main()  # Call main() instead of cli() directly
+    main()
