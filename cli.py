@@ -162,6 +162,17 @@ def _check_required_keys(agent_initialization=False):
         keyring_available = True
     except ImportError:
         keyring_available = False
+        # Inform user about keyring if we're in interactive mode
+        if agent_initialization:
+            console.print(Panel(
+                "[bold yellow]Secure Credential Storage Recommended[/bold yellow]\n\n"
+                "For secure API key storage, install the keyring package:\n"
+                "[bold]pip install keyring[/bold]\n\n"
+                "This will store your API keys in your system's secure credential store\n"
+                "instead of in plain text files.",
+                title="Security Recommendation",
+                border_style="yellow"
+            ))
     
     required_keys = {
         'gemini_api_key': 'Gemini API key',
@@ -416,6 +427,13 @@ def config(api_key, serper_key, timeout, format, use_keyring, show):
         secure_storage = True
     except ImportError:
         secure_storage = False
+        console.print(Panel(
+            "[bold yellow]Security Recommendation[/bold yellow]\n\n"
+            "For secure credential storage, install the keyring package:\n"
+            "[bold]pip install keyring[/bold]\n\n"
+            "Without keyring, API keys will be stored in a .env file.",
+            border_style="yellow"
+        ))
     
     if show:
         click.echo("Current configuration:")
@@ -458,6 +476,13 @@ def config(api_key, serper_key, timeout, format, use_keyring, show):
     if format:
         config.update('output_format', format)
         console.print(f"✅ Updated default output format to {format}")
+    
+    # If use_keyring is explicitly set to True but keyring isn't available
+    if use_keyring is True and not secure_storage:
+        console.print("[yellow]Warning: System keyring support not available. Install the 'keyring' package.[/yellow]")
+        console.print("[bold]pip install keyring[/bold]")
+        config.update('use_keyring', False)
+        console.print("[yellow]❌ Keyring storage disabled - unavailable on this system[/yellow]")
     
     # Only check for missing keys if no specific updates were provided
     if not any([api_key, serper_key, timeout, format, use_keyring is not None]):
