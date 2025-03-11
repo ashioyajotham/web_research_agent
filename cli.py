@@ -117,13 +117,20 @@ def _extract_preview_sections(content, max_length=2000):
 @click.group()
 @click.version_option(version="1.0.1")
 @click.option('--verbose', '-v', is_flag=True, help="Enable verbose logging")
-def cli(verbose):
+@click.option('--no-config', is_flag=True, help="Skip API key checks (commands requiring API keys will fail)")
+def cli(verbose, no_config):
     """Web Research Agent - An intelligent tool for web-based research tasks."""
     # Set log level based on verbose flag
     import logging
     
     if verbose:
         set_log_level(logging.INFO)  # Using the non-relative import
+    
+    # Store no_config flag in a global context so it can be accessed by other commands
+    from click import get_current_context
+    ctx = get_current_context()
+    ctx.obj = ctx.obj or {}
+    ctx.obj['no_config'] = no_config
         
     # We'll keep the banner display only for the main CLI, but skip it for subcommands
     if len(sys.argv) == 1 or sys.argv[1] not in ['shell', 'search', 'batch', 'config']:
@@ -137,8 +144,16 @@ def _check_required_keys(agent_initialization=False):
         agent_initialization (bool): Whether this check is happening during agent initialization
             
     Returns:
-        bool: True if all required keys are available (or were just added)
+        bool: True if all required keys are available (or were just added) or if --no-config was used
     """
+    # Check if --no-config flag was set
+    from click import get_current_context
+    ctx = get_current_context()
+    if ctx.obj and ctx.obj.get('no_config', False):
+        if agent_initialization:
+            console.print("[yellow]Warning: Running in no-config mode. API calls will fail.[/yellow]")
+        return True
+    
     config = get_config()
     keyring_available = False
     
