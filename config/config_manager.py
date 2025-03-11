@@ -10,10 +10,20 @@ try:
 except ImportError:
     DOTENV_AVAILABLE = False
 
+# Try to import keyring for secure credential storage
+try:
+    import keyring
+    KEYRING_AVAILABLE = True
+except ImportError:
+    KEYRING_AVAILABLE = False
+
+# Service name for keyring credentials
+KEYRING_SERVICE = "web_research_agent"
+
 class ConfigManager:
     """
     Configuration manager for the web research agent.
-    Handles loading configs from .env files and environment variables.
+    Handles loading configs from .env files, environment variables, and secure keyring.
     """
     
     # Default configuration values
@@ -25,6 +35,7 @@ class ConfigManager:
         "memory_limit": 100,  # Number of items to keep in memory
         "output_format": "markdown",
         "timeout": 30,  # Default timeout for web requests in seconds
+        "use_keyring": True,  # Whether to use keyring for API key storage
     }
     
     # Environment variable mapping
@@ -36,7 +47,11 @@ class ConfigManager:
         "MEMORY_LIMIT": "memory_limit",
         "OUTPUT_FORMAT": "output_format",
         "REQUEST_TIMEOUT": "timeout",
+        "USE_KEYRING": "use_keyring",
     }
+    
+    # Keys that should be stored securely
+    SECURE_KEYS = ["gemini_api_key", "serper_api_key"]
     
     def __init__(self, config_path: Optional[str] = None, env_file: Optional[str] = None):
         """
@@ -57,6 +72,9 @@ class ConfigManager:
         
         # Override with environment variables
         self._load_from_env()
+        
+        # Try to load secure keys from keyring
+        self._load_from_keyring()
         
         # Validate required settings
         self._validate_config()
@@ -112,6 +130,44 @@ class ConfigManager:
                 self.config[config_key] = value
                 logging.debug(f"Set {config_key} from environment variable {env_var}")
     
+    def _load_from_keyring(self) -> None:
+        """Load API keys from system keyring if enabled and available."""
+        if not KEYRING_AVAILABLE or not self.config.get("use_keyring", True):
+            return
+            
+        try:
+            for key in self.SECURE_KEYS:
+                username = key  # Using the key name as username
+                password = keyring.get_password(KEYRING_SERVICE, username)
+                if password:
+                    self.config[key] = password
+                    logging.debug(f"Loaded {key} from system keyring")
+        except Exception as e:
+            logging.warning(f"Failed to load credentials from keyring: {str(e)}")
+    
+    def _save_to_keyring(self, key: str, value: str) -> bool:
+        """
+        Save a secure value to the system keyring.
+        
+        Args:
+            key (str): Configuration key
+            value (str): Value to store
+            
+        Returns:
+            bool: True if successful, False otherwise
+        """
+        if not KEYRING_AVAILABLE or not self.config.get("use_keyring", True):
+            return False
+            
+        try:
+            username = key  # Using the key name as username
+            keyring.set_password(KEYRING_SERVICE, username, value)
+            logging.debug(f"Saved {key} to system keyring")
+            return True
+        except Exception as e:
+            logging.warning(f"Failed to save {key} to keyring: {str(e)}")
+            return False
+    
     def _validate_config(self) -> None:
         """Validate required configuration settings."""
         required_keys = ["gemini_api_key", "serper_api_key"]
@@ -145,19 +201,48 @@ class ConfigManager:
         Returns:
             dict: All configuration values
         """
-        return self.config.copy()
-    
-    def update(self, key: str, value: Any) -> None:
+        return self.config.copy()    
+    def update(self, key: str, value: Any, store_in_keyring: bool = True) -> bool:
         """
         Update a configuration value.
         
         Args:
             key (str): Configuration key
             value (any): New value
+            store_in_keyring (bool): Whether to store in keyring (for secure keys)
+            
+        Returns:
+            bool: True if keyring storage was successful (if applicable), False otherwise
         """
         self.config[key] = value
+        keyring_success = False
+        
+        # Store in keyring if it's a secure key and keyring is enabled
+        if key in self.SECURE_KEYS and store_in_keyring:
+            keyring_success = self._save_to_keyring(key, value)
+        
         logging.debug(f"Updated configuration: {key}={value}")
-
+        return keyring_success
+    
+    def securely_stored_keys(self) -> Dict[str, bool]:
+        """
+        Get information about which keys are securely stored.
+        
+        Returns:
+            dict: Dictionary of secure keys and whether they are in keyring
+        """
+        if not KEYRING_AVAILABLE or not self.config.get("use_keyring", True):
+            return {key: False for key in self.SECURE_KEYS}
+            
+        result = {}
+        for key in self.SECURE_KEYS:
+            try:
+                has_key = keyring.get_password(KEYRING_SERVICE, key) is not None
+                result[key] = has_key
+            except Exception:
+                result[key] = False
+        
+        return result
 
 # Global instance
 _config_instance = None

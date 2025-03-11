@@ -41,7 +41,7 @@ BANNER = """
 def display_banner():
     """Display the ASCII art banner."""
     console.print(BANNER)
-    console.print("\n[dim]Version 1.0.4 - Type 'help' for commands[/dim]\n")
+    console.print("\n[dim]Version 1.0.6 - Type 'help' for commands[/dim]\n")
     console.print("[dim]Built by [bold magenta]Ashioya Jotham Victor[/bold magenta][/dim]\n")
 
 def display_intro():
@@ -129,6 +129,116 @@ def cli(verbose):
     if len(sys.argv) == 1 or sys.argv[1] not in ['shell', 'search', 'batch', 'config']:
         display_banner()
 
+def _check_required_keys(agent_initialization=False):
+    """
+    Check if required API keys are available and prompt for them if needed.
+    
+    Args:
+        agent_initialization (bool): Whether this check is happening during agent initialization
+            
+    Returns:
+        bool: True if all required keys are available (or were just added)
+    """
+    config = get_config()
+    keyring_available = False
+    
+    try:
+        import keyring
+        keyring_available = True
+    except ImportError:
+        keyring_available = False
+    
+    required_keys = {
+        'gemini_api_key': 'Gemini API key',
+        'serper_api_key': 'Serper API key'
+    }
+    
+    missing_keys = [key for key in required_keys if not config.get(key)]
+    if not missing_keys:
+        return True
+    
+    if agent_initialization:
+        console.print(Panel(
+            "[bold yellow]API Keys Required[/bold yellow]\n\n"
+            "To use the Web Research Agent, you need to provide API keys.\n"
+            "You'll be prompted to enter them now.",
+            title="Configuration Needed",
+            border_style="yellow"
+        ))
+    
+    # Check which keys can be stored securely
+    secure_storage_available = keyring_available and config.get("use_keyring", True)
+    secure_status = config.securely_stored_keys() if secure_storage_available else {}
+    
+    for key, display_name in required_keys.items():
+        if key not in missing_keys:
+            continue
+            
+        prompt_text = f"{display_name} is required"
+        if secure_storage_available:
+            choice = click.confirm(
+                f"{prompt_text}. Store securely in system keyring?",
+                default=True
+            )
+            
+            if not choice:
+                console.print("[yellow]Note: API key will be stored in .env file instead.[/yellow]")
+        
+        value = click.prompt(f"Enter your {display_name}", hide_input=True)
+        
+        if secure_storage_available and choice:
+            success = config.update(key, value, store_in_keyring=True)
+            if success:
+                console.print(f"[green]✓[/green] {display_name} saved securely in system keyring")
+            else:
+                console.print(f"[yellow]⚠[/yellow] Could not save to keyring, storing in .env file")
+                _save_to_env_file(key, value)
+        else:
+            config.update(key, value, store_in_keyring=False)
+            _save_to_env_file(key, value)
+    
+    return True
+
+def _save_to_env_file(key, value):
+    """Save a key-value pair to the .env file."""
+    env_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '.env')
+    
+    # Convert config key to environment variable name
+    env_var = None
+    for env_name, config_key in get_config().ENV_MAPPING.items():
+        if config_key == key:
+            env_var = env_name
+            break
+    
+    if not env_var:
+        console.print(f"[red]Error: Could not find environment variable for {key}[/red]")
+        return
+    
+    # Check if .env file exists and if the key is already in it
+    lines = []
+    key_found = False
+    
+    if os.path.exists(env_path):
+        with open(env_path, 'r') as file:
+            lines = file.readlines()
+        
+        # Check if key already exists
+        for i, line in enumerate(lines):
+            if line.startswith(f"{env_var}="):
+                lines[i] = f"{env_var}='{value}'\n"
+                key_found = True
+                break
+    
+    # If key not found, add it
+    if not key_found:
+        lines.append(f"{env_var}='{value}'\n")
+    
+    # Write back to .env file
+    with open(env_path, 'w') as file:
+        file.writelines(lines)
+    
+    console.print(f"[green]✓[/green] Saved {env_var} to .env file")
+
 @cli.command()
 @click.argument('query', required=True)
 @click.option('--output', '-o', default="results", help="Output directory for results")
@@ -136,6 +246,10 @@ def cli(verbose):
               help="Output format for results")
 def search(query, output, format):
     """Execute a single research task with the given query."""
+    # Check if keys are configured before doing anything else
+    if not _check_required_keys(agent_initialization=True):
+        return
+        
     os.makedirs(output, exist_ok=True)
     
     console.print(Panel(f"[bold cyan]Researching:[/bold cyan] {query}", border_style="blue"))
@@ -275,55 +389,73 @@ def batch(file, output, format):
 @click.option('--serper-key', '-s', help="Set Serper API key")
 @click.option('--timeout', '-t', type=int, help="Set request timeout in seconds")
 @click.option('--format', '-f', type=click.Choice(['markdown', 'json', 'html']), help="Set default output format")
+@click.option('--use-keyring/--no-keyring', default=None, help="Whether to use system keyring for secure storage")
 @click.option('--show', is_flag=True, help="Show current configuration")
-def config(api_key, serper_key, timeout, format, show):
+def config(api_key, serper_key, timeout, format, use_keyring, show):
     """Configure the Web Research Agent."""
     config = get_config()
+    secure_storage = False
+    
+    try:
+        import keyring
+        secure_storage = True
+    except ImportError:
+        secure_storage = False
     
     if show:
         click.echo("Current configuration:")
+        secure_keys = config.securely_stored_keys() if secure_storage else {}
+        
         for key, value in config.items():
             if key.endswith('_api_key') and value:
                 value = f"{value[:4]}...{value[-4:]}"
-            click.echo(f"  {key}: {value}")
+                storage_info = " [stored in system keyring]" if secure_keys.get(key, False) else ""
+                click.echo(f"  {key}: {value}{storage_info}")
+            else:
+                click.echo(f"  {key}: {value}")
         return
     
-    # Prompt for missing API keys interactively
-    if not api_key and not config.get("gemini_api_key"):
-        api_key = click.prompt("Gemini API key is missing, please enter it", hide_input=True)
-        config.update('gemini_api_key', api_key)
-        click.echo("✅ Updated Gemini API key")
-    elif api_key:
-        config.update('gemini_api_key', api_key)
-        click.echo("✅ Updated Gemini API key")
+    # Set keyring preference if specified
+    if use_keyring is not None:
+        if use_keyring and not secure_storage:
+            console.print("[yellow]Warning: System keyring support not available. Install the 'keyring' package.[/yellow]")
+        config.update('use_keyring', use_keyring and secure_storage)
+        console.print(f"{'✅' if use_keyring else '❌'} {'Enabled' if use_keyring else 'Disabled'} secure credential storage")
     
-    if not serper_key and not config.get("serper_api_key"):
-        serper_key = click.prompt("Serper API key is missing, please enter it", hide_input=True)
-        config.update('serper_api_key', serper_key)
-        click.echo("✅ Updated Serper API key")
-    elif serper_key:
-        config.update('serper_api_key', serper_key)
-        click.echo("✅ Updated Serper API key")
+    # Update API keys with secure storage if possible
+    if api_key:
+        stored_securely = config.update('gemini_api_key', api_key, store_in_keyring=True) if secure_storage else False
+        console.print(f"✅ Updated Gemini API key{' (stored securely)' if stored_securely else ''}")
+        if not stored_securely:
+            _save_to_env_file('gemini_api_key', api_key)
     
+    if serper_key:
+        stored_securely = config.update('serper_api_key', serper_key, store_in_keyring=True) if secure_storage else False
+        console.print(f"✅ Updated Serper API key{' (stored securely)' if stored_securely else ''}")
+        if not stored_securely:
+            _save_to_env_file('serper_api_key', serper_key)
+    
+    # Other config updates
     if timeout:
         config.update('timeout', timeout)
-        click.echo(f"✅ Updated request timeout to {timeout} seconds")
+        console.print(f"✅ Updated request timeout to {timeout} seconds")
     
     if format:
         config.update('output_format', format)
-        click.echo(f"✅ Updated default output format to {format}")
+        console.print(f"✅ Updated default output format to {format}")
     
-    # Verify required configuration again after interactive prompts
-    required_keys = ['gemini_api_key', 'serper_api_key']
-    missing_keys = [key for key in required_keys if not config.get(key)]
-    if missing_keys:
-        click.echo(f"⚠️  Still missing: {', '.join(missing_keys)}")
-        click.echo("Please set these with 'web-research config --api-key=\"...\" --serper-key=\"...\"'")
+    # Only check for missing keys if no specific updates were provided
+    if not any([api_key, serper_key, timeout, format, use_keyring is not None]):
+        _check_required_keys()
 
 @cli.command()
 @click.option('--verbose', '-v', is_flag=True, help="Enable verbose logging")
 def shell(verbose):
     """Start an interactive shell for research tasks."""
+    # Check if keys are configured before doing anything else
+    if not _check_required_keys(agent_initialization=True):
+        return
+        
     # Set log level based on verbose flag
     import logging
     
