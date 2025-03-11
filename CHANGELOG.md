@@ -1,6 +1,6 @@
 # Changelog
 
-## [1.0.1] - YYYY-MM-DD
+## [1.0.1] - 2025-03-08
 
 ### Fixed
 - Fixed import issues with relative vs absolute imports
@@ -11,7 +11,7 @@
 - Support for verbose logging mode with `--verbose` flag
 - Smart preview extraction to show more relevant content
 
-## [1.0.0] - YYYY-MM-DD
+## [1.0.0] - 2025-03-08
 
 ### Added
 - Initial release of Web Research Agent
