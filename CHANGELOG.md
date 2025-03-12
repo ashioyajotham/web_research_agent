@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.9] - 2025-03-12
+
+### Fixed
+- Enhanced the update function in config.py and ConfigManager to correctly handle key updates.
+- Improved conversion of configuration updates to use the ConfigManager instance.
+- Minor improvements in error handling for configuration update operations.
+
 ## [1.0.8] - 2025-03-12
 
 ### Fixed
