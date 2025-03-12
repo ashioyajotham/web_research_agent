@@ -192,9 +192,20 @@ def _check_required_keys(agent_initialization=False):
             border_style="yellow"
         ))
     
-    # Check which keys can be stored securely
-    secure_storage_available = keyring_available and config.get("use_keyring", True)
-    secure_status = config.securely_stored_keys() if secure_storage_available else {}
+    # Check which keys can be stored securely - safely handle different config types
+    secure_storage_available = keyring_available
+    secure_status = {}
+    
+    # Only try to call securely_stored_keys if the config object might have this method
+    if hasattr(config, 'securely_stored_keys') and callable(getattr(config, 'securely_stored_keys', None)):
+        try:
+            secure_status = config.securely_stored_keys()
+        except Exception:
+            # Fall back to assuming no secure storage if method fails
+            secure_status = {}
+    else:
+        # This is likely an old version or different implementation
+        secure_storage_available = False
     
     for key, display_name in required_keys.items():
         if key not in missing_keys:
@@ -437,9 +448,16 @@ def config(api_key, serper_key, timeout, format, use_keyring, show):
     
     if show:
         click.echo("Current configuration:")
-        secure_keys = config.securely_stored_keys() if secure_storage else {}
         
-        for key, value in config.items():
+        # Safely handle different config types
+        secure_keys = {}
+        if hasattr(config, 'securely_stored_keys') and callable(getattr(config, 'securely_stored_keys', None)):
+            try:
+                secure_keys = config.securely_stored_keys() 
+            except Exception:
+                secure_keys = {}
+        
+        for key, value in (config.items() if hasattr(config, 'items') else config.get_all().items()):
             if key.endswith('_api_key') and value:
                 value = f"{value[:4]}...{value[-4:]}"
                 storage_info = " [stored in system keyring]" if secure_keys.get(key, False) else ""
