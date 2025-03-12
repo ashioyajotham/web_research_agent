@@ -1,6 +1,20 @@
 # Changelog
 
-## [1.0.6] - 2025-03-15
+## [1.0.8] - 2025-03-12
+
+### Fixed
+- Fixed "update expected at most 1 argument, got 2" error by enhancing the update function in config.py to handle different calling conventions
+- Added ConfigManager compatibility class to ensure backward compatibility with both new and old configuration systems
+- Improved error handling for configuration updates
+
+## [1.0.7] - 2025-03-12
+
+### Fixed
+- Fixed compatibility issue with older versions of the config manager by adding defensive code around the `securely_stored_keys` method
+- Improved error handling for different config object types to ensure backward compatibility
+- Made credential storage more resilient when handling different versions of the package
+
+## [1.0.6] - 2025-03-12
 
 ### Added
 - Secure credential management: API keys are now stored securely in the system's keyring
@@ -12,7 +26,7 @@
 ### Changed
 - Key configuration now happens at the earliest point needed in command execution
 
-## [1.0.5] - 2025-03-12
+## [1.0.5] - 2025-03-11
 
 ### Added
 - Interactive API Key Configuration: The agent now prompts for missing Gemini and Serper API keys during configuration, storing them using the configuration manager.
