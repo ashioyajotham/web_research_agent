@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.7] - 2025-03-16
+
+### Fixed
+- Fixed compatibility issue with older versions of the config manager by adding defensive code around the `securely_stored_keys` method
+- Improved error handling for different config object types to ensure backward compatibility
+- Made credential storage more resilient when handling different versions of the package
+
 ## [1.0.6] - 2025-03-15
 
 ### Added
