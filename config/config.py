@@ -71,10 +71,46 @@ def update_config(key, value):
     
     return _config
 
-# Alias for update_config for a cleaner API
-def update(key, value):
-    """Update a configuration value."""
+# Fix the update function to properly handle two arguments
+def update(key, value=None):
+    """
+    Update a configuration value.
+    
+    This function handles both the old API (update(key, value)) 
+    and the new method-style API from ConfigManager (used as config.update(key, value)).
+    """
+    # Check if this is being called as a method on a dict-like object
+    if value is None and hasattr(key, 'items'):
+        # Being used as object.update(dict) - not supported in our case
+        raise TypeError("Dictionary update not supported, use key-value pairs")
+        
+    # Otherwise use the normal update_config function
     return update_config(key, value)
+
+# Add ConfigManager class for backwards compatibility
+class ConfigManager(dict):
+    """Compatibility class that behaves like both the new ConfigManager and the old config dict."""
+    
+    def __init__(self, config_dict=None):
+        dict.__init__(self, config_dict or {})
+        
+    def update(self, key, value, store_in_keyring=False):
+        """Update method that matches the new ConfigManager.update() signature."""
+        update_config(key, value)
+        return False  # No keyring support in this fallback
+        
+    def get(self, key, default=None):
+        """Get a configuration value."""
+        config = get_config()
+        return config.get(key, default)
+        
+    def items(self):
+        """Get all items in the configuration."""
+        return get_config().items()
+        
+    def securely_stored_keys(self):
+        """Compatibility method for secure key storage."""
+        return {}  # No keys are securely stored in this fallback
 
 # Re-export for backwards compatibility
 __all__ = ['get_config', 'init_config', 'ConfigManager', 'update', 'update_config']
