@@ -2,6 +2,7 @@ import os
 import json
 from pathlib import Path
 from dotenv import load_dotenv
+from config.config_manager import ConfigManager
 
 # Load environment variables from .env file
 load_dotenv()
@@ -21,27 +22,29 @@ def init_config():
     config_dir.mkdir(exist_ok=True)
     
     # Load configuration from file if it exists
+    file_config = {}
     if config_file.exists():
         try:
             with open(config_file, "r") as f:
-                _config = json.load(f)
+                file_config = json.load(f)
         except json.JSONDecodeError:
-            # If the config file is invalid, start with empty config
-            _config = {}
+            file_config = {}
+    # Merge default config with file config
+    merged_config = {**{
+        "timeout": 30,
+        "max_search_results": 5,
+        "output_format": "markdown",
+        "log_level": "INFO"
+    }, **file_config}
     
-    # Load API keys from environment variables, overriding file config
+    # Override with API keys from environment variables
     if os.environ.get("GEMINI_API_KEY"):
-        _config["gemini_api_key"] = os.environ.get("GEMINI_API_KEY")
-    
+        merged_config["gemini_api_key"] = os.environ.get("GEMINI_API_KEY")
     if os.environ.get("SERPER_API_KEY"):
-        _config["serper_api_key"] = os.environ.get("SERPER_API_KEY")
+        merged_config["serper_api_key"] = os.environ.get("SERPER_API_KEY")
     
-    # Set default values if not already set
-    _config.setdefault("timeout", 30)
-    _config.setdefault("max_search_results", 5)
-    _config.setdefault("output_format", "markdown")
-    _config.setdefault("log_level", "INFO")
-    
+    # Create a ConfigManager instance instead of a plain dict
+    _config = ConfigManager(merged_config)
     return _config
 
 def get_config():
@@ -101,12 +104,11 @@ class ConfigManager(dict):
         
     def get(self, key, default=None):
         """Get a configuration value."""
-        config = get_config()
-        return config.get(key, default)
+        return super().get(key, default)
         
     def items(self):
         """Get all items in the configuration."""
-        return get_config().items()
+        return super().items()
         
     def securely_stored_keys(self):
         """Compatibility method for secure key storage."""
