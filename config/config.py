@@ -104,12 +104,11 @@ class ConfigManager(dict):
         
     def get(self, key, default=None):
         """Get a configuration value."""
-        config = get_config()
-        return config.get(key, default)
+        return super().get(key, default)
         
     def items(self):
         """Get all items in the configuration."""
-        return get_config().items()
+        return super().items()
         
     def securely_stored_keys(self):
         """Compatibility method for secure key storage."""
