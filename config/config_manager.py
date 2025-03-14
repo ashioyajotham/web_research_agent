@@ -62,6 +62,7 @@ class ConfigManager:
             env_file (str, optional): Path to .env file
         """
         self.config = self.DEFAULT_CONFIG.copy()
+        self.ENV_MAPPING = self.__class__.ENV_MAPPING
         
         # Load from .env file if available
         self._load_from_dotenv(env_file)
