@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.2] - 2025-03-15
+
+### Fixed
+- Fixed issue with ENV_MAPPING access in ConfigManager class
+- Improved _save_to_env_file function to handle different config object types
+- Enhanced backward compatibility with older configuration systems
+
 ## [1.1.0] - 2025-03-14
 
 ### Added
