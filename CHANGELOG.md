@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.1.0] - 2025-03-14
+
+### Added
+- Updated package version to 1.1.0.
+- Improved configuration management and keyring integration.
+- Enhanced tool registration and default tool integration.
+
+### Fixed
+- Resolved issues with secure credential storage in ConfigManager.
+- Fixed various logging and error handling improvements.
+
 ## [1.0.9] - 2025-03-12
 
 ### Fixed
