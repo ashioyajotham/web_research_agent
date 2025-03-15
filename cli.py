@@ -411,7 +411,7 @@ def batch(file, output, format):
                         console.print(f"[bold red]Error:[/bold red] {str(e)}")
                         result = f"Error: {str(e)}"
                         status = "✗ Failed"
-                progress.update(research_task, completed=j * 10)
+                progress.update(research_task, completed=(j * 10))
                 if j < 9:
                     time.sleep(0.1)  # Just for visual effect
             
@@ -662,13 +662,13 @@ def shell(verbose):
                                 console.print(f"[bold red]Error:[/bold red] {str(e)}")
                                 break
                         
-                        progress.update(task, completed=i * 10)
+                        progress.update(task, completed=(i * 10))
                         if i < 9:
                             time.sleep(0.2)  # Just for visual feedback
                     
                     # Complete the progress
                     if result:
-                        progress.update(task, completed=100)
+                        progress.update(task, completed=(100))
                 
                 # Only proceed if we got results
                 if result:

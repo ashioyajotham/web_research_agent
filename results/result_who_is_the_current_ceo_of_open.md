@@ -2,14 +2,14 @@
 
 ## Plan
 
-1. **Search Google for the current CEO of OpenAI using a relevant query.** (using search)
-2. **Extract the CEO's name from the top search result.** (using browser)
-3. **Verify the CEO's name from another reliable source (e.g., OpenAI's website).** (using browser)
-4. **Present the CEO's name in a summary format.** (using present)
+1. **Search Google for the current CEO of OpenAI** (using search)
+2. **Extract CEO's name from the top search result** (using browser)
+3. **Verify the CEO's name from another reputable source (e.g., OpenAI's website)** (using browser)
+4. **Present the confirmed CEO's name in a summary format** (using present)
 
 ## Results
 
-### 1. Search Google for the current CEO of OpenAI using a relevant query.
+### 1. Search Google for the current CEO of OpenAI
 **Status**: success
 
 **Search Query**: current CEO of OpenAI
@@ -24,7 +24,7 @@
 3. [Meet Sam Altman, OpenAI's Cofounder and CEO - Business Insider](https://www.businessinsider.com/sam-altman-chatgpt-openai-ceo-career-net-worth-ycombinator-prepper-2023-1)
    Altman became CEO of OpenAI in May 2019 after it turned away from being a nonprofit company into a "capped profit" corporation. Sam Altman.
 
-### 2. Extract the CEO's name from the top search result.
+### 2. Extract CEO's name from the top search result
 **Status**: success
 
 **Source**: [Sam Altman - Wikipedia](https://en.wikipedia.org/wiki/Sam_Altman)
@@ -56,12 +56,12 @@
   * [Galego](https://gl.wikipedia.org/wiki/Sam_Altman "Sam Altman – Galician")
   * [한국어](https://ko.wikipedia.org/wiki/%EC%83%98_%EC%98%AC%ED%8A%B8%EB%A8%BC "샘 올트먼 – ... [Content truncated, 81244 more characters]
 
-### 3. Verify the CEO's name from another reliable source (e.g., OpenAI's website).
+### 3. Verify the CEO's name from another reputable source (e.g., OpenAI's website)
 **Status**: success
 
 **Error**: Error accessing URL https://openai.com/about: 403 Client Error: Forbidden for url: https://openai.com/about
 
-### 4. Present the CEO's name in a summary format.
+### 4. Present the confirmed CEO's name in a summary format
 **Status**: error
 
 **Error**: Skipped step due to previous failures: Previous step 3 returned error: Error accessing URL https://openai.com/about: 403 Client Error: Forbidden for url: https://openai.com/about
