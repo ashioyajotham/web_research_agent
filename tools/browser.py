@@ -55,7 +55,7 @@ class BrowserTool(BaseTool):
         
         # Check if we have cached content
         cached_content = memory.get_cached_content(url)
-        if cached_content:
+        if (cached_content):
             logger.info(f"Using cached content for URL: {url}")
             content = cached_content["content"]
         else:
@@ -139,18 +139,21 @@ class BrowserTool(BaseTool):
         
         # Define comprehensive patterns for placeholders
         placeholder_patterns = [
-            # Brackets format
+            # Brackets format (expanded to catch more variations)
             (r"\[(.*URL.*|.*link.*|Insert.*|.*result.*)\]", "bracketed URL placeholder"),
-            # Template variables
+            # Template variables (various formats)
             (r"\{(.*?)\}", "template variable"),
-            # Explicit placeholder text
-            (r"placeholder|PLACEHOLDER|url_from|URL_FROM", "explicit placeholder text"),
+            # Explicit placeholder text (expanded)
+            (r"placeholder|PLACEHOLDER|url_from|URL_FROM|PLACEHOLDER_FOR", "explicit placeholder text"),
             # Function calls
             (r"function\s*\(.*?\)", "function call"),
             # Template instructions
             (r"<.*?>", "HTML-style placeholder"),
             # Default URLs
             (r"example\.com|localhost|127\.0\.0\.1", "example domain"),
+            # Additional common formats used by the planner
+            (r"^URL_", "URL prefix placeholder"),
+            (r"_URL$", "URL suffix placeholder"),
         ]
         
         # Check if URL matches any placeholder pattern
@@ -217,7 +220,7 @@ class BrowserTool(BaseTool):
                 return index - 1
         
         # Look for keywords that might indicate which result to use
-        if "first" in placeholder_lower or "1st" in placeholder_lower:
+        if "first" in placeholder_lower or "1st" in placeholder_lower or "top" in placeholder_lower:
             return 0
         elif "second" in placeholder_lower or "2nd" in placeholder_lower:
             return 1 if len(search_results) > 1 else 0
@@ -227,52 +230,9 @@ class BrowserTool(BaseTool):
         # Default to first result
         return 0
 
-    def _process_url_parameter(self, url: str, memory: Any) -> str:
-        """
-        Process URL parameter to handle various placeholder formats.
-        
-        Args:
-            url (str): URL or placeholder
-            memory (Memory): Agent's memory
-            
-        Returns:
-            str: Processed URL or error message
-        """
-        # Handle variable substitution for search result URLs in various formats
-        if url.startswith("{search_result_") and "url}" in url:
-            # Format: {search_result_0_url}
-            try:
-                idx_str = re.search(r"search_result_(\d+)", url).group(1)
-                idx = int(idx_str)
-                
-                if hasattr(memory, 'search_results') and memory.search_results:
-                    if idx < len(memory.search_results):
-                        return memory.search_results[idx].get("link", "")
-                    else:
-                        return f"Error: Search result index {idx} out of range"
-                else:
-                    return f"Error: No search results available in memory"
-            except Exception as e:
-                return f"Error: Failed to process URL placeholder: {str(e)}"
-        
-        elif re.match(r"\[.*URL.*\]", url, re.IGNORECASE) or re.match(r"\[Insert.*\]", url, re.IGNORECASE):
-            # Format: [Insert URL from search results] or similar
-            logger.warning(f"Found placeholder URL: {url}")
-            
-            # Try to use the first search result as fallback
-            if hasattr(memory, 'search_results') and memory.search_results:
-                first_url = memory.search_results[0].get("link", "")
-                logger.info(f"Substituting placeholder with first search result: {first_url}")
-                return first_url
-            else:
-                return f"Error: Cannot resolve placeholder URL: {url}"
-        
-        # If it seems like a valid URL, return it
-        return url
-    
     def _fetch_url(self, url: str) -> str:
         """
-        Fetch content from a URL.
+        Fetch content from a URL with better error handling.
         
         Args:
             url (str): URL to fetch
@@ -285,10 +245,26 @@ class BrowserTool(BaseTool):
             url = 'https://' + url
             logger.info(f"Added https:// prefix to URL: {url}")
         
-        timeout = self.config.get("timeout", 30)
-        response = requests.get(url, headers=self.headers, timeout=timeout)
-        response.raise_for_status()  # Raise exception for 4XX/5XX responses
-        return response.text
+        try:
+            timeout = self.config.get("timeout", 30)
+            response = requests.get(url, headers=self.headers, timeout=timeout)
+            response.raise_for_status()  # Raise exception for 4XX/5XX responses
+            return response.text
+        except requests.exceptions.HTTPError as e:
+            # Handle specific status codes
+            if e.response.status_code == 403:
+                # Handle forbidden errors (websites with anti-scraping)
+                raise Exception(f"Access to URL {url} is forbidden (403). This site may block automated access.")
+            elif e.response.status_code == 404:
+                raise Exception(f"URL {url} not found (404). The page may have been moved or deleted.")
+            else:
+                raise Exception(f"HTTP error accessing URL {url}: {str(e)}")
+        except requests.exceptions.ConnectionError:
+            raise Exception(f"Connection error accessing URL {url}. The site may be down or blocking requests.")
+        except requests.exceptions.Timeout:
+            raise Exception(f"Timeout accessing URL {url} after {timeout} seconds.")
+        except requests.exceptions.RequestException as e:
+            raise Exception(f"Error accessing URL {url}: {str(e)}")
     
     def _extract_title(self, html_content: str) -> str:
         """Extract the page title from HTML content."""
