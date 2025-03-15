@@ -72,7 +72,36 @@ class WebResearchAgent:
                 })
                 continue
             
-            # Get the appropriate tool
+            # Special handling for search results - extract entities early from snippets
+            if step.tool_name == "search":
+                tool = self.tool_registry.get_tool(step.tool_name)
+                if tool:
+                    try:
+                        output = tool.execute(step.parameters, self.memory)
+                        
+                        if isinstance(output, dict) and "results" in output:
+                            # Extract entities from search snippets for immediate use
+                            self._extract_entities_from_snippets(output["results"], step.parameters.get("query", ""))
+                            
+                            # Store results in memory
+                            self.memory.search_results = output["results"]
+                            
+                        # Store the step result
+                        results.append({"step": step.description, "status": "success", "output": output})
+                        self.memory.add_result(step.description, output)
+                        
+                    except Exception as e:
+                        logger.error(f"Error executing search: {str(e)}")
+                        results.append({"step": step.description, "status": "error", "output": str(e)})
+                    
+                    # Display the result of this step
+                    display_result = next((r for r in results if r["step"] == step.description), None)
+                    if display_result:
+                        self._display_step_result(step_index+1, step.description, display_result["status"], display_result["output"])
+                    
+                    continue  # Skip the normal execution flow for this step
+            
+            # Normal tool execution for non-search steps
             tool = self.tool_registry.get_tool(step.tool_name)
             if not tool:
                 error_msg = f"Tool '{step.tool_name}' not found"
@@ -407,3 +436,122 @@ class WebResearchAgent:
         
         logger.info(f"Refined query: '{original_query}' -> '{refined_query}'")
         return refined_query
+
+    def _extract_entities_from_snippets(self, search_results, query):
+        """
+        Extract entities from search result snippets for early knowledge acquisition.
+        
+        Args:
+            search_results (list): List of search result dictionaries
+            query (str): The search query that produced these results
+        """
+        # Combine all snippets into a single text for entity extraction
+        combined_text = ""
+        for result in search_results:
+            if "snippet" in result and result["snippet"]:
+                combined_text += result["snippet"] + "\n\n"
+            if "title" in result and result["title"]:
+                combined_text += result["title"] + "\n"
+        
+        if not combined_text:
+            return
+        
+        # Extract potential query targets for focused entity extraction
+        target_entity = self._extract_target_entity(query)
+        target_role = self._extract_target_role(query)
+        
+        # Use comprehension for entity extraction with focused entity types
+        entity_types = ["person", "organization", "role", "date"]
+        
+        try:
+            # Extract entities using focused entity types
+            entities = self.comprehension.extract_entities(combined_text, entity_types)
+            
+            # Add extracted entities to memory
+            self.memory.add_entities(entities)
+            
+            # Create role relationships if we have role entities and our query was about a role
+            if target_role and "person" in entities and "organization" in entities:
+                self._map_role_relationships(target_role, entities)
+                
+        except Exception as e:
+            logger.error(f"Error extracting entities from snippets: {str(e)}")
+
+    def _extract_target_entity(self, query):
+        """Extract the target entity from a query."""
+        # Common patterns for entity-seeking queries
+        entity_patterns = [
+            r"who is (the )?([\w\s]+)( of| at| in| for)? ([\w\s]+)",
+            r"what is (the )?([\w\s]+)( of| at| in| for)? ([\w\s]+)"
+        ]
+        
+        for pattern in entity_patterns:
+            match = re.search(pattern, query, re.IGNORECASE)
+            if match:
+                return match.group(4).strip()  # The entity/organization name
+        
+        return None
+
+    def _extract_target_role(self, query):
+        """Extract the target role from a query."""
+        # Common patterns for role-seeking queries
+        role_patterns = [
+            r"who is (the )?([\w\s]+)( of| at| in| for)?",
+            r"current ([\w\s]+)( of| at| for)?"
+        ]
+        
+        roles = ["ceo", "cfo", "coo", "president", "founder", "director", "head", "chief", "lead"]
+        
+        # Check for exact role matches in the query
+        query_lower = query.lower()
+        for role in roles:
+            if role in query_lower:
+                return role
+        
+        # Try pattern matching
+        for pattern in role_patterns:
+            match = re.search(pattern, query, re.IGNORECASE)
+            if match and match.group(2):
+                return match.group(2).strip()
+        
+        return None
+
+    def _map_role_relationships(self, target_role, entities):
+        """
+        Create explicit role-person-organization relationships based on extracted entities.
+        
+        Args:
+            target_role (str): The role being searched for
+            entities (dict): The extracted entities
+        """
+        # If we have exactly one person and one organization and a target role
+        if (target_role and "person" in entities and len(entities["person"]) > 0 
+            and "organization" in entities and len(entities["organization"]) > 0):
+            
+            # Create a formatted role entry that combines all three elements
+            person = entities["person"][0]
+            org = entities["organization"][0]
+            
+            role_entry = f"{target_role.upper()}: {person} @ {org}"
+            
+            # Add or update the role in memory
+            if "role" not in entities:
+                entities["role"] = []
+            
+            # Check if we already have this role
+            exists = False
+            for i, existing_role in enumerate(entities["role"]):
+                if target_role.lower() in existing_role.lower() and org.lower() in existing_role.lower():
+                    # Update existing role with better formatting
+                    entities["role"][i] = role_entry
+                    exists = True
+                    break
+            
+            # If no existing role, add new one
+            if not exists:
+                entities["role"].append(role_entry)
+            
+            # Update memory with our enhanced entities
+            self.memory.update_entities(entities)
+            
+            logger.info(f"Created role relationship: {role_entry}")

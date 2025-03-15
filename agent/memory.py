@@ -146,6 +146,48 @@ class Memory:
                 if not exists:
                     self.extracted_entities[entity_type].append(value)
 
+    def update_entities(self, entities):
+        """
+        Update entities with priority information (replace entire entity list).
+        
+        Args:
+            entities (dict): Dictionary of entity types and values to update
+        """
+        for entity_type, values in entities.items():
+            self.extracted_entities[entity_type] = values
+
+    def find_entity_by_role(self, role_name):
+        """
+        Find a person entity associated with a specific role.
+        
+        Args:
+            role_name (str): Role name to search for (e.g., "CEO", "founder")
+            
+        Returns:
+            tuple: (person_name, organization_name) or (None, None) if not found
+        """
+        if "role" not in self.extracted_entities:
+            return None, None
+            
+        role_name = role_name.lower()
+        
+        # Look through all roles for a match
+        for role in self.extracted_entities["role"]:
+            if role_name in role.lower():
+                # Parse the role if it's in the format "Role: Person @ Organization"
+                if ":" in role and "@" in role:
+                    parts = role.split(":")
+                    if len(parts) >= 2:
+                        person_org = parts[1].strip().split("@")
+                        if len(person_org) >= 2:
+                            person = person_org[0].strip()
+                            org = person_org[1].strip()
+                            return person, org
+                # Return just the role if it doesn't follow the format
+                return role, None
+        
+        return None, None
+
     def get_related_entities(self, entity_value):
         """
         Find related entities across different entity types.

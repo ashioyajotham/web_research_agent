@@ -152,23 +152,56 @@ class Comprehension:
         # Cap text length to avoid token limits
         text_sample = text[:25000] if len(text) > 25000 else text
         
-        prompt = f"""
+        # Use specialized prompt based on presence of 'role' type
+        if 'role' in entity_types:
+            prompt = self._create_role_focused_extraction_prompt(entity_types, text_sample)
+        else:
+            prompt = self._create_standard_extraction_prompt(entity_types, text_sample)
+        
+        try:
+            response = self.model.generate_content(prompt)
+            entities = self._extract_json(response.text)
+            
+            # Post-process the extracted entities
+            cleaned_entities = self._clean_entities(entities)
+            
+            # Process role relationships
+            if 'role' in cleaned_entities and 'person' in cleaned_entities and 'organization' in cleaned_entities:
+                cleaned_entities = self._enhance_role_relationships(cleaned_entities)
+            
+            logger.info(f"Extracted entities: {cleaned_entities}")
+            return cleaned_entities
+        except Exception as e:
+            logger.error(f"Error extracting entities: {str(e)}")
+            return {entity_type: [] for entity_type in entity_types}
+
+    def _create_role_focused_extraction_prompt(self, entity_types, text):
+        """Create a prompt specifically designed to extract roles with relationships."""
+        entity_types_str = ', '.join(entity_types)
+        
+        return f"""
         Carefully analyze and extract the following entity types from the text below:
-        {', '.join(entity_types)}
+        {entity_types_str}
         
         For each entity type, provide a list of unique values found in the text.
         Be thorough and precise in your extraction, focusing especially on unique identifiers.
+        
+        Pay special attention to identifying leadership roles and their relationships to people and organizations.
         
         Special extraction instructions:
         
         1. PERSON: Extract full names when possible. Include titles only if they help identify the person.
         2. ORGANIZATION: Extract complete organization names. Include both full names and well-known abbreviations.
-        3. ROLE: For roles/positions, use the format "Role: Person @ Organization" when that information is available.
+        3. ROLE: For roles and positions, use this exact format: "ROLE: Person @ Organization" 
+           For example: "CEO: John Smith @ Acme Corp"
+           This is critical for establishing the relationship between roles, people and organizations.
+           If a role is mentioned (like CEO, founder, director) always try to determine which person has this role
+           and at which organization.
         4. DATE: Extract specific dates mentioned, including year information when available.
         5. LOCATION: Extract specific locations including cities, countries, and venues.
         
         TEXT:
-        {text_sample}
+        {text}
         
         Return the results as a JSON object with entity types as keys and arrays of found entities as values.
         Only include entity types that have at least one match. Return ONLY the JSON without additional text.
@@ -181,19 +214,98 @@ class Comprehension:
             "location": ["Geneva, Switzerland", "Washington DC"]
         }}
         """
+
+    def _create_standard_extraction_prompt(self, entity_types, text):
+        """Create a standard entity extraction prompt."""
+        entity_types_str = ', '.join(entity_types)
         
-        try:
-            response = self.model.generate_content(prompt)
-            entities = self._extract_json(response.text)
+        return f"""
+        Carefully analyze and extract the following entity types from the text below:
+        {entity_types_str}
+        
+        For each entity type, provide a list of unique values found in the text.
+        Be thorough and precise in your extraction, focusing especially on unique identifiers.
+        
+        Special extraction instructions:
+        
+        1. PERSON: Extract full names when possible. Include titles only if they help identify the person.
+        2. ORGANIZATION: Extract complete organization names. Include both full names and well-known abbreviations.
+        3. DATE: Extract specific dates mentioned, including year information when available.
+        4. LOCATION: Extract specific locations including cities, countries, and venues.
+        
+        TEXT:
+        {text}
+        
+        Return the results as a JSON object with entity types as keys and arrays of found entities as values.
+        Only include entity types that have at least one match. Return ONLY the JSON without additional text.
+        """
+
+    def _enhance_role_relationships(self, entities):
+        """
+        Enhance role relationships by ensuring proper format and connections.
+        
+        Args:
+            entities (dict): Extracted entities
             
-            # Post-process the extracted entities
-            cleaned_entities = self._clean_entities(entities)
+        Returns:
+            dict: Entities with enhanced role relationships
+        """
+        # If we don't have the necessary entities, return as is
+        if not all(k in entities for k in ['role', 'person', 'organization']):
+            return entities
+        
+        # Make a copy to avoid modifying the original
+        enhanced = {k: v.copy() if isinstance(v, list) else v for k, v in entities.items()}
+        
+        # Process each role entry
+        updated_roles = []
+        for role in enhanced['role']:
+            # Check if the role is already properly formatted
+            if ':' in role and '@' in role:
+                updated_roles.append(role)
+                continue
             
-            logger.info(f"Extracted entities: {cleaned_entities}")
-            return cleaned_entities
-        except Exception as e:
-            logger.error(f"Error extracting entities: {str(e)}")
-            return {entity_type: [] for entity_type in entity_types}
+            # Try to extract role type and connect to person and organization
+            role_parts = role.split()
+            if not role_parts:
+                continue
+                
+            # Get the role type (e.g. CEO, Director)
+            role_type = role_parts[0].upper()
+            
+            # Find person and organization in this role text
+            best_person = None
+            best_org = None
+            
+            # Look for person name in the role text
+            for person in enhanced['person']:
+                if person.lower() in role.lower():
+                    best_person = person
+                    break
+            
+            # Look for organization in the role text
+            for org in enhanced['organization']:
+                if org.lower() in role.lower():
+                    best_org = org
+                    break
+            
+            # If we found matches, format properly. Otherwise use first entries
+            if not best_person and enhanced['person']:
+                best_person = enhanced['person'][0]
+                
+            if not best_org and enhanced['organization']:
+                best_org = enhanced['organization'][0]
+                
+            # Create formatted role entry if we have both components
+            if best_person and best_org:
+                formatted_role = f"{role_type}: {best_person} @ {best_org}"
+                updated_roles.append(formatted_role)
+            else:
+                # Keep original if we couldn't enhance
+                updated_roles.append(role)
+        
+        enhanced['role'] = updated_roles
+        return enhanced
 
     def _clean_entities(self, entities):
         """Clean and normalize extracted entities."""

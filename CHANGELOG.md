@@ -1,6 +1,18 @@
 # Changelog
 
-## [1.1.2] - 2025-03-15
+## [1.1.4] - 2025-03-15
+
+### Added
+- Enhanced PresentationTool with smart entity placeholder detection and replacement
+- Advanced entity matching that automatically identifies placeholder patterns like [CEO's Name]
+- Flexible placeholder format support including brackets, braces, and angle brackets
+
+### Fixed
+- Resolved ConfigManager ENV_MAPPING attribute access issue
+- Improved environment variable handling in configuration system
+- Enhanced browser tool placeholder URL detection
+
+## [1.1.2] - 2025-03-14
 
 ### Fixed
 - Fixed issue with ENV_MAPPING access in ConfigManager class
