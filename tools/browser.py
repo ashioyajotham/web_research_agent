@@ -121,20 +121,32 @@ class BrowserTool(BaseTool):
                 "content": processed_content
             }
             
-            # Extract entities if requested
-            if parameters.get("extract_entities", False):
+            # Enhanced entity extraction - now always extracts entities even if not explicitly requested
+            try:
                 from agent.comprehension import Comprehension
                 comprehension = Comprehension()
-                entity_types = parameters.get("entity_types", None)
+                
+                # Determine relevant entity types based on title and content
+                entity_types = self._determine_relevant_entity_types(result["title"], processed_content)
+                
+                # Extract entities with focused types
                 entities = comprehension.extract_entities(processed_content, entity_types)
                 
-                # Add extracted entities to memory
-                memory.add_entities(entities)
+                # Try to extract relationships between entities
+                enriched_entities = self._enrich_entity_relationships(entities, parameters.get("query", ""), result["title"])
                 
-                # Include entities in result
-                result["entities"] = entities
+                # Add extracted entities to memory
+                memory.add_entities(enriched_entities)
+                
+                # Include entities in result if requested
+                if parameters.get("extract_entities", True):  # Default to True for better info extraction
+                    result["entities"] = enriched_entities
+            
+            except Exception as e:
+                logger.error(f"Error during entity extraction: {str(e)}")
             
             return result
+            
         except Exception as e:
             error_message = f"Error processing content from {url}: {str(e)}"
             logger.error(error_message)
@@ -249,3 +261,95 @@ class BrowserTool(BaseTool):
         
         # Last resort: return everything
         return self.html_converter.handle(html_content)
+    
+    def _determine_relevant_entity_types(self, title, content):
+        """Determine which entity types are most relevant to extract based on content."""
+        title_lower = title.lower() if title else ""
+        content_sample = content[:2000].lower() if content else ""
+        
+        # Start with a base set of entity types
+        entity_types = ["person", "organization", "role"]
+        
+        # Check for keywords suggesting date relevance
+        date_keywords = ["when", "date", "time", "year", "month", "history", "founded", "established", "launched"]
+        if any(keyword in title_lower or keyword in content_sample for keyword in date_keywords):
+            entity_types.append("date")
+        
+        # Check for keywords suggesting location relevance
+        location_keywords = ["where", "location", "country", "city", "region", "headquartered", "based in"]
+        if any(keyword in title_lower or keyword in content_sample for keyword in location_keywords):
+            entity_types.append("location")
+        
+        # Check for other specialized entities based on content
+        if "%" in content_sample or any(term in content_sample for term in ["percent", "rate", "growth", "decline"]):
+            entity_types.append("percentage")
+        
+        if "$" in content_sample or any(term in content_sample for term in ["dollar", "price", "cost", "value", "worth"]):
+            entity_types.append("monetary_value")
+        
+        return entity_types
+
+    def _enrich_entity_relationships(self, entities, query, title):
+        """
+        Enrich entity extraction by establishing relationships between entities.
+        
+        Args:
+            entities (dict): Extracted entities
+            query (str): The original query that led to this extraction
+            title (str): Title of the webpage
+            
+        Returns:
+            dict: Enriched entity dictionary with relationships
+        """
+        if not entities or len(entities) < 2:
+            return entities
+        
+        # Create a new dictionary to avoid modifying the original
+        enriched = {k: v.copy() if isinstance(v, list) else v for k, v in entities.items()}
+        
+        # Try to establish role-person-organization relationships
+        if "person" in enriched and "organization" in enriched and "role" not in enriched:
+            # Check if title or query contains role keywords
+            role_keywords = ["ceo", "chief executive", "president", "founder", "director", "chairman"]
+            title_and_query = (title + " " + query).lower()
+            
+            for role in role_keywords:
+                if role in title_and_query:
+                    # We found a role keyword, try to associate person and organization
+                    if len(enriched["person"]) > 0 and len(enriched["organization"]) > 0:
+                        # Create a role entry with person and organization
+                        person = enriched["person"][0]  # Most important person
+                        org = enriched["organization"][0]  # Most important organization
+                        role_entry = f"{role.upper()}: {person} @ {org}"
+                        
+                        if "role" not in enriched:
+                            enriched["role"] = []
+                        enriched["role"].append(role_entry)
+                        break
+        
+        # Enhanced relationship extraction for existing roles
+        if "role" in enriched and "person" in enriched and "organization" in enriched:
+            # Check for incomplete role entries (those without person or organization)
+            updated_roles = []
+            for role_entry in enriched["role"]:
+                if ":" not in role_entry or "@" not in role_entry:
+                    # Try to enhance this role
+                    role_parts = role_entry.lower().split()
+                    if len(role_parts) > 0:
+                        role_type = role_parts[0]  # e.g., "ceo", "founder"
+                        
+                        # Find most relevant person and organization
+                        person = enriched["person"][0] if enriched["person"] else "Unknown"
+                        org = enriched["organization"][0] if enriched["organization"] else "Unknown"
+                        
+                        # Create proper formatted role
+                        updated_role = f"{role_type.upper()}: {person} @ {org}"
+                        updated_roles.append(updated_role)
+                    else:
+                        updated_roles.append(role_entry)
+                else:
+                    updated_roles.append(role_entry)
+            
+            enriched["role"] = updated_roles
+        
+        return enriched
