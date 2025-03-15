@@ -42,7 +42,7 @@ def display_banner():
     """Display the ASCII art banner."""
     console.print(BANNER)
     console.print("\n[dim]Version 1.1.5 - Type 'help' for commands[/dim]\n")
-    console.print("[dim]Chef's kiss[bold magenta]Victor Jotham Ashioya[/bold magenta] - Web research wizard extraordinaire![/dim]\n")
+    console.print("[dim]Chef's kiss [bold magenta]Victor Jotham Ashioya[/bold magenta] - lock in, build and accelerate, loser![/dim]\n")
 
 def display_intro():
     """Display introduction info."""
@@ -539,6 +539,9 @@ def shell(verbose):
     from prompt_toolkit.completion import WordCompleter
     from prompt_toolkit.styles import Style
     
+    # Import direct answer extraction functionality
+    from utils.formatters import extract_direct_answer
+    
     # Create history file path
     history_file = Path.home() / ".web_research_history"
     
@@ -675,8 +678,13 @@ def shell(verbose):
                     with open(filename, 'w', encoding='utf-8') as f:
                         f.write(result)
                     
+                    # NEW: Extract and show a direct answer if possible
+                    direct_answer = extract_direct_answer(query, agent.memory.get_results(), agent.memory)
+                    if direct_answer:
+                        console.print("\n[bold green]Answer:[/bold green]", style="bold")
+                        console.print(Panel(direct_answer, border_style="green", expand=False))
+                    
                     console.print(f"[bold green]✓[/bold green] Research complete! Results saved to [cyan]{filename}[/cyan]")
-
                     
                     # Show a preview of the results
                     try:

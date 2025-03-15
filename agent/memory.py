@@ -235,3 +235,20 @@ class Memory:
         if entity_type:
             return self.extracted_entities.get(entity_type, [])
         return self.extracted_entities
+
+    def get_results(self):
+        """
+        Get all results from the current task.
+        
+        Returns:
+            list: List of result dictionaries
+        """
+        # Convert task_results dict to a list of dicts with step info
+        results = []
+        for step_desc, output in self.task_results.items():
+            results.append({
+                "step": step_desc,
+                "status": "success" if output else "error", 
+                "output": output
+            })
+        return results

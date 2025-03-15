@@ -45,40 +45,10 @@ class BrowserTool(BaseTool):
         if not url:
             return {"error": "No URL provided for browsing"}
         
-        # Enhanced URL validation and normalization
-        if not isinstance(url, str) or len(url) < 3:
-            return {"error": f"Invalid URL format: {url}"}
-        
-        # Check for obvious placeholder patterns and try to resolve them
-        placeholder_patterns = [
-            r"\[.*\]",  # Anything in square brackets
-            r"placeholder",
-            r"URL_from",
-            r"FILL_IN",
-            r"<URL>",
-            r"{.*}"  # Anything in curly braces
-        ]
-        
-        for pattern in placeholder_patterns:
-            if re.search(pattern, url, re.IGNORECASE):
-                # This is clearly a placeholder that wasn't resolved, try to get a URL from memory
-                if hasattr(memory, 'search_results') and memory.search_results:
-                    first_url = memory.search_results[0].get("link", "")
-                    if first_url:
-                        logger.warning(f"URL '{url}' appears to be an unresolved placeholder. Using first search result URL: {first_url}")
-                        url = first_url
-                        break
-                else:
-                    return {"error": f"Could not resolve placeholder URL: {url}"}
-        
-        # Add scheme if missing
-        if not url.startswith(('http://', 'https://')):
-            url = 'https://' + url
-            logger.info(f"Added https:// prefix to URL: {url}")
-        
-        # URL validation - check basic URL structure
-        if not re.match(r"https?://[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)+(:[0-9]+)?(/.*)?$", url):
-            return {"error": f"URL format appears invalid: {url}"}
+        # Enhanced URL validation, normalization and placeholder resolution
+        url, url_error = self._resolve_url_placeholders(url, memory)
+        if url_error:
+            return {"error": url_error}
         
         extract_type = parameters.get("extract_type", "main_content")
         selector = parameters.get("selector", "")
@@ -152,6 +122,111 @@ class BrowserTool(BaseTool):
             logger.error(error_message)
             return {"error": error_message}
     
+    def _resolve_url_placeholders(self, url: str, memory: Any) -> tuple:
+        """
+        Enhanced placeholder resolution with comprehensive pattern detection.
+        
+        Args:
+            url (str): URL or placeholder
+            memory (Memory): Agent's memory
+            
+        Returns:
+            tuple: (resolved_url, error_message or None)
+        """
+        # Invalid URL check
+        if not isinstance(url, str) or len(url) < 3:
+            return None, f"Invalid URL format: {url}"
+        
+        # Define comprehensive patterns for placeholders
+        placeholder_patterns = [
+            # Brackets format
+            (r"\[(.*URL.*|.*link.*|Insert.*|.*result.*)\]", "bracketed URL placeholder"),
+            # Template variables
+            (r"\{(.*?)\}", "template variable"),
+            # Explicit placeholder text
+            (r"placeholder|PLACEHOLDER|url_from|URL_FROM", "explicit placeholder text"),
+            # Function calls
+            (r"function\s*\(.*?\)", "function call"),
+            # Template instructions
+            (r"<.*?>", "HTML-style placeholder"),
+            # Default URLs
+            (r"example\.com|localhost|127\.0\.0\.1", "example domain"),
+        ]
+        
+        # Check if URL matches any placeholder pattern
+        is_placeholder = False
+        matched_pattern = None
+        
+        for pattern, pattern_name in placeholder_patterns:
+            if re.search(pattern, url, re.IGNORECASE):
+                is_placeholder = True
+                matched_pattern = pattern_name
+                break
+        
+        if is_placeholder:
+            logger.warning(f"Detected probable placeholder URL '{url}' (matched {matched_pattern})")
+            
+            # First try to intelligently resolve from search results
+            if hasattr(memory, 'search_results') and memory.search_results:
+                # Try to find the most relevant result based on the placeholder text
+                relevant_idx = self._find_relevant_result_index(url, memory.search_results)
+                
+                if relevant_idx is not None:
+                    resolved_url = memory.search_results[relevant_idx].get("link", "")
+                    if resolved_url:
+                        logger.info(f"Resolved placeholder '{url}' to search result {relevant_idx+1}: {resolved_url}")
+                        return resolved_url, None
+                
+                # Fall back to first search result if no specific match
+                first_url = memory.search_results[0].get("link", "")
+                if first_url:
+                    logger.warning(f"URL '{url}' appears to be an unresolved placeholder. Using first search result URL: {first_url}")
+                    return first_url, None
+            
+            # If we couldn't find any search result, report an error
+            return None, f"Could not resolve placeholder URL: {url}. No search results available."
+        
+        # Add scheme if missing
+        if not url.startswith(('http://', 'https://')):
+            url = 'https://' + url
+            logger.info(f"Added https:// prefix to URL: {url}")
+        
+        return url, None
+
+    def _find_relevant_result_index(self, placeholder: str, search_results: list) -> Optional[int]:
+        """
+        Find the most relevant search result based on the placeholder text.
+        
+        Args:
+            placeholder (str): The placeholder text
+            search_results (list): List of search results
+            
+        Returns:
+            int or None: Index of the most relevant result or None if no match
+        """
+        placeholder_lower = placeholder.lower()
+        
+        # Extract any numbers from the placeholder
+        number_match = re.search(r'(\d+)', placeholder_lower)
+        if number_match:
+            index = int(number_match.group(1))
+            # Check if this could be a valid index (accounting for 0 and 1-based indexing)
+            if 0 <= index < len(search_results):
+                return index
+            elif 1 <= index <= len(search_results):  # 1-based indexing in placeholder
+                return index - 1
+        
+        # Look for keywords that might indicate which result to use
+        if "first" in placeholder_lower or "1st" in placeholder_lower:
+            return 0
+        elif "second" in placeholder_lower or "2nd" in placeholder_lower:
+            return 1 if len(search_results) > 1 else 0
+        elif "third" in placeholder_lower or "3rd" in placeholder_lower:
+            return 2 if len(search_results) > 2 else 0
+        
+        # Default to first result
+        return 0
+
     def _process_url_parameter(self, url: str, memory: Any) -> str:
         """
         Process URL parameter to handle various placeholder formats.

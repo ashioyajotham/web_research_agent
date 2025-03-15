@@ -555,3 +555,22 @@ class WebResearchAgent:
             self.memory.update_entities(entities)
             
             logger.info(f"Created role relationship: {role_entry}")
+
+    def _display_step_result(self, step_number, step_description, status, output):
+        """
+        Display a formatted result from a step execution.
+        For internal use by the agent when executing steps.
+        
+        Args:
+            step_number (int): Step number
+            step_description (str): Description of the step
+            status (str): Status of step execution (success/error)
+            output (any): Output from the step
+        """
+        logger.debug(f"Step {step_number}: {step_description} - Status: {status}")
+        
+        # No visual output needed here since this is meant for internal display
+        # The actual visual display is handled by the CLI or UI layer
+        # This method exists to support potential console.print operations
+        # that may have been removed from this version of the agent
+        pass
