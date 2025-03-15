@@ -94,8 +94,22 @@ def update(key, value=None):
 class ConfigManager(dict):
     """Compatibility class that behaves like both the new ConfigManager and the old config dict."""
     
+    # Add ENV_MAPPING class attribute to match config_manager.py
+    ENV_MAPPING = {
+        "GEMINI_API_KEY": "gemini_api_key",
+        "SERPER_API_KEY": "serper_api_key",
+        "LOG_LEVEL": "log_level",
+        "MAX_SEARCH_RESULTS": "max_search_results",
+        "MEMORY_LIMIT": "memory_limit",
+        "OUTPUT_FORMAT": "output_format",
+        "REQUEST_TIMEOUT": "timeout",
+        "USE_KEYRING": "use_keyring",
+    }
+    
     def __init__(self, config_dict=None):
         dict.__init__(self, config_dict or {})
+        # Expose the class-level ENV_MAPPING on the instance
+        self.ENV_MAPPING = self.__class__.ENV_MAPPING
         
     def update(self, key, value, store_in_keyring=False):
         """Update method that matches the new ConfigManager.update() signature."""

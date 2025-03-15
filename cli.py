@@ -41,7 +41,7 @@ BANNER = """
 def display_banner():
     """Display the ASCII art banner."""
     console.print(BANNER)
-    console.print("\n[dim]Version 1.1.1 - Type 'help' for commands[/dim]\n")
+    console.print("\n[dim]Version 1.1.4 - Type 'help' for commands[/dim]\n")
     console.print("[dim]Built by [bold magenta]Ashioya Jotham Victor[/bold magenta][/dim]\n")
 
 def display_intro():
@@ -242,14 +242,27 @@ def _save_to_env_file(key, value):
     
     # Convert config key to environment variable name
     env_var = None
-    for env_name, config_key in get_config().ENV_MAPPING.items():
+    config = get_config()
+    
+    # Try different ways to access ENV_MAPPING based on the config object type
+    if hasattr(config, 'ENV_MAPPING'):
+        # Direct access to ENV_MAPPING attribute
+        env_mapping = config.ENV_MAPPING
+    elif hasattr(config, '__class__') and hasattr(config.__class__, 'ENV_MAPPING'):
+        # Class-level attribute
+        env_mapping = config.__class__.ENV_MAPPING
+    else:
+        # Hard-coded fallback mapping
+        env_mapping = {
+            "GEMINI_API_KEY": "gemini_api_key",
+            "SERPER_API_KEY": "serper_api_key"
+        }
+    
+    # Get the environment variable from the mapping
+    for env_name, config_key in env_mapping.items():
         if config_key == key:
             env_var = env_name
             break
-    
-    if not env_var:
-        console.print(f"[red]Error: Could not find environment variable for {key}[/red]")
-        return
     
     # Check if .env file exists and if the key is already in it
     lines = []
