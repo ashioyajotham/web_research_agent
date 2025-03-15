@@ -1,6 +1,7 @@
 from typing import Dict, Any, List, Optional
 from .tool_registry import BaseTool
 from utils.logger import get_logger
+import re
 
 logger = get_logger(__name__)
 
@@ -33,6 +34,10 @@ class PresentationTool(BaseTool):
         title = parameters.get("title", "Information")
         prompt = parameters.get("prompt", "")
         data = parameters.get("data", {})
+        
+        # Process the prompt to replace placeholders with actual entities
+        if prompt:
+            prompt = self._replace_placeholders(prompt, memory)
         
         # Check if we have entities to present
         if hasattr(memory, 'extracted_entities') and memory.extracted_entities:
@@ -79,6 +84,172 @@ class PresentationTool(BaseTool):
             return self._format_as_comparison(title, prompt, data)
         else:
             return self._format_as_generic(title, prompt, data)
+
+    def _replace_placeholders(self, text: str, memory: Any) -> str:
+        """
+        Replace entity placeholders in text with actual entity values from memory.
+        
+        Args:
+            text (str): Text containing placeholders
+            memory (Memory): Agent's memory containing extracted entities
+            
+        Returns:
+            str: Text with placeholders replaced with actual values
+        """
+        if not hasattr(memory, 'extracted_entities') or not memory.extracted_entities:
+            return text
+        
+        # Define patterns for common placeholder formats
+        placeholder_patterns = [
+            # [Entity's Name], [ENTITY NAME], [EntityName]
+            r'\[([\w\s\']+(?:\'s)?[\s]*(?:Name|Role|Title|Position|Organization|Company|Location|Date)?)\]',
+            # {Entity's Name}, {ENTITY NAME}, {EntityName}
+            r'\{([\w\s\']+(?:\'s)?[\s]*(?:Name|Role|Title|Position|Organization|Company|Location|Date)?)\}',
+            # <Entity's Name>, <ENTITY NAME>, <EntityName>
+            r'\<([\w\s\']+(?:\'s)?[\s]*(?:Name|Role|Title|Position|Organization|Company|Location|Date)?)\>',
+        ]
+        
+        replaced_text = text
+        
+        # Look for placeholders using the defined patterns
+        for pattern in placeholder_patterns:
+            matches = re.finditer(pattern, text, re.IGNORECASE)
+            for match in matches:
+                original_placeholder = match.group(0)  # The full placeholder, e.g., [CEO's Name]
+                placeholder_text = match.group(1).strip()  # The text inside, e.g., "CEO's Name"
+                
+                # Determine entity type from placeholder
+                entity_type = self._infer_entity_type(placeholder_text)
+                
+                # Try to find a matching entity
+                entity_value = self._find_matching_entity(placeholder_text, entity_type, memory)
+                
+                if entity_value:
+                    logger.info(f"Replacing placeholder '{original_placeholder}' with '{entity_value}'")
+                    replaced_text = replaced_text.replace(original_placeholder, entity_value)
+        
+        return replaced_text
+
+    def _infer_entity_type(self, placeholder_text: str) -> str:
+        """
+        Infer the entity type from the placeholder text.
+        
+        Args:
+            placeholder_text (str): Text inside the placeholder
+            
+        Returns:
+            str: Inferred entity type
+        """
+        placeholder_lower = placeholder_text.lower()
+        
+        # Map common placeholder terms to entity types
+        type_mapping = {
+            'person': ['person', 'name', 'who', 'individual', 'people', 'founder'],
+            'organization': ['organization', 'company', 'org', 'corporation', 'business', 'team'],
+            'role': ['ceo', 'coo', 'cfo', 'role', 'title', 'position', 'job', 'director', 'manager', 'founder'],
+            'location': ['location', 'place', 'city', 'country', 'region', 'address', 'where'],
+            'date': ['date', 'time', 'when', 'year', 'month', 'day']
+        }
+        
+        # Check for matches in the type mapping
+        for entity_type, keywords in type_mapping.items():
+            if any(keyword in placeholder_lower for keyword in keywords):
+                return entity_type
+        
+        # Default to searching all types if no specific type is inferred
+        return None
+
+    def _find_matching_entity(self, placeholder_text: str, entity_type: Optional[str], memory: Any) -> Optional[str]:
+        """
+        Find an entity value that best matches the placeholder text.
+        
+        Args:
+            placeholder_text (str): Text from the placeholder
+            entity_type (str): Inferred entity type (or None if not inferred)
+            memory (Memory): Agent's memory
+            
+        Returns:
+            str or None: Matching entity value or None if no match
+        """
+        if not hasattr(memory, 'extracted_entities') or not memory.extracted_entities:
+            return None
+            
+        # Extract keywords from placeholder for matching
+        keywords = self._extract_keywords(placeholder_text)
+        
+        # If we have a specific entity type, search only there
+        if entity_type and entity_type in memory.extracted_entities:
+            entities = memory.extracted_entities[entity_type]
+            
+            # Special handling for role entities (which might have compound formats)
+            if entity_type == "role" and "ceo" in placeholder_text.lower():
+                for role in entities:
+                    if "ceo" in role.lower():
+                        # For role format "CEO: Person @ Organization", extract the person
+                        parts = role.split("@")
+                        if len(parts) > 1:
+                            # Get person name from "Role: Person @"
+                            role_parts = parts[0].split(":")
+                            if len(role_parts) > 1:
+                                return role_parts[1].strip()
+                        return role
+            
+            # General search for matching entities
+            for entity in entities:
+                # Check for keyword matches
+                if any(keyword in entity.lower() for keyword in keywords):
+                    return entity
+            
+            # If no keyword match, return the first entity as a fallback
+            if entities:
+                return entities[0]
+        else:
+            # If no specific type was inferred or found, search all entity types
+            best_match = None
+            
+            # Priority order for entity types
+            type_priority = ["person", "organization", "role", "location", "date"]
+            
+            # Search through entity types in priority order
+            for entity_type in type_priority:
+                if entity_type not in memory.extracted_entities:
+                    continue
+                    
+                for entity in memory.extracted_entities[entity_type]:
+                    # Check for keyword matches
+                    if any(keyword in entity.lower() for keyword in keywords):
+                        return entity
+                    
+                    # Keep track of the first entity of each type as a fallback
+                    if not best_match and memory.extracted_entities[entity_type]:
+                        best_match = memory.extracted_entities[entity_type][0]
+            
+            # Return the best match found (if any)
+            return best_match
+            
+        return None
+
+    def _extract_keywords(self, text: str) -> List[str]:
+        """
+        Extract keywords from text for matching entities.
+        
+        Args:
+            text (str): Text to extract keywords from
+            
+        Returns:
+            list: List of keywords
+        """
+        # Remove common filler words
+        stop_words = {'the', 'a', 'an', 'of', 'in', 'on', 'at', 'by', 'for', 'with', 
+                      'about', 'to', 's', 'name', 'is', 'are', 'their', 'his', 'her'}
+        
+        # Split by non-alphanumeric characters and lowercase
+        words = re.findall(r'\w+', text.lower())
+        
+        # Filter out stop words and short words
+        keywords = [word for word in words if word not in stop_words and len(word) > 2]
+        
+        return keywords
     
     def _format_as_table(self, title: str, prompt: str, data: Any) -> str:
         """Format information as a markdown table."""
