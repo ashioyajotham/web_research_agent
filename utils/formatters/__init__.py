@@ -1,1 +1,1 @@
-from .formatters import format_results
+from .formatters import format_results, extract_direct_answer

@@ -21,25 +21,7 @@
 - Improved error reporting for entity extraction failures
 - Enhanced reliability of entity replacement in presentation outputs
 - Resolved issues with unprocessed placeholders in search results
-
-## [1.1.5] - 2025-03-15
-
-### Added
-- Smart entity extraction from search snippets for early knowledge acquisition
-- Intelligent role-person-organization relationship mapping for better context understanding
-- Advanced pattern detection for entity placeholders in presentation content
-- Improved browser tool entity extraction with relationship inference
-
-### Enhanced
-- Presentation tool now automatically replaces entity placeholders like [CEO's Name]
-- Entity extraction now creates structured relationships between people, roles, and organizations
-- Search results are now analyzed immediately for relevant entities
-- Memory system now has better support for entity relationships with find_entity_by_role method
-
-### Fixed
-- Fixed placeholder issues in browser tool URL handling
-- Improved error reporting for entity extraction failures
-- Enhanced reliability of entity replacement in presentation outputs
+- Fixed missing _display_step_result method in WebResearchAgent class
 
 ## [1.1.4] - 2025-03-15
 

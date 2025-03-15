@@ -41,8 +41,8 @@ BANNER = """
 def display_banner():
     """Display the ASCII art banner."""
     console.print(BANNER)
-    console.print("\n[dim]Version 1.1.5 - Type 'help' for commands[/dim]\n")
-    console.print("[dim]Chef's kiss[bold magenta]Victor Jotham Ashioya[/bold magenta] - Web research wizard extraordinaire![/dim]\n")
+    console.print("\n[dim]Version 1.1.6 - Type 'help' for commands[/dim]\n")
+    console.print("[dim]Chef's kiss [bold magenta]Victor Jotham Ashioya[/bold magenta] - lock in, build and accelerate, loser![/dim]\n")
 
 def display_intro():
     """Display introduction info."""
@@ -411,7 +411,7 @@ def batch(file, output, format):
                         console.print(f"[bold red]Error:[/bold red] {str(e)}")
                         result = f"Error: {str(e)}"
                         status = "✗ Failed"
-                progress.update(research_task, completed=j * 10)
+                progress.update(research_task, completed=(j * 10))
                 if j < 9:
                     time.sleep(0.1)  # Just for visual effect
             
@@ -539,6 +539,9 @@ def shell(verbose):
     from prompt_toolkit.completion import WordCompleter
     from prompt_toolkit.styles import Style
     
+    # Import direct answer extraction functionality
+    from utils.formatters import extract_direct_answer
+    
     # Create history file path
     history_file = Path.home() / ".web_research_history"
     
@@ -659,13 +662,13 @@ def shell(verbose):
                                 console.print(f"[bold red]Error:[/bold red] {str(e)}")
                                 break
                         
-                        progress.update(task, completed=i * 10)
+                        progress.update(task, completed=(i * 10))
                         if i < 9:
                             time.sleep(0.2)  # Just for visual feedback
                     
                     # Complete the progress
                     if result:
-                        progress.update(task, completed=100)
+                        progress.update(task, completed=(100))
                 
                 # Only proceed if we got results
                 if result:
@@ -675,8 +678,13 @@ def shell(verbose):
                     with open(filename, 'w', encoding='utf-8') as f:
                         f.write(result)
                     
+                    # NEW: Extract and show a direct answer if possible
+                    direct_answer = extract_direct_answer(query, agent.memory.get_results(), agent.memory)
+                    if direct_answer:
+                        console.print("\n[bold green]Answer:[/bold green]", style="bold")
+                        console.print(Panel(direct_answer, border_style="green", expand=False))
+                    
                     console.print(f"[bold green]✓[/bold green] Research complete! Results saved to [cyan]{filename}[/cyan]")
-
                     
                     # Show a preview of the results
                     try:

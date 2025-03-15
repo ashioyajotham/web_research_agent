@@ -235,3 +235,49 @@ class Memory:
         if entity_type:
             return self.extracted_entities.get(entity_type, [])
         return self.extracted_entities
+
+    def get_results(self):
+        """
+        Get all results from the current task.
+        
+        Returns:
+            list: List of result dictionaries
+        """
+        # Convert task_results dict to a list of dicts with step info
+        results = []
+        for step_desc, output in self.task_results.items():
+            results.append({
+                "step": step_desc,
+                "status": "success" if output else "error", 
+                "output": output
+            })
+        return results
+
+    def get_search_snippet_content(self, max_results=5):
+        """
+        Get content derived from search snippet results as fallback when browsing fails.
+        
+        Args:
+            max_results (int): Maximum number of search results to include
+            
+        Returns:
+            str: Combined content from search snippets
+        """
+        if not hasattr(self, 'search_results') or not self.search_results:
+            return "No search results available."
+        
+        combined_text = []
+        
+        # Add each search result as a section
+        for i, result in enumerate(self.search_results[:max_results]):
+            if i >= max_results:
+                break
+                
+            title = result.get("title", f"Result {i+1}")
+            snippet = result.get("snippet", "")
+            link = result.get("link", "")
+            
+            result_text = f"### {title}\n{snippet}\nSource: {link}\n"
+            combined_text.append(result_text)
+        
+        return "\n".join(combined_text)

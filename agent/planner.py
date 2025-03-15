@@ -206,7 +206,7 @@ class Planner:
             )
         ]
         
-        # Add browser step with specific URL structure
+        # Add browser step with a reliably resolvable URL placeholder format
         steps.append(
             PlanStep(
                 description="Browse the first search result to gather information",

@@ -145,6 +145,28 @@ class WebResearchAgent:
                         # Re-run with refined query
                         parameters["query"] = refined_query
                         output = tool.execute(parameters, self.memory)
+                    elif step.tool_name == "browser" and "error" in output and "403" in str(output.get("error", "")):
+                        # If we got a 403/blocked error, try a fallback approach
+                        logger.warning("Website blocked access - attempting fallback to search result snippets")
+                        
+                        # Create fallback content from search result snippets
+                        if hasattr(self.memory, 'search_results') and self.memory.search_results:
+                            # Combine snippets into a single document
+                            combined_text = f"# Content extracted from search snippets\n\n"
+                            for i, result in enumerate(self.memory.search_results[:5]):  # Use top 5 results
+                                title = result.get("title", f"Result {i+1}")
+                                snippet = result.get("snippet", "No description")
+                                link = result.get("link", "#")
+                                combined_text += f"## {title}\n\n{snippet}\n\nSource: {link}\n\n"
+                            
+                            # Override the output with our generated content
+                            output = {
+                                "url": "search_results_combined",
+                                "title": "Combined search result content (Anti-scraping fallback)",
+                                "extract_type": "fallback",
+                                "content": combined_text
+                            }
+                            logger.info("Created fallback content from search snippets")
                 
                 # Record the result with verification status
                 results.append({
@@ -203,8 +225,9 @@ class WebResearchAgent:
                     except (ValueError, IndexError):
                         logger.warning(f"Failed to extract index from placeholder: {value}")
                 
-                # Pattern 3: [Insert URL from search results]
-                if re.match(r"\[.*URL.*search results.*\]", value, re.IGNORECASE) or \
+                # Pattern 3: [URL from search results] or any bracketed URL reference
+                if re.match(r"\[.*URL.*\]", value, re.IGNORECASE) or \
+                   re.match(r"\[.*link.*\]", value, re.IGNORECASE) or \
                    re.match(r"\[Insert.*\]", value, re.IGNORECASE):
                     # Default to first result
                     substituted[key] = self._get_search_result_url(0, previous_results)
@@ -319,6 +342,7 @@ class WebResearchAgent:
             if isinstance(result_output, dict) and "results" in result_output:
                 if len(result_output["results"]) == 0:
                     return False, "Search returned no results"
+                return True, f"Search returned {len(result_output['results'])} results"
             else:
                 return False, "Search did not return expected result format"
         
@@ -327,6 +351,20 @@ class WebResearchAgent:
             if isinstance(result_output, dict) and "content" in result_output:
                 if not result_output["content"] or len(result_output["content"]) < 50:
                     return False, "Browser returned minimal or no content"
+                
+                # Check if the content includes any anti-scraping signals
+                content = result_output["content"].lower()
+                anti_bot_signals = ["captcha", "detected unusual traffic", "automated access", "blocked", "denied access"]
+                
+                if any(signal in content for signal in anti_bot_signals):
+                    return False, "Browser may have been blocked by anti-scraping measures"
+                    
+                # Check for relevant content
+                keywords = self._extract_keywords_from_step(step.description)
+                if keywords and any(keyword.lower() in content for keyword in keywords):
+                    return True, "Content appears relevant to the task"
+                    
+                return True, f"Successfully extracted {len(result_output['content'])} characters"
             else:
                 return False, "Browser did not return expected content"
         
@@ -337,7 +375,8 @@ class WebResearchAgent:
                 entity_types.append("person")
             if "organization" in step.description.lower():
                 entity_types.append("organization")
-            if "role" in step.description.lower() or "coo" in step.description.lower() or "ceo" in step.description.lower():
+            if "role" in step.description.lower() or any(role in step.description.lower() for role in 
+                                                       ["coo", "ceo", "cfo", "president", "founder", "director"]):
                 entity_types.append("role")
             
             # Check if we have any of the expected entity types in memory
@@ -345,13 +384,6 @@ class WebResearchAgent:
                 for entity_type in entity_types:
                     if entity_type in self.memory.extracted_entities and self.memory.extracted_entities[entity_type]:
                         return True, f"Found {entity_type} entities: {self.memory.extracted_entities[entity_type]}"
-        
-        # Check if the content seems relevant to our task
-        keywords = self._extract_keywords_from_step(step.description)
-        if keywords and step.tool_name == "browser":
-            content = result_output.get("content", "")
-            if any(keyword.lower() in content.lower() for keyword in keywords):
-                return True, "Content appears relevant to the task"
         
         # Default to success if no specific checks failed
         return True, "Step completed successfully"
@@ -384,7 +416,7 @@ class WebResearchAgent:
 
     def _refine_query_with_entities(self, original_query, entities):
         """
-        Refine a search query using extracted entities.
+        Refine a search query using extracted entities with a more general approach.
         
         Args:
             original_query (str): Original search query
@@ -393,38 +425,47 @@ class WebResearchAgent:
         Returns:
             str: Refined search query
         """
-        refined_query = original_query
+        if not entities:
+            return original_query
+        
+        # Extract keywords from original query for context
+        query_keywords = self._extract_keywords_from_text(original_query.lower())
+        query_type = self._determine_query_type(original_query.lower())
+        
+        # Entity additions with context awareness
         entity_additions = []
         
-        # Add organization names if available and relevant
-        if "organization" in entities and entities["organization"]:
-            # Sort by length - longer names are often more specific/relevant
-            orgs = sorted(entities["organization"], key=len, reverse=True)[:2]
-            for org in orgs:
-                if len(org) > 3 and org.lower() not in original_query.lower():
-                    entity_additions.append(f'"{org}"')
+        # Select most relevant entities across different types based on query context
+        relevant_entities = {}
         
-        # Add role specifics if available and relevant
-        if "role" in entities and entities["role"]:
-            role_keywords = []
-            for role in entities["role"]:
-                # Extract just the role part (e.g., "CEO" from "CEO: John Smith @ Acme")
-                role_parts = role.split(":")
-                if len(role_parts) > 0:
-                    role_title = role_parts[0].strip()
-                    if role_title not in original_query and role_title not in role_keywords:
-                        role_keywords.append(role_title)
-            
-            for role in role_keywords[:2]:  # Limit to top 2 roles
-                entity_additions.append(role)
+        # Build mapping of entity relevance scores
+        entity_scores = {}
+        for entity_type, entity_list in entities.items():
+            for entity in entity_list:
+                # Skip very short entities
+                if len(entity) < 3:
+                    continue
+                    
+                # Skip if entity is already part of the query
+                if entity.lower() in original_query.lower():
+                    continue
+                
+                # Calculate relevance score based on query keywords
+                score = self._calculate_entity_relevance(entity, query_keywords, query_type, entity_type)
+                entity_scores[(entity_type, entity)] = score
         
-        # Add person names if the query seems to be about finding information on people
-        if "person" in entities and entities["person"] and any(term in original_query.lower() for term in ["who", "person", "name"]):
-            # Sort by length - longer names are often more specific/relevant
-            persons = sorted(entities["person"], key=len, reverse=True)[:1]
-            for person in persons:
-                if len(person) > 3 and person.lower() not in original_query.lower():
-                    entity_additions.append(f'"{person}"')
+        # Get top 3 entities across all types, sorted by relevance
+        sorted_entities = sorted(entity_scores.items(), key=lambda x: x[1], reverse=True)
+        top_entities = [item[0] for item in sorted_entities[:3]]  # Take top 3 entities
+        
+        # Format additions based on entity types
+        for (entity_type, entity) in top_entities:
+            # Format based on entity type
+            if entity_type == "organization" or entity_type == "location" or len(entity.split()) > 1:
+                # Quote multi-word entities or organizations
+                entity_additions.append(f'"{entity}"')
+            else:
+                entity_additions.append(entity)
         
         # Add entity additions if we have any
         if entity_additions:
@@ -433,13 +474,82 @@ class WebResearchAgent:
                 refined_query = original_query.strip()[:-1] + " " + " ".join(entity_additions) + "?"
             else:
                 refined_query = original_query + " " + " ".join(entity_additions)
+            
+            logger.info(f"Refined query: '{original_query}' -> '{refined_query}'")
+            return refined_query
         
-        logger.info(f"Refined query: '{original_query}' -> '{refined_query}'")
-        return refined_query
+        return original_query
+
+    def _calculate_entity_relevance(self, entity, query_keywords, query_type, entity_type):
+        """Calculate relevance score for an entity based on query context."""
+        entity_lower = entity.lower()
+        score = 0
+        
+        # Match direct keyword presence
+        for keyword in query_keywords:
+            if keyword in entity_lower or entity_lower in keyword:
+                score += 3
+                break
+        
+        # Match based on entity type and query type
+        type_matches = {
+            "who_is": ["person", "role"],
+            "what_is": ["organization", "concept", "technology"],
+            "when": ["date", "time", "year"],
+            "where": ["location", "place"],
+            "why": ["reason", "cause"],
+            "how": ["method", "process"],
+            "quantity": ["number", "percentage", "monetary_value"]
+        }
+        
+        # Boost score for entity types relevant to the query type
+        if query_type in type_matches and entity_type in type_matches[query_type]:
+            score += 2
+        
+        # Boost for longer, more specific entities
+        word_count = len(entity.split())
+        if word_count > 1:
+            score += word_count - 1  # More words = more specific = higher score
+            
+        # Penalize very long entities slightly (might be too specific)
+        if word_count > 4:
+            score -= 1
+            
+        return score
+
+    def _extract_keywords_from_text(self, text):
+        """Extract keywords from text for entity relevance calculation."""
+        # Simplified version - remove common stop words and extract meaningful terms
+        stop_words = {"a", "an", "the", "and", "or", "but", "if", "for", "not", "on", "in", "to", "from", "by",
+                     "is", "are", "was", "were", "be", "been", "being", "have", "has", "had", "do", "does", "did",
+                     "what", "which", "who", "whom", "whose", "when", "where", "why", "how"}
+        
+        words = text.lower().split()
+        return [word for word in words if word not in stop_words and len(word) > 2]
+
+    def _determine_query_type(self, query):
+        """Determine the general type/intent of a query."""
+        # Simple pattern-based classification
+        if re.search(r'\bwho\b|\bwhose\b|\bperson\b', query):
+            return "who_is"
+        elif re.search(r'\bwhat\b|\bdefinition\b|\bmean\b|\bdescribe\b', query):
+            return "what_is"
+        elif re.search(r'\bwhen\b|\bdate\b|\btime\b|\byear\b', query):
+            return "when"
+        elif re.search(r'\bwhere\b|\blocation\b|\bplace\b', query):
+            return "where"
+        elif re.search(r'\bwhy\b|\breason\b|\bcause\b', query):
+            return "why"
+        elif re.search(r'\bhow\b', query):
+            return "how"
+        elif re.search(r'\bmany\b|\bmuch\b|\bnumber\b|\bcount\b|\bpercent', query):
+            return "quantity"
+        else:
+            return "general"
 
     def _extract_entities_from_snippets(self, search_results, query):
         """
-        Extract entities from search result snippets for early knowledge acquisition.
+        Extract entities from search result snippets with improved generalization.
         
         Args:
             search_results (list): List of search result dictionaries
@@ -456,12 +566,27 @@ class WebResearchAgent:
         if not combined_text:
             return
         
-        # Extract potential query targets for focused entity extraction
-        target_entity = self._extract_target_entity(query)
-        target_role = self._extract_target_role(query)
+        # Analyze query to determine appropriate entity types
+        query_type = self._determine_query_type(query.lower())
         
-        # Use comprehension for entity extraction with focused entity types
-        entity_types = ["person", "organization", "role", "date"]
+        # Define entity types based on query type and context
+        entity_types = ["person", "organization"]  # Base types for all queries
+        
+        # Add query-specific entity types
+        query_entity_map = {
+            "who_is": ["person", "organization", "role"],
+            "what_is": ["concept", "technology", "organization"],
+            "when": ["date", "time"],
+            "where": ["location", "organization"],
+            "why": ["reason", "cause", "event"],
+            "quantity": ["percentage", "number", "monetary_value"]
+        }
+        
+        if query_type in query_entity_map:
+            entity_types.extend(query_entity_map[query_type])
+        
+        # Deduplicate entity types
+        entity_types = list(set(entity_types))
         
         try:
             # Extract entities using focused entity types
@@ -470,88 +595,118 @@ class WebResearchAgent:
             # Add extracted entities to memory
             self.memory.add_entities(entities)
             
-            # Create role relationships if we have role entities and our query was about a role
-            if target_role and "person" in entities and "organization" in entities:
-                self._map_role_relationships(target_role, entities)
-                
+            # Process entity relationships more generally
+            self._process_entity_relationships(entities, query)
+                    
         except Exception as e:
             logger.error(f"Error extracting entities from snippets: {str(e)}")
 
-    def _extract_target_entity(self, query):
-        """Extract the target entity from a query."""
-        # Common patterns for entity-seeking queries
-        entity_patterns = [
-            r"who is (the )?([\w\s]+)( of| at| in| for)? ([\w\s]+)",
-            r"what is (the )?([\w\s]+)( of| at| in| for)? ([\w\s]+)"
-        ]
+    def _process_entity_relationships(self, entities, query):
+        """
+        Process relationships between extracted entities in a more general way.
         
-        for pattern in entity_patterns:
-            match = re.search(pattern, query, re.IGNORECASE)
-            if match:
-                return match.group(4).strip()  # The entity/organization name
+        Args:
+            entities (dict): Extracted entities
+            query (str): The search query for context
+        """
+        # Need at least two entity types for relationships
+        if len(entities) < 2:
+            return entities
+            
+        # Check for potential relationship patterns
+        has_person = "person" in entities and entities["person"]
+        has_org = "organization" in entities and entities["organization"]
+        has_role = "role" in entities and entities["role"]
+        has_location = "location" in entities and entities["location"]
         
-        return None
+        # Store enhanced relationships
+        entity_relationships = []
+        
+        # Handle person-organization relationships
+        if has_person and has_org:
+            for person in entities["person"][:2]:  # Focus on top 2 persons
+                for org in entities["organization"][:2]:  # Focus on top 2 orgs
+                    # Look for role information
+                    role_term = self._infer_role_from_context(query, entities)
+                    
+                    if role_term:
+                        # Format relationship with any available role information
+                        relationship = {
+                            "type": "person_org",
+                            "person": person,
+                            "organization": org,
+                            "role": role_term,
+                            "formatted": f"{role_term.upper()}: {person} @ {org}" if role_term else None
+                        }
+                        entity_relationships.append(relationship)
+                        
+                        # Add to role entities if not already present
+                        role_entry = relationship["formatted"]
+                        if role_entry and ("role" not in entities or role_entry not in entities["role"]):
+                            if "role" not in entities:
+                                entities["role"] = []
+                            entities["role"].append(role_entry)
+        
+        # Update memory with our enhanced entities
+        if entity_relationships:
+            self.memory.update_entities(entities)
+            logger.info(f"Created {len(entity_relationships)} entity relationships")
 
-    def _extract_target_role(self, query):
-        """Extract the target role from a query."""
-        # Common patterns for role-seeking queries
-        role_patterns = [
-            r"who is (the )?([\w\s]+)( of| at| in| for)?",
-            r"current ([\w\s]+)( of| at| for)?"
-        ]
+    def _infer_role_from_context(self, query, entities):
+        """Infer role information from query context and existing entities."""
+        # Check for common role terms in the query
+        common_roles = ["ceo", "cfo", "coo", "president", "founder", "director", "chief",
+                       "head", "leader", "manager", "chair", "executive"]
         
-        roles = ["ceo", "cfo", "coo", "president", "founder", "director", "head", "chief", "lead"]
-        
-        # Check for exact role matches in the query
         query_lower = query.lower()
-        for role in roles:
+        
+        # Check for exact role matches in query
+        for role in common_roles:
             if role in query_lower:
                 return role
         
-        # Try pattern matching
-        for pattern in role_patterns:
-            match = re.search(pattern, query, re.IGNORECASE)
-            if match and match.group(2):
-                return match.group(2).strip()
+        # Check if we have role entities
+        if "role" in entities and entities["role"]:
+            # Try to extract just the role type from existing role entities
+            for role_entry in entities["role"]:
+                if ":" in role_entry:
+                    role_parts = role_entry.split(":")
+                    if role_parts[0].strip().lower() in common_roles:
+                        return role_parts[0].strip()
+                
+                # Check for common role terms in the role entity
+                for role in common_roles:
+                    if role in role_entry.lower():
+                        return role
         
+        # Default fallback based on query intent
+        if "who" in query_lower and "ceo" in query_lower:
+            return "CEO"
+        elif "who" in query_lower and "founder" in query_lower:
+            return "founder"
+        elif "who" in query_lower and "head" in query_lower:
+            return "head"
+        elif "who" in query_lower and "lead" in query_lower:
+            return "leader"
+        
+        # No clear role found
         return None
 
-    def _map_role_relationships(self, target_role, entities):
+    def _display_step_result(self, step_number, step_description, status, output):
         """
-        Create explicit role-person-organization relationships based on extracted entities.
+        Display a formatted result from a step execution.
+        For internal use by the agent when executing steps.
         
         Args:
-            target_role (str): The role being searched for
-            entities (dict): The extracted entities
+            step_number (int): Step number
+            step_description (str): Description of the step
+            status (str): Status of step execution (success/error)
+            output (any): Output from the step
         """
-        # If we have exactly one person and one organization and a target role
-        if (target_role and "person" in entities and len(entities["person"]) > 0 
-            and "organization" in entities and len(entities["organization"]) > 0):
-            
-            # Create a formatted role entry that combines all three elements
-            person = entities["person"][0]
-            org = entities["organization"][0]
-            
-            role_entry = f"{target_role.upper()}: {person} @ {org}"
-            
-            # Add or update the role in memory
-            if "role" not in entities:
-                entities["role"] = []
-            
-            # Check if we already have this role
-            exists = False
-            for i, existing_role in enumerate(entities["role"]):
-                if target_role.lower() in existing_role.lower() and org.lower() in existing_role.lower():
-                    # Update existing role with better formatting
-                    entities["role"][i] = role_entry
-                    exists = True
-                    break
-            
-            # If no existing role, add new one
-            if not exists:
-                entities["role"].append(role_entry)
-            
-            # Update memory with our enhanced entities
-            self.memory.update_entities(entities)
-            
-            logger.info(f"Created role relationship: {role_entry}")
+        logger.debug(f"Step {step_number}: {step_description} - Status: {status}")
+        
+        # No visual output needed here since this is meant for internal display
+        # The actual visual display is handled by the CLI or UI layer
+        # This method exists to support potential console.print operations
+        # that may have been removed from this version of the agent
+        pass
