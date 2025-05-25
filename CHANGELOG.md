@@ -1,5 +1,27 @@
 # Changelog
 
+## [1.1.7] - 2025-05-25
+
+### Added
+- Multi-criteria task parser for handling complex, structured tasks
+- Task parser utility with intelligent recognition of indentation patterns
+- Enhanced documentation focusing on ReAct research implementation
+- New methods for extracting criteria from multi-criteria tasks 
+- Explicit ReAct paradigm cycle in task execution flow
+
+### Enhanced
+- Planner now generates better plans for multi-criteria tasks with specific guidance
+- Main task processing loop better handles structured tasks with multiple conditions
+- README updated to align with research focus on ReAct implementation
+- Improved task handling in agent.py with better error recovery strategies
+- Better alignment with ReAct (Reasoning + Acting) paradigm throughout code base
+
+### Fixed
+- Tasks with indented criteria are now properly processed as a single task
+- Fixed parsing issues in tasks.txt for multi-line structured tasks
+- Improved handling of JSON parsing in plan generation
+- Enhanced error recovery for web scraping failures
+
 ## [1.1.5] - 2025-03-15
 
 ### Added
