@@ -17,10 +17,10 @@ class Comprehension:
     
     def analyze_task(self, task_description):
         """
-        Analyze a task description to understand what's being asked.
+        Analyze a task to determine its type, required information, etc.
         
         Args:
-            task_description (str): The task description
+            task_description (str): Description of the task to analyze
             
         Returns:
             dict: Analysis of the task
@@ -31,6 +31,16 @@ class Comprehension:
         Analyze the following task and break it down into components:
         
         TASK: {task_description}
+        
+        Pay special attention to:
+        - Multi-line tasks with bullet points or numbered criteria
+        - Tasks that require gathering information based on multiple conditions
+        - Tasks with nested or hierarchical requirements
+        
+        Your analysis should include:
+        - Whether each criterion is a separate requirement or part of a single search
+        - How to verify that results meet all criteria
+        - Whether filtering by multiple conditions requires code
         
         Please provide a structured analysis in JSON format with the following fields:
         1. "task_type": The general category of the task (e.g., "information_gathering", "code_generation", "problem_solving", "data_analysis")

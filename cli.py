@@ -21,6 +21,9 @@ from rich import box
 from rich.table import Table
 from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn, TimeElapsedColumn
 
+# Import the new parser
+from utils.task_parser import parse_tasks_from_file
+
 logger = get_logger(__name__)
 console = Console()
 
@@ -372,9 +375,8 @@ def batch(file, output, format):
     config = get_config()
     config.update('output_format', format)
     
-    # Read tasks from file
-    with open(file, 'r', encoding='utf-8') as f:
-        tasks = [line.strip() for line in f if line.strip()]
+    # Use our new task parser
+    tasks = parse_tasks_from_file(file)
     
     # Initialize agent
     agent = WebResearchAgent()

@@ -76,12 +76,30 @@ class Planner:
         requires_coding = task_analysis.get("requires_coding", False)
         presentation_format = task_analysis.get("presentation_format", "report")
         
+        # Enhanced multi-criteria detection
+        has_multiple_criteria = "\n" in task_description and any(line.strip().startswith("-") or 
+                                                              line.strip().startswith("•") or
+                                                              re.match(r"^\s+\w+", line) 
+                                                              for line in task_description.split("\n"))
+        
+        criteria_guidance = ""
+        if has_multiple_criteria:
+            criteria_guidance = """
+            This task contains multiple criteria or conditions. Make sure to:
+            - Create specific search steps for each major criterion
+            - Use specific and targeted queries that focus on one criterion at a time
+            - Add a 'code' step to filter and verify results against all criteria
+            - End with a 'present' step that formats the final verified results as a list
+            """
+        
         return f"""
         As an AI research assistant, create a detailed execution plan for the following task:
         
         TASK: {task_description}
         
         TASK ANALYSIS: {task_analysis}
+        
+        {criteria_guidance}
         
         Available tools:
         1. search - Searches Google via serper.dev
@@ -101,6 +119,11 @@ class Planner:
         - Use the 'present' tool for tasks that need data organization or presentation of results.
         - This task {'' if requires_coding else 'does not '} appear to require coding based on analysis.
         - The suggested presentation format is '{presentation_format}'.
+        
+        For tasks with multiple criteria or conditions:
+        - Create separate search steps for different aspects of the criteria  
+        - Implement a verification step to ensure all criteria are addressed
+        - Consider using the 'code' tool to filter and validate results against complex criteria
         
         Create a step-by-step plan in valid JSON format. Follow these JSON formatting rules strictly:
         - Use double quotes for strings, not single quotes

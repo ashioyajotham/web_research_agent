@@ -6,6 +6,7 @@ from utils.console_ui import (
     create_progress_context, display_plan, display_result, display_completion_message
 )
 from utils.logger import get_logger
+from utils.task_parser import parse_tasks_from_file  # New import
 
 # Initialize the logger 
 logger = get_logger(__name__)  # Add this line
@@ -21,9 +22,8 @@ def process_tasks(task_file_path, output_dir="results"):
     # Display title
     display_title("Web Research Agent")
     
-    # Read tasks from file
-    with open(task_file_path, "r") as f:
-        tasks = [line.strip() for line in f if line.strip()]
+    # Read tasks from file using the new parser
+    tasks = parse_tasks_from_file(task_file_path)
     
     console.print(f"[bold]Loaded {len(tasks)} tasks from {task_file_path}[/]")
     
