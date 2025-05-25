@@ -10,7 +10,7 @@ A research implementation of the ReAct (Reasoning + Acting) paradigm applied to 
 - **Entity Recognition**: Identifies people, organizations, roles, and other entities from text
 - **Adaptive Search Refinement**: Modifies queries based on discovered information
 - **Information Synthesis**: Combines information from multiple sources
-- **Multi-Criteria Task Handling**: Processes complex queries with multiple conditionsresearch tasks
+- **Multi-Criteria Task Handling**: Processes complex queries with multiple conditions research tasks
 - **Structured Output**: Organize findings into well-formatted reports
 - **Code Generation**: Write code when required for data processing tasks
 
