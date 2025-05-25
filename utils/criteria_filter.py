@@ -3,6 +3,8 @@
 from typing import List, Dict, Any
 from utils.logger import get_logger
 
+import re
+
 logger = get_logger(__name__)
 
 def extract_criteria_from_task(task: str) -> List[str]:

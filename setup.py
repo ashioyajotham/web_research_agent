@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="web-research-agent",
-    version="1.1.6",
+    version="1.1.7",
     packages=find_packages(),
     include_package_data=True,
     py_modules=["cli"],
@@ -24,7 +24,7 @@ setup(
     },
     author="Victor Jotham Ashioya",
     author_email="victorashioya960@gmail.com",
-    description="An intelligent AI agent for web-based research tasks",
+    description="An AI agent for web research, capable of understanding complex tasks and executing them using various tools.",
     long_description=open("README.md").read(),
     long_description_content_type="text/markdown",
     url="https://github.com/ashioyajotham/web_research_agent",
