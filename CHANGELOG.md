@@ -1,5 +1,43 @@
 # Changelog
 
+## [1.1.8] - 2025-05-28
+
+### Added
+- **Dynamic Task Analysis System**: Intelligent pattern recognition that analyzes any research question to determine expected answer type and appropriate synthesis strategy without hardcoded rules
+- **Multi-Strategy Synthesis Framework**: Four distinct synthesis approaches (extract-and-verify, aggregate-and-filter, collect-and-organize, comprehensive-synthesis) selected based on task characteristics
+- **Answer Type Detection**: System automatically identifies whether tasks expect factual answers, comparisons, lists, or comprehensive analysis
+- **Information Target Identification**: Dynamic detection of what specific information needs to be gathered from research questions
+- **Output Structure Inference**: Predicts appropriate format for presenting answers based on question structure
+- **Enhanced URL Resolution**: Multiple fallback strategies for extracting valid URLs from search results with comprehensive validation
+- **Robust Parameter Resolution**: Advanced handling of incomplete or ambiguous web search results
+- **Source Verification Framework**: Cross-validation of findings across multiple sources with confidence scoring
+- **Numerical Data Processing**: Enhanced extraction and formatting of quantitative information
+- **Temporal Pattern Recognition**: Improved handling of date ranges and time-based queries
+
+### Enhanced
+- **Complete Results Formatting Overhaul**: System now produces direct answers to research questions instead of defaulting to entity tables
+- **Task-Adaptive Reasoning**: Agent adapts its approach based on semantic analysis of question structure and intent
+- **Dynamic Answer Synthesis**: Flexible synthesis that matches the expected output structure for each specific question type
+- **Improved Search Strategy Planning**: Creates targeted search approaches based on identified information targets
+- **Enhanced Entity Processing**: Extracts entities while maintaining focus on answering the specific question asked
+- **Advanced Error Recovery**: Multiple fallback mechanisms for content access failures and URL resolution issues
+- **Comprehensive Logging**: Detailed tracking of reasoning processes and synthesis strategy decisions
+
+### Fixed
+- **Critical Answer Format Issue**: Resolved core problem where agent produced entity-focused tables instead of direct answers to research questions
+- **Multiple Syntax Errors**: Fixed indentation issues, missing method implementations, and class structure problems in agent.py
+- **TypeError in Numerical Processing**: Resolved tuple handling errors in numerical data formatting
+- **URL Validation Issues**: Enhanced validation to reject placeholder URLs and invalid formats
+- **Parameter Substitution Problems**: Fixed comprehensive placeholder pattern handling and variable resolution
+- **Method Scope Issues**: Corrected parameter handling and method accessibility throughout the agent system
+
+### Technical Details
+- **New Dynamic Analysis Methods**: `_analyze_task_for_answer_type()`, `_extract_primary_intent()`, `_infer_output_structure()`, `_identify_information_targets()`
+- **New Synthesis Strategy Methods**: `_synthesize_extract_and_verify()`, `_synthesize_aggregate_and_filter()`, `_synthesize_collect_and_organize()`, `_synthesize_comprehensive_synthesis()`
+- **Enhanced URL Handling**: `_get_search_result_url()`, `_is_valid_url()`, `_extract_all_urls_from_results()` with comprehensive fallback strategies
+- **New Utility Methods**: `_format_source_verification()`, `_format_numerical_findings()`, `_extract_content_items()`, and multiple formatting utilities
+- **Improved Core Logic**: Enhanced `_format_results()` now calls dynamic analysis and synthesis system instead of defaulting to entity extraction
+
 ## [1.1.7] - 2025-05-25
 
 ### Added
