@@ -222,9 +222,9 @@ class BrowserTool(BaseTool):
             r'PLACEHOLDER'
         ]
         
-        url_upper = url.upper()
-        if any(re.search(pattern, url_upper) for pattern in placeholder_patterns):
-            return False
+        for pattern, _ in placeholder_patterns:
+            if re.search(pattern, url, re.IGNORECASE):
+                return False
         
         # Basic URL validation
         url_pattern = re.compile(
