@@ -6,35 +6,25 @@
 
 ### Entities Identified
 
-**Person:** Joe Biden, Donald Trump, Xi Jinping, Barbara Borgonovi, Gerard Huber, Charles Woodburn, Richard Crawford, Beth Adler, Blake Resnick, Gururaj Deshpande
-**Organization:** Biden administration, Trump administration, China Briefing, Ministry of Foreign Affairs of the People’s Republic of China, Raytheon, BAE Systems, United Technologies, Data Link Solutions, BRINC Drones, Trelleborg Engineering
-**Role:** President: Joe Biden @ United States, President: Donald Trump @ United States, President: Xi Jinping @ China, President-elect: Donald Trump @ United States, COO:  @ , CEO: @ 
-**Date:** December 9, 2024, March 22, 2021, January 20, 2021, December 5, 2024, December 3, 2024, December 2, 2024, November 22, 2024, November 25, 2024, November 16, 2024, November 13, 2024
-**Location:** United States, China, Hong Kong, Macau, Country Group D:5, Xinjiang Uyghur Autonomous Region (XUAR), Urumqi Prefecture, Lima, Peru, Yemen
-**Date:** 03/15/2022, 2021, 03/13/2024, 2023
-**Organization:** Volkswagen Group
+**Person:** Morton Abramowitz, James T. Shotwell, Richard Nixon, Henry Kissinger, Xi Jinping, Evan S. Medeiros, Stephen M. Walt, John Culver, Rosemary Foot, C. Fred Bergsten
+**Organization:** Stanford University, Carnegie Endowment, Chinese Communist Party, United Nations, Soviet Union, Center for Strategic International Studies, White House, State Department, Casaba Security, Center for New American Security
+**Role:** President: Morton Abramowitz @ Carnegie Endowment, President: James T. Shotwell @ Carnegie Endowment, President: Richard Nixon @ United States, national security advisor: Henry Kissinger @ United States, President: Xi Jinping @ Chinese Communist Party, Senior Fellow and Director: Christopher S. Chivvis @ American Statecraft Program, President: Mariano-Florentino (Tino) Cuéllar @ Carnegie Endowment, President: Joe Biden @ United States, President: Xi Jinping @ China, Co-founder: Jason Glassberg @ Casaba Security
+**Date:** early 1950s, 1952, 1997, 2007, December 20, 2022, October 2024, late 1960s, 1969, 1970s, Nov. 15, 2023
+**Location:** China, America, United States, Asia, Africa, Middle East, Washington, Beijing, Taiwan, Europe
+**Monetary_Value:** $60, $53
+**Percentage:** 58%, 17%, 50%, 1/9
 
 ### Numerical Data
 
-**Percentages:** 202021, 1947, 202023, 2674
-**Years:** 2022, 2021, 2021, 1947, 2021, 1947, 2021, 2021, 1947, 2021
+**Percentages:** 1.7, 7, 0, 35, 3, 6, 0, 3, 2, 9
+**Monetary:** 7 , 3 , 1 , 8 , 1 , 5 , 5 , 9 , 3 , 07 
+**Years:** 1920, 1920, 1920, 2080, 2080, 2064, 1904, 1920, 2041, 2084
+**Quantities:** 8628 0, 3 6, 2 l6_Q, 9 _1Ƀ, 2 I, 5 g, 4 xc, 8629 0, 8630 0, 8631 0
 
 ### Key Content
 
-**Source 1:** https://www.volkswagen-group.com/en/publications/corporate/sustainability-report-2021-1947
-03/15/2022Company Report
-
-#  Sustainability Report 2021
-
-[ Download ](/en/publications/corporate/sustainability-
-report-2021-1947/download?disposition=attachment)
-
-Add to cart
-
-Share
-
-[](https://twitter.com/intent/post?url=https%3A%2F%2Fwww.volkswagen-
-group.com%2Fen%2Fpublications%2Fcorporate%2Fsus...
+**Source 1:** https://www.responsibilityreports.com/HostedData/ResponsibilityReportArchive/v/OTC_VWAGY_2021.pdf
+%PDF-1.7 %���� 8628 0 obj <>stream ��0/\��}�I%�CQ8ϣe���YAD[z]��fړ�t�G� 9(-�I|��\=�_��!ٴ �{!�n|_ƥ��ł��I=��� �V p� (�x��S�~~C�{�� Tl�2l�\?��� Sыg|5�i'Z ��V� �&#j 6"��W�H֦�/������6�%����o�F�����C���7Q Z��R?&�]B �F�"�"���^/Q�n��t^��:Kk[7w�g)l匙��T͆K��Wݯ����tY�?�m�|��B��V���,���...
 
 **Source 2:** https://www.volkswagen-group.com/en/publications/more/group-sustainability-report-2023-2674
 03/13/2024Publication

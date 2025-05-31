@@ -137,16 +137,10 @@ class BrowserTool(BaseTool):
         if not isinstance(url, str) or len(url) < 3:
             return None, f"Invalid URL format: {url}"
         
-        # Define comprehensive patterns for placeholders
+        # Ensure consistent handling of curly-brace placeholders
         placeholder_patterns = [
-            # Brackets format (expanded to catch more variations)
-            (r"\[(.*URL.*|.*link.*|Insert.*|.*result.*)\]", "bracketed URL placeholder"),
-            # Template variables (various formats)
             (r"\{(.*?)\}", "template variable"),
-            # Explicit placeholder text (expanded)
-            (r"placeholder|PLACEHOLDER|url_from|URL_FROM|PLACEHOLDER_FOR", "explicit placeholder text"),
-            # Function calls
-            (r"function\s*\(.*?\)", "function call"),
+            (r"\[(.*URL.*|.*link.*|Insert.*|.*result.*)\]", "bracketed URL placeholder"),
             # Template instructions
             (r"<.*?>", "HTML-style placeholder"),
             # Default URLs

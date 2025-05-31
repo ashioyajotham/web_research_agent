@@ -1,11 +1,12 @@
+import re
+import time
+
 from .memory import Memory
 from .planner import Planner
 from .comprehension import Comprehension
 from tools.tool_registry import ToolRegistry
 from utils.formatters import format_results
 from utils.logger import get_logger
-import re
-import time
 
 logger = get_logger(__name__)
 
@@ -75,8 +76,8 @@ class WebResearchAgent:
             if not can_execute:
                 logger.warning(f"Skipping step {step_index+1}: {reason}")
                 results.append({
-                    "step": step.description, 
-                    "status": "error", 
+                    "step": step.description,
+                    "status": "error",
                     "output": f"Skipped step due to previous failures: {reason}"
                 })
                 continue
@@ -96,17 +97,30 @@ class WebResearchAgent:
                             self.memory.search_results = output["results"]
                             
                         # Store the step result
-                        results.append({"step": step.description, "status": "success", "output": output})
+                        results.append({
+                            "step": step.description,
+                            "status": "success",
+                            "output": output
+                        })
                         self.memory.add_result(step.description, output)
                         
                     except Exception as e:
                         logger.error(f"Error executing search: {str(e)}")
-                        results.append({"step": step.description, "status": "error", "output": str(e)})
+                        results.append({
+                            "step": step.description,
+                            "status": "error",
+                            "output": str(e)
+                        })
                     
                     # Display the result of this step
                     display_result = next((r for r in results if r["step"] == step.description), None)
                     if display_result:
-                        self._display_step_result(step_index+1, step.description, display_result["status"], display_result["output"])
+                        self._display_step_result(
+                            step_index+1,
+                            step.description,
+                            display_result["status"],
+                            display_result["output"]
+                        )
                     
                     continue  # Skip the normal execution flow for this step
             
@@ -115,7 +129,11 @@ class WebResearchAgent:
             if not tool:
                 error_msg = f"Tool '{step.tool_name}' not found"
                 logger.error(error_msg)
-                results.append({"step": step.description, "status": "error", "output": error_msg})
+                results.append({
+                    "step": step.description, 
+                    "status": "error",
+                    "output": error_msg
+                })
                 continue
             
             # Prepare parameters with variable substitution
@@ -130,7 +148,9 @@ class WebResearchAgent:
                         entity_types.append("person")
                     if "organization" in step.description.lower():
                         entity_types.append("organization")
-                    if "role" in step.description.lower() or "coo" in step.description.lower() or "ceo" in step.description.lower():
+                    if ("role" in step.description.lower() or
+                        "coo" in step.description.lower() or
+                        "ceo" in step.description.lower()):
                         entity_types.append("role")
                     if entity_types:
                         parameters["entity_types"] = entity_types
@@ -142,7 +162,9 @@ class WebResearchAgent:
                 # Check if the step actually accomplished its objective
                 verified, message = self._verify_step_completion(step, output)
                 if not verified:
-                    logger.warning(f"Step {step_index+1} did not achieve its objective: {message}")
+                    logger.warning(
+                        f"Step {step_index+1} did not achieve its objective: {message}"
+                    )
                     
                     # Try to recover with more specific parameters if appropriate
                     if step.tool_name == "search" and step_index > 0:
@@ -162,13 +184,13 @@ class WebResearchAgent:
                         if hasattr(self.memory, 'search_results') and self.memory.search_results:
                             # Combine snippets into a single document
                             combined_text = f"# Content extracted from search snippets\n\n"
-                            for i, result in enumerate(self.memory.search_results[:5]):  # Use top 5 results
-                                title = result.get("title", f"Result {i+1}")
-                                snippet = result.get("snippet", "No description")
-                                link = result.get("link", "#")
+                            for i, result_item in enumerate(self.memory.search_results[:5]):  # Use top 5
+                                title = result_item.get("title", f"Result {i+1}")
+                                snippet = result_item.get("snippet", "No description")
+                                link = result_item.get("link", "#")
                                 combined_text += f"## {title}\n\n{snippet}\n\nSource: {link}\n\n"
                             
-                            # Override the output with our generated content
+                            # Override the output with generated content
                             output = {
                                 "url": "search_results_combined",
                                 "title": "Combined search result content (Anti-scraping fallback)",
@@ -179,8 +201,8 @@ class WebResearchAgent:
                 
                 # Record the result with verification status
                 results.append({
-                    "step": step.description, 
-                    "status": "success", 
+                    "step": step.description,
+                    "status": "success",
                     "output": output,
                     "verified": verified,
                     "verification_message": message
@@ -189,12 +211,21 @@ class WebResearchAgent:
                 self.memory.add_result(step.description, output)
                 
                 # Store search results specifically for easy reference
-                if step.tool_name == "search" and isinstance(output, dict) and "results" in output:
+                if (step.tool_name == "search" and 
+                    isinstance(output, dict) and 
+                    "results" in output):
                     self.memory.search_results = output["results"]
-                    logger.info(f"Stored {len(self.memory.search_results)} search results in memory")
+                    logger.info(
+                        f"Stored {len(self.memory.search_results)} search results in memory"
+                    )
+            
             except Exception as e:
                 logger.error(f"Error executing tool {step.tool_name}: {str(e)}")
-                results.append({"step": step.description, "status": "error", "output": str(e)})
+                results.append({
+                    "step": step.description,
+                    "status": "error",
+                    "output": str(e)
+                })
         
         # After each successful step, update entity context information
         if "status" in results[-1] and results[-1]["status"] == "success":
@@ -250,30 +281,28 @@ class WebResearchAgent:
     def _resolve_dynamic_placeholders(self, value, previous_results):
         """
         Dynamically resolve various types of placeholders in parameter values.
-        
-        Args:
-            value (str): Parameter value that may contain placeholders
-            previous_results (list): Results from previous steps
-            
-        Returns:
-            str: Resolved value with placeholders substituted
         """
         original_value = value
-        
+
         # Pattern 1: Explicit URL placeholders like {search_result_X_url}
         url_pattern = re.search(r'\{search_result_(\d+)_url\}', value)
         if url_pattern:
             index = int(url_pattern.group(1))
             url = self._get_search_result_url(index, previous_results)
             return url
-        
-        # Pattern 2: Natural language placeholders [Insert URL from search result X]
-        natural_pattern = re.search(r'\[.*?(?:url|link).*?(?:search\s*result|result)\s*(\d+).*?\]', value, re.IGNORECASE)
-        if natural_pattern:
-            index = int(natural_pattern.group(1))
-            url = self._get_search_result_url(index, previous_results)
-            return url
-        
+
+        # REMOVE bracket-based URL detection to enforce curly braces usage
+        # (Commented out in the code to avoid confusion with curly-brace placeholders)
+        # natural_pattern = re.search(
+        #     r'\[.*?(?:url|link).*?(?:search\s*result|result)\s*(\d+).*?\]', 
+        #     value, 
+        #     re.IGNORECASE
+        # )
+        # if natural_pattern:
+        #     index = int(natural_pattern.group(1))
+        #     url = self._get_search_result_url(index, previous_results)
+        #     return url
+
         # Pattern 3: Generic URL requests
         generic_url_patterns = [
             r'\[urls?\s+(?:of|from).*?\]',
@@ -285,7 +314,7 @@ class WebResearchAgent:
         
         for pattern in generic_url_patterns:
             if re.search(pattern, value, re.IGNORECASE):
-                # Extract the best available URL from previous results
+                # Extract the best available URL from previous_results
                 url = self._extract_best_url_from_results(previous_results, value)
                 if url:
                     return url
@@ -312,7 +341,7 @@ class WebResearchAgent:
         
         Args:
             previous_results (list): Results from previous steps
-            context (str): Context of what type of URL is needed
+            context (str): Context string describing what type of URL is needed
             
         Returns:
             str: Best matching URL or fallback URL
@@ -440,7 +469,7 @@ class WebResearchAgent:
                         relevant_data.append(f"Content: {summary}")
         
         if relevant_data:
-            return "\n".join(relevant_data[:3])  # Limit to top 3 most relevant pieces
+            return "\n".join(relevant_data[:3])  # Limit to top 3 pieces
         else:
             return "No relevant data found in previous results"
 
@@ -464,13 +493,15 @@ class WebResearchAgent:
         return final_answer
 
     def _generate_execution_context(self, results):
-        """Generate execution context only when needed"""
+        """Generate execution context only when needed."""
         error_count = sum(1 for r in results if r.get("status") == "error")
         
         if error_count > len(results) * 0.3:  # More than 30% errors
             context = f"\n\n## Research Notes\n\n"
-            context += f"Research completed with {error_count} of {len(results)} steps encountering issues. "
-            context += "Some information may be incomplete.\n"
+            context += (
+                f"Research completed with {error_count} of {len(results)} steps "
+                f"encountering issues. Some information may be incomplete.\n"
+            )
             return context
         
         return ""
@@ -496,13 +527,44 @@ class WebResearchAgent:
         """
         # Intent mapping based on action verbs and question patterns
         intent_patterns = {
-            "find_specific": [r"find\s+(the\s+)?name", r"who\s+is", r"what\s+is\s+the\s+name", r"identify\s+the"],
-            "compile_list": [r"compile\s+.*list", r"list\s+of", r"find\s+.*companies", r"gather"],
-            "extract_content": [r"extract.*statements", r"get\s+quotes", r"find\s+what.*said"],
-            "calculate_value": [r"calculate", r"by\s+what\s+percentage", r"determine.*ratio"],
-            "compare_analyze": [r"compare", r"analyze.*difference", r"versus"],
-            "explain_describe": [r"explain", r"describe", r"how", r"why"],
-            "download_process": [r"download", r"extract.*from.*dataset", r"process.*data"]
+            "find_specific": [
+                r"find\s+(the\s+)?name",
+                r"who\s+is",
+                r"what\s+is\s+the\s+name",
+                r"identify\s+the"
+            ],
+            "compile_list": [
+                r"compile\s+.*list",
+                r"list\s+of",
+                r"find\s+.*companies",
+                r"gather"
+            ],
+            "extract_content": [
+                r"extract.*statements",
+                r"get\s+quotes",
+                r"find\s+what.*said"
+            ],
+            "calculate_value": [
+                r"calculate",
+                r"by\s+what\s+percentage",
+                r"determine.*ratio"
+            ],
+            "compare_analyze": [
+                r"compare",
+                r"analyze.*difference",
+                r"versus"
+            ],
+            "explain_describe": [
+                r"explain",
+                r"describe",
+                r"how",
+                r"why"
+            ],
+            "download_process": [
+                r"download",
+                r"extract.*from.*dataset",
+                r"process.*data"
+            ]
         }
         
         task_lower = task_description.lower()
@@ -607,8 +669,11 @@ class WebResearchAgent:
         collected_data = self._extract_comprehensive_data(results)
         
         # Apply appropriate synthesis strategy
-        synthesis_method = getattr(self, f"_synthesize_{task_analysis['synthesis_strategy']}", 
-                                  self._synthesize_comprehensive_synthesis)
+        synthesis_method = getattr(
+            self,
+            f"_synthesize_{task_analysis['synthesis_strategy']}",
+            self._synthesize_comprehensive_synthesis
+        )
         
         return synthesis_method(task_description, task_analysis, collected_data)
 
@@ -671,7 +736,11 @@ class WebResearchAgent:
         """Extract numerical information patterns from text."""
         patterns = {
             "percentages": re.findall(r'(\d+(?:\.\d+)?)\s*%', text),
-            "monetary": re.findall(r'[€$£¥]\s*(\d+(?:,\d{3})*(?:\.\d+)?)\s*([bmk]?)', text, re.IGNORECASE),
+            "monetary": re.findall(
+                r'[€$£¥]\s*(\d+(?:,\d{3})*(?:\.\d+)?)\s*([bmk]?)',
+                text,
+                re.IGNORECASE
+            ),
             "years": re.findall(r'(20\d{2}|19\d{2})', text),
             "quantities": re.findall(r'(\d+(?:,\d{3})*(?:\.\d+)?)\s+(\w+)', text)
         }
@@ -687,7 +756,7 @@ class WebResearchAgent:
         }
         return patterns
 
-    # Synthesis strategies - each handles different types of tasks
+    # Synthesis strategies
     def _synthesize_extract_and_verify(self, task_description, task_analysis, collected_data):
         """For tasks that need to find specific information (names, facts, etc.)"""
         answer = f"# {task_description}\n\n"
@@ -705,17 +774,20 @@ class WebResearchAgent:
         
         if primary_finding:
             answer += f"## Answer\n\n{primary_finding}\n\n"
-            answer += f"## Source Verification\n\n"
+            answer += "## Source Verification\n\n"
             answer += self._format_source_verification(primary_finding, collected_data)
         else:
             answer += "## Research Results\n\n"
-            answer += "The specific information requested could not be definitively identified from available sources.\n\n"
+            answer += (
+                "The specific information requested could not be definitively "
+                "identified from available sources.\n\n"
+            )
             answer += self._format_available_findings(findings)
         
         return answer
 
     def _synthesize_aggregate_and_filter(self, task_description, task_analysis, collected_data):
-        """For tasks that need to compile lists with criteria"""
+        """For tasks that need to compile lists with criteria."""
         answer = f"# {task_description}\n\n"
         
         # Extract potential list items
@@ -724,18 +796,21 @@ class WebResearchAgent:
         # Apply filtering based on task criteria
         filtered_items = self._apply_dynamic_filters(candidates, task_description)
         
-        # Format as appropriate list
+        # Format as an appropriate list
         if filtered_items:
             answer += self._format_dynamic_list(filtered_items, task_analysis)
         else:
             answer += "## Research Results\n\n"
-            answer += "No items meeting all specified criteria could be identified from the available research.\n\n"
+            answer += (
+                "No items meeting all specified criteria could be identified "
+                "from the available research.\n\n"
+            )
             answer += self._format_research_summary(collected_data)
         
         return answer
 
     def _synthesize_collect_and_organize(self, task_description, task_analysis, collected_data):
-        """For tasks that need to extract and organize content (quotes, statements, etc.)"""
+        """For tasks that need to extract and organize content (quotes, statements, etc.)."""
         answer = f"# {task_description}\n\n"
         
         # Extract content items
@@ -746,13 +821,15 @@ class WebResearchAgent:
             answer += self._format_content_collection(content_items, task_analysis)
         else:
             answer += "## Research Results\n\n"
-            answer += "The requested content could not be extracted from available sources.\n\n"
+            answer += (
+                "The requested content could not be extracted from available sources.\n\n"
+            )
             answer += self._format_alternative_findings(collected_data)
         
         return answer
 
     def _synthesize_comprehensive_synthesis(self, task_description, task_analysis, collected_data):
-        """Default synthesis for complex or unclear tasks"""
+        """Default synthesis for complex or unclear tasks."""
         answer = f"# {task_description}\n\n"
         
         # Provide comprehensive findings organized by relevance
@@ -768,14 +845,14 @@ class WebResearchAgent:
         if collected_data["web_content"]:
             answer += self._format_content_findings(collected_data["web_content"][:3])  # Top 3
         
-        answer += f"\n## Research Summary\n\n"
+        answer += "\n## Research Summary\n\n"
         answer += self._generate_research_summary(collected_data, task_analysis)
         
         return answer
 
-    # Helper methods for dynamic processing
+    # Strategy helper methods
     def _search_for_target(self, target, collected_data):
-        """Search for a specific target across all collected data"""
+        """Search for a specific target across all collected data."""
         findings = []
         
         # Search in web content
@@ -806,7 +883,7 @@ class WebResearchAgent:
         return findings
 
     def _extract_context(self, text, target, window=100):
-        """Extract context around a target in text"""
+        """Extract context around a target in text."""
         pos = text.find(target.lower())
         if pos == -1:
             return ""
@@ -817,7 +894,7 @@ class WebResearchAgent:
         return text[start:end].strip()
 
     def _identify_primary_finding(self, findings, task_description):
-        """Identify the most relevant finding for the task"""
+        """Identify the most relevant single finding across all targets."""
         all_findings = []
         for target, target_findings in findings.items():
             all_findings.extend(target_findings)
@@ -836,16 +913,16 @@ class WebResearchAgent:
         return scored_findings[0][1]["context"] if scored_findings else None
 
     def _score_finding_relevance(self, finding, task_description):
-        """Score a finding's relevance to the task"""
+        """Score a finding's relevance to the task."""
         score = 0
         
-        # Higher score for web content vs search snippets
+        # Higher score for web content vs. search snippets
         if finding["type"] == "web_content":
             score += 5
         
-        # Score based on context quality
+        # Score based on context snippet length
         context_length = len(finding["context"])
-        if 50 < context_length < 500:  # Optimal length
+        if 50 < context_length < 500:  # Somewhat optimal range
             score += 3
         
         # Score based on source quality
@@ -858,7 +935,7 @@ class WebResearchAgent:
         return score
 
     def _extract_list_candidates(self, collected_data, task_analysis):
-        """Extract potential list items from collected data"""
+        """Extract potential list items from collected data."""
         candidates = set()
         
         # From entities
@@ -869,10 +946,9 @@ class WebResearchAgent:
         # From structured patterns in text
         all_text = " ".join(collected_data["text_content"])
         
-        # Extract list-like patterns
         list_patterns = [
-            r'(?:^|\n)\s*[-•*]\s*([^\n]+)',  # Bullet points
-            r'(?:^|\n)\s*\d+\.\s*([^\n]+)',  # Numbered lists
+            r'(?:^|\n)\s*[-•*]\s*([^\n]+)',        # Bullet points
+            r'(?:^|\n)\s*\d+\.\s*([^\n]+)',        # Numbered lists
             r'([A-Z][a-zA-Z\s&]+(?:Group|AG|SE|Ltd|Inc|Corporation|Company))',  # Company names
         ]
         
@@ -883,10 +959,10 @@ class WebResearchAgent:
         return list(candidates)
 
     def _apply_dynamic_filters(self, candidates, task_description):
-        """Apply filters based on task description"""
+        """Apply filters based on the text of the task."""
         filtered = []
         
-        # Extract filter criteria from task description
+        # Extract filter criteria from the task
         filters = self._extract_filter_criteria(task_description)
         
         for candidate in candidates:
@@ -896,10 +972,10 @@ class WebResearchAgent:
         return filtered
 
     def _extract_filter_criteria(self, task_description):
-        """Extract filtering criteria from task description"""
+        """Extract filtering criteria from the task description."""
         criteria = {}
         
-        # Geographic filters
+        # Example: geographic filter
         if "eu" in task_description.lower():
             criteria["geography"] = "eu"
         
@@ -907,7 +983,7 @@ class WebResearchAgent:
         if "motor vehicle" in task_description.lower():
             criteria["industry"] = "automotive"
         
-        # Size filters
+        # Revenue filters
         revenue_match = re.search(r'€(\d+)([bm])', task_description.lower())
         if revenue_match:
             amount = int(revenue_match.group(1))
@@ -922,13 +998,16 @@ class WebResearchAgent:
         return criteria
 
     def _meets_criteria(self, candidate, filters):
-        """Check if a candidate meets the filter criteria"""
-        # Basic implementation - can be enhanced
-        return True  # For now, accept all candidates
+        """
+        Check if a candidate meets the filter criteria.
+        This can be expanded for real-world usage.
+        """
+        # For now, return True to accept all
+        return True
 
     # Formatting methods
     def _format_dynamic_list(self, items, task_analysis):
-        """Format items as an appropriate list structure"""
+        """Format items as an appropriate list structure."""
         output = "## Results\n\n"
         
         if task_analysis["expected_output_structure"] == "structured_list":
@@ -944,7 +1023,7 @@ class WebResearchAgent:
         return output
 
     def _format_content_collection(self, content_items, task_analysis):
-        """Format collected content items"""
+        """Format collected content items."""
         output = "## Collected Content\n\n"
         
         for i, item in enumerate(content_items, 1):
@@ -955,7 +1034,7 @@ class WebResearchAgent:
         return output
 
     def _format_source_verification(self, primary_finding, collected_data):
-        """Format source verification for findings"""
+        """Format source verification for findings."""
         output = "Sources that support this finding:\n\n"
         
         # Look for sources that mention the finding
@@ -970,29 +1049,33 @@ class WebResearchAgent:
         return output
 
     def _format_available_findings(self, findings):
-        """Format available findings when primary finding is not found"""
+        """Format available findings when a primary finding is not identified."""
         output = "Available information found:\n\n"
         
         for target, target_findings in findings.items():
             if target_findings:
                 output += f"**{target}:**\n"
-                for finding in target_findings[:3]:  # Top 3
-                    output += f"- {finding['context'][:100]}... (Source: {finding['source']})\n"
+                for finding in target_findings[:3]:  # Top 3 examples
+                    snippet_short = finding['context'][:100]
+                    source = finding['source']
+                    output += f"- {snippet_short}... (Source: {source})\n"
                 output += "\n"
         
         return output
 
     def _format_research_summary(self, collected_data):
-        """Format a summary of research conducted"""
+        """Format a summary of research conducted."""
         output = "Research conducted:\n\n"
         output += f"- Analyzed {len(collected_data['search_results'])} search results\n"
         output += f"- Extracted content from {len(collected_data['web_content'])} web pages\n"
-        output += f"- Identified {sum(len(entities) for entities in collected_data['entities'].values())} entities\n"
-        
+        output += (
+            f"- Identified {sum(len(entities) for entities in collected_data['entities'].values())} "
+            "entities\n"
+        )
         return output
 
     def _extract_content_items(self, collected_data, task_analysis):
-        """Extract specific content items based on task analysis"""
+        """Extract specific content items based on the task analysis."""
         content_items = []
         
         # Extract based on the task's information targets
@@ -1004,9 +1087,9 @@ class WebResearchAgent:
             
             # Look for quotes or statements
             quote_patterns = [
-                r'"([^"]{20,300})"',  # Quoted text
-                r'said[^.]*"([^"]{20,300})"',  # Said + quote
-                r'stated[^.]*"([^"]{20,300})"',  # Stated + quote
+                r'"([^"]{20,300})"',          # Quoted text
+                r'said[^.]*"([^"]{20,300})"', # "said" + quote
+                r'stated[^.]*"([^"]{20,300})"'# "stated" + quote
             ]
             
             for pattern in quote_patterns:
@@ -1014,7 +1097,8 @@ class WebResearchAgent:
                 for match in matches:
                     # Check if it's relevant to our targets
                     match_lower = match.lower()
-                    if any(target.lower() in match_lower for target in targets) or not targets:
+                    # If no explicit targets, or if match includes them, collect
+                    if any(t.lower() in match_lower for t in targets) or not targets:
                         content_items.append({
                             "content": match.strip(),
                             "source": content_item["url"],
@@ -1034,7 +1118,7 @@ class WebResearchAgent:
         return content_items[:10]  # Limit to 10 items
 
     def _format_alternative_findings(self, collected_data):
-        """Format alternative findings when requested content isn't found"""
+        """Format alternative findings when requested content isn't found."""
         output = "Related information found:\n\n"
         
         # Show entities that were found
@@ -1042,7 +1126,8 @@ class WebResearchAgent:
             output += "**Entities identified:**\n"
             for entity_type, entities in collected_data["entities"].items():
                 if entities:
-                    output += f"- {entity_type.title()}: {', '.join(str(e) for e in entities[:5])}\n"
+                    entity_list = ", ".join(str(e) for e in entities[:5])
+                    output += f"- {entity_type.title()}: {entity_list}\n"
             output += "\n"
         
         # Show numerical data if any
@@ -1056,7 +1141,7 @@ class WebResearchAgent:
         return output
 
     def _format_entity_findings(self, entities):
-        """Format entity findings"""
+        """Format discovered entities."""
         output = "### Entities Identified\n\n"
         
         for entity_type, entity_list in entities.items():
@@ -1067,7 +1152,7 @@ class WebResearchAgent:
         return output
 
     def _format_numerical_findings(self, numerical_data):
-        """Format numerical findings"""
+        """Format numerical findings."""
         output = "### Numerical Data\n\n"
         
         for data_type, values in numerical_data.items():
@@ -1076,21 +1161,19 @@ class WebResearchAgent:
                 formatted_values = []
                 for value in values[:10]:
                     if isinstance(value, tuple):
-                        # Handle different tuple structures
                         if len(value) == 2:
                             formatted_values.append(f"{value[0]} {value[1]}")
                         else:
                             formatted_values.append(" ".join(str(v) for v in value))
                     else:
                         formatted_values.append(str(value))
-                
                 output += f"**{data_type.title()}:** {', '.join(formatted_values)}\n"
         
         output += "\n"
         return output
 
     def _format_content_findings(self, web_content):
-        """Format content findings"""
+        """Format key content findings."""
         output = "### Key Content\n\n"
         
         for i, content_item in enumerate(web_content, 1):
@@ -1103,15 +1186,17 @@ class WebResearchAgent:
         return output
 
     def _generate_research_summary(self, collected_data, task_analysis):
-        """Generate a summary of the research conducted"""
-        summary = f"Research completed using {task_analysis['synthesis_strategy']} strategy.\n\n"
+        """Generate a summary of the research conducted."""
+        summary = (
+            f"Research completed using {task_analysis['synthesis_strategy']} strategy.\n\n"
+        )
         
         # Count what was found
         search_count = len(collected_data["search_results"])
         content_count = len(collected_data["web_content"])
         entity_count = sum(len(entities) for entities in collected_data["entities"].values())
         
-        summary += f"**Research scope:**\n"
+        summary += "**Research scope:**\n"
         summary += f"- {search_count} search results analyzed\n"
         summary += f"- {content_count} web pages processed\n"
         summary += f"- {entity_count} entities identified\n\n"
@@ -1152,7 +1237,9 @@ class WebResearchAgent:
                         if isinstance(search_result, dict) and "link" in search_result:
                             url = search_result["link"]
                             if self._is_valid_url(url):
-                                logger.debug(f"Found URL in previous results at index {index}: {url}")
+                                logger.debug(
+                                    f"Found URL in previous results at index {index}: {url}"
+                                )
                                 return url
         
         # Strategy 3: Get any valid URL from search results (ignore index)
@@ -1164,7 +1251,7 @@ class WebResearchAgent:
             logger.info(f"Using URL at safe index {safe_index} instead of {index}: {url}")
             return url
         
-        # Strategy 4: Return a safe placeholder that tools can handle gracefully
+        # Strategy 4: Return a safe placeholder
         placeholder_url = "https://example.com/search-result-not-found"
         logger.warning(f"No valid URLs found, returning placeholder: {placeholder_url}")
         return placeholder_url
@@ -1179,14 +1266,16 @@ class WebResearchAgent:
             r'^https?://'  # http:// or https://
             r'(?:(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\.)+[A-Z]{2,6}\.?|'  # domain...
             r'localhost|'  # localhost...
-            r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})'  # ...or ip
+            r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})'  # ...or IP
             r'(?::\d+)?'  # optional port
-            r'(?:/?|[/?]\S+)$', re.IGNORECASE)
+            r'(?:/?|[/?]\S+)$',
+            re.IGNORECASE
+        )
         
         if not url_pattern.match(url):
             return False
         
-        # Reject common placeholder patterns
+        # Reject known placeholder patterns
         placeholder_patterns = [
             r'example\.com',
             r'placeholder',
@@ -1219,15 +1308,15 @@ class WebResearchAgent:
                                 url = search_result["link"]
                                 if self._is_valid_url(url):
                                     all_urls.append(url)
-            
-            # Extract URLs from content using regex
-            elif isinstance(output, dict) and "content" in output:
-                content = output["content"]
-                if isinstance(content, str):
-                    urls = re.findall(r'https?://[^\s<>"]+', content)
-                    for url in urls:
-                        if self._is_valid_url(url):
-                            all_urls.append(url)
+                
+                # Extract URLs from content
+                elif isinstance(output, dict) and "content" in output:
+                    content = output["content"]
+                    if isinstance(content, str):
+                        urls = re.findall(r'https?://[^\s<>"]+', content)
+                        for candidate_url in urls:
+                            if self._is_valid_url(candidate_url):
+                                all_urls.append(candidate_url)
 
         # Remove duplicates while preserving order
         seen = set()
@@ -1240,7 +1329,7 @@ class WebResearchAgent:
         return unique_urls
 
     def _can_execute_step(self, step_index, previous_results):
-        """Check if a step can be executed based on previous results."""
+        """Check if a step can be executed based on prior steps' statuses."""
         # Always allow first step
         if step_index == 0:
             return True, "First step"
@@ -1251,8 +1340,8 @@ class WebResearchAgent:
             if result.get("status") == "error":
                 critical_failures += 1
         
-        # Allow execution if not too many failures
-        if critical_failures < len(previous_results) * 0.7:  # Allow if less than 70% failed
+        # Allow if not too many failures
+        if critical_failures < len(previous_results) * 0.7:
             return True, "Sufficient previous success"
         
         return False, f"Too many previous failures ({critical_failures}/{len(previous_results)})"
@@ -1270,7 +1359,7 @@ class WebResearchAgent:
                 snippet = result.get("snippet", "")
                 combined_text += f"{title} {snippet} "
         
-        # Extract entities using comprehension module
+        # Extract entities using the comprehension module
         if combined_text.strip():
             entities = self.comprehension.extract_entities(combined_text)
             if entities:
@@ -1297,10 +1386,11 @@ class WebResearchAgent:
         if isinstance(output, str) and len(output) > 20:
             return True, "Text output generated"
         
-        return True, "Step completed"  # Default to success for now
+        # Default to success if we can't detect a failure
+        return True, "Step completed"
 
     def _refine_query_with_entities(self, original_query, entities):
-        """Refine a search query using discovered entities."""
+        """Refine a search query using discovered named entities."""
         if not entities:
             return original_query
         
@@ -1308,7 +1398,7 @@ class WebResearchAgent:
         additional_terms = []
         for entity_type, entity_list in entities.items():
             if entity_type in ["organization", "person", "location"] and entity_list:
-                # Add the first few entities
+                # Add first few discovered entity names
                 for entity in entity_list[:2]:
                     entity_str = str(entity).strip()
                     if entity_str and entity_str not in original_query:
@@ -1321,9 +1411,7 @@ class WebResearchAgent:
         return original_query
 
     def _display_step_result(self, step_number, description, status, output):
-        """Display the result of a step execution."""
-        # This method handles displaying step results
-        # For now, just log the results
+        """Display the result of a step execution (logging in this implementation)."""
         logger.info(f"Step {step_number} ({description}): {status}")
         if isinstance(output, dict) and "results" in output:
             result_count = len(output["results"]) if output["results"] else 0

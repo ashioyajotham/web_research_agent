@@ -18,26 +18,26 @@
 
 | Item | Details | Status |
 |------|---------|--------|
-| Office of Foreign Assets Control (OFAC) | Found in research | Requires verification |
-| CATL | Found in research | Requires verification |
-| October 2022 | Found in research | Requires verification |
-| March 22, 2021 | Found in research | Requires verification |
-| COO:  @  | Found in research | Requires verification |
-| 2025-04-29 | Found in research | Requires verification |
-| Rapid Flight | Found in research | Requires verification |
-| 2021 | Found in research | Requires verification |
-| 2023 | Found in research | Requires verification |
-| October 3, 2024 | Found in research | Requires verification |
-| Baowu Group Xinjiang Bayi Iron and Steel Co., Ltd. | Found in research | Requires verification |
-| 2025-04-10 | Found in research | Requires verification |
-| 2024-06-12 | Found in research | Requires verification |
-| 2025-04-14 | Found in research | Requires verification |
-| September 5, 2024 | Found in research | Requires verification |
-| Cyberlux | Found in research | Requires verification |
-| Tsinghua University | Found in research | Requires verification |
-| September 14 | Found in research | Requires verification |
-| 2024-07-20 | Found in research | Requires verification |
-| Quietos Drone Systems | Found in research | Requires verification |
+| President: Joe Biden @ United States | Found in research | Requires verification |
+| 03/13/2024 | Found in research | Requires verification |
+| Warren Spector | Found in research | Requires verification |
+| $60 | Found in research | Requires verification |
+| President: Mariano-Florentino (Tino) Cuéllar @ Carnegie Endowment | Found in research | Requires verification |
+| Africa | Found in research | Requires verification |
+| Jason Glassberg | Found in research | Requires verification |
+| CEO: Rocco "Roy" Gori @ Manulife | Found in research | Requires verification |
+| Fortune 500 | Found in research | Requires verification |
+| Houlin Zhao | Found in research | Requires verification |
+| Geneva | Found in research | Requires verification |
+| Frank Bajak | Found in research | Requires verification |
+| President: Zoe Cruz @ Morgan Stanley | Found in research | Requires verification |
+| COO: Thomas O. Staggs @ The Walt Disney Company | Found in research | Requires verification |
+| Rosemary Foot | Found in research | Requires verification |
+| 1969 | Found in research | Requires verification |
+| Richard Fuld | Found in research | Requires verification |
+| White House | Found in research | Requires verification |
+| early 1950s | Found in research | Requires verification |
+| Cerberus Capital | Found in research | Requires verification |
 
-**Total found:** 187
+**Total found:** 186
 

@@ -118,7 +118,12 @@ class SearchTool(BaseTool):
         if response.status_code != 200:
             raise Exception(f"Search API returned status code {response.status_code}: {response.text}")
         
-        search_data = response.json()
+        # Wrap response.json() in a try/except
+        try:
+            search_data = response.json()
+        except ValueError:
+            raise Exception("Received non-JSON response from search API (possibly HTML error page).")
+        
         results = []
         
         # Process organic search results
@@ -131,3 +136,18 @@ class SearchTool(BaseTool):
             results.append(SearchResult(title, link, snippet))
         
         return results
+
+def get_page(url: str) -> dict:
+    headers = {
+        "User-Agent": "Mozilla/5.0 (WebResearchAgent/1.0)"
+    }
+    try:
+        response = requests.get(url, headers=headers, timeout=30)
+        if response.status_code == 401:
+            logger.error(f"401 Unauthorized: {url}")
+            return {"error": f"HTTP 401 accessing {url}"}
+        response.raise_for_status()
+        return {"content": response.text}
+    except requests.RequestException as e:
+        logger.error(f"HTTP error accessing {url}: {str(e)}")
+        return {"error": str(e)}

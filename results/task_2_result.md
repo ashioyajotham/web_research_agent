@@ -4,11 +4,12 @@
 
 ## Answer
 
-e quaterly](https://www.edgeverve.com/the-edge-quarterly/author/vinod/
-"posts by the edge quaterly")2023-03-14t05:22:02+00:00
+র্তা – bangla")
+  * [беларуская (тарашкевіца)](https://be-tarask.wikipedia.org/wiki/coo "coo – belarusian \(taraškievica orthography\)")
+  * [català](https://ca.wikipedia.org/wiki/cap_d%27operacions "ca
 
 ## Source Verification
 
 Sources that support this finding:
 
-- https://www.edgeverve.com/the-edge-quarterly/new-custodian-enabled-enterprise/ (COO The New Custodian of an AI-Enabled Enterprise)
+- https://en.wikipedia.org/wiki/Chief_operating_officer (Chief operating officer - Wikipedia)

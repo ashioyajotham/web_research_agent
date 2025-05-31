@@ -6,48 +6,16 @@
 
 ### Entities Identified
 
-**Person:** Joe Biden, Donald Trump, Xi Jinping, Barbara Borgonovi, Gerard Huber, Charles Woodburn, Richard Crawford, Beth Adler, Blake Resnick, Gururaj Deshpande
-**Organization:** Biden administration, Trump administration, China Briefing, Ministry of Foreign Affairs of the People’s Republic of China, Raytheon, BAE Systems, United Technologies, Data Link Solutions, BRINC Drones, Trelleborg Engineering
-**Role:** President: Joe Biden @ United States, President: Donald Trump @ United States, President: Xi Jinping @ China, President-elect: Donald Trump @ United States, COO:  @ , CEO: @ 
-**Date:** December 9, 2024, March 22, 2021, January 20, 2021, December 5, 2024, December 3, 2024, December 2, 2024, November 22, 2024, November 25, 2024, November 16, 2024, November 13, 2024
-**Location:** United States, China, Hong Kong, Macau, Country Group D:5, Xinjiang Uyghur Autonomous Region (XUAR), Urumqi Prefecture, Lima, Peru, Yemen
+**Person:** Morton Abramowitz, James T. Shotwell, Richard Nixon, Henry Kissinger, Xi Jinping, Evan S. Medeiros, Stephen M. Walt, John Culver, Rosemary Foot, C. Fred Bergsten
+**Organization:** Stanford University, Carnegie Endowment, Chinese Communist Party, United Nations, Soviet Union, Center for Strategic International Studies, White House, State Department, Casaba Security, Center for New American Security
+**Role:** President: Morton Abramowitz @ Carnegie Endowment, President: James T. Shotwell @ Carnegie Endowment, President: Richard Nixon @ United States, national security advisor: Henry Kissinger @ United States, President: Xi Jinping @ Chinese Communist Party, Senior Fellow and Director: Christopher S. Chivvis @ American Statecraft Program, President: Mariano-Florentino (Tino) Cuéllar @ Carnegie Endowment, President: Joe Biden @ United States, President: Xi Jinping @ China, Co-founder: Jason Glassberg @ Casaba Security
+**Date:** early 1950s, 1952, 1997, 2007, December 20, 2022, October 2024, late 1960s, 1969, 1970s, Nov. 15, 2023
+**Location:** China, America, United States, Asia, Africa, Middle East, Washington, Beijing, Taiwan, Europe
+**Monetary_Value:** $60, $53
+**Percentage:** 58%, 17%, 50%, 1/9
 
 ### Numerical Data
 
-**Years:** 2025, 2017, 2020, 2022, 2024, 2017, 2018, 2019, 2020, 2021
-**Quantities:** 300 models, 1023 floating, 1023 FLOP, 190 models, 1023 FLOP, 101 more, 1023 FLOP, 324 large, 284 are, 47 are
-
-### Key Content
-
-**Source 1:** https://epoch.ai/data/large-scale-ai-models
-[ ](/)
-
-Publications & Commentary
-
-[Publications](/blog) [Gradient Updates](/gradient-updates) [Epoch After
-Hours](/epoch-after-hours)
-
-Data & Resources
-
-Datasets
-
-[Overview](/data) [AI Benchmarking](/data/ai-benchmarking-dashboard) [Notable
-AI Models](/data/notable-ai-models) [Large-Scale AI Models...
-
-**Source 2:** https://epoch.ai/data/large-scale-ai-models
-[ ](/)
-
-Publications & Commentary
-
-[Publications](/blog) [Gradient Updates](/gradient-updates) [Epoch After
-Hours](/epoch-after-hours)
-
-Data & Resources
-
-Datasets
-
-[Overview](/data) [AI Benchmarking](/data/ai-benchmarking-dashboard) [Notable
-AI Models](/data/notable-ai-models) [Large-Scale AI Models...
 
 
 ## Research Summary
@@ -56,6 +24,11 @@ Research completed using research_and_elaborate strategy.
 
 **Research scope:**
 - 0 search results analyzed
-- 2 web pages processed
-- 182 entities identified
+- 0 web pages processed
+- 185 entities identified
 
+
+
+## Research Notes
+
+Research completed with 3 of 8 steps encountering issues. Some information may be incomplete.
