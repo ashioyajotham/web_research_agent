@@ -162,35 +162,64 @@ class BrowserTool(BaseTool):
                         if search_results:
                             break
         
-        # Compile and return information from search snippets
-        compiled_text = ""
-        for result in search_results:
-            if isinstance(result, dict):
-                title = result.get("title", "")
-                snippet = result.get("snippet", "")
-                compiled_text += f"{title}\n{snippet}\n\n"
+        if not search_results:
+            logger.warning("No search results available for snippet extraction")
+            return {
+                "error": "No search results available for snippet extraction",
+                "content": "Unable to extract information - no search results found",
+                "extracted_text": "No search results available"
+            }
+        
+        logger.info(f"Extracting from {len(search_results)} search result snippets")
+        
+        # Combine snippets from search results
+        combined_content = []
+        urls = []
+        
+        for i, result in enumerate(search_results[:5]):  # Limit to top 5 results
+            if isinstance(result, dict) and "snippet" in result:
+                title = result.get('title', f'Search Result {i+1}')
+                snippet = result['snippet']
+                link = result.get('link', '')
+                
+                combined_content.append(f"**{title}**\n{snippet}")
+                if link:
+                    urls.append(link)
+        
+        if not combined_content:
+            return {
+                "error": "No usable content in search snippets",
+                "content": "Search results contained no extractable snippets",
+                "extracted_text": "No extractable content found"
+            }
+        
+        extracted_text = "\n\n".join(combined_content)
+        
+        logger.info(f"Successfully extracted {len(extracted_text)} characters from search snippets")
         
         return {
-            "extracted_text": compiled_text,
-            "source": "search_snippets"
+            "content": extracted_text,
+            "extracted_text": extracted_text,
+            "source": "search_snippets",
+            "title": "Combined Search Results",
+            "urls": urls,
+            "snippet_count": len(combined_content)
         }
-        
+
     def _is_valid_url(self, url):
-        """Validate URL format and check for placeholders."""
-        if not url:
+        """Validate URL format."""
+        if not url or not isinstance(url, str):
             return False
-            
-        # Ensure consistent handling of curly-brace placeholders
+        
+        url = url.strip()
+        
+        # Check for placeholder patterns
         placeholder_patterns = [
-            (r"\{(.*?)\}", "template variable"),
-            (r"\[(.*URL.*|.*link.*|Insert.*|.*result.*)\]", "bracketed URL placeholder"),
-            # Template instructions
-            (r"<.*?>", "HTML-style placeholder"),
-            # Default URLs
-            (r"example\.com|localhost|127\.0\.0\.1", "example domain"),
-            # Additional common formats used by the planner
-            (r"^URL_", "URL prefix placeholder"),
-            (r"_URL$", "URL suffix placeholder"),
+            r'\[.*?\]',
+            r'\{.*?\}',
+            r'<.*?>',
+            r'INSERT',
+            r'PLACEHOLDER'
         ]
         
         for pattern, _ in placeholder_patterns:
