@@ -64,6 +64,15 @@ def process_tasks(task_file_path, output_dir="results"):
                 # Prepare parameters with variable substitution
                 parameters = agent._substitute_parameters(step.parameters, results)
                 
+                # Special handling for browser steps with unresolved URLs
+                if step.tool_name == "browser":
+                    url = parameters.get("url")
+                    if not url or url == "None" or not agent._is_valid_url(url):
+                        # Force use of search snippets
+                        parameters["use_search_snippets"] = True
+                        parameters["url"] = None
+                        logger.info("Browser step will use search snippets due to URL resolution failure")
+                
                 # Execute the tool
                 try:
                     output = tool.execute(parameters, agent.memory)
@@ -79,9 +88,12 @@ def process_tasks(task_file_path, output_dir="results"):
                         results.append({"step": step.description, "status": "success", "output": output})
                         agent.memory.add_result(step.description, output)
                         
-                        # Store search results specifically for easy reference
-                        if step.tool_name == "search" and isinstance(output, dict) and "results" in output:
-                            agent.memory.search_results = output["results"]
+                        # Store search results for browser fallback - handle different formats
+                        if step.tool_name == "search" and isinstance(output, dict):
+                            search_results = output.get("results") or output.get("search_results") or []
+                            if search_results:
+                                agent.memory.search_results = search_results
+                                logger.info(f"Stored {len(search_results)} search results in memory")
                 except Exception as e:
                     # Exception during tool execution
                     logger.error(f"Error executing tool {step.tool_name}: {str(e)}")

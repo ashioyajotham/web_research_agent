@@ -4,61 +4,59 @@
 
 ## Research Findings
 
-### Entities Identified
+### Search Results Found
 
-**Person:** Joe Biden, Donald Trump, Xi Jinping, Barbara Borgonovi, Gerard Huber, Charles Woodburn, Richard Crawford, Beth Adler, Blake Resnick, Gururaj Deshpande
-**Organization:** Biden administration, Trump administration, China Briefing, Ministry of Foreign Affairs of the People’s Republic of China, Raytheon, BAE Systems, United Technologies, Data Link Solutions, BRINC Drones, Trelleborg Engineering
-**Role:** President: Joe Biden @ United States, President: Donald Trump @ United States, President: Xi Jinping @ China, President-elect: Donald Trump @ United States, COO:  @ , CEO: @ 
-**Date:** December 9, 2024, March 22, 2021, January 20, 2021, December 5, 2024, December 3, 2024, December 2, 2024, November 22, 2024, November 25, 2024, November 16, 2024, November 13, 2024
-**Location:** United States, China, Hong Kong, Macau, Country Group D:5, Xinjiang Uyghur Autonomous Region (XUAR), Urumqi Prefecture, Lima, Peru, Yemen
-**Date:** 03/15/2022, 2021, 03/13/2024, 2023
-**Organization:** Volkswagen Group
+**1. [PDF] Association Climate Review 2023 - Volkswagen Group**
 
-### Numerical Data
+For example, Scania is committed to reducing its absolute Scope 1 and. Scope 2 greenhouse gas emissions by 50% by 2025 compared with the base year of 2015 ...
 
-**Percentages:** 202021, 1947, 202023, 2674
-**Years:** 2022, 2021, 2021, 1947, 2021, 1947, 2021, 2021, 1947, 2021
+Source: https://www.volkswagen-group.com/en/publications/corporate/association-climate-review-2023-1810/download?disposition=attachment
 
-### Key Content
 
-**Source 1:** https://www.volkswagen-group.com/en/publications/corporate/sustainability-report-2021-1947
-03/15/2022Company Report
 
-#  Sustainability Report 2021
+**2. Scope 1 and 2 emissions of the Volkswagen Group 2023-2024**
 
-[ Download ](/en/publications/corporate/sustainability-
-report-2021-1947/download?disposition=attachment)
+The Volkswagen Group's location-based Scope 2 emissions were the highest among Scope 1 and Scope 2 greenhouse gas emissions in both 2023 and 2024.
 
-Add to cart
+Source: https://www.statista.com/statistics/1607589/scope-1-and-2-emissions-of-the-volkswagen-group/
 
-Share
 
-[](https://twitter.com/intent/post?url=https%3A%2F%2Fwww.volkswagen-
-group.com%2Fen%2Fpublications%2Fcorporate%2Fsus...
 
-**Source 2:** https://www.volkswagen-group.com/en/publications/more/group-sustainability-report-2023-2674
-03/13/2024Publication
+**3. [PDF] DECARBONIZATION | Volkswagen Group**
 
-#  Group Sustainability Report 2023
+For example, Scania is committed to reducing its absolute Scope 1 and. Scope 2 greenhouse gas emissions by 50% by 2025 compared with the base year of 2015.
 
-[ Download ](/en/publications/more/group-sustainability-
-report-2023-2674/download?disposition=attachment)
+Source: https://www.volkswagen-group.com/en/publications/more/decarbonization-2348/download?disposition=attachment
 
-Add to cart
 
-Share
 
-[](https://twitter.com/intent/post?url=https%3A%2F%2Fwww.volkswagen-
-group.com%2Fen%2Fpublications%2Fmore%2Fgrou...
+**4. Our Decarbonization Commitments - Volkswagen**
+
+Volkswagen Group of America conducts an annual greenhouse gas (GHG) and environmental inventory of its scope 1, 2, and 3 emissions in line with the GHG Protocol ...
+
+Source: https://www.vw.com/en/our-decarbonization-commitments.html
+
+
+
+**5. [PDF] 2023 Sustainability Report**
+
+absolute Scope 1 and Scope 2 greenhouse gas emissions by. 50% by 2025 compared with the base year of 2015. In 2022, the company also ...
+
+Source: https://uploads.vw-mms.de/system/production/documents/cws/002/674/file_en/912a475685ada015c1ad3e8c5f193f783bb74b10/2023_Volkswagen_Group_Sustainability_Report.pdf?1710947082
+
 
 
 ## Research Summary
 
-Research completed using compute_and_explain strategy.
+**Research completed using comprehensive_synthesis strategy.**
+
 
 **Research scope:**
-- 0 search results analyzed
-- 2 web pages processed
-- 187 entities identified
 
-**Success criteria:** minimum_1_items
+- 2 search operations completed
+
+- 0 web pages processed
+
+- 0 content extracts from search snippets
+
+- 10 search results analyzed

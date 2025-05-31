@@ -4,58 +4,59 @@
 
 ## Research Findings
 
-### Entities Identified
+### Search Results Found
 
-**Person:** Joe Biden, Donald Trump, Xi Jinping, Barbara Borgonovi, Gerard Huber, Charles Woodburn, Richard Crawford, Beth Adler, Blake Resnick, Gururaj Deshpande
-**Organization:** Biden administration, Trump administration, China Briefing, Ministry of Foreign Affairs of the People’s Republic of China, Raytheon, BAE Systems, United Technologies, Data Link Solutions, BRINC Drones, Trelleborg Engineering
-**Role:** President: Joe Biden @ United States, President: Donald Trump @ United States, President: Xi Jinping @ China, President-elect: Donald Trump @ United States, COO:  @ , CEO: @ 
-**Date:** December 9, 2024, March 22, 2021, January 20, 2021, December 5, 2024, December 3, 2024, December 2, 2024, November 22, 2024, November 25, 2024, November 16, 2024, November 13, 2024
-**Location:** United States, China, Hong Kong, Macau, Country Group D:5, Xinjiang Uyghur Autonomous Region (XUAR), Urumqi Prefecture, Lima, Peru, Yemen
+**1. Data on Large-Scale AI Models - Epoch AI**
 
-### Numerical Data
+Scale is a key factor in the performance of AI. Explore public data and graphs on over 300 large-scale machine learning models at the leading edge.
 
-**Years:** 2025, 2017, 2020, 2022, 2024, 2017, 2018, 2019, 2020, 2021
-**Quantities:** 300 models, 1023 floating, 1023 FLOP, 190 models, 1023 FLOP, 101 more, 1023 FLOP, 324 large, 284 are, 47 are
+Source: https://epoch.ai/data/large-scale-ai-models
 
-### Key Content
 
-**Source 1:** https://epoch.ai/data/large-scale-ai-models
-[ ](/)
 
-Publications & Commentary
+**2. Tracking Large-Scale AI Models - Epoch AI**
 
-[Publications](/blog) [Gradient Updates](/gradient-updates) [Epoch After
-Hours](/epoch-after-hours)
+We present a dataset of 81 large-scale models, from AlphaGo to Gemini, developed across 18 countries, at the leading edge of scale and capabilities.
 
-Data & Resources
+Source: https://epoch.ai/blog/tracking-large-scale-ai-models
 
-Datasets
 
-[Overview](/data) [AI Benchmarking](/data/ai-benchmarking-dashboard) [Notable
-AI Models](/data/notable-ai-models) [Large-Scale AI Models...
 
-**Source 2:** https://epoch.ai/data/large-scale-ai-models
-[ ](/)
+**3. Data on Notable AI Models - Epoch AI**
 
-Publications & Commentary
+Epoch AI's database contains over 900 notable ML models and 400 training compute estimates, offering a detailed exploration of trends in AI development.
 
-[Publications](/blog) [Gradient Updates](/gradient-updates) [Epoch After
-Hours](/epoch-after-hours)
+Source: https://epoch.ai/data/notable-ai-models
 
-Data & Resources
 
-Datasets
 
-[Overview](/data) [AI Benchmarking](/data/ai-benchmarking-dashboard) [Notable
-AI Models](/data/notable-ai-models) [Large-Scale AI Models...
+**4. Data on the Trajectory of AI | Epoch AI Database**
+
+Our public datasets catalog over 2400 machine learning models. Explore data and graphs showing the growth and trajectory of AI from 1950 to today.
+
+Source: https://epoch.ai/data
+
+
+
+**5. Large-Scale AI Models - Epoch AI**
+
+... compute notes,Training dataset,Training dataset notes,Training ... Download the Llama 4 Scout and Llama 4 Maverick models today on ...
+
+Source: https://epoch.ai/data/large_scale_ai_models.csv
+
 
 
 ## Research Summary
 
-Research completed using research_and_elaborate strategy.
+**Research completed using comprehensive_synthesis strategy.**
+
 
 **Research scope:**
-- 0 search results analyzed
-- 2 web pages processed
-- 182 entities identified
 
+- 2 search operations completed
+
+- 0 web pages processed
+
+- 0 content extracts from search snippets
+
+- 10 search results analyzed

@@ -14,30 +14,61 @@
     They earned more than €1B in revenue in 2023
     They are not a subsidiary of another company, except if the parent company is a holding company
 
-## Results
+## Research Findings
 
-| Item | Details | Status |
-|------|---------|--------|
-| Office of Foreign Assets Control (OFAC) | Found in research | Requires verification |
-| CATL | Found in research | Requires verification |
-| October 2022 | Found in research | Requires verification |
-| March 22, 2021 | Found in research | Requires verification |
-| COO:  @  | Found in research | Requires verification |
-| 2025-04-29 | Found in research | Requires verification |
-| Rapid Flight | Found in research | Requires verification |
-| 2021 | Found in research | Requires verification |
-| 2023 | Found in research | Requires verification |
-| October 3, 2024 | Found in research | Requires verification |
-| Baowu Group Xinjiang Bayi Iron and Steel Co., Ltd. | Found in research | Requires verification |
-| 2025-04-10 | Found in research | Requires verification |
-| 2024-06-12 | Found in research | Requires verification |
-| 2025-04-14 | Found in research | Requires verification |
-| September 5, 2024 | Found in research | Requires verification |
-| Cyberlux | Found in research | Requires verification |
-| Tsinghua University | Found in research | Requires verification |
-| September 14 | Found in research | Requires verification |
-| 2024-07-20 | Found in research | Requires verification |
-| Quietos Drone Systems | Found in research | Requires verification |
+### Search Results Found
 
-**Total found:** 187
+**1. Setting up a European Company (SE) - Your Europe**
 
+A type of public limited-liability company that allows you to run your business in different European countries using a single set of rules.
+
+Source: https://europa.eu/youreurope/business/running-business/developing-business/setting-up-european-company/index_en.htm
+
+
+
+**2. EU enlargement - European Union**
+
+Which countries can join? Any European country can join the EU if it fulfills the membership criteria, also known as the Copenhagen criteria. For example, ...
+
+Source: https://european-union.europa.eu/principles-countries-history/eu-enlargement_en
+
+
+
+**3. 12 Facts about GDPR Compliance | Osano**
+
+We've compiled a list of essential facts about GDPR rules and regulations. Use these as your guide to improving your organization's data security.
+
+Source: https://www.osano.com/articles/gdpr-compliance-regulations
+
+
+
+**4. EU Sanctions Map**
+
+EU sanctions tracker · Arms export · Asset freeze and prohibition to make funds available · Embargo on dual-use goods · Financial measures · Financial measures.
+
+Source: https://www.sanctionsmap.eu/
+
+
+
+**5. [PDF] The new SME definition – User guide and model declaration**
+
+They are an essential source of jobs, create entrepreneurial spirit and innovation in the EU and are thus crucial for fostering competitiveness and employment.
+
+Source: https://www.eusmecentre.org.cn/wp-content/uploads/2022/12/SME-Definition.pdf
+
+
+
+## Research Summary
+
+**Research completed using comprehensive_synthesis strategy.**
+
+
+**Research scope:**
+
+- 2 search operations completed
+
+- 0 web pages processed
+
+- 0 content extracts from search snippets
+
+- 10 search results analyzed
