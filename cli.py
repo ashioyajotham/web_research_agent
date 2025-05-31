@@ -37,7 +37,7 @@ BANNER = """
 │       [bold cyan]╚███╔███╔╝███████╗██████╔╝   ██║  ██║╚██████╔╝███████╗██║ ╚████║   ██║   [/bold cyan]       │
 │       [bold cyan] ╚══╝╚══╝ ╚══════╝╚═════╝    ╚═╝  ╚═╝ ╚═════╝ ╚══════╝╚═╝  ╚═══╝   ╚═╝   [/bold cyan]       │
 [bold blue]│                                                            │
-│  [bold green]Research Assistant AI - Navigating the web for answers[/bold green]  │
+│  [bold green]Your Daily Research Tool - Practical Web Research & Analysis[/bold green]  │
 ╰──────────────────────────────────────────────────────────────╯[/bold blue]
 """
 

@@ -29,36 +29,96 @@ An experimental research implementation of the ReAct (Reasoning + Acting) paradi
 
 ## Architecture & ReAct Implementation
 
-This project implements the ReAct paradigm with dynamic task analysis and adaptive synthesis, with a focus on research application rather than production systems.
+This project implements the ReAct paradigm with dynamic task analysis and adaptive synthesis:
 
-The architecture consists of the following main components:
+```mermaid
+graph TD
+    A[Main] --> B[WebResearchAgent]
+    B --> C1[Memory]
+    B --> C2[Planner]
+    B --> C3[Comprehension]
+    B --> C4[ToolRegistry]
+    
+    %% Enhanced ReAct: Dynamic Reasoning
+    C3 -->|"Dynamic Analysis"| G1[Task Analysis]
+    G1 --> G2[Answer Type Detection]
+    G1 --> G3[Information Target ID]
+    G1 --> G4[Output Structure Inference]
+    
+    C2 -->|"Adaptive Planning"| D[Plan]
+    D -->|Contains| E[PlanSteps]
+    
+    %% ReAct: Acting component
+    C4 -->|Registers| F1[SearchTool]
+    C4 -->|Registers| F2[BrowserTool]
+    C4 -->|Registers| F3[CodeGeneratorTool]
+    C4 -->|Registers| F4[PresentationTool]
+    
+    %% Enhanced ReAct: Multi-Strategy Synthesis
+    C3 -->|"Strategy Selection"| S1[Extract & Verify]
+    C3 -->|"Strategy Selection"| S2[Aggregate & Filter]
+    C3 -->|"Strategy Selection"| S3[Collect & Organize]
+    C3 -->|"Strategy Selection"| S4[Comprehensive Synthesis]
+    
+    %% ReAct: Observation component
+    C1 -->|"Stores"| M1[Results & Entities]
+    
+    %% ReAct: Iteration cycle
+    B -->|"1. Analyze Task"| G1
+    G1 -->|"2. Plan Strategy"| C2
+    C2 -->|"3. Execute Actions"| C4
+    C4 -->|"4. Synthesize Answer"| S1
+    S1 -->|"5. Verify & Refine"| B
+    
+    style B fill:#f9f,stroke:#333,stroke-width:2px
+    style G1 fill:#fbb,stroke:#333,stroke-width:2px
+    style S1 fill:#bfb,stroke:#333,stroke-width:2px
+    style C1 fill:#bbf,stroke:#333
+    style C2 fill:#bbf,stroke:#333
+    style C3 fill:#bbf,stroke:#333
+    style C4 fill:#bbf,stroke:#333
+    style F1 fill:#bfb,stroke:#333
+    style F2 fill:#bfb,stroke:#333
+    style F3 fill:#bfb,stroke:#333
+    style F4 fill:#bfb,stroke:#333
+```
 
-1. **WebResearchAgent**: The main controller coordinating all system components
+### Workflow Explanation
 
-2. **Memory**: Stores results and entities for contextual awareness during research tasks
+The diagram above illustrates how the Web Research Agent processes research tasks:
 
-3. **Planner**: Creates adaptive search strategies based on identified information targets
+1. **Task Analysis Phase**: 
+   - When a user submits a research question, the system first analyzes the task structure
+   - The Comprehension component uses pattern recognition to detect answer types (factual, comparative, list-based, etc.)
+   - It identifies specific information targets needed to answer the question
+   - It determines the appropriate output structure for the anticipated answer
 
-4. **Comprehension**: 
-   - Implements dynamic task analysis to determine question types
-   - Detects answer types (factual, comparative, etc.)
-   - Identifies information targets from questions
-   - Infers appropriate output structures
+2. **Planning Phase**:
+   - Based on the task analysis, the Planner creates a series of search strategies
+   - It generates concrete plan steps targeting the identified information needs
+   - Each plan step specifies what information to retrieve and how to process it
 
-5. **ToolRegistry**: Manages research tools including:
-   - SearchTool: Information retrieval with robust URL resolution
-   - BrowserTool: Content extraction with multiple fallback strategies
-   - CodeGeneratorTool: Data analysis capabilities
-   - PresentationTool: Task-adaptive result formatting
+3. **Action Phase**:
+   - The ToolRegistry orchestrates the execution of research tools:
+     - SearchTool finds relevant information sources
+     - BrowserTool extracts content from web pages
+     - CodeGeneratorTool creates analysis scripts when needed
+     - PresentationTool formats findings appropriately
 
-6. **Multi-Strategy Synthesis**:
-   - Extract & Verify: For factual lookup questions
-   - Aggregate & Filter: For comparison and analytical questions
-   - Collect & Organize: For list-building tasks
-   - Comprehensive Synthesis: For complex research questions
+4. **Synthesis Phase**:
+   - Based on the question type, one of four synthesis strategies is selected:
+     - Extract-and-Verify for factual questions
+     - Aggregate-and-Filter for comparative analyses
+     - Collect-and-Organize for list-building tasks
+     - Comprehensive-Synthesis for complex, multi-faceted questions
+   - The Memory component provides context by storing intermediate findings and entities
 
-This research implementation follows the ReAct pattern of:
-1. Analyze Task → 2. Plan Strategy → 3. Execute Actions → 4. Synthesize Answer → 5. Verify & Refine
+5. **Refinement Loop**:
+   - If the synthesized answer is incomplete, the system may return to planning
+   - This iterative process continues until a satisfactory answer is produced
+   - The final output is tailored to directly address the specific question asked
+
+This research implementation demonstrates how a structured approach to web research can adapt to different question types without relying on hardcoded rules.
 
 ## Installation
 
