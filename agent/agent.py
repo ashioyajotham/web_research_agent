@@ -82,9 +82,6 @@ class WebResearchAgent:
                 })
                 continue
             
-<<<<<<< HEAD
-            # Get the tool
-=======
             # Special handling for search results - extract entities early from snippets
             if step.tool_name == "search":
                 tool = self.tool_registry.get_tool(step.tool_name)
@@ -128,7 +125,6 @@ class WebResearchAgent:
                     continue  # Skip the normal execution flow for this step
             
             # Normal tool execution for non-search steps
->>>>>>> main
             tool = self.tool_registry.get_tool(step.tool_name)
             if not tool:
                 error_msg = f"Tool '{step.tool_name}' not found"
@@ -143,14 +139,6 @@ class WebResearchAgent:
             # Prepare parameters with enhanced variable substitution
             parameters = self._substitute_parameters(step.parameters, results)
             
-<<<<<<< HEAD
-            # Special handling for browser steps with unresolved URLs
-            if (step.tool_name == "browser" and 
-                (not parameters.get("url") or parameters.get("use_search_snippets"))):
-                
-                logger.info("Browser step will use search snippets due to URL resolution failure")
-                # The browser tool will handle snippet extraction
-=======
             # Add entity extraction for certain step types
             if "identify" in step.description.lower() or "find" in step.description.lower():
                 if step.tool_name == "browser":
@@ -166,7 +154,6 @@ class WebResearchAgent:
                         entity_types.append("role")
                     if entity_types:
                         parameters["entity_types"] = entity_types
->>>>>>> main
             
             # Execute the tool
             try:
@@ -233,11 +220,6 @@ class WebResearchAgent:
                     )
             
             except Exception as e:
-<<<<<<< HEAD
-                logger.error(f"Error executing step {step_index+1}: {str(e)}")
-                results.append({"step": step.description, "status": "error", "output": str(e)})
-    
-=======
                 logger.error(f"Error executing tool {step.tool_name}: {str(e)}")
                 results.append({
                     "step": step.description,
@@ -245,7 +227,6 @@ class WebResearchAgent:
                     "output": str(e)
                 })
         
->>>>>>> main
         # After each successful step, update entity context information
         if "status" in results[-1] and results[-1]["status"] == "success":
             self._update_entity_context_from_step(results[-1], task_description)
@@ -367,14 +348,6 @@ class WebResearchAgent:
         """
         Dynamically resolve various types of placeholders in parameter values.
         """
-<<<<<<< HEAD
-        if not isinstance(value, str):
-            return value
-        
-        # For now, return the value as-is if it's not a URL
-        # This method can be expanded for other types of placeholders
-        return value
-=======
         original_value = value
 
         # Pattern 1: Explicit URL placeholders like {search_result_X_url}
@@ -1420,7 +1393,6 @@ class WebResearchAgent:
                 unique_urls.append(url)
         
         return unique_urls
->>>>>>> main
 
     def _can_execute_step(self, step_index, previous_results):
         """Check if a step can be executed based on prior steps' statuses."""
