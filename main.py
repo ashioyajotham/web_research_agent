@@ -67,7 +67,7 @@ def process_tasks(task_file_path, output_dir="results"):
                 # Special handling for browser steps with unresolved URLs
                 if step.tool_name == "browser":
                     url = parameters.get("url")
-                    if not url or url == "None" or not agent._is_valid_url(url):
+                    if not url or url is None or not agent._is_valid_url(url):
                         # Force use of search snippets and ensure search results are available
                         parameters["use_search_snippets"] = True
                         parameters["url"] = None
