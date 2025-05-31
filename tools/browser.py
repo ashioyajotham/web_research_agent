@@ -162,6 +162,7 @@ class BrowserTool(BaseTool):
                         if search_results:
                             break
         
+<<<<<<< HEAD
         if not search_results:
             logger.warning("No search results available for snippet extraction")
             return {
@@ -220,6 +221,19 @@ class BrowserTool(BaseTool):
             r'<.*?>',
             r'INSERT',
             r'PLACEHOLDER'
+=======
+        # Ensure consistent handling of curly-brace placeholders
+        placeholder_patterns = [
+            (r"\{(.*?)\}", "template variable"),
+            (r"\[(.*URL.*|.*link.*|Insert.*|.*result.*)\]", "bracketed URL placeholder"),
+            # Template instructions
+            (r"<.*?>", "HTML-style placeholder"),
+            # Default URLs
+            (r"example\.com|localhost|127\.0\.0\.1", "example domain"),
+            # Additional common formats used by the planner
+            (r"^URL_", "URL prefix placeholder"),
+            (r"_URL$", "URL suffix placeholder"),
+>>>>>>> main
         ]
         
         url_upper = url.upper()

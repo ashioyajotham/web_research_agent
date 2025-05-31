@@ -16,9 +16,36 @@
 
 ## Research Findings
 
+<<<<<<< HEAD
 ### Search Results Found
 
 **1. EU enlargement - European Union**
+=======
+| Item | Details | Status |
+|------|---------|--------|
+| President: Joe Biden @ United States | Found in research | Requires verification |
+| 03/13/2024 | Found in research | Requires verification |
+| Warren Spector | Found in research | Requires verification |
+| $60 | Found in research | Requires verification |
+| President: Mariano-Florentino (Tino) Cuéllar @ Carnegie Endowment | Found in research | Requires verification |
+| Africa | Found in research | Requires verification |
+| Jason Glassberg | Found in research | Requires verification |
+| CEO: Rocco "Roy" Gori @ Manulife | Found in research | Requires verification |
+| Fortune 500 | Found in research | Requires verification |
+| Houlin Zhao | Found in research | Requires verification |
+| Geneva | Found in research | Requires verification |
+| Frank Bajak | Found in research | Requires verification |
+| President: Zoe Cruz @ Morgan Stanley | Found in research | Requires verification |
+| COO: Thomas O. Staggs @ The Walt Disney Company | Found in research | Requires verification |
+| Rosemary Foot | Found in research | Requires verification |
+| 1969 | Found in research | Requires verification |
+| Richard Fuld | Found in research | Requires verification |
+| White House | Found in research | Requires verification |
+| early 1950s | Found in research | Requires verification |
+| Cerberus Capital | Found in research | Requires verification |
+
+**Total found:** 186
+>>>>>>> main
 
 Which countries can join? Any European country can join the EU if it fulfills the membership criteria, also known as the Copenhagen criteria. For example, ...
 

@@ -6,10 +6,21 @@
 
 ### Search Results Found
 
+<<<<<<< HEAD
 **1. Data on Large-Scale AI Models - Epoch AI**
+=======
+**Person:** Morton Abramowitz, James T. Shotwell, Richard Nixon, Henry Kissinger, Xi Jinping, Evan S. Medeiros, Stephen M. Walt, John Culver, Rosemary Foot, C. Fred Bergsten
+**Organization:** Stanford University, Carnegie Endowment, Chinese Communist Party, United Nations, Soviet Union, Center for Strategic International Studies, White House, State Department, Casaba Security, Center for New American Security
+**Role:** President: Morton Abramowitz @ Carnegie Endowment, President: James T. Shotwell @ Carnegie Endowment, President: Richard Nixon @ United States, national security advisor: Henry Kissinger @ United States, President: Xi Jinping @ Chinese Communist Party, Senior Fellow and Director: Christopher S. Chivvis @ American Statecraft Program, President: Mariano-Florentino (Tino) Cuéllar @ Carnegie Endowment, President: Joe Biden @ United States, President: Xi Jinping @ China, Co-founder: Jason Glassberg @ Casaba Security
+**Date:** early 1950s, 1952, 1997, 2007, December 20, 2022, October 2024, late 1960s, 1969, 1970s, Nov. 15, 2023
+**Location:** China, America, United States, Asia, Africa, Middle East, Washington, Beijing, Taiwan, Europe
+**Monetary_Value:** $60, $53
+**Percentage:** 58%, 17%, 50%, 1/9
+>>>>>>> main
 
 Scale is a key factor in the performance of AI. Explore public data and graphs on over 300 large-scale machine learning models at the leading edge.
 
+<<<<<<< HEAD
 Source: https://epoch.ai/data/large-scale-ai-models
 
 
@@ -44,6 +55,8 @@ Our public datasets catalog over 2400 machine learning models. Explore data and 
 
 Source: https://epoch.ai/data
 
+=======
+>>>>>>> main
 
 
 ## Research Summary
@@ -52,6 +65,7 @@ Source: https://epoch.ai/data
 
 
 **Research scope:**
+<<<<<<< HEAD
 
 - 2 search operations completed
 
@@ -60,3 +74,14 @@ Source: https://epoch.ai/data
 - 0 content extracts from search snippets
 
 - 10 search results analyzed
+=======
+- 0 search results analyzed
+- 0 web pages processed
+- 185 entities identified
+
+
+
+## Research Notes
+
+Research completed with 3 of 8 steps encountering issues. Some information may be incomplete.
+>>>>>>> main

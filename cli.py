@@ -37,7 +37,7 @@ BANNER = """
 │       [bold cyan]╚███╔███╔╝███████╗██████╔╝   ██║  ██║╚██████╔╝███████╗██║ ╚████║   ██║   [/bold cyan]       │
 │       [bold cyan] ╚══╝╚══╝ ╚══════╝╚═════╝    ╚═╝  ╚═╝ ╚═════╝ ╚══════╝╚═╝  ╚═══╝   ╚═╝   [/bold cyan]       │
 [bold blue]│                                                            │
-│  [bold green]Research Assistant AI - Navigating the web for answers[/bold green]  │
+│  [bold green]Your Daily Research Tool - Practical Web Research & Analysis[/bold green]  │
 ╰──────────────────────────────────────────────────────────────╯[/bold blue]
 """
 
@@ -45,7 +45,7 @@ def display_banner():
     """Display the ASCII art banner."""
     console.print(BANNER)
     console.print("\n[dim]Version 1.1.9 - Type 'help' for commands[/dim]\n")
-    console.print("[dim]Chef's kiss [bold magenta]Victor Jotham Ashioya[/bold magenta] - lock in, build and accelerate, loser![/dim]\n")
+    console.print("[dim]Chef's kiss [bold magenta]Ashioya Jotham Victor[/bold magenta] - lock in, build and accelerate, loser![/dim]\n")
 
 def display_intro():
     """Display introduction info."""

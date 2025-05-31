@@ -278,3 +278,13 @@ class Planner:
             )
         
         return Plan(task=task_description, steps=steps)
+    
+def create_plan(task: str, analysis: dict) -> dict:
+    plan_raw = "..."  # Assume we fetch raw JSON from somewhere
+    try:
+        plan_data = json.loads(plan_raw)
+    except json.JSONDecodeError as e:
+        logger.error(f"Error creating plan: Could not parse plan JSON: {str(e)}")
+        return {"error": f"JSON parsing error: {str(e)}"}
+    
+    return plan_data

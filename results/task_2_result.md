@@ -4,12 +4,19 @@
 
 ## Research Findings
 
+<<<<<<< HEAD
 ### Search Results Found
+=======
+র্তা – bangla")
+  * [беларуская (тарашкевіца)](https://be-tarask.wikipedia.org/wiki/coo "coo – belarusian \(taraškievica orthography\)")
+  * [català](https://ca.wikipedia.org/wiki/cap_d%27operacions "ca
+>>>>>>> main
 
 **1. China and US envoys will hold the first top-level dialogue on ...**
 
 High-level envoys from the United States and China are set to meet in Geneva on Tuesday for talks about artificial intelligence, including the ...
 
+<<<<<<< HEAD
 Source: https://www.startribune.com/china-and-us-envoys-will-hold-first-top-level-dialogue-on-artificial-intelligence/600365545
 
 
@@ -60,3 +67,6 @@ Source: https://etradeforall.org/news/flagship-united-nations-ai-event-kicked-of
 - 0 content extracts from search snippets
 
 - 10 search results analyzed
+=======
+- https://en.wikipedia.org/wiki/Chief_operating_officer (Chief operating officer - Wikipedia)
+>>>>>>> main

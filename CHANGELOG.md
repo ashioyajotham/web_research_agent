@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.1.9] - 2025-05-30
+
+### Enhanced
+- Improved robustness with consistent handling of curly-brace placeholders in browser.py
+
+### Fixed
+- Added try/except blocks around response.json() calls in search.py to handle non-JSON responses more gracefully
+
 ## [1.1.8] - 2025-05-28
 
 ### Added

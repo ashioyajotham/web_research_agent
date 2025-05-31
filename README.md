@@ -1,8 +1,8 @@
 # Web Research Agent
 
-A research implementation of the ReAct (Reasoning + Acting) paradigm applied to web research tasks. This project explores how task-adaptive reasoning and synthesis can solve complex information-seeking problems by dynamically analyzing questions, creating appropriate search strategies, and synthesizing answers that match the expected output structure.
+An experimental research implementation of the ReAct (Reasoning + Acting) paradigm applied to web research tasks. This project explores systematic approaches to information-seeking problems through structured analysis of tasks, adaptive search strategies, and context-aware synthesis methods.
 
-> **Research Focus**: This project implements and extends the ReAct framework with dynamic task analysis and multi-strategy synthesis, demonstrating how systems can adapt their approach based on the structure and intent of research questions without hardcoded rules.
+> **Research Focus**: This project implements and extends the ReAct framework as a platform for investigating task-adaptive reasoning patterns. It is intended as an academic exploration rather than a production system, focusing on understanding how structured approaches to web research can be systematized and evaluated.
 
 ## Research Contributions
 
@@ -83,11 +83,42 @@ graph TD
     style F4 fill:#bfb,stroke:#333
 ```
 
-The diagram illustrates the enhanced ReAct implementation:
-- **Dynamic Analysis**: Pattern recognition determines answer types and synthesis strategies
-- **Adaptive Planning**: Search strategies based on identified information targets  
-- **Multi-Strategy Synthesis**: Four synthesis approaches selected based on task characteristics
-- **Task-Focused Output**: Direct answers to questions rather than generic entity tables
+### Workflow Explanation
+
+The diagram above illustrates how the Web Research Agent processes research tasks:
+
+1. **Task Analysis Phase**: 
+   - When a user submits a research question, the system first analyzes the task structure
+   - The Comprehension component uses pattern recognition to detect answer types (factual, comparative, list-based, etc.)
+   - It identifies specific information targets needed to answer the question
+   - It determines the appropriate output structure for the anticipated answer
+
+2. **Planning Phase**:
+   - Based on the task analysis, the Planner creates a series of search strategies
+   - It generates concrete plan steps targeting the identified information needs
+   - Each plan step specifies what information to retrieve and how to process it
+
+3. **Action Phase**:
+   - The ToolRegistry orchestrates the execution of research tools:
+     - SearchTool finds relevant information sources
+     - BrowserTool extracts content from web pages
+     - CodeGeneratorTool creates analysis scripts when needed
+     - PresentationTool formats findings appropriately
+
+4. **Synthesis Phase**:
+   - Based on the question type, one of four synthesis strategies is selected:
+     - Extract-and-Verify for factual questions
+     - Aggregate-and-Filter for comparative analyses
+     - Collect-and-Organize for list-building tasks
+     - Comprehensive-Synthesis for complex, multi-faceted questions
+   - The Memory component provides context by storing intermediate findings and entities
+
+5. **Refinement Loop**:
+   - If the synthesized answer is incomplete, the system may return to planning
+   - This iterative process continues until a satisfactory answer is produced
+   - The final output is tailored to directly address the specific question asked
+
+This research implementation demonstrates how a structured approach to web research can adapt to different question types without relying on hardcoded rules.
 
 ## Installation
 
@@ -377,6 +408,14 @@ Key observations from this implementation:
 2. **Synthesis Strategy Impact**: Different synthesis strategies show measurable differences in answer quality for different question types
 3. **Fallback Strategy Value**: Robust parameter resolution significantly improves success rates for web content access
 4. **Entity vs. Answer Focus**: Maintaining task focus while extracting entities produces more relevant outputs than entity-driven approaches
+
+### Acknowledgements
+
+This research implementation draws from established agent concepts and development approaches, including:
+
+- [OpenAI Function Calling Guide](https://platform.openai.com/docs/guides/function-calling) - Best practices for tool-using agents
+- [Anthropic's Claude Agent Guide](https://www.anthropic.com/research/claude-agent) - Methods for reliable agent construction
+- [LangChain ReAct Implementation](https://python.langchain.com/docs/modules/agents/agent_types/react) - Technical approaches for implementing ReAct
 
 ### Related Research
 
