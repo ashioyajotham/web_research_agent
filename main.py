@@ -78,8 +78,11 @@ def process_tasks(task_file_path, output_dir="results"):
                             if (result.get("status") == "success" and 
                                 "search" in result.get("step", "").lower()):
                                 result_output = result.get("output", {})
-                                if isinstance(result_output, dict) and "results" in result_output:
-                                    search_results.extend(result_output["results"])
+                                if isinstance(result_output, dict):
+                                    if "results" in result_output:
+                                        search_results.extend(result_output["results"])
+                                    elif "search_results" in result_output:
+                                        search_results.extend(result_output["search_results"])
                         
                         if search_results:
                             agent.memory.search_results = search_results
