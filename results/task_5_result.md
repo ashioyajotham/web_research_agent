@@ -18,15 +18,7 @@
 
 ### Search Results Found
 
-**1. Setting up a European Company (SE) - Your Europe**
-
-A type of public limited-liability company that allows you to run your business in different European countries using a single set of rules.
-
-Source: https://europa.eu/youreurope/business/running-business/developing-business/setting-up-european-company/index_en.htm
-
-
-
-**2. EU enlargement - European Union**
+**1. EU enlargement - European Union**
 
 Which countries can join? Any European country can join the EU if it fulfills the membership criteria, also known as the Copenhagen criteria. For example, ...
 
@@ -34,27 +26,35 @@ Source: https://european-union.europa.eu/principles-countries-history/eu-enlarge
 
 
 
-**3. 12 Facts about GDPR Compliance | Osano**
+**2. Setting up a European Company (SE) - Your Europe**
 
-We've compiled a list of essential facts about GDPR rules and regulations. Use these as your guide to improving your organization's data security.
+To establish a European Company you must abide by all the requirements listed below: Your registered office and your head office must be in the same EU country.
 
-Source: https://www.osano.com/articles/gdpr-compliance-regulations
-
-
-
-**4. EU Sanctions Map**
-
-EU sanctions tracker · Arms export · Asset freeze and prohibition to make funds available · Embargo on dual-use goods · Financial measures · Financial measures.
-
-Source: https://www.sanctionsmap.eu/
+Source: https://europa.eu/youreurope/business/running-business/developing-business/setting-up-european-company/index_en.htm
 
 
 
-**5. [PDF] The new SME definition – User guide and model declaration**
+**3. [PDF] Draft Guidance on the Standards of Fitness and Probity 2025**
 
-They are an essential source of jobs, create entrepreneurial spirit and innovation in the EU and are thus crucial for fostering competitiveness and employment.
+performance of that business, and the business in question satisfies either of the following quantitative criteria: a) Has gross total assets equal to or in ...
 
-Source: https://www.eusmecentre.org.cn/wp-content/uploads/2022/12/SME-Definition.pdf
+Source: https://www.centralbank.ie/docs/default-source/regulation/how-we-regulate/fitness-probity/guidance-on-fitness-and-probity-standards.pdf?sfvrsn=a5bcdb1d_25
+
+
+
+**4. IDEAs in Action General Education curriculum - UNC Catalog**
+
+The IDEAs in Action general education curriculum empowers students to design their own educational journey, while providing them with a foundation that ...
+
+Source: https://catalog.unc.edu/undergraduate/ideas-in-action/
+
+
+
+**5. Summary of the HIPAA Security Rule | HHS.gov**
+
+The Security Rule establishes a national set of security standards to protect certain health information that is maintained or transmitted in electronic form.
+
+Source: https://www.hhs.gov/hipaa/for-professionals/security/laws-regulations/index.html
 
 
 

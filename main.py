@@ -68,10 +68,24 @@ def process_tasks(task_file_path, output_dir="results"):
                 if step.tool_name == "browser":
                     url = parameters.get("url")
                     if not url or url == "None" or not agent._is_valid_url(url):
-                        # Force use of search snippets
+                        # Force use of search snippets and ensure search results are available
                         parameters["use_search_snippets"] = True
                         parameters["url"] = None
-                        logger.info("Browser step will use search snippets due to URL resolution failure")
+                        
+                        # Ensure search results are in memory
+                        search_results = []
+                        for result in results:
+                            if (result.get("status") == "success" and 
+                                "search" in result.get("step", "").lower()):
+                                result_output = result.get("output", {})
+                                if isinstance(result_output, dict) and "results" in result_output:
+                                    search_results.extend(result_output["results"])
+                        
+                        if search_results:
+                            agent.memory.search_results = search_results
+                            logger.info(f"Set {len(search_results)} search results in memory for browser fallback")
+                        else:
+                            logger.warning("No search results available for browser fallback")
                 
                 # Execute the tool
                 try:
@@ -94,6 +108,8 @@ def process_tasks(task_file_path, output_dir="results"):
                             if search_results:
                                 agent.memory.search_results = search_results
                                 logger.info(f"Stored {len(search_results)} search results in memory")
+                            else:
+                                logger.warning("Search step completed but no results found in output")
                 except Exception as e:
                     # Exception during tool execution
                     logger.error(f"Error executing tool {step.tool_name}: {str(e)}")

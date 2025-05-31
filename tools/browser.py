@@ -31,19 +31,34 @@ class BrowserTool(BaseTool):
         """Execute browser tool with enhanced URL handling."""
         url = parameters.get("url")
         
-        # Handle special dynamic resolution flag
-        if url == "RESOLVE_FROM_SEARCH":
-            logger.info("URL resolution deferred to agent - should not reach this point")
-            return {
-                "error": "URL resolution should be handled by agent before browser execution",
-                "content": "",
-                "extracted_text": ""
-            }
-        
         # Handle fallback to search snippets
-        if parameters.get("use_search_snippets"):
+        if parameters.get("use_search_snippets") or not url:
             logger.info("Using search snippets instead of web browsing")
-            return self._extract_from_search_snippets(memory)
+            snippet_result = self._extract_from_search_snippets(memory)
+            
+            # Process snippet content for entities if it has substantial content
+            if snippet_result.get("extracted_text") and len(snippet_result["extracted_text"]) > 100:
+                try:
+                    from agent.comprehension import Comprehension
+                    comprehension = Comprehension()
+                    
+                    entity_types = ["PERSON", "ORG", "DATE", "GPE"]
+                    entities = comprehension.extract_entities(snippet_result["extracted_text"], entity_types)
+                    
+                    # Handle different entity formats
+                    if isinstance(entities, list):
+                        entities = {"entities": entities}
+                    elif not isinstance(entities, dict):
+                        entities = {}
+                    
+                    if entities:
+                        memory.add_entities(entities)
+                        snippet_result["entities"] = entities
+                        
+                except Exception as e:
+                    logger.error(f"Error extracting entities from snippets: {str(e)}")
+            
+            return snippet_result
         
         # Validate URL before attempting to browse
         if not url or not self._is_valid_url(url):
@@ -103,11 +118,19 @@ class BrowserTool(BaseTool):
                 # Extract entities with focused types
                 entities = comprehension.extract_entities(processed_content, entity_types)
                 
+                # Ensure entities is a dictionary
+                if isinstance(entities, list):
+                    # Convert list to dictionary format
+                    entities = {"entities": entities}
+                elif not isinstance(entities, dict):
+                    entities = {}
+                
                 # Try to extract relationships between entities
                 enriched_entities = self._enrich_entity_relationships(entities, parameters.get("query", ""), result["title"])
                 
                 # Add extracted entities to memory
-                memory.add_entities(enriched_entities)
+                if enriched_entities:
+                    memory.add_entities(enriched_entities)
                 
                 # Include entities in result if requested
                 if parameters.get("extract_entities", True):  # Default to True for better info extraction
@@ -317,21 +340,35 @@ class BrowserTool(BaseTool):
 
     def _enrich_entity_relationships(self, entities, query, title):
         """Enrich entities with relationship information."""
+        # Handle different entity formats
+        if isinstance(entities, list):
+            entity_list = entities
+        elif isinstance(entities, dict):
+            entity_list = []
+            for entity_type, values in entities.items():
+                if isinstance(values, list):
+                    entity_list.extend(values)
+                else:
+                    entity_list.append(str(values))
+        else:
+            return []
+        
         enriched = []
         
-        for entity in entities:
+        for entity in entity_list:
+            entity_str = str(entity)
             # Simple relationship detection based on context
             if "president" in title.lower() or "president" in query.lower():
-                if any(name in entity.lower() for name in ["biden", "xi", "trump"]):
-                    enriched.append(f"{entity} @ President")
+                if any(name in entity_str.lower() for name in ["biden", "xi", "trump"]):
+                    enriched.append(f"{entity_str} @ President")
                 else:
-                    enriched.append(entity)
+                    enriched.append(entity_str)
             elif "coo" in title.lower() or "coo" in query.lower():
-                if "organization" in entity.lower() or "company" in entity.lower():
-                    enriched.append(f"{entity} @ Mediating Organization")
+                if "organization" in entity_str.lower() or "company" in entity_str.lower():
+                    enriched.append(f"{entity_str} @ Mediating Organization")
                 else:
-                    enriched.append(entity)
+                    enriched.append(entity_str)
             else:
-                enriched.append(entity)
+                enriched.append(entity_str)
         
         return enriched

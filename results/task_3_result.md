@@ -22,7 +22,15 @@ Source: https://epoch.ai/blog/tracking-large-scale-ai-models
 
 
 
-**3. Data on Notable AI Models - Epoch AI**
+**3. Large-Scale AI Models - Epoch AI**
+
+... compute notes,Training dataset,Training dataset notes,Training ... Download the Llama 4 Scout and Llama 4 Maverick models today on ...
+
+Source: https://epoch.ai/data/large_scale_ai_models.csv
+
+
+
+**4. Data on Notable AI Models - Epoch AI**
 
 Epoch AI's database contains over 900 notable ML models and 400 training compute estimates, offering a detailed exploration of trends in AI development.
 
@@ -30,19 +38,11 @@ Source: https://epoch.ai/data/notable-ai-models
 
 
 
-**4. Data on the Trajectory of AI | Epoch AI Database**
+**5. Data on the Trajectory of AI | Epoch AI Database**
 
 Our public datasets catalog over 2400 machine learning models. Explore data and graphs showing the growth and trajectory of AI from 1950 to today.
 
 Source: https://epoch.ai/data
-
-
-
-**5. Large-Scale AI Models - Epoch AI**
-
-... compute notes,Training dataset,Training dataset notes,Training ... Download the Llama 4 Scout and Llama 4 Maverick models today on ...
-
-Source: https://epoch.ai/data/large_scale_ai_models.csv
 
 
 

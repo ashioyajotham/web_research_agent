@@ -6,23 +6,15 @@
 
 ### Search Results Found
 
-**1. Summit 23 - AI for Good**
+**1. China and US envoys will hold the first top-level dialogue on ...**
 
-The AI for Good Global Summit 2023 drives AI for health, climate, gender equality, and development, organized by ITU, UN agencies, and Switzerland.
-
-Source: https://aiforgood.itu.int/summit23/
-
-
-
-**2. China and US envoys will hold the first top-level dialogue on ...**
-
-High-level envoys from the United States and China are set to meet in Geneva on Tuesday for talks about artificial intelligence, ...
+High-level envoys from the United States and China are set to meet in Geneva on Tuesday for talks about artificial intelligence, including the ...
 
 Source: https://www.startribune.com/china-and-us-envoys-will-hold-first-top-level-dialogue-on-artificial-intelligence/600365545
 
 
 
-**3. AI for Good Global Summit 2024 - ITU**
+**2. AI for Good Global Summit 2024 - ITU**
 
 Join the AI for Good Summit 2024 in Geneva to accelerate UN SDGs with AI solutions for health, climate, gender equality, and more.
 
@@ -30,9 +22,17 @@ Source: https://aiforgood.itu.int/summit24/
 
 
 
+**3. China Pushes For Global AI Governance In Talks With U.S. - Forbes**
+
+In Geneva, the U.S. side brought up China's “misuse” of AI—while China “expressed a stern stance on the U.S. restrictions and pressure in the ...
+
+Source: https://www.forbes.com/sites/johannacostigan/2024/05/20/us-china-dont-agree-on-much-at-ai-talks-but-share-ai-safety-concerns/
+
+
+
 **4. Top US and Chinese officials begin talks on AI in Geneva | AP News**
 
-Top envoys from the U.S. and China huddled Tuesday in closed-door talks in Geneva to discuss ways to ensure that emerging artificial ...
+The talks, which Presidents Joe Biden and Xi Jinping agreed to launch in last 2023, are meant to open up bilateral dialogue between the world's ...
 
 Source: https://apnews.com/article/artificial-intelligence-china-united-states-geneva-switzerland-1aa4451f82f250a47039a213f3d72879
 
