@@ -1,8 +1,8 @@
 # Web Research Agent
 
-A research implementation of the ReAct (Reasoning + Acting) paradigm applied to web research tasks. This project explores how task-adaptive reasoning and synthesis can solve complex information-seeking problems by dynamically analyzing questions, creating appropriate search strategies, and synthesizing answers that match the expected output structure.
+An experimental research implementation of the ReAct (Reasoning + Acting) paradigm applied to web research tasks. This project explores systematic approaches to information-seeking problems through structured analysis of tasks, adaptive search strategies, and context-aware synthesis methods.
 
-> **Research Focus**: This project implements and extends the ReAct framework with dynamic task analysis and multi-strategy synthesis, demonstrating how systems can adapt their approach based on the structure and intent of research questions without hardcoded rules.
+> **Research Focus**: This project implements and extends the ReAct framework as a platform for investigating task-adaptive reasoning patterns. It is intended as an academic exploration rather than a production system, focusing on understanding how structured approaches to web research can be systematized and evaluated.
 
 ## Research Contributions
 
@@ -29,65 +29,36 @@ A research implementation of the ReAct (Reasoning + Acting) paradigm applied to 
 
 ## Architecture & ReAct Implementation
 
-This project implements the ReAct paradigm with dynamic task analysis and adaptive synthesis:
+This project implements the ReAct paradigm with dynamic task analysis and adaptive synthesis, with a focus on research application rather than production systems.
 
-```mermaid
-graph TD
-    A[Main] --> B[WebResearchAgent]
-    B --> C1[Memory]
-    B --> C2[Planner]
-    B --> C3[Comprehension]
-    B --> C4[ToolRegistry]
-    
-    %% Enhanced ReAct: Dynamic Reasoning
-    C3 -->|"Dynamic Analysis"| G1[Task Analysis]
-    G1 --> G2[Answer Type Detection]
-    G1 --> G3[Information Target ID]
-    G1 --> G4[Output Structure Inference]
-    
-    C2 -->|"Adaptive Planning"| D[Plan]
-    D -->|Contains| E[PlanSteps]
-    
-    %% ReAct: Acting component
-    C4 -->|Registers| F1[SearchTool]
-    C4 -->|Registers| F2[BrowserTool]
-    C4 -->|Registers| F3[CodeGeneratorTool]
-    C4 -->|Registers| F4[PresentationTool]
-    
-    %% Enhanced ReAct: Multi-Strategy Synthesis
-    C3 -->|"Strategy Selection"| S1[Extract & Verify]
-    C3 -->|"Strategy Selection"| S2[Aggregate & Filter]
-    C3 -->|"Strategy Selection"| S3[Collect & Organize]
-    C3 -->|"Strategy Selection"| S4[Comprehensive Synthesis]
-    
-    %% ReAct: Observation component
-    C1 -->|"Stores"| M1[Results & Entities]
-    
-    %% ReAct: Iteration cycle
-    B -->|"1. Analyze Task"| G1
-    G1 -->|"2. Plan Strategy"| C2
-    C2 -->|"3. Execute Actions"| C4
-    C4 -->|"4. Synthesize Answer"| S1
-    S1 -->|"5. Verify & Refine"| B
-    
-    style B fill:#f9f,stroke:#333,stroke-width:2px
-    style G1 fill:#fbb,stroke:#333,stroke-width:2px
-    style S1 fill:#bfb,stroke:#333,stroke-width:2px
-    style C1 fill:#bbf,stroke:#333
-    style C2 fill:#bbf,stroke:#333
-    style C3 fill:#bbf,stroke:#333
-    style C4 fill:#bbf,stroke:#333
-    style F1 fill:#bfb,stroke:#333
-    style F2 fill:#bfb,stroke:#333
-    style F3 fill:#bfb,stroke:#333
-    style F4 fill:#bfb,stroke:#333
-```
+The architecture consists of the following main components:
 
-The diagram illustrates the enhanced ReAct implementation:
-- **Dynamic Analysis**: Pattern recognition determines answer types and synthesis strategies
-- **Adaptive Planning**: Search strategies based on identified information targets  
-- **Multi-Strategy Synthesis**: Four synthesis approaches selected based on task characteristics
-- **Task-Focused Output**: Direct answers to questions rather than generic entity tables
+1. **WebResearchAgent**: The main controller coordinating all system components
+
+2. **Memory**: Stores results and entities for contextual awareness during research tasks
+
+3. **Planner**: Creates adaptive search strategies based on identified information targets
+
+4. **Comprehension**: 
+   - Implements dynamic task analysis to determine question types
+   - Detects answer types (factual, comparative, etc.)
+   - Identifies information targets from questions
+   - Infers appropriate output structures
+
+5. **ToolRegistry**: Manages research tools including:
+   - SearchTool: Information retrieval with robust URL resolution
+   - BrowserTool: Content extraction with multiple fallback strategies
+   - CodeGeneratorTool: Data analysis capabilities
+   - PresentationTool: Task-adaptive result formatting
+
+6. **Multi-Strategy Synthesis**:
+   - Extract & Verify: For factual lookup questions
+   - Aggregate & Filter: For comparison and analytical questions
+   - Collect & Organize: For list-building tasks
+   - Comprehensive Synthesis: For complex research questions
+
+This research implementation follows the ReAct pattern of:
+1. Analyze Task → 2. Plan Strategy → 3. Execute Actions → 4. Synthesize Answer → 5. Verify & Refine
 
 ## Installation
 
@@ -377,6 +348,14 @@ Key observations from this implementation:
 2. **Synthesis Strategy Impact**: Different synthesis strategies show measurable differences in answer quality for different question types
 3. **Fallback Strategy Value**: Robust parameter resolution significantly improves success rates for web content access
 4. **Entity vs. Answer Focus**: Maintaining task focus while extracting entities produces more relevant outputs than entity-driven approaches
+
+### Acknowledgements
+
+This research implementation draws from established agent concepts and development approaches, including:
+
+- [OpenAI Function Calling Guide](https://platform.openai.com/docs/guides/function-calling) - Best practices for tool-using agents
+- [Anthropic's Claude Agent Guide](https://www.anthropic.com/research/claude-agent) - Methods for reliable agent construction
+- [LangChain ReAct Implementation](https://python.langchain.com/docs/modules/agents/agent_types/react) - Technical approaches for implementing ReAct
 
 ### Related Research
 
