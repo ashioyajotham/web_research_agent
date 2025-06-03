@@ -221,8 +221,8 @@ class BrowserTool(BaseTool):
             r'INSERT',
             r'PLACEHOLDER'
         ]
-        
-        for pattern, _ in placeholder_patterns:
+
+        for pattern in placeholder_patterns:
             if re.search(pattern, url, re.IGNORECASE):
                 return False
         

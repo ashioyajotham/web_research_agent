@@ -1,7 +1,7 @@
 from typing import Dict, Any, List, Optional
 import requests
 import json
-from .tool_registry import BaseTool
+from .tool_registry import BaseTool, ToolRegistry
 from utils.logger import get_logger
 from config.config import get_config
 
@@ -76,7 +76,21 @@ class SearchTool(BaseTool):
                 "results": [r.to_dict() for r in results]
             }
             
-            return formatted_results
+            # Enrich results with full content
+            browser_tool = ToolRegistry.get_tool("browser")
+            enriched_results = []
+            for result in results:
+                content_data = browser_tool.execute(
+                    {"url": result.link, "extract_type": "summary"},
+                    memory
+                )
+                enriched_results.append({
+                    "title": result.title,
+                    "link": result.link,
+                    "snippet": result.snippet,
+                    "fetched_content": content_data.get("content", "")
+                })
+            return enriched_results
         
         except Exception as e:
             error_message = f"Error performing search: {str(e)}"
