@@ -22,19 +22,19 @@ Source: https://aiforgood.itu.int/summit25/programme/
 
 
 
-**3. RebootDemocracy.AI**
-
-In the news this week: The GovLab wants your feedback on our new "Civic and Democratic AI" course which teaches people how to use AI to organize for community ...
-
-Source: https://rebootdemocracy.ai/
-
-
-
-**4. Top US and Chinese officials begin talks on AI in Geneva | AP News**
+**3. Top US and Chinese officials begin talks on AI in Geneva | AP News**
 
 Top envoys from the U.S. and China huddled Tuesday in closed-door talks in Geneva to discuss ways to ensure that emerging artificial ...
 
 Source: https://apnews.com/article/artificial-intelligence-china-united-states-geneva-switzerland-1aa4451f82f250a47039a213f3d72879
+
+
+
+**4. RebootDemocracy.AI**
+
+In the news this week: The GovLab wants your feedback on our new "Civic and Democratic AI" course which teaches people how to use AI to organize for community ...
+
+Source: https://rebootdemocracy.ai/
 
 
 

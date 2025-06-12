@@ -361,13 +361,36 @@ class Comprehension:
             if (json_match):
                 json_str = json_match.group(1)
             else:
-                raise ValueError("Could not extract JSON from response")
-        
+                logger.warning("Could not extract JSON from response, using fallback")
+                # Return a minimal fallback object instead of raising an error
+                return {
+                    "answer_type": "general_research",
+                    "information_targets": ["general information"],
+                    "synthesis_strategy": "comprehensive_synthesis",
+                    "output_structure": "markdown"
+                }
+    
         try:
+            # First attempt: parse as-is
             return json.loads(json_str)
-        except json.JSONDecodeError:
-            # Try to fix common JSON errors
-            json_str = json_str.replace("'", '"')
-            # Remove any non-JSON content
-            clean_json = re.sub(r'(?<!["{\s,:])\s*//.*?(?=\n|$)', '', json_str)
-            return json.loads(clean_json)
+        except json.JSONDecodeError as e:
+            logger.warning(f"JSON decode error: {str(e)}. Attempting fixes...")
+            try:
+                # Second attempt: replace single quotes with double quotes
+                json_str = json_str.replace("'", '"')
+                # Remove any non-JSON content like comments
+                clean_json = re.sub(r'(?<!["{\s,:])\s*//.*?(?=\n|$)', '', json_str)
+                # Fix trailing commas in arrays and objects
+                clean_json = re.sub(r',\s*}', '}', clean_json)
+                clean_json = re.sub(r',\s*]', ']', clean_json)
+                return json.loads(clean_json)
+            except json.JSONDecodeError as e2:
+                # Third attempt: Create a minimal fallback object
+                logger.error(f"Failed to parse JSON after fixes: {str(e2)}")
+                logger.error(f"Problematic JSON: {json_str[:100]}...")
+                return {
+                    "answer_type": "general_research",
+                    "information_targets": ["general information"],
+                    "synthesis_strategy": "comprehensive_synthesis",
+                    "output_structure": "markdown"
+                }

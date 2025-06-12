@@ -18,11 +18,11 @@
 
 ### Search Results Found
 
-**1. Setting up a European Company (SE) - Your Europe**
+**1. Common provisions - Taxation and Customs Union**
 
-A type of public limited-liability company that allows you to run your business in different European countries using a single set of rules.
+Products have originating status if they are either "wholly obtained" or sufficiently worked or processed. This applies to all preferential origin arrangements.
 
-Source: https://europa.eu/youreurope/business/running-business/developing-business/setting-up-european-company/index_en.htm
+Source: https://taxation-customs.ec.europa.eu/customs-4/international-affairs/origin-goods/preferential-origin/common-provisions_en
 
 
 
@@ -34,11 +34,11 @@ Source: https://www.spglobal.com/esg/insights/a-short-guide-to-the-eu-s-taxonomy
 
 
 
-**3. EU enlargement - European Union**
+**3. Setting up a European Company (SE) - Your Europe**
 
-Which countries can join? Any European country can join the EU if it fulfills the membership criteria, also known as the Copenhagen criteria. For example, ...
+A type of public limited-liability company that allows you to run your business in different European countries using a single set of rules.
 
-Source: https://european-union.europa.eu/principles-countries-history/eu-enlargement_en
+Source: https://europa.eu/youreurope/business/running-business/developing-business/setting-up-european-company/index_en.htm
 
 
 
@@ -50,11 +50,11 @@ Source: https://www.interregnextmed.eu/wp-content/uploads/2023/12/2.-Interreg-NE
 
 
 
-**5. 12 Facts about GDPR Compliance | Osano**
+**5. What is Sustainable Tourism? Here's the Definition | GSTC**
 
-We've compiled a list of essential facts about GDPR rules and regulations. Use these as your guide to improving your organization's data security.
+Finally, the GSTC Criteria are the starting goals that businesses, governments, and destinations should achieve. Tourism destinations each ...
 
-Source: https://www.osano.com/articles/gdpr-compliance-regulations
+Source: https://www.gstc.org/what-is-sustainable-tourism/
 
 
 

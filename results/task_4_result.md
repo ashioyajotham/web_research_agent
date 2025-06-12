@@ -38,11 +38,11 @@ Source: https://net0tracker.com/corporates.html/Volkswagen%20Group/
 
 
 
-**5. Our Decarbonization Commitments - Volkswagen**
+**5. [PDF] 2023 Sustainability Report**
 
-Volkswagen Group of America conducts an annual greenhouse gas (GHG) and environmental inventory of its scope 1, 2, and 3 emissions in line with the GHG Protocol ...
+absolute Scope 1 and Scope 2 greenhouse gas emissions by. 50% by 2025 compared with the base year of 2015. In 2022, the company also ...
 
-Source: https://www.vw.com/en/our-decarbonization-commitments.html
+Source: https://uploads.vw-mms.de/system/production/documents/cws/002/674/file_en/912a475685ada015c1ad3e8c5f193f783bb74b10/2023_Volkswagen_Group_Sustainability_Report.pdf?1710947082
 
 
 

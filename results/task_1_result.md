@@ -38,11 +38,11 @@ Source: https://china.usembassy-china.org.cn/remarks-by-president-biden-and-secr
 
 
 
-**5. Biden tells Quad allies: China 'testing us' – DW – 09/22/2024**
+**5. Joe Biden State of the Union speech: China relations - YouTube**
 
-US President Joe Biden was caught telling his Quad summit partners that China was "testing us" with aggressive tactics.
+US President Joe Biden said in his State of the Union address on Tuesday (Feb 7) that the US would cooperate with China but vowed to protect ...
 
-Source: https://www.dw.com/en/biden-tells-quad-allies-china-testing-us/a-70291803
+Source: https://www.youtube.com/watch?v=79PIdAdf9Ro
 
 
 
