@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.1.10] - 2025-06-12
+
+### Fixed
+- Fixed unpacking error in browser tool's URL validation method where placeholder patterns were incorrectly treated as tuples
+- Enhanced JSON parsing robustness in the comprehension module with improved error recovery for malformed API responses
+- Added better fallback mechanisms when JSON extraction fails in task analysis
+- Fixed entity extraction methods to properly handle list data structures
+
+### Enhanced
+- Improved error handling with detailed logging to aid debugging
+- Added more graceful failure modes to maintain workflow progress despite partial errors
+
 ## [1.1.9] - 2025-05-30
 
 ### Enhanced

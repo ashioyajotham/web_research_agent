@@ -10,7 +10,7 @@ import time
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 # Now we can import from our modules using absolute imports
-from utils.logger import get_logger, set_log_level  # Changed from relative import
+from utils.logger import get_logger, set_log_level
 from agent.agent import WebResearchAgent
 from config.config import get_config, init_config
 from rich.console import Console
@@ -44,7 +44,7 @@ BANNER = """
 def display_banner():
     """Display the ASCII art banner."""
     console.print(BANNER)
-    console.print("\n[dim]Version 1.1.9 - Type 'help' for commands[/dim]\n")
+    console.print("\n[dim]Version 1.1.10 - Type 'help' for commands[/dim]\n")
     console.print("[dim]Chef's kiss [bold magenta]Ashioya Jotham Victor[/bold magenta] - lock in, build and accelerate, loser![/dim]\n")
 
 def display_intro():
