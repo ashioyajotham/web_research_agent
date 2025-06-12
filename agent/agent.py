@@ -248,16 +248,24 @@ class WebResearchAgent:
         return None
 
     def _is_valid_url(self, url):
-        """Check if URL is valid and not a placeholder."""
+        """Validate URL format."""
         if not url or not isinstance(url, str):
             return False
         
-        # Remove whitespace
         url = url.strip()
         
         # Check for placeholder patterns
-        if self._is_placeholder_url(url):
-            return False
+        placeholder_patterns = [
+            r'\[.*?\]',
+            r'\{.*?\}',
+            r'<.*?>',
+            r'INSERT',
+            r'PLACEHOLDER'
+        ]
+        
+        for pattern in placeholder_patterns:  # FIXED - no unpacking
+            if re.search(pattern, url, re.IGNORECASE):
+                return False
         
         # Basic URL validation
         url_pattern = re.compile(
