@@ -16,72 +16,45 @@
 
 ## Research Findings
 
-<<<<<<< HEAD
 ### Search Results Found
 
-**1. EU enlargement - European Union**
-=======
-| Item | Details | Status |
-|------|---------|--------|
-| President: Joe Biden @ United States | Found in research | Requires verification |
-| 03/13/2024 | Found in research | Requires verification |
-| Warren Spector | Found in research | Requires verification |
-| $60 | Found in research | Requires verification |
-| President: Mariano-Florentino (Tino) Cuéllar @ Carnegie Endowment | Found in research | Requires verification |
-| Africa | Found in research | Requires verification |
-| Jason Glassberg | Found in research | Requires verification |
-| CEO: Rocco "Roy" Gori @ Manulife | Found in research | Requires verification |
-| Fortune 500 | Found in research | Requires verification |
-| Houlin Zhao | Found in research | Requires verification |
-| Geneva | Found in research | Requires verification |
-| Frank Bajak | Found in research | Requires verification |
-| President: Zoe Cruz @ Morgan Stanley | Found in research | Requires verification |
-| COO: Thomas O. Staggs @ The Walt Disney Company | Found in research | Requires verification |
-| Rosemary Foot | Found in research | Requires verification |
-| 1969 | Found in research | Requires verification |
-| Richard Fuld | Found in research | Requires verification |
-| White House | Found in research | Requires verification |
-| early 1950s | Found in research | Requires verification |
-| Cerberus Capital | Found in research | Requires verification |
+**1. Setting up a European Company (SE) - Your Europe**
 
-**Total found:** 186
->>>>>>> main
-
-Which countries can join? Any European country can join the EU if it fulfills the membership criteria, also known as the Copenhagen criteria. For example, ...
-
-Source: https://european-union.europa.eu/principles-countries-history/eu-enlargement_en
-
-
-
-**2. Setting up a European Company (SE) - Your Europe**
-
-To establish a European Company you must abide by all the requirements listed below: Your registered office and your head office must be in the same EU country.
+A type of public limited-liability company that allows you to run your business in different European countries using a single set of rules.
 
 Source: https://europa.eu/youreurope/business/running-business/developing-business/setting-up-european-company/index_en.htm
 
 
 
-**3. [PDF] Draft Guidance on the Standards of Fitness and Probity 2025**
+**2. Common provisions - Taxation and Customs Union**
 
-performance of that business, and the business in question satisfies either of the following quantitative criteria: a) Has gross total assets equal to or in ...
+Products have originating status if they are either "wholly obtained" or sufficiently worked or processed. This applies to all preferential origin arrangements.
 
-Source: https://www.centralbank.ie/docs/default-source/regulation/how-we-regulate/fitness-probity/guidance-on-fitness-and-probity-standards.pdf?sfvrsn=a5bcdb1d_25
-
-
-
-**4. IDEAs in Action General Education curriculum - UNC Catalog**
-
-The IDEAs in Action general education curriculum empowers students to design their own educational journey, while providing them with a foundation that ...
-
-Source: https://catalog.unc.edu/undergraduate/ideas-in-action/
+Source: https://taxation-customs.ec.europa.eu/customs-4/international-affairs/origin-goods/preferential-origin/common-provisions_en
 
 
 
-**5. Summary of the HIPAA Security Rule | HHS.gov**
+**3. Six steps companies can take now to prepare for EUDR**
 
-The Security Rule establishes a national set of security standards to protect certain health information that is maintained or transmitted in electronic form.
+Here are six steps companies - including FSC certificate and licence holders - can take now to prepare for EUDR compliance before 31 December 2024.
 
-Source: https://www.hhs.gov/hipaa/for-professionals/security/laws-regulations/index.html
+Source: https://fsc.org/en/newscentre/eudr/six-steps-companies-can-take-now-to-prepare-for-eudr-and-how-fsc-can-help
+
+
+
+**4. [PDF] Interreg NEXT MED Programme Guidelines for Applicants**
+
+European Union agencies provided that they meet the conditions set by the EC to ... In case of private companies, the following criteria shall be met:.
+
+Source: https://www.interregnextmed.eu/wp-content/uploads/2023/12/2.-Interreg-NEXT-MED_Guidelines-for-Applicants_v-1.0.pdf
+
+
+
+**5. 12 Facts about GDPR Compliance | Osano**
+
+We've compiled a list of essential facts about GDPR rules and regulations. Use these as your guide to improving your organization's data security.
+
+Source: https://www.osano.com/articles/gdpr-compliance-regulations
 
 
 

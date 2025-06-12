@@ -222,7 +222,7 @@ class BrowserTool(BaseTool):
             r'PLACEHOLDER'
         ]
         
-        for pattern, _ in placeholder_patterns:
+        for pattern in placeholder_patterns:  # FIXED - removed the tuple unpacking
             if re.search(pattern, url, re.IGNORECASE):
                 return False
         
@@ -371,4 +371,6 @@ class BrowserTool(BaseTool):
             else:
                 enriched.append(entity_str)
         
-        return enriched
+        # Convert the enriched list back to a dictionary format that the memory system expects
+        # This is what was missing - we need to return a dict, not a list
+        return {"entities": enriched} if enriched else {}
