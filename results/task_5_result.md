@@ -18,7 +18,15 @@
 
 ### Search Results Found
 
-**1. Common provisions - Taxation and Customs Union**
+**1. Setting up a European Company (SE) - Your Europe**
+
+A type of public limited-liability company that allows you to run your business in different European countries using a single set of rules.
+
+Source: https://europa.eu/youreurope/business/running-business/developing-business/setting-up-european-company/index_en.htm
+
+
+
+**2. Common provisions - Taxation and Customs Union**
 
 Products have originating status if they are either "wholly obtained" or sufficiently worked or processed. This applies to all preferential origin arrangements.
 
@@ -26,19 +34,11 @@ Source: https://taxation-customs.ec.europa.eu/customs-4/international-affairs/or
 
 
 
-**2. A Short Guide to the EU's Taxonomy Regulation | S&P Global**
+**3. Six steps companies can take now to prepare for EUDR**
 
-The EU's new Taxonomy Regulation is designed to support the transformation of the EU economy to meet its European Green Deal objectives.
+Here are six steps companies - including FSC certificate and licence holders - can take now to prepare for EUDR compliance before 31 December 2024.
 
-Source: https://www.spglobal.com/esg/insights/a-short-guide-to-the-eu-s-taxonomy-regulation
-
-
-
-**3. Setting up a European Company (SE) - Your Europe**
-
-A type of public limited-liability company that allows you to run your business in different European countries using a single set of rules.
-
-Source: https://europa.eu/youreurope/business/running-business/developing-business/setting-up-european-company/index_en.htm
+Source: https://fsc.org/en/newscentre/eudr/six-steps-companies-can-take-now-to-prepare-for-eudr-and-how-fsc-can-help
 
 
 
@@ -50,11 +50,11 @@ Source: https://www.interregnextmed.eu/wp-content/uploads/2023/12/2.-Interreg-NE
 
 
 
-**5. What is Sustainable Tourism? Here's the Definition | GSTC**
+**5. 12 Facts about GDPR Compliance | Osano**
 
-Finally, the GSTC Criteria are the starting goals that businesses, governments, and destinations should achieve. Tourism destinations each ...
+We've compiled a list of essential facts about GDPR rules and regulations. Use these as your guide to improving your organization's data security.
 
-Source: https://www.gstc.org/what-is-sustainable-tourism/
+Source: https://www.osano.com/articles/gdpr-compliance-regulations
 
 
 

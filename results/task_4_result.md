@@ -30,19 +30,19 @@ Source: https://www.volkswagen-group.com/en/publications/more/decarbonization-23
 
 
 
-**4. Volkswagen Group - Net 0 Tracker**
-
-Volkswagen AG commits to reduce absolute scope 1 and 2 GHG emissions 50.4% by 2030 from a 2018 base year. Volkswagen AG further commits to reduce scope 3 GHG ...
-
-Source: https://net0tracker.com/corporates.html/Volkswagen%20Group/
-
-
-
-**5. [PDF] 2023 Sustainability Report**
+**4. [PDF] 2023 Sustainability Report**
 
 absolute Scope 1 and Scope 2 greenhouse gas emissions by. 50% by 2025 compared with the base year of 2015. In 2022, the company also ...
 
 Source: https://uploads.vw-mms.de/system/production/documents/cws/002/674/file_en/912a475685ada015c1ad3e8c5f193f783bb74b10/2023_Volkswagen_Group_Sustainability_Report.pdf?1710947082
+
+
+
+**5. Volkswagen Group - Net 0 Tracker**
+
+Volkswagen AG commits to reduce absolute scope 1 and 2 GHG emissions 50.4% by 2030 from a 2018 base year. Volkswagen AG further commits to reduce scope 3 GHG ...
+
+Source: https://net0tracker.com/corporates.html/Volkswagen%20Group/
 
 
 

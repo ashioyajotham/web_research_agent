@@ -38,11 +38,11 @@ Source: https://china.usembassy-china.org.cn/remarks-by-president-biden-and-secr
 
 
 
-**5. Joe Biden State of the Union speech: China relations - YouTube**
+**5. US-China Relations in the Biden-Era: A Timeline**
 
-US President Joe Biden said in his State of the Union address on Tuesday (Feb 7) that the US would cooperate with China but vowed to protect ...
+Day 476: May 11, 2022 – Joe Biden says US may lift tariffs on Chinese goods to combat inflation. In a speech on Tuesday, May 10, President Joe Biden stated ...
 
-Source: https://www.youtube.com/watch?v=79PIdAdf9Ro
+Source: https://www.china-briefing.com/news/us-china-relations-in-the-biden-era-a-timeline/
 
 
 

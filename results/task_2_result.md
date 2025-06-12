@@ -14,23 +14,15 @@ Source: https://www.startribune.com/china-and-us-envoys-will-hold-first-top-leve
 
 
 
-**2. Summit 2025 Programme - AI for Good**
+**2. P5 Experts Roundtable – Online Meeting on the AI nuclear nexus on ...**
 
-Explore the AI for Good Summit 2025—keynotes, panels, workshops & demos advancing AI solutions for global development challenges.
+At our last roundtable held in Geneva in December 2023, the experts had one session on the nexus between artificial intelligence (AI) and ...
 
-Source: https://aiforgood.itu.int/summit25/programme/
-
-
-
-**3. Top US and Chinese officials begin talks on AI in Geneva | AP News**
-
-Top envoys from the U.S. and China huddled Tuesday in closed-door talks in Geneva to discuss ways to ensure that emerging artificial ...
-
-Source: https://apnews.com/article/artificial-intelligence-china-united-states-geneva-switzerland-1aa4451f82f250a47039a213f3d72879
+Source: https://www.gcsp.ch/global-insights/p5-experts-roundtable-online-meeting-ai-nuclear-nexus-24-june-2024
 
 
 
-**4. RebootDemocracy.AI**
+**3. RebootDemocracy.AI**
 
 In the news this week: The GovLab wants your feedback on our new "Civic and Democratic AI" course which teaches people how to use AI to organize for community ...
 
@@ -38,11 +30,19 @@ Source: https://rebootdemocracy.ai/
 
 
 
-**5. Speakers - World Summit AI Amsterdam**
+**4. Top US and Chinese officials begin talks on AI in Geneva - WAVY.com**
 
-Meet the 2024 line-up · MARK HEAPS · CHIEF TECH EVANGELIST & VP OF BRAND · GROQ · THOMAS WOLF · CO-FOUNDER & CSO · HUGGING FACE · DARREN HARDMAN · CORPORATE VICE ...
+The talks, which Presidents Joe Biden and Xi Jinping agreed to launch in last 2023, are meant to open up bilateral dialogue between the world's ...
 
-Source: https://worldsummit.ai/speakers/
+Source: https://www.wavy.com/news/technology/ap-top-us-and-chinese-officials-begin-talks-on-ai-in-geneva/
+
+
+
+**5. Summit 2025 Programme - AI for Good**
+
+Explore the AI for Good Summit 2025—keynotes, panels, workshops & demos advancing AI solutions for global development challenges.
+
+Source: https://aiforgood.itu.int/summit25/programme/
 
 
 

@@ -350,47 +350,101 @@ class Comprehension:
         return cleaned
     
     def _extract_json(self, text):
-        """Extract and parse JSON from text."""
+        """Extract and parse JSON from text with enhanced error handling."""
         # Try to find JSON within code blocks
         json_match = re.search(r'```(?:json)?\s*({.*?})\s*```', text, re.DOTALL)
         if json_match:
             json_str = json_match.group(1)
         else:
-            # Try to find JSON without code blocks
+            # Try to find JSON without code blocks - more greedy pattern
             json_match = re.search(r'({[\s\S]*})', text)
-            if (json_match):
+            if json_match:
                 json_str = json_match.group(1)
             else:
                 logger.warning("Could not extract JSON from response, using fallback")
-                # Return a minimal fallback object instead of raising an error
-                return {
-                    "answer_type": "general_research",
-                    "information_targets": ["general information"],
-                    "synthesis_strategy": "comprehensive_synthesis",
-                    "output_structure": "markdown"
-                }
+                return self._get_fallback_analysis()
     
         try:
             # First attempt: parse as-is
             return json.loads(json_str)
         except json.JSONDecodeError as e:
             logger.warning(f"JSON decode error: {str(e)}. Attempting fixes...")
+            
             try:
-                # Second attempt: replace single quotes with double quotes
+                # Advanced JSON repair techniques:
+                
+                # 1. Replace single quotes with double quotes
                 json_str = json_str.replace("'", '"')
-                # Remove any non-JSON content like comments
+                
+                # 2. Remove any non-JSON content like comments
                 clean_json = re.sub(r'(?<!["{\s,:])\s*//.*?(?=\n|$)', '', json_str)
-                # Fix trailing commas in arrays and objects
+                
+                # 3. Fix trailing commas in arrays and objects
                 clean_json = re.sub(r',\s*}', '}', clean_json)
                 clean_json = re.sub(r',\s*]', ']', clean_json)
+                
+                # 4. Fix truncated arrays/objects
+                clean_json = re.sub(r'"\s*:\s*\[\s*$', '": []', clean_json)
+                clean_json = re.sub(r'"\s*:\s*{\s*$', '": {}', clean_json)
+                
+                # 5. Check for unquoted keys and fix them
+                clean_json = re.sub(r'([{,]\s*)([a-zA-Z0-9_]+)(\s*:)', r'\1"\2"\3', clean_json)
+                
+                # 6. Attempt to fix truncated or incomplete JSON
+                if not (clean_json.strip().endswith('}') or clean_json.strip().endswith(']')):
+                    if clean_json.count('{') > clean_json.count('}'):
+                        clean_json += '}'
+                    if clean_json.count('[') > clean_json.count(']'):
+                        clean_json += ']'
+                
                 return json.loads(clean_json)
+                
             except json.JSONDecodeError as e2:
-                # Third attempt: Create a minimal fallback object
+                # Final attempt - try to recover partial JSON
+                try:
+                    # For truncated JSON, try to parse what we have and add missing closing braces
+                    partial_json = self._recover_partial_json(json_str)
+                    if partial_json:
+                        return partial_json
+                except:
+                    pass
+                
                 logger.error(f"Failed to parse JSON after fixes: {str(e2)}")
                 logger.error(f"Problematic JSON: {json_str[:100]}...")
-                return {
-                    "answer_type": "general_research",
-                    "information_targets": ["general information"],
-                    "synthesis_strategy": "comprehensive_synthesis",
-                    "output_structure": "markdown"
-                }
+                return self._get_fallback_analysis()
+            
+    def _get_fallback_analysis(self):
+        """Return a fallback analysis object."""
+        return {
+            "answer_type": "general_research",
+            "information_targets": ["general information"],
+            "synthesis_strategy": "comprehensive_synthesis",
+            "output_structure": "markdown"
+        }
+        
+    def _recover_partial_json(self, json_str):
+        """Attempt to recover partial JSON by extracting valid key-value pairs."""
+        result = {}
+        
+        # Extract keys and values that are in valid format
+        key_value_pattern = r'"([^"]+)"\s*:\s*(?:"([^"]*)"|\[([^\]]*)\]|(\d+)|true|false|null)'
+        matches = re.findall(key_value_pattern, json_str)
+        
+        for match in matches:
+            key = match[0]
+            # Determine which value group is populated
+            if match[1]:  # String value
+                result[key] = match[1]
+            elif match[2]:  # Array value
+                try:
+                    # Try to parse as JSON array
+                    array_str = f"[{match[2]}]"
+                    result[key] = json.loads(array_str)
+                except:
+                    # Fall back to string list
+                    result[key] = [s.strip().strip('"') for s in match[2].split(',') if s.strip()]
+            elif match[3]:  # Numeric value
+                result[key] = int(match[3])
+            # Else it's a boolean/null captured in the regex but not in a group
+        
+        return result if result else None
