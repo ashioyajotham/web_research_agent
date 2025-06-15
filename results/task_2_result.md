@@ -14,35 +14,35 @@ Source: https://www.startribune.com/china-and-us-envoys-will-hold-first-top-leve
 
 
 
-**2. P5 Experts Roundtable – Online Meeting on the AI nuclear nexus on ...**
+**2. Summit 2025 Programme - AI for Good**
 
-At our last roundtable held in Geneva in December 2023, the experts had one session on the nexus between artificial intelligence (AI) and ...
+Explore the AI for Good Summit 2025—keynotes, panels, workshops & demos advancing AI solutions for global development challenges.
 
-Source: https://www.gcsp.ch/global-insights/p5-experts-roundtable-online-meeting-ai-nuclear-nexus-24-june-2024
+Source: https://aiforgood.itu.int/summit25/programme/
 
 
 
-**3. RebootDemocracy.AI**
+**3. Top US and Chinese officials begin talks on AI in Geneva - News4JAX**
 
-In the news this week: The GovLab wants your feedback on our new "Civic and Democratic AI" course which teaches people how to use AI to organize for community ...
+The talks, which Presidents Joe Biden and Xi Jinping agreed to launch in last 2023, are meant to open up bilateral dialogue between the ...
+
+Source: https://www.news4jax.com/news/world/2024/05/14/top-us-and-chinese-officials-begin-talks-on-ai-in-geneva/
+
+
+
+**4. RebootDemocracy.AI**
+
+A Berlin Global Gov Tech Center whitepaper – "The Agentic State" – lays out an ambitious vision for how AI agents can reshape the core functions of government, ...
 
 Source: https://rebootdemocracy.ai/
 
 
 
-**4. Top US and Chinese officials begin talks on AI in Geneva - WAVY.com**
+**5. Speakers - World Summit AI Amsterdam**
 
-The talks, which Presidents Joe Biden and Xi Jinping agreed to launch in last 2023, are meant to open up bilateral dialogue between the world's ...
+Meet the 2024 line-up · MARK HEAPS · CHIEF TECH EVANGELIST & VP OF BRAND · GROQ · THOMAS WOLF · CO-FOUNDER & CSO · HUGGING FACE · DARREN HARDMAN · CORPORATE VICE ...
 
-Source: https://www.wavy.com/news/technology/ap-top-us-and-chinese-officials-begin-talks-on-ai-in-geneva/
-
-
-
-**5. Summit 2025 Programme - AI for Good**
-
-Explore the AI for Good Summit 2025—keynotes, panels, workshops & demos advancing AI solutions for global development challenges.
-
-Source: https://aiforgood.itu.int/summit25/programme/
+Source: https://worldsummit.ai/speakers/
 
 
 

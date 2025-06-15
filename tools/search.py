@@ -45,7 +45,7 @@ class SearchTool(BaseTool):
         Args:
             parameters (dict): Parameters for the search
                 - query (str): Search query string
-                - num_results (int, optional): Number of results to return (default: 5)
+                - num_results (int, optional): Number of results to return (default: 10)
             memory (Memory): Agent's memory
             
         Returns:
@@ -55,7 +55,7 @@ class SearchTool(BaseTool):
         if not query:
             return {"error": "No search query provided"}
         
-        num_results = int(parameters.get("num_results", self.config.get("max_search_results", 5)))
+        num_results = int(parameters.get("num_results", self.config.get("max_search_results", 10)))
         
         logger.info(f"Searching for: {query}")
         
