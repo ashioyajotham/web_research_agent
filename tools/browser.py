@@ -248,8 +248,8 @@ class BrowserTool(BaseTool):
             )
             response.raise_for_status()
             return response.text
-        except Exception as e:
-            logger.warning(f"Error fetching URL {url}: {str(e)}")
+        except requests.exceptions.RequestException as e:
+            logger.warning(f"HTTP error fetching URL {url}: {str(e)}")
             # Return None instead of raising an exception so we can try fallbacks
             return None
 
