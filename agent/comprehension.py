@@ -27,6 +27,20 @@ class Comprehension:
         """
         logger.info(f"Analyzing task: {task_description}")
         
+        # Add specific pattern recognition for statement compilation tasks
+        task_lower = task_description.lower()
+        
+        # Check for list/compilation tasks specifically for statements/quotes
+        if ("compile" in task_lower or "list" in task_lower) and \
+           ("statement" in task_lower or "quote" in task_lower or "said" in task_lower):
+            return {
+                "task_type": "information_gathering",
+                "answer_type": "list_compilation",
+                "information_targets": ["statements", "quotes", "remarks"],
+                "synthesis_strategy": "collect_and_organize",
+                "output_structure": "list"
+            }
+        
         prompt = f"""
         Analyze the following task and break it down into components:
         

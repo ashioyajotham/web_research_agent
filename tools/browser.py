@@ -238,7 +238,7 @@ class BrowserTool(BaseTool):
         return bool(url_pattern.match(url))
 
     def _fetch_url(self, url):
-        """Fetch content from URL with timeout and error handling."""
+        """Enhanced URL fetching with better error handling."""
         try:
             response = requests.get(
                 url, 
@@ -248,9 +248,10 @@ class BrowserTool(BaseTool):
             )
             response.raise_for_status()
             return response.text
-        except requests.exceptions.RequestException as e:
-            logger.error(f"Error fetching URL {url}: {str(e)}")
-            raise
+        except Exception as e:
+            logger.warning(f"Error fetching URL {url}: {str(e)}")
+            # Return None instead of raising an exception so we can try fallbacks
+            return None
 
     def _extract_title(self, content):
         """Extract title from HTML content."""

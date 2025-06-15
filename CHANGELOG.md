@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.1.11] - 2025-06-15
+
+### Fixed
+- Fixed web page processing in browser tool to correctly process URLs instead of falling back to snippets
+- Enhanced statement extraction for "compile a list" tasks, properly identifying and processing quotes
+- Fixed task analysis for statement compilation tasks to use the correct synthesis strategy
+- Increased default search result count from 5 to 10 for more comprehensive research
+
+### Enhanced
+- Improved statement compilation strategy to extract quotes from both web content and search snippets
+- Added better error recovery in URL fetching to attempt processing before falling back to snippets
+
 ## [1.1.10] - 2025-06-12
 
 ### Fixed

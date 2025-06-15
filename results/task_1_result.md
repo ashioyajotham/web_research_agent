@@ -4,59 +4,39 @@
 
 ## Research Findings
 
-### Search Results Found
+### Statements Found
 
-**1. Remarks by President Biden and President Xi Jinping of the ...**
+**Statement 1:** It's a great pleasure to see you again, President Biden. Over the past four years, China-US relations have gone through ups and downs.
 
-It's a great pleasure to see you again, President Biden. Over the past four years, China-US relations have gone through ups and downs.
-
-Source: https://china.usembassy-china.org.cn/remarks-by-president-biden-and-president-xi-jinping-of-the-peoples-republic-of-china-before-bilateral-meeting-lima-peru/
+Source: [Remarks by President Biden and President Xi Jinping of the ...](https://china.usembassy-china.org.cn/remarks-by-president-biden-and-president-xi-jinping-of-the-peoples-republic-of-china-before-bilateral-meeting-lima-peru/)
 
 
+**Statement 2:** Remarks by President Biden on His Actions to Protect American Workers and Businesses from China's Unfair Trade Practices.
 
-**2. Remarks by President Biden on His Actions to Protect American ...**
-
-Remarks by President Biden on His Actions to Protect American Workers and Businesses from China's Unfair Trade Practices.
-
-Source: https://bidenwhitehouse.archives.gov/briefing-room/speeches-remarks/2024/05/14/remarks-by-president-biden-remarks-by-president-biden-on-his-actions-to-protect-american-workers-and-businesses-from-chinas-unfair-trade-practices/
+Source: [Remarks by President Biden on His Actions to Protect American ...](https://bidenwhitehouse.archives.gov/briefing-room/speeches-remarks/2024/05/14/remarks-by-president-biden-remarks-by-president-biden-on-his-actions-to-protect-american-workers-and-businesses-from-chinas-unfair-trade-practices/)
 
 
+**Statement 3:** It's a great pleasure to see you again, President Biden. Over the past four years, China-US relations have gone through ups and downs.
 
-**3. Remarks by President Biden and President Xi Jinping of the ...**
-
-It's a great pleasure to see you again, President Biden. Over the past four years, China-US relations have gone through ups and downs.
-
-Source: https://bidenwhitehouse.archives.gov/briefing-room/speeches-remarks/2024/11/16/remarks-by-president-biden-and-president-xi-jinping-of-the-peoples-republic-of-china-before-bilateral-meeting-lima-peru/
+Source: [Remarks by President Biden and President Xi Jinping of the ...](https://bidenwhitehouse.archives.gov/briefing-room/speeches-remarks/2024/11/16/remarks-by-president-biden-and-president-xi-jinping-of-the-peoples-republic-of-china-before-bilateral-meeting-lima-peru/)
 
 
+**Statement 4:** US President Joe Biden was caught telling his Quad summit partners that China was "testing us" with aggressive tactics.
 
-**4. Remarks by President Biden and Secretary of State Antony Blinken ...**
-
-Today, I can report to the American people: We're in a better strategic position in the long-term competition with China than we were when I ...
-
-Source: https://china.usembassy-china.org.cn/remarks-by-president-biden-and-secretary-of-state-antony-blinken-on-the-administrations-work-to-strengthen-america-and-lead-the-world/
+Source: [Biden tells Quad allies: China 'testing us' – DW – 09/22/2024](https://www.dw.com/en/biden-tells-quad-allies-china-testing-us/a-70291803)
 
 
+**Statement 5:** In his last State of the Union address before the general election, President Joe Biden said he wants “competition with China, not conflict” ...
 
-**5. US-China Relations in the Biden-Era: A Timeline**
-
-Day 476: May 11, 2022 – Joe Biden says US may lift tariffs on Chinese goods to combat inflation. In a speech on Tuesday, May 10, President Joe Biden stated ...
-
-Source: https://www.china-briefing.com/news/us-china-relations-in-the-biden-era-a-timeline/
+Source: [WATCH: Biden says he wants 'competition with China, not conflict'](https://www.youtube.com/watch?v=hQkfFIcYrds)
 
 
+**Statement 6:** US-China relations entered a new phase. It is one of the most challenging foreign policy relationship that President Biden inherited from his predecessor.
 
-## Research Summary
-
-**Research completed using comprehensive_synthesis strategy.**
+Source: [US-China Relations under President Joe Biden](https://www.icwa.in/show_content.php?lang=1&level=3&ls_id=7181&lid=4855)
 
 
-**Research scope:**
+**Statement 7:** US President Joe Biden said US forces would defend Taiwan in the event of a Chinese invasion, his most explicit statement on the issue.
 
-- 2 search operations completed
+Source: [Biden says U.S. forces would defend Taiwan in the event ... - Reuters](https://www.reuters.com/world/biden-says-us-forces-would-defend-taiwan-event-chinese-invasion-2022-09-18/)
 
-- 0 web pages processed
-
-- 0 content extracts from search snippets
-
-- 10 search results analyzed
