@@ -4,37 +4,37 @@
 
 ### Search Results Found
 
-**1. Tracking Large-Scale AI Models**
-
-We present a dataset of 81 large-scale models, from AlphaGo to Gemini, developed across 18 countries, at the leading edge of scale and capabilities.
-
-Source: https://epoch.ai/blog/tracking-large-scale-ai-models
-
-
-**2. Data on AI Models**
+**1. Data on AI Models**
 
 Our public database, the largest of its kind, tracks over 2800 machine learning models from 1950 to today. Explore data and graphs showing the trajectory of ...
 
 Source: https://epoch.ai/data/ai-models
 
 
-**3. Cumulative number of large-scale AI models by domain ...**
+**2. Tracking Large-Scale AI Models**
 
-Epoch – Tracking Compute-Intensive AI Models ... A dataset that tracks compute-intensive AI models, with training compute over 10²³ floating point operations ( ...See more
+We present a dataset of 81 large-scale models, from AlphaGo to Gemini, developed across 18 countries, at the leading edge of scale and capabilities.
+
+Source: https://epoch.ai/blog/tracking-large-scale-ai-models
+
+
+**3. Data on the Trajectory of AI | Epoch AI Database**
+
+Our public datasets catalog over 2800 machine learning models. Explore data and graphs showing the growth and trajectory of AI from 1950 to today.
+
+Source: https://epoch.ai/data
+
+
+**4. Cumulative number of large-scale AI models by domain ...**
+
+Epoch – Tracking Compute-Intensive AI Models. A dataset that tracks compute-intensive AI models, with training compute over 10²³ ...
 
 Source: https://ourworldindata.org/grapher/cumulative-number-of-large-scale-ai-models-by-domain
 
 
-**4. The Epochs data structure: discontinuous data**
+**5. File:Large-Scale AI Models Epoch-ml-trends (2025-04-25) ...**
 
-Epochs objects are a data structure for representing and analyzing equal-duration chunks of the EEG/MEG signal.See more
+Our Large-Scale AI Models dataset documents over 200 models trained with more than 10²³ floating point operations, at the leading edge of ...
 
-Source: https://mne.tools/1.8/auto_tutorials/epochs/10_epochs_overview.html
-
-
-**5. tf.data.Dataset: how to get the dataset size (number of ...**
-
-I know that tf.data.Dataset already knows the dimension of the dataset, because the repeat() method allows repeating the input pipeline for a specified number ...See more
-
-Source: https://stackoverflow.com/questions/50737192/tf-data-dataset-how-to-get-the-dataset-size-number-of-elements-in-an-epoch
+Source: https://commons.wikimedia.org/wiki/File:Large-Scale_AI_Models_Epoch-ml-trends_(2025-04-25)_(Epoch_AI).png
 

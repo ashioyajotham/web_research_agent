@@ -16,37 +16,37 @@
 
 ### Search Results Found
 
-**1. Building a sustainable automotive industry in Europe**
+**1. Building a sustainable automotive industry in Europe | Deloitte Insights**
 
 Our research analyzes the current progress of European automotive companies on their sustainability journey.
 
 Source: https://www.deloitte.com/us/en/insights/environmental-social-governance/automotive-industry-sustainability.html
 
 
-**2. European automotive industry: What it takes to regain ...**
-
-The European automotive industry has been a cornerstone of the region's economy, but disruptions have challenged its dominance.
-
-Source: https://www.mckinsey.com/industries/automotive-and-assembly/our-insights/european-automotive-industry-what-it-takes-to-regain-competitiveness
-
-
-**3. A road map for Europe's automotive industry**
+**2. A road map for the automotive industry in Europe | McKinsey**
 
 Keeping the automotive industry in Europe competitive requires focus and acceleration of current efforts. Here's our seven-point road map.
 
 Source: https://www.mckinsey.com/industries/automotive-and-assembly/our-insights/a-road-map-for-europes-automotive-industry
 
 
-**4. EPP Group Position Paper: Securing the Competitiveness ...**
+**3. European automotive industry: What it takes to regain competitiveness**
 
-The EPP Group supports the proposal of the President of the Commission to open a Strategic Dialogue on the Future of the Automotive Sector.
+The European automotive industry has been a cornerstone of the region's economy, but disruptions have challenged its dominance.
+
+Source: https://www.mckinsey.com/industries/automotive-and-assembly/our-insights/european-automotive-industry-what-it-takes-to-regain-competitiveness
+
+
+**4. Securing the Competitiveness of the European Automotive Industry**
+
+Supply Chain Resilience and Rules-Based International Trade. The automotive industry operates in a highly competitive international environment.
 
 Source: https://www.eppgroup.eu/newsroom/epp-group-position-paper-securing-the-competitiveness-of-the-european-automotive-industry
 
 
-**5. Employment and value added using FIGARO data - view into ...**
+**5. [PDF] The Future of the EU automotive sector - European Parliament**
 
-This article delves into gross value added and employment in the EU associated with the global value chains (GVCs) in the automotive industry ...
+This study provides an independent overview of the automotive industrial landscape in the EU. Specifically, the study assesses green and digital trends ...
 
-Source: https://ec.europa.eu/eurostat/statistics-explained/index.php?title=Employment_and_value_added_using_FIGARO_data_-_view_into_the_automotive_industry
+Source: https://www.europarl.europa.eu/RegData/etudes/STUD/2021/695457/IPOL_STU(2021)695457_EN.pdf
 

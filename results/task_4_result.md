@@ -4,16 +4,16 @@
 
 ### Search Results Found
 
-**1. Scope 1 and 2 emissions of the Volkswagen Group**
+**1. Group Sustainability Report 2023 - Volkswagen Group**
 
-The Volkswagen Group's location-based Scope 2 emissions were the highest among Scope 1 and Scope 2 greenhouse gas emissions in both 2023 and 2024.
+Further information on official fuel consumption data and official specific CO₂ emissions for new passenger cars can be found in the "Guide ...
 
-Source: https://www.statista.com/statistics/1607589/scope-1-and-2-emissions-of-the-volkswagen-group/
+Source: https://www.volkswagen-group.com/en/publications/more/group-sustainability-report-2023-2674
 
 
-**2. Volkswagen - Greenhouse Gas Emissions: Scope 1, 2 & 3 ...**
+**2. Our Decarbonization Commitments**
 
-Compared to the previous year (2023), Volkswagen's Scope 1 emissions decreased by 18.11%, highlighting the company's efforts to lower direct emissions from ...
+Volkswagen Group of America conducts an annual greenhouse gas (GHG) and environmental inventory of its scope 1, 2, and 3 emissions in line with the GHG Protocol ...
 
-Source: https://tracenable.com/company/volkswagen/ghg-emissions
+Source: https://www.vw.com/en/our-decarbonization-commitments.html
 

@@ -4,37 +4,37 @@
 
 ### Search Results Found
 
-**1. US companies and Chinese experts engaged in secret diplomacy ...**
+**1. Top US and Chinese officials begin talks on AI in Geneva | AP News**
 
-The talks were convened by the Shaikh Group, a private mediation organisation that facilitates dialogue between key actors in regions of ...
+Missing: secret mediating
 
-Source: https://www.ft.com/content/f87b693f-9ba3-4929-8b95-a296b0278021
-
-
-**2. Chinese and US officials meet in Geneva for 'de-escalation' trade talks**
-
-Senior US and Chinese officials held talks early on Saturday in Geneva in a tentative first step towards defusing a trade war that is disrupting the global ...
-
-Source: https://www.theguardian.com/world/2025/may/10/chinese-us-officials-meet-geneva-trade-talks-tariffs
+Source: https://apnews.com/article/artificial-intelligence-china-united-states-geneva-switzerland-1aa4451f82f250a47039a213f3d72879
 
 
-**3. 13WCC | 2023 - International Chamber of Commerce**
+**2. U.S. and China open high-level talks on AI use and risks**
 
-The 13th World Chambers Congress. We exchanged new ideas, discovered new tools, and explored the latest best practices to shape the next economic era.
+Missing: secret mediating organization
 
-Source: https://13wcc.iccwbo.org/
-
-
-**4. U.S., China hold first call since Geneva meeting, signaling progress ...**
-
-The U.S. and China agreed to keep lines of communication open, following a call between senior officials Thursday.
-
-Source: https://www.nbclosangeles.com/news/business/money-report/china-says-u-s-dialogue-to-continue-as-china-hints-trade-talks-are-advancing/3707613/
+Source: https://pamirllc.com/blog/us-and-china-open-high-level-talks-on-ai-use-and-risks
 
 
-**5. [PDF] CCP Political Warfare - House Oversight Committee**
+**3. China and the United States Begin Official AI Dialogue - Richard Weitz**
 
-The Chinese Communist Party (CCP or the Party) is engaging in warfare tactics against the United States with increasing efficacy.
+Missing: secret mediating
 
-Source: https://oversight.house.gov/wp-content/uploads/2024/10/CCP-Report-10.24.24.pdf
+Source: https://www.chinausfocus.com/peace-security/china-and-the-united-states-begin-official-ai-dialogue
+
+
+**4. US, China meet in Geneva to discuss AI risks | Reuters**
+
+The U.S. and China will meet in Geneva to discuss artificial intelligence on Tuesday and U.S. officials stressed that Washington's policies ...
+
+Source: https://www.reuters.com/technology/us-china-meet-geneva-discuss-ai-risks-2024-05-13/
+
+
+**5. Promising Topics for US–China Dialogues on AI Risks and ...**
+
+Missing: secret mediating
+
+Source: https://dl.acm.org/doi/full/10.1145/3715275.3732080
 
