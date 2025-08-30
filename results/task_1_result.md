@@ -4,44 +4,59 @@
 
 ## Research Findings
 
-### Items Found
+### Search Results Found
 
-**Item 1:** I said, “Look, we'll play by the same rules if you want. If you want to do business in China, you got to have a 51 percent Chinese owner, you ...
+**1. Remarks by President Biden and President Xi Jinping of the ...**
 
-Source: [Remarks by President Biden on His Actions to Protect American ...](https://bidenwhitehouse.archives.gov/briefing-room/speeches-remarks/2024/05/14/remarks-by-president-biden-remarks-by-president-biden-on-his-actions-to-protect-american-workers-and-businesses-from-chinas-unfair-trade-practices/)
+It is my consistent belief that as the world's most important bilateral relationship, a stable China-U.S. relationship is critical not only to ...
 
-
-**Item 2:** President Biden stated that the U.S.-China relationship is the most important relationship in the world, not just for the two peoples, but ...
-
-Source: [President Xi Jinping Meets with U.S. President Joe Biden in ...](https://www.fmprc.gov.cn/eng/xw/zyxw/202411/t20241117_11527672.html)
+Source: https://china.usembassy-china.org.cn/remarks-by-president-biden-and-president-xi-jinping-of-the-peoples-republic-of-china-before-bilateral-meeting-lima-peru/
 
 
-**Item 3:** In his first press conference, President Biden said: “This is a battle between the utility of democracies in the 21st century and autocracies.” He further said: ...
 
-Source: [US-China Relations under President Joe Biden](https://www.icwa.in/show_content.php?lang=1&level=3&ls_id=7181&lid=4855)
+**2. Remarks by President Biden and President Xi Jinping of the ...**
 
+It is my consistent belief that as the world's most important bilateral relationship, a stable China-U.S. relationship is critical not only to ...
 
-**Item 4:** " He said competition between China and the U.S. must not veer into conflict, a point he has been stressing for months. U.S. President Joe Biden ...
-
-Source: [Biden says 'real progress' was made after meeting with China's Xi ...](https://www.nbcnews.com/politics/joe-biden/biden-chinas-xi-jinping-meet-effort-smooth-tensions-rcna124924)
+Source: https://bidenwhitehouse.archives.gov/briefing-room/speeches-remarks/2024/11/16/remarks-by-president-biden-and-president-xi-jinping-of-the-peoples-republic-of-china-before-bilateral-meeting-lima-peru/
 
 
-**Item 5:** “In the next 50 years, the most important thing in international relations is that China and the United States must find the right way to get ...
 
-Source: [US-China relations: key quotes from Xi Jinping and Joe Biden's ...](https://www.scmp.com/news/china/diplomacy/article/3156252/us-china-relations-key-quotes-xi-jinping-and-joe-bidens)
+**3. Remarks by President Biden on His Actions to Protect American ...**
 
+I said, “Look, we'll play by the same rules if you want. If you want to do business in China, you got to have a 51 percent Chinese owner, you ...
 
-**Item 6:** He reiterated that the world expects the United States and China to manage competition responsibly to prevent it from veering into conflict, ...
-
-Source: [Readout of President Joe Biden's Meeting with President Xi Jinping ...](https://china.usembassy-china.org.cn/readout-of-president-joe-bidens-meeting-with-president-xi-jinping-of-the-peoples-republic-of-china-2/)
+Source: https://bidenwhitehouse.archives.gov/briefing-room/speeches-remarks/2024/05/14/remarks-by-president-biden-remarks-by-president-biden-on-his-actions-to-protect-american-workers-and-businesses-from-chinas-unfair-trade-practices/
 
 
-**Item 7:** Day 476: May 11, 2022 – Joe Biden says US may lift tariffs on Chinese goods to combat inflation. In a speech on Tuesday, May 10, President Joe Biden stated ...
 
-Source: [US-China Relations in the Biden-Era: A Timeline](https://www.china-briefing.com/news/us-china-relations-in-the-biden-era-a-timeline/)
+**4. Biden and Xi discuss US-China cooperation and conflict - BBC**
+
+Mr Biden stressed support for Taiwan, but Mr Xi called US interference in the South China Sea a "red line". Mr Xi also took issue with sanctions ...
+
+Source: https://www.bbc.com/news/world-us-canada-68718821
 
 
-**Item 8:** US President Joe Biden said in his State of the Union address on Tuesday (Feb 7) that the US would cooperate with China but vowed to protect ...
 
-Source: [Joe Biden State of the Union speech: China relations - YouTube](https://www.youtube.com/watch?v=79PIdAdf9Ro)
+**5. 'I don't want to contain China,' Biden says in Beijing's backyard**
 
+“I just want to make sure we have a relationship with China that is on the up and up, squared away. Everybody knows what it's all about,” Biden ...
+
+Source: https://www.politico.com/news/2023/09/10/biden-china-g20-00114892
+
+
+
+## Research Summary
+
+**Research completed using comprehensive_synthesis strategy.**
+
+
+**Research scope:**
+
+- 1 search operations completed
+
+- 0 web pages processed
+
+- 0 content extracts from search snippets
+
+- 20 search results analyzed

@@ -499,7 +499,7 @@ class WebResearchAgent:
             return "\n".join(output)
 
         # Helpers
-        SENT_SPLIT = re.compile(r'(?<=[.!?])\s+')
+        SENT_SPLIT = re.compile(r'(?<=[.!?])\s+') 
         STOP = {
             "the","and","for","with","that","this","from","into","over","under","their","your","our",
             "they","them","are","was","were","have","has","had","each","must","made","more","than",
@@ -813,71 +813,84 @@ class WebResearchAgent:
         return "\n".join(output_lines)
     
     def _synthesize_comprehensive_synthesis(self, task_description, results):
-        """Synthesize results for comprehensive synthesis strategy."""
-        output = [f"# {task_description}\n"]
-        
-        output.append("## Research Findings\n")
-        
-        # Get search results for analysis
+        """Comprehensive synthesis that respects requested count and de-duplicates."""
+        import re
+        from urllib.parse import urlparse
+
+        # Infer desired count from task text (default 5)
+        m = re.search(r'\b(\d{1,3})\b', task_description)
+        desired = int(m.group(1)) if m else 5
+
+        # Aggregate search results and any fetched page summaries
         search_results = []
-        snippet_content = []
-        
-        for result in results:
-            if result.get("status") == "success":
-                result_output = result.get("output", {})
-                
-                # Collect search results
-                if isinstance(result_output, dict):
-                    if "results" in result_output:
-                        search_results.extend(result_output["results"])
-                    elif "search_results" in result_output:
-                        search_results.extend(result_output["search_results"])
-                    
-                    # Collect snippet content from browser fallbacks
-                    if result_output.get("source") == "search_snippets":
-                        content = result_output.get("extracted_text", "")
-                        if content and len(content) > 100:
-                            snippet_content.append(content)
-        
-        # If we have snippet content, use it
-        if snippet_content:
-            output.append("### Information Found\n")
-            for i, content in enumerate(snippet_content):
-                output.append(f"**Source {i+1}:**\n")
-                # Show relevant excerpts
-                lines = content.split('\n')
-                relevant_lines = [line for line in lines if line.strip() and not line.startswith('**')]
-                for line in relevant_lines[:10]:  # Show first 10 relevant lines
-                    output.append(f"- {line.strip()}\n")
-                output.append("\n")
-        
-        # Show search results found
-        if search_results:
-            output.append("### Search Results Found\n")
-            for i, result in enumerate(search_results[:5]):
-                title = result.get("title", "Unknown")
-                snippet = result.get("snippet", "")
-                link = result.get("link", "")
-                
-                output.append(f"**{i+1}. {title}**\n")
-                if snippet:
-                    output.append(f"{snippet}\n")
-                if link:
-                    output.append(f"Source: {link}\n")
-                output.append("\n")
-        
-        # Add research summary
-        output.append("## Research Summary\n")
-        
-        search_count = len([r for r in results if "search" in r.get("step", "").lower() and r.get("status") == "success"])
-        browser_count = len([r for r in results if "browse" in r.get("step", "").lower() and r.get("status") == "success"])
-        snippet_count = len(snippet_content)
-        
-        output.append(f"**Research completed using comprehensive_synthesis strategy.**\n\n")
-        output.append(f"**Research scope:**\n")
-        output.append(f"- {search_count} search operations completed\n")
-        output.append(f"- {browser_count} web pages processed\n")
-        output.append(f"- {snippet_count} content extracts from search snippets\n")
-        output.append(f"- {len(search_results)} search results analyzed\n")
-        
-        return "\n".join(output)
+        for r in results:
+            if r.get("status") != "success":
+                continue
+            out = r.get("output", {})
+            if isinstance(out, dict) and isinstance(out.get("results"), list):
+                search_results.extend(out["results"])
+
+        # Deduplicate by normalized title with fuzzy match across domains
+        STOP = {"the","and","for","with","that","this","from","into","over","under","their","your","our","of","to","in","on","by","as","it","an","a","or","be","is"}
+        def norm_title(t):
+            t = (t or "").strip().lower()
+            t = re.sub(r'…$', '', t)  # drop trailing ellipsis
+            t = re.sub(r'[^a-z0-9 ]+', ' ', t)
+            toks = [w for w in t.split() if w and w not in STOP]
+            return toks[:20]
+        def jaccard(a, b):
+            sa, sb = set(a), set(b)
+            return (len(sa & sb) / max(1, len(sa | sb)))
+        def domain(u):
+            try:
+                return urlparse(u or "").netloc.lower()
+            except Exception:
+                return ""
+        def domain_score(d):
+            # Task-agnostic scoring by TLD only; no hardcoded hosts
+            # Higher score for .gov/.edu/.mil/.int, modest for .org, baseline otherwise
+            tld = (d.rsplit(".", 1)[-1] if "." in d else d).lower()
+            if tld in {"gov", "edu", "mil", "int"}:
+                return 3.0
+            if tld in {"org"}:
+                return 2.0
+            return 1.0
+
+        items = []
+        seen = []
+        for res in search_results:
+            title = res.get("title") or ""
+            link = res.get("link") or res.get("url") or ""
+            snippet = res.get("snippet") or ""
+            if not title or not link:
+                continue
+            nt = norm_title(title)
+            dup = False
+            # When near-duplicates, keep the one with higher generic TLD score or longer snippet
+            for i, (ptoks, plink, _) in enumerate(seen):
+                if jaccard(nt, ptoks) >= 0.8:
+                    new_score = domain_score(domain(link))
+                    old_score = domain_score(domain(plink))
+                    old_snip_len = len(items[i].get("snippet") or "")
+                    new_snip_len = len(snippet or "")
+                    if (new_score > old_score) or (new_score == old_score and new_snip_len > old_snip_len):
+                        seen[i] = (nt, link, title)
+                        items[i] = {"title": title, "url": link, "snippet": snippet}
+                    dup = True
+                    break
+            if dup:
+                continue
+            seen.append((nt, link, title))
+            items.append({"title": title, "url": link, "snippet": snippet})
+            if len(items) >= desired:
+                break
+
+        lines = ["## Research Findings", "", "### Search Results Found", ""]
+        for idx, it in enumerate(items, 1):
+            lines.append(f"**{idx}. {it['title']}**\n")
+            if it["snippet"]:
+                lines.append(f"{it['snippet']}\n")
+            lines.append(f"Source: {it['url']}\n\n")
+        if not items:
+            lines.append("No results to display.\n")
+        return "\n".join(lines)

@@ -4,36 +4,6 @@
 
 ## Research Findings
 
-### Information Found
-
-**Source 1:**
-
-- 03/15/2022 Company Report. Sustainability Report 2021. Download. Add to collection. Share. Sustainability Report 2021.
-
-- Group Sustainability Report 2022. 03/14/2023 Publication · Sustainability Report 2021. 03/11/2022 Company Report. Show More Documents.
-
-- The NEW AUTO Group strategy defines the six key focus issues shown above for the area of sustainability and ESG in Group initiative 6. This ...
-
-- The VW Group's 2023 Sustainability report outlines achievements in focus areas including decarbonisation, circularity, people, integrity & supply chain.
-
-- 2023 Sustainability Report View Sustainability Report Download. Volkswagen ... Volkswagen Group. 2021 Sustainability Report View Sustainability Report Download.
-
-
-
-**Source 2:**
-
-- 03/15/2022 Company Report. Sustainability Report 2021. Download. Add to collection. Share. Sustainability Report 2021.
-
-- Group Sustainability Report 2022. 03/14/2023 Publication · Sustainability Report 2021. 03/11/2022 Company Report. Show More Documents.
-
-- The NEW AUTO Group strategy defines the six key focus issues shown above for the area of sustainability and ESG in Group initiative 6. This ...
-
-- The VW Group's 2023 Sustainability report outlines achievements in focus areas including decarbonisation, circularity, people, integrity & supply chain.
-
-- 2023 Sustainability Report View Sustainability Report Download. Volkswagen ... Volkswagen Group. 2021 Sustainability Report View Sustainability Report Download.
-
-
-
 ### Search Results Found
 
 **1. Sustainability Report 2021 - Volkswagen Group**
@@ -52,7 +22,7 @@ Source: https://www.volkswagen-group.com/en/reporting-15808
 
 
 
-**3. SUSTAINABILITY REPORT**
+**3. [PDF] SUSTAINABILITY REPORT - Volkswagen Group Italia**
 
 The NEW AUTO Group strategy defines the six key focus issues shown above for the area of sustainability and ESG in Group initiative 6. This ...
 
@@ -85,8 +55,8 @@ Source: https://www.responsibilityreports.com/Company/volkswagen-group
 
 - 1 search operations completed
 
-- 1 web pages processed
+- 2 web pages processed
 
-- 2 content extracts from search snippets
+- 0 content extracts from search snippets
 
 - 5 search results analyzed

@@ -33,10 +33,11 @@ class BrowserTool(BaseTool):
         url = parameters.get("url")
         extract_type = parameters.get("extract_type", "main_content")
         selector = parameters.get("selector", "")
+        top_k = int(parameters.get("top_k", 10))
 
         # Handle fallback to search snippets
         if parameters.get("use_search_snippets") or not url:
-            snippet_out = self._extract_from_search_snippets(memory)
+            snippet_out = self._extract_from_search_snippets(memory, top_k=top_k)
             return {
                 "status": "success" if snippet_out.get("extracted_text") else "error",
                 "output": snippet_out
@@ -45,7 +46,7 @@ class BrowserTool(BaseTool):
         # Validate URL before attempting to browse
         if not url or not self._is_valid_url(url):
             logger.info("Invalid or missing URL for browser; falling back to search snippets")
-            snippet_out = self._extract_from_search_snippets(memory)
+            snippet_out = self._extract_from_search_snippets(memory, top_k=top_k)
             return {
                 "status": "success" if snippet_out.get("extracted_text") else "error",
                 "output": snippet_out
@@ -108,7 +109,7 @@ class BrowserTool(BaseTool):
             logger.error(f"Browser error for {url}: {e}")
             return {"status": "error", "error": str(e), "output": {}}
     
-    def _extract_from_search_snippets(self, memory):
+    def _extract_from_search_snippets(self, memory, top_k=10):
         """Extract information from search snippets when URL browsing fails."""
         # Try multiple ways to get search results
         search_results = getattr(memory, 'search_results', [])
@@ -132,7 +133,7 @@ class BrowserTool(BaseTool):
         combined_content = []
         urls = []
         
-        for i, result in enumerate(search_results[:5]):            
+        for i, result in enumerate(search_results[:top_k]):            
             snippet = (result.get("snippet") or "").strip()
             link = result.get("link") or result.get("url") or ""
             title = result.get("title") or ""

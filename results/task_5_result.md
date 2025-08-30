@@ -14,63 +14,54 @@
     They earned more than €1B in revenue in 2023
     They are not a subsidiary of another company, except if the parent company is a holding company
 
+They are based in the EU
+    They operate within the motor vehicle sector, as defined by the European Financial Reporting Advisory Group's (EFRAG) draft sector guidance
+    They provide detailed environmental information for their automotive operations
+    The total greenhouse gas emissions from their automotive operations are available for 2021, 2022, and 2023
+    They earned more than €1B in revenue in 2023
+    They are not a subsidiary of another company, except if the parent company is a holding company
+
 ## Research Findings
-
-### Information Found
-
-**Source 1:**
-
-- Our research analyzes the current progress of European automotive companies on their sustainability journey.
-
-- Missing: satisfying criteria
-
-- New rules for the motor vehicle sector designed to enhance competition between distributors in relation to the sale of new motor vehicles.
-
-- The European automotive sector is faced with potentially disruptive challenges. In particular, the projected increase in the share of electric vehicles ...
-
-- More specifically, it deals with the personal data: (i) processed inside the vehicle, (ii) exchanged between the vehicle and personal devices.
-
-
 
 ### Search Results Found
 
-**1. Building a sustainable automotive industry in Europe | Deloitte Insights**
+**1. Sector-specific ESRS - EFRAG**
 
-Our research analyzes the current progress of European automotive companies on their sustainability journey.
+EFRAG is tasked to develop a set of sector-agnostic draft ESRS. This will be a multi-year exercise. In particular, EFRAG's mandate also includes the ...
 
-Source: https://www.deloitte.com/us/en/insights/environmental-social-governance/automotive-industry-sustainability.html
-
-
-
-**2. European automotive industry: What it takes to regain competitiveness**
-
-Missing: satisfying criteria
-
-Source: https://www.mckinsey.com/industries/automotive-and-assembly/our-insights/european-automotive-industry-what-it-takes-to-regain-competitiveness
+Source: https://www.efrag.org/en/sustainability-reporting/esrs-workstreams/sectorspecific-esrs
 
 
 
-**3. Motor vehicle distribution and after-sales service - EUR-Lex**
+**2. 2023 (Full Year) Europe: Best-Selling Car Manufacturers and Brands**
 
-New rules for the motor vehicle sector designed to enhance competition between distributors in relation to the sale of new motor vehicles.
+In full-year 2023, Volkswagen and Stellantis remained the largest carmakers in Europe while VW, Toyota, and Audi were the top-selling brands.
 
-Source: https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=legissum:l26098
-
-
-
-**4. Resource effectiveness of the European automotive sector**
-
-The European automotive sector is faced with potentially disruptive challenges. In particular, the projected increase in the share of electric vehicles ...
-
-Source: https://www.sciencedirect.com/science/article/pii/S0921344921001658
+Source: https://www.best-selling-cars.com/europe/2023-full-year-europe-best-selling-car-manufacturers-and-brands/
 
 
 
-**5. [PDF] Guidelines 01/2020 on processing personal data in the context of ...**
+**3. Top 40 companies in Europe by Revenue in 2023 - Global Database**
 
-More specifically, it deals with the personal data: (i) processed inside the vehicle, (ii) exchanged between the vehicle and personal devices.
+This list highlights the top 40 European companies ranked by revenue, with a brief overview of each business and its role in the regional and global economy.
 
-Source: https://www.edpb.europa.eu/system/files/2021-03/edpb_guidelines_202001_connected_vehicles_v2.0_adopted_en.pdf
+Source: https://www.globaldatabase.com/top-50-companies-in-europe-by-revenue-in-2018
+
+
+
+**4. List of largest companies in Europe by revenue - Wikipedia**
+
+In 2023, largest company in Europe was the Volkswagen Group with revenue of US$348 billion. Volkswagen Group headquarters in Wolfsburg, Germany. Volkswagen is ...
+
+Source: https://en.wikipedia.org/wiki/List_of_largest_companies_in_Europe_by_revenue
+
+
+
+**5. Worldwide Car Sales | Top-Selling Manufacturers 2023 & 2024**
+
+Toyota remained the largest automaker globally in 2023, selling over 8.57 million units, which accounted for about 11.18% of global car sales.
+
+Source: https://roadgenius.com/cars/statistics/sales-by-manufacturer/
 
 
 
@@ -81,10 +72,10 @@ Source: https://www.edpb.europa.eu/system/files/2021-03/edpb_guidelines_202001_c
 
 **Research scope:**
 
-- 2 search operations completed
+- 3 search operations completed
 
-- 0 web pages processed
+- 1 web pages processed
 
-- 1 content extracts from search snippets
+- 0 content extracts from search snippets
 
-- 10 search results analyzed
+- 101 search results analyzed
