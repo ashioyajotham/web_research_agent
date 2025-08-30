@@ -433,32 +433,26 @@ class WebResearchAgent:
             logger.info(f"  Extracted {content_length} characters of content")
     
     def _format_results(self, task_description, plan, results):
-        """
-        Format the results of task execution.
-        
-        Args:
-            task_description (str): The original task description
-            plan: The plan that was executed
-            results (list): List of step results
-            
-        Returns:
-            str: Formatted results
-        """
-        # Determine the appropriate synthesis strategy based on task analysis
-        task_analysis = self.comprehension.analyze_task(task_description)
-        synthesis_strategy = task_analysis.get("synthesis_strategy", "comprehensive_synthesis")
-        
-        logger.info(f"Formatting results using strategy: {synthesis_strategy}")
-        
-        # Use the appropriate synthesis method
-        if synthesis_strategy == "extract_and_verify":
-            return self._synthesize_extract_and_verify(task_description, results)
-        elif synthesis_strategy == "aggregate_and_filter":
-            return self._synthesize_aggregate_and_filter(task_description, results)
-        elif synthesis_strategy == "collect_and_organize":
-            return self._synthesize_collect_and_organize(task_description, results)
+        """Single-header formatting; strip duplicate headers from synth output."""
+        # Choose strategy (keep simple: honor comprehension if available)
+        strategy = getattr(self.comprehension, "last_strategy", None)
+        body = ""
+        if strategy == "extract_and_verify":
+            body = self._synthesize_extract_and_verify(task_description, results)
+        elif strategy == "aggregate_and_filter":
+            body = self._synthesize_aggregate_and_filter(task_description, results)
+        elif strategy == "collect_and_organize":
+            body = self._synthesize_collect_and_organize(task_description, results)
         else:
-            return self._synthesize_comprehensive_synthesis(task_description, results)
+            # Default to comprehensive
+            body = self._synthesize_comprehensive_synthesis(task_description, results)
+        
+        # Remove leading duplicate headers if synth already includes one
+        lines = [l for l in (body or "").splitlines()]
+        while lines and lines[0].lstrip().startswith("#"):
+            lines.pop(0)
+        cleaned = "\n".join(lines).lstrip()
+        return f"# {task_description}\n\n{cleaned}\n"
 
     def _synthesize_extract_and_verify(self, task_description, results):
         """Synthesize results for extract and verify strategy (task-agnostic, cross-source)."""

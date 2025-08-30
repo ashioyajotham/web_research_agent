@@ -1,31 +1,49 @@
 # Web Research Agent
 
-An experimental research implementation of the ReAct (Reasoning + Acting) paradigm applied to web research tasks. This project explores systematic approaches to information-seeking problems through structured analysis of tasks, adaptive search strategies, and context-aware synthesis methods.
+A research implementation of the ReAct (Reasoning + Acting) paradigm for web research. The system analyzes a task, plans concrete tool actions, executes them (search, browse, optional code), and synthesizes an answer with sources and basic verification. The design is task-agnostic: no topic-specific heuristics are required to operate across different questions.
 
-> **Research Focus**: This project implements and extends the ReAct framework as a platform for investigating task-adaptive reasoning patterns. It is intended as an academic exploration rather than a production system, focusing on understanding how structured approaches to web research can be systematized and evaluated.
+> This repository is intended for studying structured approaches to web research and evaluation. It is not a production system.
 
 ## Research Contributions
 
-- **Dynamic Task Analysis**: Pattern recognition system that determines expected answer types and synthesis strategies from question structure alone
-- **Multi-Strategy Synthesis**: Four distinct synthesis approaches (extract-and-verify, aggregate-and-filter, collect-and-organize, comprehensive-synthesis) selected based on task characteristics
-- **Adaptive Answer Formatting**: System produces direct answers to questions rather than defaulting to entity tables or fixed formats
-- **Robust Parameter Resolution**: Multiple fallback strategies for handling incomplete or ambiguous web search results
+- Task-agnostic analysis of question structure to select a synthesis strategy without topic-specific rules
+- Adaptive planning that produces actionable steps over registered tools (search, browser, present, optional code)
+- Multi-strategy synthesis (extract-and-verify, aggregate-and-filter, collect-and-organize, comprehensive-synthesis)
+- Robust parameter and URL handling with snippet fallback when pages cannot be fetched
+- Source attribution and lightweight cross-source verification
 
 ## Features
 
-### Research Implementation Features
-- **Task-Adaptive Reasoning**: Analyzes task structure to determine appropriate synthesis strategies
-- **Dynamic Answer Synthesis**: Four synthesis modes that adapt to question types (factual lookup, comparison, aggregation, comprehensive analysis)
-- **Entity-Aware Processing**: Extracts and tracks entities while maintaining focus on answering the specific question asked
-- **Flexible Search Planning**: Creates search strategies based on information targets identified in the task
-- **Robust Error Handling**: Multiple fallback strategies for URL resolution and content extraction
+- Task-Adaptive Reasoning: infers expected answer type (factual lookup, list, comparison, narrative) from the task text
+- Planning and Tool Use: generates steps that call SearchTool, BrowserTool, and PresentationTool with validated parameters
+- Content Extraction: prefers main content from web pages; falls back to search snippets when needed
+- Verification: groups paraphrases and scores support by distinct domains (extract-and-verify strategy)
+- Structured Output: formats results deterministically for the requested answer type
+- Configuration and Logging: configurable limits and detailed logs for analysis and evaluation
 
-### Practical Tool Features  
-- **Multi-Criteria Task Handling**: Processes complex queries with multiple conditions
-- **Structured Output**: Formats findings appropriately for the question type
-- **Code Generation**: Generates analysis code when computational tasks are detected
-- **Source Verification**: Validates information across multiple sources
-- **Progress Tracking**: Detailed logging of reasoning and synthesis processes
+## Task-Agnostic Design
+
+- No topic-specific filters or keywords are required for operation
+- Requested list size is inferred from the task text (e.g., “10 statements”), not hardcoded
+- De-duplication is based on content similarity and source/date keys, not hand-written topic rules
+- Statement/quote extraction uses generic patterns (quotes and sentence heuristics)
+- Verification relies on cross-source/domain support rather than task-specific logic
+
+## Tool Interfaces
+
+- SearchTool: returns a list of results (title, link, snippet)
+- BrowserTool: fetches a URL and extracts main content or full page; can aggregate search snippets if a URL is not available
+- PresentationTool: assembles the final answer for the chosen strategy
+- CodeGeneratorTool: optional, for tasks that require computation (e.g., filtering or plotting)
+
+See implementation: agent/agent.py, agent/planner.py, tools/search.py, tools/browser.py, tools/presentation_tool.py.
+
+## Execution Flow
+
+1. Analyze the task to determine answer type and information targets
+2. Create a plan: search → browse (one or more pages) → present (optionally code when needed)
+3. Execute tools with parameter and URL resolution; use snippet fallback as needed
+4. Synthesize the answer using one of four strategies; attribute sources and verify where applicable
 
 ## Architecture & ReAct Implementation
 
@@ -87,7 +105,7 @@ graph TD
 
 The diagram above illustrates how the Web Research Agent processes research tasks:
 
-1. **Task Analysis Phase**: 
+1. **Task Analysis Phase**:
    - When a user submits a research question, the system first analyzes the task structure
    - The Comprehension component uses pattern recognition to detect answer types (factual, comparative, list-based, etc.)
    - It identifies specific information targets needed to answer the question
@@ -130,18 +148,21 @@ This research implementation demonstrates how a structured approach to web resea
 ### Setup
 
 1. Clone the repository:
+
    ```bash
    git clone https://github.com/ashioyajotham/web_research_agent.git
    cd web_research_agent
    ```
 
 2. Create a virtual environment:
+
    ```bash
    python -m venv venv
    source venv/bin/activate  # On Windows: venv\Scripts\activate
    ```
 
 3. Install dependencies:
+
    ```bash
    pip install -r requirements.txt
    ```
@@ -200,7 +221,8 @@ These parameters control the system's behavior and can be modified for experimen
 ### Basic Research Tasks
 
 1. Create a text file with research questions:
-   ```
+
+   ```txt
    # tasks.txt
    Find the name of the COO of the organization that mediated talks between US and Chinese AI companies in Geneva in 2023.
      By what percentage did Volkswagen reduce their Scope 1 and Scope 2 greenhouse gas emissions in 2023 compared to 2021?
@@ -209,6 +231,7 @@ These parameters control the system's behavior and can be modified for experimen
    Note: Empty lines between tasks help the system distinguish between separate questions.
 
 2. Run the research process:
+
    ```bash
    python main.py tasks.txt
    ```
@@ -219,7 +242,7 @@ These parameters control the system's behavior and can be modified for experimen
 
 For complex queries with multiple requirements:
 
-```
+```txt
 # multi_criteria_tasks.txt
 Compile a list of companies satisfying the following criteria:
     They are based in the EU
@@ -276,32 +299,40 @@ The project structure reflects the enhanced ReAct implementation with dynamic an
 The system implements pattern recognition to analyze any research question and determine:
 
 1. **Answer Type Detection**: Identifies whether the question expects a factual answer, comparison, list, or comprehensive analysis
-2. **Information Target Identification**: Determines what specific information needs to be gathered 
+2. **Information Target Identification**: Determines what specific information needs to be gathered
 3. **Output Structure Inference**: Predicts the appropriate format for presenting the answer
 4. **Synthesis Strategy Selection**: Chooses from four synthesis approaches based on task characteristics
 
 ### Multi-Strategy Synthesis Approaches
 
 #### Extract-and-Verify Strategy
+
 Used for factual lookup questions requiring specific information:
+
 - Searches for target information across multiple sources
 - Cross-validates findings for accuracy
 - Provides direct answers with source verification
 
-#### Aggregate-and-Filter Strategy  
+#### Aggregate-and-Filter Strategy
+
 Applied to comparison and analytical questions:
+
 - Collects relevant data points from multiple sources
 - Applies filtering criteria to focus on relevant information
 - Synthesizes comparative or analytical insights
 
 #### Collect-and-Organize Strategy
+
 Employed for list-building and compilation tasks:
+
 - Systematically gathers items meeting specified criteria
 - Organizes findings in structured formats
 - Validates completeness of collected information
 
 #### Comprehensive-Synthesis Strategy
+
 Used for complex, multi-faceted research questions:
+
 - Integrates information from diverse sources
 - Builds coherent narratives or explanations
 - Balances breadth and depth of coverage
@@ -309,6 +340,7 @@ Used for complex, multi-faceted research questions:
 ### Enhanced Parameter Resolution
 
 The system includes robust handling of web search challenges:
+
 - Multiple URL extraction strategies from search results
 - Fallback mechanisms for content retrieval failures
 - Validation of information sources and URLs
@@ -361,6 +393,7 @@ As a research implementation, this project provides insights into both capabilit
 ### Research Insights from Implementation
 
 Detailed logs in the `logs/` directory provide research data on:
+
 - Dynamic task analysis decision patterns
 - Synthesis strategy selection effectiveness
 - URL resolution fallback frequency and success rates
@@ -372,6 +405,7 @@ These logs are valuable for understanding the system's behavior and identifying 
 ## Contributing
 
 This research implementation welcomes contributions, particularly in areas of:
+
 - Enhanced pattern recognition for task analysis
 - Additional synthesis strategies for specialized question types
 - Improved robustness in web content extraction
@@ -386,6 +420,7 @@ This project implements and extends the ReAct (Reasoning + Acting) paradigm from
 ### Core ReAct Implementation
 
 The foundational ReAct components:
+
 1. **Reasoning**: Task decomposition and solution planning
 2. **Acting**: Tool execution based on reasoning
 3. **Observation**: Processing action results
