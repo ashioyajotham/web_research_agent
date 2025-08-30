@@ -95,7 +95,7 @@ class WebResearchAgent:
                 continue
             
             # Prepare parameters with enhanced variable substitution
-            parameters = self._substitute_parameters(step.parameters, results)
+            parameters = dict(step.parameters or {})
             
             # Special handling for browser steps with unresolved URLs
             if (step.tool_name == "browser" and 
@@ -104,74 +104,118 @@ class WebResearchAgent:
                 logger.info("Browser step will use search snippets due to URL resolution failure")
                 # The browser tool will handle snippet extraction
             
-            # Execute the tool
-            try:
-                output = tool.execute(parameters, self.memory)
-                
-                # Check if the step actually accomplished its objective
-                verified, message = self._verify_step_completion(step, output)
-                if not verified:
-                    logger.warning(
-                        f"Step {step_index+1} did not achieve its objective: {message}"
-                    )
-                    
-                    # Try to recover with more specific parameters if appropriate
-                    if step.tool_name == "search" and step_index > 0:
-                        # If previous steps found relevant entities, use them to refine the search
-                        entities = self.memory.get_entities()
-                        refined_query = self._refine_query_with_entities(step.parameters.get("query", ""), entities)
-                        logger.info(f"Refining search query to: {refined_query}")
-                        
-                        # Re-run with refined query
-                        parameters["query"] = refined_query
-                        output = tool.execute(parameters, self.memory)
-                    elif step.tool_name == "browser" and "error" in output and "403" in str(output.get("error", "")):
-                        # If we got a 403/blocked error, try a fallback approach
-                        logger.warning("Website blocked access - attempting fallback to search result snippets")
-                        
-                        # Create fallback content from search result snippets
-                        if hasattr(self.memory, 'search_results') and self.memory.search_results:
-                            # Combine snippets into a single document
-                            combined_text = f"# Content extracted from search snippets\n\n"
-                            for i, result_item in enumerate(self.memory.search_results[:5]):  # Use top 5
-                                title = result_item.get("title", f"Result {i+1}")
-                                snippet = result_item.get("snippet", "No description")
-                                link = result_item.get("link", "#")
-                                combined_text += f"## {title}\n\n{snippet}\n\nSource: {link}\n\n"
-                            
-                            # Override the output with generated content
-                            output = {
-                                "url": "search_results_combined",
-                                "title": "Combined search result content (Anti-scraping fallback)",
-                                "extract_type": "fallback",
-                                "content": combined_text
+            # Adaptive multi-browse when URL is unresolved but we have search results
+            if step.tool_name == "browser" and not parameters.get("url"):
+                top_k = int(parameters.get("top_k", 5))
+                extract_type = parameters.get("extract_type", "main_content")
+
+                if hasattr(self.memory, "search_results") and self.memory.search_results:
+                    logger.info(f"No URL provided for browser step; fetching top {top_k} search results")
+                    aggregated_contents = []
+                    per_page_results = []
+
+                    for item in self.memory.search_results[:top_k]:
+                        url = item.get("link") or item.get("url")
+                        title = item.get("title", "")
+                        if not url:
+                            continue
+                        try:
+                            page_out = tool.execute({"url": url, "extract_type": extract_type}, self.memory)
+                            # Normalize a common shape for downstream synthesis
+                            if isinstance(page_out, dict) and page_out.get("status") == "success":
+                                out_payload = page_out.get("output", {})
+                                content = out_payload.get("content") or out_payload.get("text") or ""
+                                if content and len(content) > 100:
+                                    aggregated_contents.append(
+                                        f"# {title}\nSource: {url}\n\n{content}\n"
+                                    )
+                                # Keep per-page metadata for synthesis
+                                per_page_results.append({
+                                    "title": title,
+                                    "url": url,
+                                    "content": content
+                                })
+                        except Exception as e:
+                            logger.warning(f"Failed to browse {url}: {e}")
+
+                    if aggregated_contents or per_page_results:
+                        combined = "\n\n".join(aggregated_contents)
+                        results.append({
+                            "step": step.description,
+                            "status": "success",
+                            "output": {
+                                "content": combined,
+                                "items": per_page_results
                             }
-                            logger.info("Created fallback content from search snippets")
-                
-                # Record the result with verification status
-                results.append({
-                    "step": step.description,
-                    "status": "success",
-                    "output": output,
-                    "verified": verified,
-                    "verification_message": message
-                })
-                
-                self.memory.add_result(step.description, output)
-                
-                # Store search results specifically for easy reference
-                if (step.tool_name == "search" and 
-                    isinstance(output, dict) and 
-                    "results" in output):
-                    self.memory.search_results = output["results"]
-                    logger.info(
-                        f"Stored {len(self.memory.search_results)} search results in memory"
-                    )
+                        })
+                        # Continue to next step
+                        continue
+                    else:
+                        logger.warning("No content fetched from search results; will fall back to default execution")
+
+            # Normal tool execution (includes 403 snippet-fallback later)
+            output = tool.execute(parameters, self.memory)
             
-            except Exception as e:
-                logger.error(f"Error executing step {step_index+1}: {str(e)}")
-                results.append({"step": step.description, "status": "error", "output": str(e)})
-    
+            # Check if the step actually accomplished its objective
+            verified, message = self._verify_step_completion(step, output)
+            if not verified:
+                logger.warning(
+                    f"Step {step_index+1} did not achieve its objective: {message}"
+                )
+                
+                # Try to recover with more specific parameters if appropriate
+                if step.tool_name == "search" and step_index > 0:
+                    # If previous steps found relevant entities, use them to refine the search
+                    entities = self.memory.get_entities()
+                    refined_query = self._refine_query_with_entities(step.parameters.get("query", ""), entities)
+                    logger.info(f"Refining search query to: {refined_query}")
+                    
+                    # Re-run with refined query
+                    parameters["query"] = refined_query
+                    output = tool.execute(parameters, self.memory)
+                elif step.tool_name == "browser" and "error" in output and "403" in str(output.get("error", "")):
+                    # If we got a 403/blocked error, try a fallback to search result snippets
+                    logger.warning("Website blocked access - attempting fallback to search result snippets")
+                    
+                    # Create fallback content from search result snippets
+                    if hasattr(self.memory, 'search_results') and self.memory.search_results:
+                        # Combine snippets into a single document
+                        combined_text = f"# Content extracted from search snippets\n\n"
+                        for i, result_item in enumerate(self.memory.search_results[:5]):  # Use top 5
+                            title = result_item.get("title", f"Result {i+1}")
+                            snippet = result_item.get("snippet", "No description")
+                            link = result_item.get("link", "#")
+                            combined_text += f"## {title}\n\n{snippet}\n\nSource: {link}\n\n"
+                        
+                        # Override the output with generated content
+                        output = {
+                            "url": "search_results_combined",
+                            "title": "Combined search result content (Anti-scraping fallback)",
+                            "extract_type": "fallback",
+                            "content": combined_text
+                        }
+                        logger.info("Created fallback content from search snippets")
+            
+            # Record the result with verification status
+            results.append({
+                "step": step.description,
+                "status": "success",
+                "output": output,
+                "verified": verified,
+                "verification_message": message
+            })
+            
+            self.memory.add_result(step.description, output)
+            
+            # Store search results specifically for easy reference
+            if (step.tool_name == "search" and 
+                isinstance(output, dict) and 
+                "results" in output):
+                self.memory.search_results = output["results"]
+                logger.info(
+                    f"Stored {len(self.memory.search_results)} search results in memory"
+                )
+        
         # After each successful step, update entity context information
         if "status" in results[-1] and results[-1]["status"] == "success":
             self._update_entity_context_from_step(results[-1], task_description)
@@ -506,83 +550,152 @@ class WebResearchAgent:
 
     def _synthesize_collect_and_organize(self, task_description, results):
         """Synthesize results for collect and organize strategy."""
-        output = [f"# {task_description}\n"]
-        
-        output.append("## Research Findings\n")
-        
-        # For statement compilation tasks, extract statements from search results
+        import re
+        output = [f"# {task_description}\n", "## Research Findings\n"]
+
+        # Determine requested count from task text (e.g., '10 statements'), default to 10
+        m = re.search(r'\b(\d{1,3})\b', task_description)
+        desired_count = int(m.group(1)) if m else 10
+
         if "statement" in task_description.lower() or "quote" in task_description.lower():
             output.append("### Statements Found\n")
-            
-            # Get search results and any extracted content
+
+            # Collect search results and extracted content
             search_results = []
             extracted_content = []
-            
+
             for result in results:
                 if result.get("status") == "success":
                     result_output = result.get("output", {})
-                    
-                    # Collect search results
                     if isinstance(result_output, dict):
                         if "results" in result_output:
                             search_results.extend(result_output["results"])
-                        
-                        # Collect full page content
+                        # Accept either aggregated combined content or per-page items
+                        if "items" in result_output and isinstance(result_output["items"], list):
+                            for it in result_output["items"]:
+                                if it.get("content") and len(it["content"]) > 100:
+                                    extracted_content.append({
+                                        "content": it["content"],
+                                        "url": it.get("url", ""),
+                                        "title": it.get("title", "")
+                                    })
                         if "content" in result_output and len(result_output["content"]) > 100:
                             extracted_content.append({
                                 "content": result_output["content"],
                                 "url": result_output.get("url", ""),
                                 "title": result_output.get("title", "")
                             })
-            
-            # Extract statements from content when available
+
+            # Helper: extract a probable date from content/title/url
+            def _extract_date(text, title, url):
+                patterns = [
+                    r'\b(?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|'
+                    r'Jul(?:y)?|Aug(?:ust)?|Sep(?:tember)?|Oct(?:ober)?|Nov(?:ember)?|'
+                    r'Dec(?:ember)?)\s+\d{1,2},\s+\d{4}\b',
+                    r'\b\d{4}-\d{2}-\d{2}\b',
+                    r'\b\d{1,2}\s+(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\.?,?\s+\d{4}\b',
+                    r'\b\d{4}\b'
+                ]
+                source = f"{title}\n{url}\n{text[:2000]}"
+                for p in patterns:
+                    m = re.search(p, source)
+                    if m:
+                        return m.group(0)
+                return None
+
+            # Extract quotes/statements from full content first
             statements = []
-            
-            # First try to get from extracted content
+            seen_text = set()
+            seen_occurrence = set()  # (date or url) to enforce separate occasions generically
+
             for content_item in extracted_content:
                 content_text = content_item["content"]
-                source_url = content_item["url"]
-                title = content_item["title"]
-                
-                # Extract quotes/statements (simple approach)
+                source_url = content_item.get("url", "")
+                title = content_item.get("title", "")
+
+                page_date = _extract_date(content_text, title, source_url) or source_url
+
                 quotes = re.findall(r'"([^"]{10,500})"', content_text)
                 for quote in quotes:
-                    if len(statements) < 10:  # Limit to requested number
-                        statements.append({
-                            "text": quote,
-                            "source": source_url,
-                            "title": title
-                        })
-            
-            # If we don't have enough statements, use search snippets
-            if len(statements) < 10:
-                for result in search_results:
-                    snippet = result.get("snippet", "")
-                    source = result.get("link", "")
-                    title = result.get("title", "")
-                    
-                    # Only include if snippet contains relevant content
-                    if "Biden" in snippet and ("China" in snippet or "Chinese" in snippet):
-                        statements.append({
-                            "text": snippet,
-                            "source": source,
-                            "title": title
-                        })
-                        
-                    if len(statements) >= 10:
-                        break
-            
-            # Format the found statements
-            for i, statement in enumerate(statements[:10]):
-                output.append(f"**Statement {i+1}:** {statement['text']}\n")
-                output.append(f"Source: [{statement['title']}]({statement['source']})\n\n")
-        
-        # Original implementation for other types of collection tasks
-        else:
-            pass  # Use 'pass' as a placeholder if there's no code to execute
-        
-        return "\n".join(output)
+                    norm = re.sub(r'\s+', ' ', quote.strip()).strip('“”"')
+                    if not norm or norm.lower() in seen_text:
+                        continue
+                    # Enforce distinct occasion by date or at least by URL
+                    occ_key = (page_date or source_url)
+                    if occ_key in seen_occurrence:
+                        continue
 
+                    statements.append({
+                        "text": norm,
+                        "source": source_url or "",
+                        "title": title or "",
+                        "date": page_date
+                    })
+                    seen_text.add(norm.lower())
+                    seen_occurrence.add(occ_key)
+                    if len(statements) >= desired_count:
+                        break
+                if len(statements) >= desired_count:
+                    break
+
+            # If not enough statements, use search snippets generically (entity-aware)
+            if len(statements) < desired_count and search_results:
+                # Gather entity strings from memory (generic, not task-specific)
+                entities = []
+                if hasattr(self, "memory") and hasattr(self.memory, "get_entities"):
+                    ents = self.memory.get_entities()
+                    for _, arr in (ents or {}).items():
+                        for e in arr or []:
+                            s = str(e).strip()
+                            if s:
+                                entities.append(s)
+                entity_set = {e for e in entities}
+
+                speech_verbs = {"said", "says", "state", "stated", "remarks", "remarked", "announced", "declared", "told", "wrote", "noted", "argued"}
+
+                for result in search_results:
+                    snippet = result.get("snippet", "") or ""
+                    source = result.get("link", "") or result.get("url", "") or ""
+                    title = result.get("title", "") or ""
+
+                    if not snippet:
+                        continue
+
+                    lower = snippet.lower()
+                    # Generic filter: must mention at least one entity and a speech/action verb
+                    has_entity = any(e.lower() in lower for e in entity_set) if entity_set else True
+                    has_speech = any(v in lower for v in speech_verbs)
+
+                    if has_entity and has_speech:
+                        norm = re.sub(r'\s+', ' ', snippet.strip())
+                        if norm.lower() in seen_text:
+                            continue
+                        occ_key = source or title
+                        if occ_key in seen_occurrence:
+                            continue
+
+                        statements.append({
+                            "text": norm,
+                            "source": source,
+                            "title": title,
+                            "date": _extract_date("", title, source)
+                        })
+                        seen_text.add(norm.lower())
+                        seen_occurrence.add(occ_key)
+                        if len(statements) >= desired_count:
+                            break
+
+            # Format output
+            for i, statement in enumerate(statements[:desired_count]):
+                output.append(f"**Statement {i+1}:** {statement['text']}\n")
+                src_title = statement.get("title") or "Source"
+                output.append(f"Source: [{src_title}]({statement.get('source','')})\n\n")
+
+            return "\n".join(output)
+
+        # Fallback for other collect-and-organize tasks
+        # ...existing code...
+    
     def _synthesize_comprehensive_synthesis(self, task_description, results):
         """Synthesize results for comprehensive synthesis strategy."""
         output = [f"# {task_description}\n"]

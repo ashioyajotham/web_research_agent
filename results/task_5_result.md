@@ -26,7 +26,15 @@ Source: https://europa.eu/youreurope/business/running-business/developing-busine
 
 
 
-**2. The Corporate Sustainability Reporting Directive - EBU**
+**2. Common provisions - Taxation and Customs Union**
+
+Products have originating status if they are either "wholly obtained" or sufficiently worked or processed. This applies to all preferential origin arrangements.
+
+Source: https://taxation-customs.ec.europa.eu/customs-4/international-affairs/origin-goods/preferential-origin/common-provisions_en
+
+
+
+**3. The Corporate Sustainability Reporting Directive - EBU**
 
 The aim is to enable investors, civil society organisations, consumers and other stakeholders to evaluate how sustainable these companies are.
 
@@ -34,27 +42,19 @@ Source: https://www.ebu.ch/case-studies/open/legal-policy/eu-sustainability-rule
 
 
 
-**3. EU enlargement - European Union**
+**4. 12 Facts about GDPR Compliance | Osano**
 
-Which countries can join? Any European country can join the EU if it fulfills the membership criteria, also known as the Copenhagen criteria. For example, ...
+We've compiled a list of essential facts about GDPR rules and regulations. Use these as your guide to improving your organization's data security.
 
-Source: https://european-union.europa.eu/principles-countries-history/eu-enlargement_en
-
-
-
-**4. Solved To provide a sustainable competitive advantage, a - Chegg**
-
-To provide a sustainable competitive advantage, a capability must satisfy all of the following criteria EXCEPT be: technologically innovative.
-
-Source: https://www.chegg.com/homework-help/questions-and-answers/provide-sustainable-competitive-advantage-capability-must-satisfy-following-criteria-excep-q174831397
+Source: https://www.osano.com/articles/gdpr-compliance-regulations
 
 
 
-**5. [PDF] EFRAG ESRS Q&A Platform - Compilation of Explanations**
+**5. Exporting to the EU – A guide for Canadian business**
 
-This Compilation of Explanations relates to the sector agnostic ESRS as adopted by the European Commission on 31 July 2023. Sector-specific standards may add ...
+The purpose of this guide is to provide Canadian businesses, particularly small and medium-sized enterprises (SMEs), with an overview of the ...
 
-Source: https://www.efrag.org/Assets/Download?assetUrl=%2Fsites%2Fwebpublishing%2FSiteAssets%2FExplanations%2520January%2520-%2520May%25202024%2520%28final%2520version%29.pdf
+Source: https://www.tradecommissioner.gc.ca/en/market-industry-info/search-country-region/region/canada-europe-export/export-guide-european-union.html
 
 
 

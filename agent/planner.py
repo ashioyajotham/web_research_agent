@@ -68,19 +68,27 @@ class Planner:
             return self._create_default_plan(task_description)
 
     def _create_targeted_search_query(self, task_description):
-        """Create a more targeted search query from task description."""
-        # Extract key terms for better search
-        if "statements" in task_description.lower() and "biden" in task_description.lower():
-            return "Joe Biden statements US China relations speeches remarks"
-        elif "coo" in task_description.lower() and "geneva" in task_description.lower():
-            return "Geneva AI talks 2023 mediator organization COO chief operating officer"
-        elif "epoch ai" in task_description.lower() and "dataset" in task_description.lower():
-            return "Epoch AI dataset download large-scale AI models compute"
-        elif "volkswagen" in task_description.lower() and "emissions" in task_description.lower():
-            return "Volkswagen greenhouse gas emissions Scope 1 Scope 2 2021 2023"
-        else:
-            # Use first 100 characters as fallback
-            return task_description[:100]
+        """Create a more targeted search query from task description (generic, task-agnostic)."""
+        # Simple generic keyword extraction from the task text
+        import re
+        STOP = {
+            "the","and","for","with","that","this","from","into","over","under","their","your","our",
+            "they","them","are","was","were","have","has","had","each","must","made","more","than",
+            "list","compile","find","show","what","which","who","when","where","why","how","of","to",
+            "in","on","by","as","it","an","a","or","be","is"
+        }
+        words = re.findall(r"[A-Za-z0-9%€\-]+", task_description)
+        keywords = []
+        seen = set()
+        for w in words:
+            wl = w.lower()
+            if wl in STOP or len(wl) < 3:
+                continue
+            if wl not in seen:
+                keywords.append(w)
+                seen.add(wl)
+        # Keep it concise
+        return " ".join(keywords[:12])
 
     def _create_planning_prompt(self, task_description, task_analysis):
         """Create a prompt for the LLM to generate a plan."""
