@@ -2,61 +2,67 @@
 
 # Compile a list of 10 statements made by Joe Biden regarding US-China relations. Each statement must have been made on a separate occasion. Provide a source for each statement.
 
-## Research Findings
-
 ### Search Results Found
 
-**1. Remarks by President Biden and President Xi Jinping of the ...**
+**1. US-China Relations in the Biden-Era: A Timeline**
 
-It is my consistent belief that as the world's most important bilateral relationship, a stable China-U.S. relationship is critical not only to ...
+Timeline tracking key developments affecting US-China relations, including trade and business engagement, under the Biden Administration.
 
-Source: https://china.usembassy-china.org.cn/remarks-by-president-biden-and-president-xi-jinping-of-the-peoples-republic-of-china-before-bilateral-meeting-lima-peru/
-
+Source: https://www.china-briefing.com/news/us-china-relations-in-the-biden-era-a-timeline/
 
 
 **2. Remarks by President Biden and President Xi Jinping of the ...**
 
-It is my consistent belief that as the world's most important bilateral relationship, a stable China-U.S. relationship is critical not only to ...
+It's a great pleasure to see you again, President Biden. Over the past four years, China-US relations have gone through ups and downs.
 
-Source: https://bidenwhitehouse.archives.gov/briefing-room/speeches-remarks/2024/11/16/remarks-by-president-biden-and-president-xi-jinping-of-the-peoples-republic-of-china-before-bilateral-meeting-lima-peru/
-
-
-
-**3. Remarks by President Biden on His Actions to Protect American ...**
-
-I said, “Look, we'll play by the same rules if you want. If you want to do business in China, you got to have a 51 percent Chinese owner, you ...
-
-Source: https://bidenwhitehouse.archives.gov/briefing-room/speeches-remarks/2024/05/14/remarks-by-president-biden-remarks-by-president-biden-on-his-actions-to-protect-american-workers-and-businesses-from-chinas-unfair-trade-practices/
+Source: https://china.usembassy-china.org.cn/remarks-by-president-biden-and-president-xi-jinping-of-the-peoples-republic-of-china-before-bilateral-meeting-lima-peru/
 
 
+**3. How will the Biden administration's China policy be remembered?**
 
-**4. Biden and Xi discuss US-China cooperation and conflict - BBC**
+Biden's principal shortcoming was in convincing the American people that he had the U.S.-China relationship firmly under control.
 
-Mr Biden stressed support for Taiwan, but Mr Xi called US interference in the South China Sea a "red line". Mr Xi also took issue with sanctions ...
-
-Source: https://www.bbc.com/news/world-us-canada-68718821
-
+Source: https://www.brookings.edu/articles/how-will-the-biden-administrations-china-policy-be-remembered/
 
 
-**5. 'I don't want to contain China,' Biden says in Beijing's backyard**
+**4. US-China Relations under President Joe Biden**
 
-“I just want to make sure we have a relationship with China that is on the up and up, squared away. Everybody knows what it's all about,” Biden ...
+Both sides issued separate statements listing their concerns. There was no major outcome of the meeting nor was there any joint statement.[iii] Xi Jinping laid ...
 
-Source: https://www.politico.com/news/2023/09/10/biden-china-g20-00114892
-
-
-
-## Research Summary
-
-**Research completed using comprehensive_synthesis strategy.**
+Source: https://www.icwa.in/show_content.php?lang=1&level=3&ls_id=7181&lid=4855
 
 
-**Research scope:**
+**5. Vice President Joe Biden Speaks on U.S. - China Relations - YouTube**
 
-- 1 search operations completed
+Missing: statement separate occasion source
 
-- 0 web pages processed
+Source: https://www.youtube.com/watch?v=7bbMkWS6CL4
 
-- 0 content extracts from search snippets
 
-- 20 search results analyzed
+**6. Remarks by Vice President Joe Biden to the Opening Session of the ...**
+
+We've recognized that the United States-China relations generate global economic benefit, not just to both our countries, but global benefit.
+
+Source: https://obamawhitehouse.archives.gov/the-press-office/2011/05/09/remarks-vice-president-joe-biden-opening-session-us-china-strategic-econ
+
+
+**7. Remarks by President Biden and Secretary of State Antony Blinken ...**
+
+Missing: separate occasion
+
+Source: https://china.usembassy-china.org.cn/remarks-by-president-biden-and-secretary-of-state-antony-blinken-on-the-administrations-work-to-strengthen-america-and-lead-the-world/
+
+
+**8. Biden and China: Administration Rethinks Relations**
+
+Missing: statement separate source
+
+Source: https://www.nytimes.com/2021/02/17/business/economy/biden-china.html
+
+
+**9. [PDF] Biden's Strategic Turn to China**
+
+U.S. President Joe Biden and his government officials have put forward a hard line against China in their tenure, describing the authoritarian government as an.
+
+Source: https://www.pf.org.tw/wSite/public/Attachment/003/f1646210663218.pdf
+

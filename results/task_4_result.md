@@ -2,61 +2,18 @@
 
 # By what percentage did Volkswagen reduce the sum of their Scope 1 and Scope 2 greenhouse gas emissions in 2023 compared to 2021?
 
-## Research Findings
-
 ### Search Results Found
 
-**1. Sustainability Report 2021 - Volkswagen Group**
+**1. Scope 1 and 2 emissions of the Volkswagen Group**
 
-03/15/2022 Company Report. Sustainability Report 2021. Download. Add to collection. Share. Sustainability Report 2021.
+The Volkswagen Group's location-based Scope 2 emissions were the highest among Scope 1 and Scope 2 greenhouse gas emissions in both 2023 and 2024.
 
-Source: https://www.volkswagen-group.com/en/publications/corporate/sustainability-report-2021-1947
-
-
-
-**2. Reporting | Volkswagen Group**
-
-Group Sustainability Report 2022. 03/14/2023 Publication · Sustainability Report 2021. 03/11/2022 Company Report. Show More Documents.
-
-Source: https://www.volkswagen-group.com/en/reporting-15808
+Source: https://www.statista.com/statistics/1607589/scope-1-and-2-emissions-of-the-volkswagen-group/
 
 
+**2. Volkswagen - Greenhouse Gas Emissions: Scope 1, 2 & 3 ...**
 
-**3. [PDF] SUSTAINABILITY REPORT - Volkswagen Group Italia**
+Compared to the previous year (2023), Volkswagen's Scope 1 emissions decreased by 18.11%, highlighting the company's efforts to lower direct emissions from ...
 
-The NEW AUTO Group strategy defines the six key focus issues shown above for the area of sustainability and ESG in Group initiative 6. This ...
+Source: https://tracenable.com/company/volkswagen/ghg-emissions
 
-Source: https://www.volkswagengroup.it/en/volkswagen-group/overview/download/sustainabilty-report-2023.pdf
-
-
-
-**4. Mobility for Future Generations:VW's Sustainability Strategy**
-
-The VW Group's 2023 Sustainability report outlines achievements in focus areas including decarbonisation, circularity, people, integrity & supply chain.
-
-Source: https://sustainabilitymag.com/articles/mobility-for-future-generations-vws-sustainability-strateg
-
-
-
-**5. Volkswagen Group - ResponsibilityReports.com**
-
-2023 Sustainability Report View Sustainability Report Download. Volkswagen ... Volkswagen Group. 2021 Sustainability Report View Sustainability Report Download.
-
-Source: https://www.responsibilityreports.com/Company/volkswagen-group
-
-
-
-## Research Summary
-
-**Research completed using comprehensive_synthesis strategy.**
-
-
-**Research scope:**
-
-- 1 search operations completed
-
-- 2 web pages processed
-
-- 0 content extracts from search snippets
-
-- 5 search results analyzed

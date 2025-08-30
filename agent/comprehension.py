@@ -18,29 +18,27 @@ class Comprehension:
     def analyze_task(self, task_description):
         """
         Analyze a task to determine its type, required information, etc.
-        
-        Args:
-            task_description (str): Description of the task to analyze
-            
-        Returns:
-            dict: Analysis of the task
         """
         logger.info(f"Analyzing task: {task_description}")
-        
-        # Add specific pattern recognition for statement compilation tasks
-        task_lower = task_description.lower()
-        
-        # Check for list/compilation tasks specifically for statements/quotes
-        if ("compile" in task_lower or "list" in task_lower) and \
-           ("statement" in task_lower or "quote" in task_lower or "said" in task_lower):
-            return {
+
+        # Task-agnostic, pattern-only routing for list-of-statements/quotes
+        tl = (task_description or "").lower()
+        is_list_intent = any(w in tl for w in ["compile", "list", "gather", "collect"])
+        targets_statements = any(w in tl for w in ["statement", "statements", "quote", "quotes", "remark", "remarks", "said", "says"])
+        if is_list_intent and targets_statements:
+            analysis = {
                 "task_type": "information_gathering",
                 "answer_type": "list_compilation",
                 "information_targets": ["statements", "quotes", "remarks"],
                 "synthesis_strategy": "collect_and_organize",
-                "output_structure": "list"
+                "output_structure": "list",
+                "presentation_format": "list",
+                "expected_output": "list"
             }
-        
+            # Expose last_strategy for downstream formatting
+            self.last_strategy = analysis.get("synthesis_strategy")
+            return analysis
+
         prompt = f"""
         Analyze the following task and break it down into components:
         
@@ -83,17 +81,23 @@ class Comprehension:
             # Updated API call format
             response = self.model.generate_content(prompt)
             analysis = self._extract_json(response.text)
+            # Record last strategy if provided
+            if isinstance(analysis, dict):
+                self.last_strategy = analysis.get("synthesis_strategy")
             return analysis
         except Exception as e:
             logger.error(f"Error analyzing task: {str(e)}")
-            # Return a basic analysis if LLM fails
-            return {
+            fallback = {
                 "task_type": "general_research",
                 "key_entities": [task_description.split()[:3]],
                 "search_queries": [task_description],
                 "required_information": ["general information"],
-                "expected_output": "report"
+                "presentation_format": "summary",
+                "expected_output": "report",
+                "synthesis_strategy": "comprehensive_synthesis"
             }
+            self.last_strategy = fallback.get("synthesis_strategy")
+            return fallback
     
     def summarize_content(self, content, max_length=500):
         """

@@ -2,8 +2,6 @@
 
 # Download Epoch AI's dataset of large-scale AI models. From this, extract a time series showing how the maximum amount of compute used to train any AI system has changed over time. Each entry in your response must represent a training run which, at the time it happened, set a new record for the maximum amount of compute used to train an AI system.
 
-## Research Findings
-
 ### Search Results Found
 
 **1. Tracking Large-Scale AI Models**
@@ -13,7 +11,6 @@ We present a dataset of 81 large-scale models, from AlphaGo to Gemini, developed
 Source: https://epoch.ai/blog/tracking-large-scale-ai-models
 
 
-
 **2. Data on AI Models**
 
 Our public database, the largest of its kind, tracks over 2800 machine learning models from 1950 to today. Explore data and graphs showing the trajectory of ...
@@ -21,42 +18,23 @@ Our public database, the largest of its kind, tracks over 2800 machine learning 
 Source: https://epoch.ai/data/ai-models
 
 
+**3. Cumulative number of large-scale AI models by domain ...**
 
-**3. Large-Scale AI Models**
-
-... dataset,Training dataset notes,Training dataset size (datapoints),Dataset size notes,Training time (hours),Training time notes,Training ...
-
-Source: https://epoch.ai/data/generated/large_scale_ai_models.csv
-
-
-
-**4. Cumulative number of large-scale AI models by domain ...**
-
-Epoch – Tracking Compute-Intensive AI Models​​ A dataset that tracks compute-intensive AI models, with training compute over 10²³ floating point operations (FLOP ...
+Epoch – Tracking Compute-Intensive AI Models ... A dataset that tracks compute-intensive AI models, with training compute over 10²³ floating point operations ( ...See more
 
 Source: https://ourworldindata.org/grapher/cumulative-number-of-large-scale-ai-models-by-domain
 
 
+**4. The Epochs data structure: discontinuous data**
 
-**5. Language models compose the large majority of ...**
+Epochs objects are a data structure for representing and analyzing equal-duration chunks of the EEG/MEG signal.See more
 
-Out of 426 large-scale models with known compute, 337 are language models, of which 88 are vision-language models such as GPT-4.
-
-Source: https://epoch.ai/data-insights/large-scale-models-by-domain
-
+Source: https://mne.tools/1.8/auto_tutorials/epochs/10_epochs_overview.html
 
 
-## Research Summary
+**5. tf.data.Dataset: how to get the dataset size (number of ...**
 
-**Research completed using comprehensive_synthesis strategy.**
+I know that tf.data.Dataset already knows the dimension of the dataset, because the repeat() method allows repeating the input pipeline for a specified number ...See more
 
+Source: https://stackoverflow.com/questions/50737192/tf-data-dataset-how-to-get-the-dataset-size-number-of-elements-in-an-epoch
 
-**Research scope:**
-
-- 2 search operations completed
-
-- 1 web pages processed
-
-- 0 content extracts from search snippets
-
-- 5 search results analyzed

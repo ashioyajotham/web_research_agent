@@ -14,68 +14,39 @@
     They earned more than €1B in revenue in 2023
     They are not a subsidiary of another company, except if the parent company is a holding company
 
-They are based in the EU
-    They operate within the motor vehicle sector, as defined by the European Financial Reporting Advisory Group's (EFRAG) draft sector guidance
-    They provide detailed environmental information for their automotive operations
-    The total greenhouse gas emissions from their automotive operations are available for 2021, 2022, and 2023
-    They earned more than €1B in revenue in 2023
-    They are not a subsidiary of another company, except if the parent company is a holding company
-
-## Research Findings
-
 ### Search Results Found
 
-**1. Sector-specific ESRS - EFRAG**
+**1. Building a sustainable automotive industry in Europe**
 
-EFRAG is tasked to develop a set of sector-agnostic draft ESRS. This will be a multi-year exercise. In particular, EFRAG's mandate also includes the ...
+Our research analyzes the current progress of European automotive companies on their sustainability journey.
 
-Source: https://www.efrag.org/en/sustainability-reporting/esrs-workstreams/sectorspecific-esrs
-
-
-
-**2. 2023 (Full Year) Europe: Best-Selling Car Manufacturers and Brands**
-
-In full-year 2023, Volkswagen and Stellantis remained the largest carmakers in Europe while VW, Toyota, and Audi were the top-selling brands.
-
-Source: https://www.best-selling-cars.com/europe/2023-full-year-europe-best-selling-car-manufacturers-and-brands/
+Source: https://www.deloitte.com/us/en/insights/environmental-social-governance/automotive-industry-sustainability.html
 
 
+**2. European automotive industry: What it takes to regain ...**
 
-**3. Top 40 companies in Europe by Revenue in 2023 - Global Database**
+The European automotive industry has been a cornerstone of the region's economy, but disruptions have challenged its dominance.
 
-This list highlights the top 40 European companies ranked by revenue, with a brief overview of each business and its role in the regional and global economy.
-
-Source: https://www.globaldatabase.com/top-50-companies-in-europe-by-revenue-in-2018
-
+Source: https://www.mckinsey.com/industries/automotive-and-assembly/our-insights/european-automotive-industry-what-it-takes-to-regain-competitiveness
 
 
-**4. List of largest companies in Europe by revenue - Wikipedia**
+**3. A road map for Europe's automotive industry**
 
-In 2023, largest company in Europe was the Volkswagen Group with revenue of US$348 billion. Volkswagen Group headquarters in Wolfsburg, Germany. Volkswagen is ...
+Keeping the automotive industry in Europe competitive requires focus and acceleration of current efforts. Here's our seven-point road map.
 
-Source: https://en.wikipedia.org/wiki/List_of_largest_companies_in_Europe_by_revenue
-
-
-
-**5. Worldwide Car Sales | Top-Selling Manufacturers 2023 & 2024**
-
-Toyota remained the largest automaker globally in 2023, selling over 8.57 million units, which accounted for about 11.18% of global car sales.
-
-Source: https://roadgenius.com/cars/statistics/sales-by-manufacturer/
+Source: https://www.mckinsey.com/industries/automotive-and-assembly/our-insights/a-road-map-for-europes-automotive-industry
 
 
+**4. EPP Group Position Paper: Securing the Competitiveness ...**
 
-## Research Summary
+The EPP Group supports the proposal of the President of the Commission to open a Strategic Dialogue on the Future of the Automotive Sector.
 
-**Research completed using comprehensive_synthesis strategy.**
+Source: https://www.eppgroup.eu/newsroom/epp-group-position-paper-securing-the-competitiveness-of-the-european-automotive-industry
 
 
-**Research scope:**
+**5. Employment and value added using FIGARO data - view into ...**
 
-- 3 search operations completed
+This article delves into gross value added and employment in the EU associated with the global value chains (GVCs) in the automotive industry ...
 
-- 1 web pages processed
+Source: https://ec.europa.eu/eurostat/statistics-explained/index.php?title=Employment_and_value_added_using_FIGARO_data_-_view_into_the_automotive_industry
 
-- 0 content extracts from search snippets
-
-- 101 search results analyzed

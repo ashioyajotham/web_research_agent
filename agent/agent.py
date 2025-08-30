@@ -58,13 +58,17 @@ class WebResearchAgent:
         # Store task in memory
         self.memory.add_task(task_description)
         
-        # Analyze task
-        task_analysis = self.comprehension.analyze_task(task_description)
-        logger.info(f"Task analysis: {task_analysis}")
-        
-        # Create plan
-        plan = self.planner.create_plan(task_description, task_analysis)
-        logger.info(f"Created plan with {len(plan.steps)} steps")
+        # Analyze, plan, execute; ensure strategy is recorded
+        analysis = self.comprehension.analyze_task(task_description)
+        try:
+            plan = self.planner.create_plan(task_description, analysis or {})
+        except Exception:
+            plan = self.planner._create_default_plan(task_description)
+        # Persist last strategy for formatter
+        try:
+            self.comprehension.last_strategy = analysis.get("synthesis_strategy") or getattr(self.comprehension, "last_strategy", None)
+        except Exception:
+            pass
         
         # Execute the plan
         results = []
@@ -209,8 +213,7 @@ class WebResearchAgent:
             self._update_entity_context_from_step(results[-1], task_description)
     
         # Format results based on task type and entity relevance
-        formatted_results = self._format_results(task_description, plan, results)
-        return formatted_results
+        return self._format_results(task_description, plan, results)
 
     def _update_entity_context_from_step(self, step_result, task_description):
         """
@@ -433,10 +436,8 @@ class WebResearchAgent:
             logger.info(f"  Extracted {content_length} characters of content")
     
     def _format_results(self, task_description, plan, results):
-        """Single-header formatting; strip duplicate headers from synth output."""
-        # Choose strategy (keep simple: honor comprehension if available)
+        """Single-header formatting; choose synthesis by last_strategy (task-agnostic)."""
         strategy = getattr(self.comprehension, "last_strategy", None)
-        body = ""
         if strategy == "extract_and_verify":
             body = self._synthesize_extract_and_verify(task_description, results)
         elif strategy == "aggregate_and_filter":
@@ -444,11 +445,10 @@ class WebResearchAgent:
         elif strategy == "collect_and_organize":
             body = self._synthesize_collect_and_organize(task_description, results)
         else:
-            # Default to comprehensive
             body = self._synthesize_comprehensive_synthesis(task_description, results)
-        
-        # Remove leading duplicate headers if synth already includes one
-        lines = [l for l in (body or "").splitlines()]
+
+        # Strip leading headers from body to avoid duplication
+        lines = (body or "").splitlines()
         while lines and lines[0].lstrip().startswith("#"):
             lines.pop(0)
         cleaned = "\n".join(lines).lstrip()
@@ -804,6 +804,16 @@ class WebResearchAgent:
                 if len(items) >= desired_count:
                     break
 
+        # Adaptive backfill: expand search/browse until we reach desired_count or hit limits
+        if len(items) < desired_count:
+            items = self._backfill_collect_and_organize(
+                task_description=task_description,
+                items=items,
+                desired_count=desired_count,
+                seen_text=seen_text,
+                seen_occurrence=seen_occurrence
+            )
+
         # Format output
         for i, it in enumerate(items[:desired_count]):
             output_lines.append(f"**Item {i+1}:** {it['text']}\n")
@@ -811,53 +821,169 @@ class WebResearchAgent:
             output_lines.append(f"Source: [{src_title}]({it.get('source','')})\n\n")
 
         return "\n".join(output_lines)
-    
-    def _synthesize_comprehensive_synthesis(self, task_description, results):
-        """Comprehensive synthesis that respects requested count and de-duplicates."""
+
+    def _backfill_collect_and_organize(self, task_description, items, desired_count, seen_text, seen_occurrence):
+        """Adaptive, task-agnostic backfill to reach the requested count."""
         import re
         from urllib.parse import urlparse
 
-        # Infer desired count from task text (default 5)
-        m = re.search(r'\b(\d{1,3})\b', task_description)
-        desired = int(m.group(1)) if m else 5
+        def tokenize_query(text):
+            STOP = {"the","and","for","with","that","this","from","into","over","under","their","your","our","they","them","are","was","were","have","has","had","each","must","made","more","than","what","which","who","when","where","why","how","of","to","in","on","by","as","it","an","a","or","be","is","any","all","data","information"}
+            words = re.findall(r"[A-Za-z0-9%€\-]+", text)
+            kws, seen = [], set()
+            for w in words:
+                wl = w.lower()
+                if wl in STOP or len(wl) < 3:
+                    continue
+                if wl not in seen:
+                    kws.append(w)
+                    seen.add(wl)
+            return " ".join(kws[:12]) if kws else text.strip()
 
-        # Aggregate search results and any fetched page summaries
+        # Build a generic base query + optional entity hints
+        base_query = tokenize_query(task_description)
+        ent_hints = []
+        if hasattr(self, "memory") and hasattr(self.memory, "get_entities"):
+            ent_map = self.memory.get_entities() or {}
+            for _, arr in ent_map.items():
+                for e in arr or []:
+                    s = str(e).strip()
+                    if s:
+                        ent_hints.append(f'"{s}"')
+        if ent_hints:
+            base_query = f"{base_query} {' '.join(ent_hints[:4])}"
+
+        search_tool = self.tool_registry.get_tool("search")
+        browser_tool = self.tool_registry.get_tool("browser")
+        if not search_tool or not browser_tool:
+            return items  # Tools unavailable; nothing to do
+
+        # Helper to extract quotes from page content (generic)
+        def extract_from_text(text, title, url):
+            new = []
+            quotes = re.findall(r'“([^”]{10,500})”|"([^"]{10,500})"', text or "")
+            quotes = [q[0] or q[1] for q in quotes if (q[0] or q[1])]
+            if not quotes:
+                quotes = re.findall(r'([A-Z][^.!?]{40,400}[.!?])', text or "")
+            # date/url key
+            def date_or_key():
+                pats = [
+                    r'\b(?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:tember)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?)\s+\d{1,2},\s+\d{4}\b',
+                    r'\b\d{4}-\d{2}-\d{2}\b',
+                    r'\b\d{1,2}\s+(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\.?,?\s+\d{4}\b'
+                ]
+                source = f"{title}\n{url}\n{(text or '')[:2000]}"
+                for p in pats:
+                    m = re.search(p, source)
+                    if m:
+                        return m.group(0)
+                return url or title or None
+            occ_key = date_or_key()
+            for q in quotes:
+                norm = re.sub(r'\s+', ' ', q.strip()).strip('“”"')
+                if not norm or norm.lower() in seen_text:
+                    continue
+                if occ_key in seen_occurrence:
+                    continue
+                new.append({"text": norm, "source": url, "title": title, "date": occ_key})
+                seen_text.add(norm.lower())
+                seen_occurrence.add(occ_key)
+            return new
+
+        # Try several backfill rounds with increasing breadth
+        for round_idx in range(3):
+            if len(items) >= desired_count:
+                break
+            num_results = min(30, 10 + round_idx * 10)
+            top_k = min(15, 5 + round_idx * 5)
+            # Search
+            try:
+                s_out = search_tool.execute({"query": base_query, "num_results": num_results}, self.memory)
+            except Exception:
+                s_out = {}
+            results = (s_out or {}).get("results", [])
+            if results:
+                # make available to browser fallback
+                self.memory.search_results = results
+            # Browse additional URLs
+            tried = 0
+            for res in results[:top_k]:
+                if len(items) >= desired_count:
+                    break
+                url = res.get("link") or res.get("url")
+                title = res.get("title") or ""
+                if not url:
+                    continue
+                try:
+                    b_out = browser_tool.execute({"url": url, "extract_type": "main_content"}, self.memory)
+                    if isinstance(b_out, dict) and b_out.get("status") == "success":
+                        payload = b_out.get("output", {})
+                        content = payload.get("content") or payload.get("extracted_text") or ""
+                        if content and len(content) > 100:
+                            new_items = extract_from_text(content, title, url)
+                            for ni in new_items:
+                                if len(items) >= desired_count:
+                                    break
+                                items.append(ni)
+                except Exception:
+                    pass
+                tried += 1
+
+            # If still short, try snippet extraction for breadth
+            if len(items) < desired_count and results:
+                try:
+                    snip = browser_tool.execute({"url": None, "use_search_snippets": True, "top_k": top_k}, self.memory)
+                    payload = (snip or {}).get("output", {})
+                    text = payload.get("extracted_text") or ""
+                    if text:
+                        # Treat snippet sentences as quotes-like fallback
+                        for sent in re.findall(r'([A-Z][^.!?]{40,400}[.!?])', text):
+                            if len(items) >= desired_count:
+                                break
+                            norm = re.sub(r'\s+', ' ', sent.strip())
+                            if norm.lower() in seen_text:
+                                continue
+                            # approximate occ key by sentence hash
+                            occ_key = hash(norm)  # stable enough for de-dup in this run
+                            if occ_key in seen_occurrence:
+                                continue
+                            items.append({"text": norm, "source": "", "title": "Search Snippet", "date": None})
+                            seen_text.add(norm.lower())
+                            seen_occurrence.add(occ_key)
+                except Exception:
+                    pass
+
+        return items
+
+    def _synthesize_comprehensive_synthesis(self, task_description, results):
+        """Generic fallback synthesis over search results (task-agnostic)."""
+        import re
+
+        # Infer desired count (default 5)
+        nums = re.findall(r'\b(\d{1,3})\b', task_description or "")
+        desired = int(nums[-1]) if nums else 5
+
+        # Collect search results
         search_results = []
-        for r in results:
+        for r in results or []:
             if r.get("status") != "success":
                 continue
             out = r.get("output", {})
             if isinstance(out, dict) and isinstance(out.get("results"), list):
                 search_results.extend(out["results"])
 
-        # Deduplicate by normalized title with fuzzy match across domains
+        # Deduplicate by title similarity
         STOP = {"the","and","for","with","that","this","from","into","over","under","their","your","our","of","to","in","on","by","as","it","an","a","or","be","is"}
         def norm_title(t):
             t = (t or "").strip().lower()
-            t = re.sub(r'…$', '', t)  # drop trailing ellipsis
+            t = re.sub(r'…$', '', t)
             t = re.sub(r'[^a-z0-9 ]+', ' ', t)
-            toks = [w for w in t.split() if w and w not in STOP]
-            return toks[:20]
+            return [w for w in t.split() if w and w not in STOP][:20]
         def jaccard(a, b):
             sa, sb = set(a), set(b)
-            return (len(sa & sb) / max(1, len(sa | sb)))
-        def domain(u):
-            try:
-                return urlparse(u or "").netloc.lower()
-            except Exception:
-                return ""
-        def domain_score(d):
-            # Task-agnostic scoring by TLD only; no hardcoded hosts
-            # Higher score for .gov/.edu/.mil/.int, modest for .org, baseline otherwise
-            tld = (d.rsplit(".", 1)[-1] if "." in d else d).lower()
-            if tld in {"gov", "edu", "mil", "int"}:
-                return 3.0
-            if tld in {"org"}:
-                return 2.0
-            return 1.0
+            return (len(sa & sb) / max(1, len(sa | sb))) if sa and sb else 0.0
 
-        items = []
-        seen = []
+        items, seen = [], []
         for res in search_results:
             title = res.get("title") or ""
             link = res.get("link") or res.get("url") or ""
@@ -866,22 +992,17 @@ class WebResearchAgent:
                 continue
             nt = norm_title(title)
             dup = False
-            # When near-duplicates, keep the one with higher generic TLD score or longer snippet
-            for i, (ptoks, plink, _) in enumerate(seen):
+            for i, (ptoks, _) in enumerate(seen):
                 if jaccard(nt, ptoks) >= 0.8:
-                    new_score = domain_score(domain(link))
-                    old_score = domain_score(domain(plink))
-                    old_snip_len = len(items[i].get("snippet") or "")
-                    new_snip_len = len(snippet or "")
-                    if (new_score > old_score) or (new_score == old_score and new_snip_len > old_snip_len):
-                        seen[i] = (nt, link, title)
+                    if len(snippet or "") > len(items[i].get("snippet") or ""):
                         items[i] = {"title": title, "url": link, "snippet": snippet}
+                        seen[i] = (nt, link)
                     dup = True
                     break
             if dup:
                 continue
-            seen.append((nt, link, title))
             items.append({"title": title, "url": link, "snippet": snippet})
+            seen.append((nt, link))
             if len(items) >= desired:
                 break
 

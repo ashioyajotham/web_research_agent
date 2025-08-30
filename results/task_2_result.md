@@ -2,61 +2,39 @@
 
 # Find the name of the COO of the organization that mediated secret talks between US and Chinese AI companies in Geneva in 2023.
 
-## Research Findings
-
 ### Search Results Found
 
-**1. China and the United States Begin Official AI Dialogue - Richard Weitz**
+**1. US companies and Chinese experts engaged in secret diplomacy ...**
 
-China and the United States held their first intergovernmental meeting on artificial intelligence (AI) in Geneva, Switzerland on May 14, 2024.
+The talks were convened by the Shaikh Group, a private mediation organisation that facilitates dialogue between key actors in regions of ...
 
-Source: https://www.chinausfocus.com/peace-security/china-and-the-united-states-begin-official-ai-dialogue
-
-
-
-**2. Top US and Chinese officials begin talks on AI in Geneva | AP News**
-
-Top envoys from the U.S. and China huddled Tuesday in closed-door talks in Geneva to discuss ways to ensure that emerging artificial ...
-
-Source: https://apnews.com/article/artificial-intelligence-china-united-states-geneva-switzerland-1aa4451f82f250a47039a213f3d72879
+Source: https://www.ft.com/content/f87b693f-9ba3-4929-8b95-a296b0278021
 
 
+**2. Chinese and US officials meet in Geneva for 'de-escalation' trade talks**
 
-**3. US, China meet in Geneva to discuss AI risks | Reuters**
+Senior US and Chinese officials held talks early on Saturday in Geneva in a tentative first step towards defusing a trade war that is disrupting the global ...
 
-The U.S. and China will meet in Geneva to discuss artificial intelligence on Tuesday and U.S. officials stressed that Washington's policies ...
-
-Source: https://www.reuters.com/technology/us-china-meet-geneva-discuss-ai-risks-2024-05-13/
-
+Source: https://www.theguardian.com/world/2025/may/10/chinese-us-officials-meet-geneva-trade-talks-tariffs
 
 
-**4. Statement from NSC Spokesperson Adrienne Watson on the U.S. ...**
+**3. 13WCC | 2023 - International Chamber of Commerce**
 
-In a candid and constructive discussion, the United States and PRC exchanged perspectives on their respective approaches to AI safety and risk management.
+The 13th World Chambers Congress. We exchanged new ideas, discovered new tools, and explored the latest best practices to shape the next economic era.
 
-Source: https://geneva.usmission.gov/2024/05/15/statement-from-nsc-spokesperson-adrienne-watson-on-the-us-prc-talks-on-ai-risk-and-safety/
-
-
-
-**5. Promising Topics for US–China Dialogues on AI Risks and ...**
-
-Henry Kissinger's 2023 discussions with Chinese President Xi Jinping emphasized the need for high-level international cooperation on AI risks [ ...
-
-Source: https://dl.acm.org/doi/full/10.1145/3715275.3732080
+Source: https://13wcc.iccwbo.org/
 
 
+**4. U.S., China hold first call since Geneva meeting, signaling progress ...**
 
-## Research Summary
+The U.S. and China agreed to keep lines of communication open, following a call between senior officials Thursday.
 
-**Research completed using comprehensive_synthesis strategy.**
+Source: https://www.nbclosangeles.com/news/business/money-report/china-says-u-s-dialogue-to-continue-as-china-hints-trade-talks-are-advancing/3707613/
 
 
-**Research scope:**
+**5. [PDF] CCP Political Warfare - House Oversight Committee**
 
-- 4 search operations completed
+The Chinese Communist Party (CCP or the Party) is engaging in warfare tactics against the United States with increasing efficacy.
 
-- 2 web pages processed
+Source: https://oversight.house.gov/wp-content/uploads/2024/10/CCP-Report-10.24.24.pdf
 
-- 0 content extracts from search snippets
-
-- 15 search results analyzed
