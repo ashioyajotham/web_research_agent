@@ -93,3 +93,23 @@ class ToolRegistry:
                 return self.func(**parameters)
         
         self.register_tool(name, FunctionTool(name, description, func))
+
+    # Back-compat and convenience wrapper: allow register(tool) or register(name, tool)
+    def register(self, name_or_tool, tool: Optional[BaseTool] = None) -> None:
+        """
+        Register a tool using either:
+          - register(tool_instance)               -> uses tool_instance.name
+          - register("name", tool_instance)
+        """
+        if tool is None:
+            inst = name_or_tool
+            if not isinstance(inst, BaseTool):
+                logger.warning("register(tool) called with non-BaseTool")
+                return
+            if not getattr(inst, "name", None):
+                logger.warning("register(tool) missing tool.name")
+                return
+            return self.register_tool(inst.name, inst)
+        else:
+            name = name_or_tool
+            return self.register_tool(name, tool)

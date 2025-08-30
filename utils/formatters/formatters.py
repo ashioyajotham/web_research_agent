@@ -10,18 +10,36 @@ def _truncate_content(content, max_length=2000):
     
     return content[:max_length] + f"... [Content truncated, {len(content) - max_length} more characters]"
 
-def format_results(task_description: str, plan: Any, results: List[Dict[str, Any]]) -> str:
+def format_results(task_description, plan, results):
     """
-    Format the results of a task into a well-structured output.
-    
-    Args:
-        task_description (str): Original task description
-        plan (Plan): The plan that was executed
-        results (list): Results from each step of the plan
-        
-    Returns:
-        str: Formatted results
+    Format output. If the plan's present step requested suppress_debug,
+    return only the present tool's final text (and optionally sources).
     """
+    try:
+        # Detect suppress_debug on the last present step
+        suppress = False
+        if plan and hasattr(plan, "steps"):
+            for s in plan.steps[::-1]:
+                params = getattr(s, "parameters", {}) or {}
+                if getattr(s, "tool_name", getattr(s, "tool", "")) in ("present", "presentation"):
+                    suppress = bool(params.get("suppress_debug"))
+                    break
+        # Try to locate the present tool output
+        present_text = None
+        for r in (results or [])[::-1]:
+            if r.get("tool") in ("present", "presentation"):
+                out = r.get("output")
+                if isinstance(out, dict):
+                    # Common fields used by presentation tool
+                    present_text = out.get("final_text") or out.get("text") or out.get("content")
+                elif isinstance(out, str):
+                    present_text = out
+                break
+        if suppress and present_text:
+            return present_text.strip()
+    except Exception:
+        pass
+    # Fallback: existing verbose formatting
     config = get_config()
     output_format = config.get("output_format", "markdown").lower()
     

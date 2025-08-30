@@ -15,7 +15,7 @@ class PresentationTool(BaseTool):
             description="Organizes and formats information into tables, lists, or summaries"
         )
     
-    def execute(self, parameters: Dict[str, Any], memory: Any) -> str:
+    def execute(self, parameters: Dict[str, Any], memory: Any) -> Dict[str, Any]:
         """
         Execute the presentation tool with the given parameters.
         
@@ -34,6 +34,7 @@ class PresentationTool(BaseTool):
         title = parameters.get("title", "Information")
         prompt = parameters.get("prompt", "")
         data = parameters.get("data", {})
+        suppress_debug = bool(parameters.get("suppress_debug", False))
         
         # Process the prompt to replace placeholders with actual entities
         if prompt:
@@ -44,16 +45,15 @@ class PresentationTool(BaseTool):
             if not data:  # Only use entities if no other data provided
                 data = {"entities": memory.extracted_entities}
             else:
-                # Add entities to existing data
                 data["entities"] = memory.extracted_entities
         
-        # Check if we have search results but no data
-        if not data and hasattr(memory, 'search_results') and memory.search_results:
+        # Avoid auto-dumping raw search results when suppress_debug is set
+        if not data and not suppress_debug and hasattr(memory, 'search_results') and memory.search_results:
             logger.info("No data provided, using search results from memory")
             data = {"search_results": memory.search_results}
         
         # Check if we have any previous results
-        if not data:
+        if not data and not suppress_debug:
             past_results = []
             for key, value in memory.task_results.items():
                 if isinstance(value, dict):
@@ -115,8 +115,8 @@ class PresentationTool(BaseTool):
         for pattern in placeholder_patterns:
             matches = re.finditer(pattern, text, re.IGNORECASE)
             for match in matches:
-                original_placeholder = match.group(0)  # The full placeholder, e.g., [CEO's Name]
-                placeholder_text = match.group(1).strip()  # The text inside, e.g., "CEO's Name"
+                original_placeholder = match.group(0) # The full placeholder, e.g., [CEO's Name]
+                placeholder_text = match.group(1).strip() # The text inside, e.g., "CEO's Name"
                 
                 # Determine entity type from placeholder
                 entity_type = self._infer_entity_type(placeholder_text)
@@ -533,3 +533,6 @@ class PresentationTool(BaseTool):
                     output.append("")
         
         return "\n".join(output)
+
+# Back-compat alias for older imports
+PresentTool = PresentationTool

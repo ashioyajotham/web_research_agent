@@ -1,202 +1,90 @@
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, List
 from bs4 import BeautifulSoup
 from .tool_registry import BaseTool
 from utils.logger import get_logger
 from config.config import get_config
 import re
 import requests
-from urllib.parse import urlparse
-import html2text
+import random
 
 logger = get_logger(__name__)
+
+TEXT_CT_PAT = re.compile(r"(text/|application/(json|xml|xhtml|javascript))", re.I)
+PLACEHOLDER_PAT = re.compile(r"\{\{\s*search_result_(\d+)_url\s*\}\}", re.I)
+
+UA_LIST = [
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36",
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:124.0) Gecko/20100101 Firefox/124.0",
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Safari/605.1.15",
+]
+
+def _safe_decode(response: requests.Response) -> str:
+    try:
+        response.encoding = response.encoding or response.apparent_encoding or "utf-8"
+        return response.text or ""
+    except Exception:
+        try:
+            return response.content.decode("utf-8", errors="replace")
+        except Exception:
+            return ""
+
+def _extract_title_and_text(html: str) -> Dict[str, str]:
+    soup = BeautifulSoup(html or "", "html.parser")
+    title = (soup.title.string or "").strip() if soup.title else ""
+    for tag in soup(["script", "style", "noscript"]):
+        tag.decompose()
+    text = " ".join(soup.get_text(separator=" ").split())
+    return {"title": title, "text": text}
+
+def _resolve_url_placeholder(raw_url: Optional[str], memory: Any) -> Optional[str]:
+    if not raw_url or not isinstance(raw_url, str):
+        return None
+    raw = raw_url.strip()
+    m = PLACEHOLDER_PAT.fullmatch(raw)
+    results = getattr(memory, "search_results", None) or []
+    if m:
+        idx = int(m.group(1))
+        if 0 <= idx < len(results):
+            return results[idx].get("link") or results[idx].get("url")
+        return None
+    if raw.lower() in {"{from_search}", "from_search", "${from_search}", "{{from_search}}"}:
+        if results:
+            return results[0].get("link") or results[0].get("url")
+        return None
+    return raw
 
 class BrowserTool(BaseTool):
     """Tool for browsing websites and extracting content."""
     
     def __init__(self):
-        """Initialize the browser tool."""
-        super().__init__(
-            name="browser",
-            description="Fetches and processes web content from URLs"
-        )
+        super().__init__(name="browser", description="Fetch web pages and extract text")
         self.config = get_config()
-        self.headers = {
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
+        self.base_headers = {
+            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,application/json;q=0.8,*/*;q=0.6",
+            "Accept-Language": "en-US,en;q=0.9",
+            "Accept-Encoding": "gzip, deflate",  # avoid 'br' unless brotli installed
         }
-        self.html_converter = html2text.HTML2Text()
-        self.html_converter.ignore_links = False
-        self.html_converter.bypass_tables = False
-        self.html_converter.ignore_images = True
-    
+
     def execute(self, parameters: Dict[str, Any], memory: Any) -> Dict[str, Any]:
-        """Execute browser tool with enhanced URL handling."""
-        url = parameters.get("url")
-        extract_type = parameters.get("extract_type", "main_content")
-        selector = parameters.get("selector", "")
-        top_k = int(parameters.get("top_k", 10))
-
-        # Handle fallback to search snippets
-        if parameters.get("use_search_snippets") or not url:
-            snippet_out = self._extract_from_search_snippets(memory, top_k=top_k)
-            return {
-                "status": "success" if snippet_out.get("extracted_text") else "error",
-                "output": snippet_out
-            }
-        
-        # Validate URL before attempting to browse
-        if not url or not self._is_valid_url(url):
-            logger.info("Invalid or missing URL for browser; falling back to search snippets")
-            snippet_out = self._extract_from_search_snippets(memory, top_k=top_k)
-            return {
-                "status": "success" if snippet_out.get("extracted_text") else "error",
-                "output": snippet_out
-            }
-        
-        # Check if we have cached content
-        cached_content = memory.get_cached_content(url)
-        if (cached_content):
-            logger.info(f"Using cached content for {url}")
-            title = self._extract_title(cached_content) or ""
-            text = cached_content
-            if extract_type == "summary":
-                text = "\n".join(text.splitlines()[:80])
-            return {
-                "status": "success",
-                "output": {
-                    "url": url,
-                    "title": title,
-                    "content": text,
-                    "extracted_text": text
-                }
-            }
-        else:
-            logger.info(f"Fetching URL: {url}")
-        
+        params = parameters or {}
+        raw_url = params.get("url")
+        url = _resolve_url_placeholder(raw_url, memory)
+        if not url:
+            return {"status": "error", "error": "Missing URL"}
+        headers = {**self.base_headers, "User-Agent": random.choice(UA_LIST)}
         try:
-            resp = self._fetch_url(url)
-            if resp is None or resp.status_code >= 400:
-                logger.warning(f"Fetch failed for {url} with status {getattr(resp, 'status_code', 'n/a')}")
-                snippet_out = self._extract_from_search_snippets(memory)
-                return {
-                    "status": "success" if snippet_out.get("extracted_text") else "error",
-                    "output": snippet_out
-                }
-            html = resp.text or ""
-            soup = BeautifulSoup(html, "html.parser")
-            title = self._extract_title(html) or (soup.title.string.strip() if soup.title and soup.title.string else "")
-            # Extract main content or full page
-            if extract_type == "full":
-                text_md = self._process_full_page(html)
+            resp = requests.get(url, headers=headers, timeout=self.config.get("http_timeout", 25))
+            ct = resp.headers.get("Content-Type", "")
+            is_text = bool(TEXT_CT_PAT.search(ct))
+            output: Dict[str, Any] = {"url": url, "title": "", "extracted_text": "", "_binary": False}
+            if is_text:
+                html = _safe_decode(resp)
+                tt = _extract_title_and_text(html)
+                output["title"] = tt["title"]
+                output["extracted_text"] = tt["text"]
             else:
-                main_html = self._extract_main_content(soup, selector)
-                text_md = self.html_converter.handle(str(main_html)) if main_html else self._process_full_page(html)
-            # Cache if available
-            if hasattr(memory, "cache_content"):
-                try:
-                    memory.cache_content(url, text_md)
-                except Exception:
-                    pass
-            return {
-                "status": "success",
-                "output": {
-                    "url": url,
-                    "title": title,
-                    "content": text_md,
-                    "extracted_text": text_md
-                }
-            }
+                output["_binary"] = True
+            return {"status": "success", "output": output}
         except Exception as e:
-            logger.error(f"Browser error for {url}: {e}")
-            return {"status": "error", "error": str(e), "output": {}}
-    
-    def _extract_from_search_snippets(self, memory, top_k=10):
-        """Extract information from search snippets when URL browsing fails."""
-        # Try multiple ways to get search results
-        search_results = getattr(memory, 'search_results', [])
-        
-        # If no search_results attribute, try to find them in recent results
-        if not search_results:
-            recent = getattr(memory, 'recent_results', []) or []
-            for r in recent:
-                out = r.get("output", {})
-                if isinstance(out, dict) and isinstance(out.get("results"), list):
-                    search_results = out["results"]
-                    break
-        
-        if not search_results:
-            logger.info("No search results available for snippet extraction")
-            return {"title": "Combined Search Results", "extracted_text": "", "urls": []}
-        
-        logger.info(f"Extracting from {len(search_results)} search result snippets")
-        
-        # Combine snippets from search results
-        combined_content = []
-        urls = []
-        
-        for i, result in enumerate(search_results[:top_k]):            
-            snippet = (result.get("snippet") or "").strip()
-            link = result.get("link") or result.get("url") or ""
-            title = result.get("title") or ""
-            if snippet:
-                combined_content.append(f"{title}\n{snippet}".strip())
-            if link:
-                urls.append(link)
-        
-        if not combined_content:
-            return {"title": "Combined Search Results", "extracted_text": "", "urls": urls}
-        
-        extracted_text = "\n\n".join(combined_content)
-        
-        logger.info(f"Successfully extracted {len(extracted_text)} characters from search snippets")
-        return {"title": "Combined Search Results", "extracted_text": extracted_text, "urls": urls}
-
-    def _is_valid_url(self, url):
-        try:
-            u = urlparse(url)
-            return bool(u.scheme in ("http", "https") and u.netloc)
-        except Exception:
-            return False
-
-    def _fetch_url(self, url):
-        try:
-            return requests.get(url, headers=self.headers, timeout=15)
-        except Exception:
-            return None
-
-    def _extract_title(self, content):
-        try:
-            soup = BeautifulSoup(content, "html.parser")
-            return soup.title.string.strip() if soup.title and soup.title.string else ""
-        except Exception:
-            return ""
-
-    def _extract_main_content(self, content, selector=""):
-        # content can be BeautifulSoup or HTML string
-        soup = content if isinstance(content, BeautifulSoup) else BeautifulSoup(str(content), "html.parser")
-        if selector:
-            sel = soup.select_one(selector)
-            if sel:
-                return sel
-        # Heuristics: article, role=main, main, content containers
-        for cand in [
-            "article", "[role=main]", "main",
-            "div#content", "div.article", "section.article", "div.post", "div#main"
-        ]:
-            el = soup.select_one(cand)
-            if el:
-                return el
-        return soup.body or soup
-
-    def _process_full_page(self, content):
-        try:
-            return self.html_converter.handle(content)
-        except Exception:
-            return BeautifulSoup(content, "html.parser").get_text(" ", strip=True)
-
-    def _determine_relevant_entity_types(self, title, content):
-        # Placeholder; kept for compatibility
-        return []
-
-    def _enrich_entity_relationships(self, entities, query, title):
-        # Placeholder; kept for compatibility
-        return entities
+            logger.warning(f"Fetch failed for {url}: {e}")
+            return {"status": "error", "error": str(e), "url": url}

@@ -1,4 +1,4 @@
-from typing import Dict, Any, List, Optional
+from typing import Any, Dict, List
 import requests
 import json
 from .tool_registry import BaseTool
@@ -38,6 +38,26 @@ class SearchTool(BaseTool):
         self.api_key = self.config.get("serper_api_key")
         self.base_url = "https://google.serper.dev/search"
     
+    def _normalize_result_item(self, item: Any) -> Dict[str, Any]:
+        if isinstance(item, dict):
+            return {
+                "title": item.get("title"),
+                "link": item.get("link") or item.get("url"),
+                "snippet": item.get("snippet") or item.get("description") or "",
+            }
+        if hasattr(item, "__dict__"):
+            d = vars(item)
+            return {
+                "title": d.get("title"),
+                "link": d.get("link") or d.get("url"),
+                "snippet": d.get("snippet") or d.get("description") or "",
+            }
+        try:
+            title, link, snippet = item
+            return {"title": title, "link": link, "snippet": snippet}
+        except Exception:
+            return {"title": str(item), "link": None, "snippet": ""}
+
     def execute(self, parameters: Dict[str, Any], memory: Any) -> Dict[str, Any]:
         """
         Execute a web search with the given parameters.
@@ -76,7 +96,17 @@ class SearchTool(BaseTool):
                 "results": [r.to_dict() for r in results]
             }
             
-            return formatted_results
+            result = {"status": "success", "output": {"query": query, "results": results}}
+            try:
+                if memory is not None and isinstance(results, list) and results:
+                    # normalize keys and persist for downstream tools
+                    setattr(memory, "search_results", [
+                        {"title": r.get("title"), "link": r.get("link") or r.get("url"), "snippet": r.get("snippet", "")}
+                        for r in results
+                    ])
+            except Exception:
+                pass
+            return result
         
         except Exception as e:
             error_message = f"Error performing search: {str(e)}"
@@ -139,13 +169,20 @@ class SearchTool(BaseTool):
 
 def get_page(url: str) -> dict:
     headers = {
-        "User-Agent": "Mozilla/5.0 (WebResearchAgent/1.0)"
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
+        "Accept-Language": "en-US,en;q=0.9",
+        "Cache-Control": "no-cache",
+        "Pragma": "no-cache",
     }
     try:
         response = requests.get(url, headers=headers, timeout=30)
         if response.status_code == 401:
             logger.error(f"401 Unauthorized: {url}")
             return {"error": f"HTTP 401 accessing {url}"}
+        if response.status_code in (403, 429):
+            logger.error(f"{response.status_code} blocked: {url}")
+            return {"error": f"HTTP {response.status_code} accessing {url}"}
         response.raise_for_status()
         return {"content": response.text}
     except requests.RequestException as e:

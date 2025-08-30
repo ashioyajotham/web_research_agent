@@ -8,9 +8,13 @@ from rich.text import Text
 import logging
 from typing import List, Dict, Any, Optional
 import json
+from typing import Any
+from tools.tool_registry import BaseTool
+from utils.logger import get_logger
 
 # Create a global console object
 console = Console()
+logger = get_logger(__name__)
 
 class RichHandler(logging.Handler):
     """Custom logging handler that uses Rich formatting."""
@@ -97,61 +101,43 @@ def display_plan(plan_steps: List[Dict[str, Any]]):
     console.print(table)
     console.print("\n")
 
-def display_result(step_number: int, step_description: str, status: str, output: Any):
-    """Display a result from a step in a formatted way."""
-    if status == "success":
-        header_style = "green"
-        status_display = "[bold green]SUCCESS[/]"
-    else:
-        header_style = "red"
-        status_display = "[bold red]ERROR[/]"
-    
-    console.print(f"\n[bold {header_style}]Step {step_number}: {step_description}[/]")
-    console.print(f"Status: {status_display}")
-    
-    if status == "error":
-        console.print(Panel(str(output), title="Error", border_style="red"))
-        return
-    
-    if isinstance(output, dict):
-        if "error" in output:
-            console.print(Panel(output["error"], title="Error", border_style="red"))
-        elif "content" in output:  # Browser results
-            console.print(f"[bold]Source:[/] {output.get('title', 'Web content')} ({output.get('url', 'unknown URL')})")
-            md = Markdown(output['content'][:500] + ("..." if len(output['content']) > 500 else ""))
-            console.print(md)
-        elif "results" in output:  # Search results
-            console.print(f"[bold]Search Query:[/] {output.get('query', 'Unknown query')}")
-            console.print(f"[bold]Found:[/] {output.get('result_count', 0)} results")
-            
-            results_table = Table(show_header=True)
-            results_table.add_column("#", style="dim")
-            results_table.add_column("Title")
-            results_table.add_column("Link", style="blue")
-            
-            for i, result in enumerate(output.get('results', []), 1):
-                results_table.add_row(
-                    str(i),
-                    result.get('title', 'No title'),
-                    result.get('link', '#')
-                )
-            
-            console.print(results_table)
-        else:
-            # Generic dictionary output
-            console.print_json(json.dumps(output))
-    elif isinstance(output, str):
-        if output.startswith("```"):
-            # This is a code block, try to extract the language
-            import re
-            lang_match = re.match(r"```(\w+)", output)
-            language = lang_match.group(1) if lang_match else "text"
-            code = re.sub(r"```\w*\n", "", output).replace("```", "")
-            console.print(Syntax(code, language, theme="monokai"))
-        else:
-            console.print(output)
-    else:
-        console.print(str(output))
+def _to_jsonable(obj: Any):
+    try:
+        json.dumps(obj)
+        return obj
+    except TypeError:
+        if isinstance(obj, dict):
+            return {str(k): _to_jsonable(v) for k, v in obj.items()}
+        if isinstance(obj, (list, tuple, set)):
+            return [_to_jsonable(x) for x in obj]
+        if hasattr(obj, "__dict__"):
+            return {k: _to_jsonable(v) for k, v in vars(obj).items()}
+        return str(obj)
+
+def display_result(step_number, description, status, output):
+    console.print(f"\nStep {step_number}: {description}")
+    console.print(f"Status: {status.upper()}")
+    try:
+        compact = output
+        if isinstance(output, dict):
+            preview = {}
+            for k in ("title", "url", "query"):
+                if k in output and output[k]:
+                    preview[k] = output[k]
+            if "results" in output and isinstance(output["results"], list):
+                preview["results"] = len(output["results"])
+            if "extracted_text" in output and isinstance(output["extracted_text"], str):
+                preview["text_chars"] = len(output["extracted_text"])
+            if "_binary" in output:
+                preview["binary"] = bool(output["_binary"])
+            if preview:
+                compact = preview
+        console.print_json(json.dumps(_to_jsonable(compact)))
+    except Exception:
+        try:
+            console.print_json(json.dumps(_to_jsonable(output)))
+        except Exception:
+            console.print(str(output)[:500])
 
 def display_completion_message(task_description: str, output_file: str):
     """Display a message indicating task completion."""
@@ -162,3 +148,47 @@ def display_completion_message(task_description: str, output_file: str):
         title="Task Complete",
         border_style="green"
     ))
+
+class PresentationTool(BaseTool):
+    """Tool for organizing and presenting information without writing code."""
+    
+    def __init__(self):
+        super().__init__(name="present", description="Format and present results")
+
+    def execute(self, parameters: Dict[str, Any], memory: Any) -> Dict[str, Any]:
+        params = parameters or {}
+        title = params.get("title", "Results")
+        prompt = params.get("prompt", "")
+        data = params.get("data")
+        suppress_debug = bool(params.get("suppress_debug", False))
+
+        if prompt:
+            prompt = self._replace_placeholders(prompt, memory)
+
+        # Minimal deterministic output: prefer explicit content if provided
+        if isinstance(data, str) and data.strip():
+            content = data.strip()
+        else:
+            content = prompt.strip() or "No data available for presentation"
+
+        if suppress_debug:
+            return {"status": "success", "output": {"final_text": content}}
+        return {"status": "success", "output": {"title": title, "content": content}}
+
+    def _replace_placeholders(self, text: str, memory: Any) -> str:
+        return (text or "").replace("{coo_name}", getattr(memory, "coo_name", "{coo_name}"))
+
+    # Stubs kept for future richer formatting
+    def _infer_entity_type(self, placeholder_text: str) -> str:
+        return "generic"
+
+    def _find_matching_entity(self, placeholder_text: str, entity_type: Optional[str], memory: Any) -> Optional[str]:
+        return None
+
+    def _extract_keywords(self, text: str) -> List[str]:
+        return []
+
+    def _format_as_table(self, title: str, prompt: str, data: Any) -> str:
+        return f"# {title}\n\n{prompt}"
+# Back-compat alias for older imports
+PresentTool = PresentationTool

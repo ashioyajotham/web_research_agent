@@ -1,1017 +1,136 @@
 import re
-import time
+from urllib.parse import urlparse
 
 from .memory import Memory
 from .planner import Planner
 from .comprehension import Comprehension
 from tools.tool_registry import ToolRegistry
+from tools.search import SearchTool
+from tools.browser import BrowserTool
+from tools.presentation_tool import PresentationTool
 from utils.formatters import format_results
 from utils.logger import get_logger
-
 logger = get_logger(__name__)
 
 class WebResearchAgent:
     """Main agent class for web research."""
     
     def __init__(self):
-        """Initialize the web research agent with its components."""
         self.memory = Memory()
         self.planner = Planner()
         self.comprehension = Comprehension()
-        self.tool_registry = ToolRegistry()
-        
-        # Register default tools
-        self._register_default_tools()
-    
-    def _register_default_tools(self):
-        """Register the default set of tools."""
-        from tools.search import SearchTool
-        from tools.browser import BrowserTool
-        from tools.code_generator import CodeGeneratorTool
-        from tools.presentation_tool import PresentationTool
-        
-        self.tool_registry.register_tool("search", SearchTool())
-        self.tool_registry.register_tool("browser", BrowserTool())
-        self.tool_registry.register_tool("code", CodeGeneratorTool())
-        self.tool_registry.register_tool("present", PresentationTool())
-    
+        self.registry = ToolRegistry()
+        self.tool_registry = self.registry  # back-compat
+        self.registry.register(SearchTool())
+        self.registry.register(BrowserTool())
+        self.registry.register(PresentationTool())
+
     def execute_task(self, task_description):
-        """
-        Execute a research task with enhanced URL resolution.
-        
-        Args:
-            task_description (str): Description of the task to perform
-            
-        Returns:
-            str: Formatted results of the task
-        """
-        # Reset memory and tools at the beginning of each task
-        self.memory = Memory()
-        self.tool_registry = ToolRegistry()
-        self._register_default_tools()
-        
-        # Initialize entity context tracking
-        self._entity_context_mentions = {}
-        
-        logger.info(f"Starting new task with clean memory: {task_description}")
-        
-        # Store task in memory
-        self.memory.add_task(task_description)
-        
-        # Analyze, plan, execute; ensure strategy is recorded
-        analysis = self.comprehension.analyze_task(task_description)
-        try:
-            plan = self.planner.create_plan(task_description, analysis or {})
-        except Exception:
-            plan = self.planner._create_default_plan(task_description)
-        # Persist last strategy for formatter
-        try:
-            self.comprehension.last_strategy = analysis.get("synthesis_strategy") or getattr(self.comprehension, "last_strategy", None)
-        except Exception:
-            pass
-        
-        # Execute the plan
-        results = []
-        for step_index, step in enumerate(plan.steps):
-            logger.info(f"Executing step {step_index+1}/{len(plan.steps)}: {step.description}")
-            
-            # Check if dependencies are met
-            can_execute, reason = self._can_execute_step(step_index, results)
-            if not can_execute:
-                logger.warning(f"Skipping step {step_index+1}: {reason}")
-                results.append({
-                    "step": step.description,
-                    "status": "error",
-                    "output": f"Skipped step due to previous failures: {reason}"
-                })
-                continue
-            
-            # Get the tool
-            tool = self.tool_registry.get_tool(step.tool_name)
-            if not tool:
-                error_msg = f"Tool '{step.tool_name}' not found"
-                logger.error(error_msg)
-                results.append({
-                    "step": step.description, 
-                    "status": "error",
-                    "output": error_msg
-                })
-                continue
-            
-            # Prepare parameters with enhanced variable substitution
-            parameters = dict(step.parameters or {})
-            # Apply dynamic placeholder/URL resolution before any tool call
-            parameters = self._substitute_parameters(parameters, results)
-            # Special handling for browser steps with unresolved URLs
-            if (step.tool_name == "browser" and 
-                (not parameters.get("url") or parameters.get("use_search_snippets"))):
-                logger.info("Browser step will use search snippets due to URL resolution failure")
-                # The browser tool will handle snippet extraction
-            
-            # Adaptive multi-browse when URL is unresolved but we have search results
-            if step.tool_name == "browser" and not parameters.get("url"):
-                top_k = int(parameters.get("top_k", 5))
-                extract_type = parameters.get("extract_type", "main_content")
-
-                if hasattr(self.memory, "search_results") and self.memory.search_results:
-                    aggregated_contents = []
-                    per_page_results = []
-                    for item in self.memory.search_results[:top_k]:
-                        url = item.get("link") or item.get("url")
-                        title = item.get("title", "")
-                        if not url:
-                            continue
-                        try:
-                            page_out = tool.execute({"url": url, "extract_type": extract_type}, self.memory)
-                            if isinstance(page_out, dict) and page_out.get("status") == "success":
-                                out_payload = page_out.get("output", {})
-                                content = out_payload.get("content") or out_payload.get("text") or ""
-                                if content and len(content) > 100:
-                                    aggregated_contents.append(f"# {title}\nSource: {url}\n\n{content}\n")
-                                per_page_results.append({"title": title, "url": url, "content": content})
-                        except Exception as e:
-                            logger.warning(f"Failed to browse {url}: {e}")
-
-                    if aggregated_contents or per_page_results:
-                        results.append({
-                            "step": step.description,
-                            "status": "success",
-                            "output": {
-                                "content": "\n\n".join(aggregated_contents),
-                                "items": per_page_results
-                            }
-                        })
-                        continue  # move to next step
-                    else:
-                        logger.warning("No content fetched from search results; will fall back to normal execution")
-
-            # Normal tool execution
-            output = tool.execute(parameters, self.memory)
-            
-            # Check if the step actually accomplished its objective
-            verified, message = self._verify_step_completion(step, output)
-            if not verified:
-                logger.warning(
-                    f"Step {step_index+1} did not achieve its objective: {message}"
-                )
-                
-                # Try to recover with more specific parameters if appropriate
-                if step.tool_name == "search" and step_index > 0:
-                    # If previous steps found relevant entities, use them to refine the search
-                    entities = self.memory.get_entities()
-                    refined_query = self._refine_query_with_entities(step.parameters.get("query", ""), entities)
-                    logger.info(f"Refining search query to: {refined_query}")
-                    
-                    # Re-run with refined query
-                    parameters["query"] = refined_query
-                    output = tool.execute(parameters, self.memory)
-                elif step.tool_name == "browser" and "error" in output and "403" in str(output.get("error", "")):
-                    # If we got a 403/blocked error, try a fallback to search result snippets
-                    logger.warning("Website blocked access - attempting fallback to search result snippets")
-                    
-                    # Create fallback content from search result snippets
-                    if hasattr(self.memory, 'search_results') and self.memory.search_results:
-                        # Combine snippets into a single document
-                        combined_text = f"# Content extracted from search snippets\n\n"
-                        for i, result_item in enumerate(self.memory.search_results[:5]):  # Use top 5
-                            title = result_item.get("title", f"Result {i+1}")
-                            snippet = result_item.get("snippet", "No description")
-                            link = result_item.get("link", "#")
-                            combined_text += f"## {title}\n\n{snippet}\n\nSource: {link}\n\n"
-                        
-                        # Override the output with generated content
-                        output = {
-                            "url": "search_results_combined",
-                            "title": "Combined search result content (Anti-scraping fallback)",
-                            "extract_type": "fallback",
-                            "content": combined_text
-                        }
-                        logger.info("Created fallback content from search snippets")
-            
-            # Record the result with verification status
-            results.append({
-                "step": step.description,
-                "status": "success",
-                "output": output,
-                "verified": verified,
-                "verification_message": message
-            })
-            
-            self.memory.add_result(step.description, output)
-            
-            # Store search results specifically for easy reference
-            if (step.tool_name == "search" and 
-                isinstance(output, dict) and 
-                "results" in output):
-                self.memory.search_results = output["results"]
-                logger.info(
-                    f"Stored {len(self.memory.search_results)} search results in memory"
-                )
-        
-        # After each successful step, update entity context information
-        if "status" in results[-1] and results[-1]["status"] == "success":
-            self._update_entity_context_from_step(results[-1], task_description)
-    
-        # Format results based on task type and entity relevance
-        return self._format_results(task_description, plan, results)
-
-    def _update_entity_context_from_step(self, step_result, task_description):
-        """
-        Update entity context information based on step results.
-        
-        Args:
-            step_result (dict): Result from a step
-            task_description (str): The task description
-        """
-        if not hasattr(self, '_entity_context_mentions'):
-            self._entity_context_mentions = {}
-            
-        # Track entities that appear together
-        if hasattr(self.memory, 'extracted_entities'):
-            for entity_type, entities in self.memory.extracted_entities.items():
-                for entity in entities:
-                    entity_str = str(entity).lower()
-                    if entity_str not in self._entity_context_mentions:
-                        self._entity_context_mentions[entity_str] = 0
-                    self._entity_context_mentions[entity_str] += 1
+        # ...existing or planned logic...
+        pass
 
     def _substitute_parameters(self, parameters, previous_results):
-        """
-        Enhanced parameter substitution with dynamic placeholder detection and resolution.
-        
-        Args:
-            parameters (dict): Step parameters with potential variables
-            previous_results (list): Results from previous steps
-            
-        Returns:
-            dict: Parameters with variables substituted
-        """
-        substituted = {}
-        
-        for key, value in parameters.items():
-            if key == "url" and value is None:
-                # Resolve URL from previous search results
-                resolved_url = self._resolve_url_from_search_results(previous_results)
-                if resolved_url:
-                    substituted[key] = resolved_url
-                    logger.info(f"Resolved URL to: {resolved_url}")
-                else:
-                    # Use search snippets instead
-                    substituted["use_search_snippets"] = True
-                    substituted[key] = None
-                    logger.warning("Could not resolve URL, will use search snippets")
-            else:
-                substituted[key] = value
-    
-        return substituted
+        params = dict(parameters or {})
+        url = params.get("url")
+        if isinstance(url, str):
+            m = re.fullmatch(r"\{\{\s*search_result_(\d+)_url\s*\}\}", url.strip(), flags=re.I)
+            if m:
+                idx = int(m.group(1))
+                results = getattr(self.memory, "search_results", None) or []
+                if 0 <= idx < len(results):
+                    params["url"] = results[idx].get("link") or results[idx].get("url")
+                    return params
+        if url and self._is_placeholder_url(url):
+            resolved = self._resolve_url_from_search_results(previous_results)
+            if resolved:
+                params["url"] = resolved
+        return params
 
     def _resolve_url_from_search_results(self, previous_results):
-        """Resolve URL from most recent search results."""
-        for result in reversed(previous_results):
-            if (result.get("status") == "success" and 
-                "search" in result.get("step", "").lower()):
-            
-                search_output = result.get("output", {})
-                search_results = search_output.get("results", [])
-                
-                # Get first valid URL
-                for search_result in search_results:
-                    url = search_result.get("link")
-                    if url and self._is_valid_url(url):
-                        return url
-    
+        """Pick a URL from latest successful search results."""
+        # Prefer memory if set during main loop
+        if getattr(self.memory, "search_results", None):
+            for item in self.memory.search_results:
+                link = item.get("link") or item.get("url")
+                if self._is_valid_url(link):
+                    return link
+        # Fallback: scan previous tool outputs
+        for r in reversed(previous_results or []):
+            out = r.get("output")
+            if isinstance(out, dict):
+                results = out.get("results") or out.get("search_results") or []
+                for item in results:
+                    link = item.get("link") or item.get("url")
+                    if self._is_valid_url(link):
+                        return link
         return None
 
     def _is_valid_url(self, url):
-        """Validate URL format."""
-        if not url or not isinstance(url, str):
-            return False
-        
-        url = url.strip()
-        
-        # Check for placeholder patterns
-        placeholder_patterns = [
-            r'\[.*?\]',
-            r'\{.*?\}',
-            r'<.*?>',
-            r'INSERT',
-            r'PLACEHOLDER'
-        ]
-        
-        for pattern in placeholder_patterns:  # FIXED - no unpacking
-            if re.search(pattern, url, re.IGNORECASE):
+        try:
+            if not url:
                 return False
-        
-        # Basic URL validation
-        url_pattern = re.compile(
-            r'^https?://'  # http:// or https://
-            r'(?:(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\.)+[A-Z]{2,6}\.?|'  # domain...
-            r'localhost|'  # localhost...
-            r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})'  # ...or ip
-            r'(?::\d+)?'  # optional port
-            r'(?:/?|[/?]\S+)$', re.IGNORECASE)
-        
-        return bool(url_pattern.match(url))
+            u = urlparse(url)
+            return u.scheme in ("http", "https") and bool(u.netloc)
+        except Exception:
+            return False
 
     def _is_placeholder_url(self, url):
-        """Detect placeholder URLs that shouldn't be used."""
-        if not url or not isinstance(url, str):
-            return True
-        
-        # Check for common placeholder patterns
-        placeholder_patterns = [
-            r'\[.*?(?:url|link|insert|from).*?\]',  # [Insert URL from search results]
-            r'\{.*?(?:url|link|result).*?\}',       # {search_result_url}
-            r'<.*?(?:url|link).*?>',                # <URL here>
-            r'INSERT.*?URL',                        # INSERT URL HERE
-            r'PLACEHOLDER',                         # PLACEHOLDER
-            r'EXAMPLE\.COM',                        # example.com
-            r'^\[',                                 # Starts with [
-        ]
-        
-        url_upper = url.upper()
-        return any(re.search(pattern, url_upper, re.IGNORECASE) for pattern in placeholder_patterns)
-
-    def _resolve_dynamic_placeholders(self, value, previous_results):
-        """
-        Dynamically resolve various types of placeholders in parameter values.
-        """
-        if not isinstance(value, str):
-            return value
-        
-        # For now, return the value as-is if it's not a URL
-        # This method can be expanded for other types of placeholders
-        return value
-
-    def _can_execute_step(self, step_index, previous_results):
-        """Check if a step can be executed based on prior steps' statuses."""
-        # Always allow first step
-        if step_index == 0:
-            return True, "First step"
-        
-        # Check if any critical previous steps failed
-        critical_failures = 0
-        for i, result in enumerate(previous_results):
-            if result.get("status") == "error":
-                critical_failures += 1
-        
-        # Allow if not too many failures
-        if critical_failures < len(previous_results) * 0.7:
-            return True, "Sufficient previous success"
-        
-        return False, f"Too many previous failures ({critical_failures}/{len(previous_results)})"
-
-    def _extract_entities_from_snippets(self, search_results, query):
-        """Extract entities from search result snippets."""
-        if not search_results:
-            return
-        
-        # Combine all snippets
-        combined_text = ""
-        for result in search_results:
-            if isinstance(result, dict):
-                title = result.get("title", "")
-                snippet = result.get("snippet", "")
-                combined_text += f"{title} {snippet} "
-        
-        # Extract entities using the comprehension module
-        if combined_text.strip():
-            entities = self.comprehension.extract_entities(combined_text)
-            if entities:
-                self.memory.add_entities(entities)
-                logger.info(f"Extracted entities from search snippets: {entities}")
-
-    def _verify_step_completion(self, step, output):
-        """Verify if a step achieved its intended objective."""
-        if not output:
-            return False, "No output generated"
-        
-        if isinstance(output, dict) and "error" in output:
-            return False, f"Step error: {output['error']}"
-        
-        # Basic verification - step ran successfully if it has meaningful output
-        if isinstance(output, dict):
-            if "results" in output and output["results"]:
-                return True, "Search results found"
-            elif "content" in output and len(str(output["content"])) > 50:
-                return True, "Content extracted successfully"
-            elif "url" in output:
-                return True, "URL processed"
-        
-        if isinstance(output, str) and len(output) > 20:
-            return True, "Text output generated"
-        
-        # Default to success if we can't detect a failure
-        return True, "Step completed"
-
-    def _refine_query_with_entities(self, original_query, entities):
-        """Refine a search query using discovered named entities."""
-        if not entities:
-            return original_query
-        
-        # Add relevant entities to query
-        additional_terms = []
-        for entity_type, entity_list in entities.items():
-            if entity_type in ["organization", "person", "location"] and entity_list:
-                # Add first few discovered entity names
-                for entity in entity_list[:2]:
-                    entity_str = str(entity).strip()
-                    if entity_str and entity_str not in original_query:
-                        additional_terms.append(f'"{entity_str}"')
-        
-        if additional_terms:
-            refined_query = f"{original_query} {' '.join(additional_terms)}"
-            return refined_query
-        
-        return original_query
+        if not isinstance(url, str):
+            return False
+        t = url.strip().lower()
+        return (t in ("{from_search}", "from_search", "${from_search}")
+                or ("${" in t and "}" in t))
 
     def _display_step_result(self, step_number, description, status, output):
-        """Display the result of a step execution (logging in this implementation)."""
-        logger.info(f"Step {step_number} ({description}): {status}")
-        if isinstance(output, dict) and "results" in output:
-            result_count = len(output["results"]) if output["results"] else 0
-            logger.info(f"  Found {result_count} search results")
-        elif isinstance(output, dict) and "content" in output:
-            content_length = len(str(output["content"])) if output["content"] else 0
-            logger.info(f"  Extracted {content_length} characters of content")
-    
+        """Safe, compact console output (not used by main UI but kept for completeness)."""
+        print(f"\nStep {step_number}: {description}")
+        print(f"Status: {status.upper()}")
+        try:
+            if isinstance(output, dict):
+                title = output.get("title") or ""
+                url = output.get("url") or ""
+                text = output.get("extracted_text") or output.get("content") or ""
+                items = output.get("results") or output.get("items") or []
+                binary = output.get("_binary", False)
+                text_len = len(text) if isinstance(text, str) else 0
+                if title:
+                    print(f'title: {title[:120]}...')
+                if url:
+                    print(f'url: {url}')
+                if items:
+                    print(f'items: {len(items)}')
+                if text_len:
+                    print(f'text_chars: {text_len}')
+                if binary:
+                    print('note: binary content omitted')
+            elif isinstance(output, str):
+                preview = output.replace("\n", " ")[:400]
+                ellipsis = "..." if len(output) > 400 else ""
+                print(f'text_preview: {preview}{ellipsis}')
+            else:
+                print(f'output_type: {type(output).__name__}')
+        except Exception as e:
+            print(f"display_error: {e}")
+
     def _format_results(self, task_description, plan, results):
-        """Single-header formatting; choose synthesis by last_strategy (task-agnostic)."""
-        strategy = getattr(self.comprehension, "last_strategy", None)
-        if strategy == "extract_and_verify":
-            body = self._synthesize_extract_and_verify(task_description, results)
-        elif strategy == "aggregate_and_filter":
-            body = self._synthesize_aggregate_and_filter(task_description, results)
-        elif strategy == "collect_and_organize":
-            body = self._synthesize_collect_and_organize(task_description, results)
-        else:
-            body = self._synthesize_comprehensive_synthesis(task_description, results)
+        """Delegate to unified formatter for consistent, task-agnostic outputs."""
+        try:
+            return format_results(task_description, plan, results)
+        except Exception as e:
+            logger.error(f"Formatting failed: {e}")
+            # Minimal fallback with sources if available
+            lines = [f"## Result for: {task_description}\n"]
+            for r in results or []:
+                if isinstance(r.get("output"), dict):
+                    url = r["output"].get("url")
+                    title = r["output"].get("title")
+                    if url or title:
+                        lines.append(f"- {title or ''} {url or ''}".strip())
+            return "\n".join(lines) or "No result."
 
-        # Strip leading headers from body to avoid duplication
-        lines = (body or "").splitlines()
-        while lines and lines[0].lstrip().startswith("#"):
-            lines.pop(0)
-        cleaned = "\n".join(lines).lstrip()
-        return f"# {task_description}\n\n{cleaned}\n"
-
-    def _synthesize_extract_and_verify(self, task_description, results):
-        """Synthesize results for extract and verify strategy (task-agnostic, cross-source)."""
-        import re
-        from urllib.parse import urlparse
-
-        output = [f"# {task_description}\n"]
-
-        # Collect successful outputs
-        successful = [r for r in results if r.get("status") == "success"]
-        if not successful:
-            output.append("## No Results Found\n")
-            output.append("The research did not produce any usable outputs.\n")
-            return "\n".join(output)
-
-        # Aggregate raw text chunks and source metadata from tool outputs
-        pages = []
-        for r in successful:
-            payload = r.get("output", {})
-            if not isinstance(payload, dict):
-                continue
-
-            # From direct browse outputs
-            page_text = payload.get("content") or payload.get("extracted_text")
-            if page_text and len(str(page_text)) > 50:
-                pages.append({
-                    "text": str(page_text),
-                    "url": payload.get("url", ""),
-                    "title": payload.get("title", "")
-                })
-
-            # From snippet fallback (multiple URLs but single combined text)
-            if not payload.get("content") and payload.get("extracted_text") and payload.get("urls"):
-                pages.append({
-                    "text": str(payload["extracted_text"]),
-                    "url": "",  # multiple, handled below
-                    "title": payload.get("title", "Combined Search Results"),
-                    "urls": payload.get("urls", [])
-                })
-
-        if not pages:
-            output.append("## No Results Found\n")
-            output.append("The research did not produce any text to verify.\n")
-            return "\n".join(output)
-
-        # Helpers
-        SENT_SPLIT = re.compile(r'(?<=[.!?])\s+') 
-        STOP = {
-            "the","and","for","with","that","this","from","into","over","under","their","your","our",
-            "they","them","are","was","were","have","has","had","each","must","made","more","than",
-            "what","which","who","when","where","why","how","of","to","in","on","by","as","it","an","a","or","be","is"
-        }
-
-        def tokenize(s):
-            return [w for w in re.findall(r"[a-z0-9%€$\-]+", s.lower()) if w and w not in STOP]
-
-        def jaccard(a, b):
-            sa, sb = set(a), set(b)
-            if not sa or not sb:
-                return 0.0
-            return len(sa & sb) / max(1, len(sa | sb))
-
-        def domain(u):
-            try:
-                return urlparse(u).netloc.lower()
-            except Exception:
-                return ""
-
-        def plausible_claim(sent):
-            s = sent.strip()
-            if len(s) < 40 or len(s) > 400:
-                return False
-            # Indicators of verifiable statements
-            has_number = bool(re.search(r'[\d%€$]', s))
-            has_date = bool(re.search(r'\b(19|20)\d{2}\b', s))
-            has_verbs = bool(re.search(r'\b(said|stated|announced|reported|estimated|reduced|increased|will|plans?|agreed)\b', s, re.I))
-            has_caps = len(re.findall(r'\b[A-Z][a-z]{2,}\b', s)) >= 2
-            return has_number or has_date or has_verbs or has_caps
-
-        def extract_sentences(text):
-            # Prefer quoted spans, else split into sentences
-            quotes = re.findall(r'“([^”]{10,500})”|"([^"]{10,500})"', text)
-            quoted = [q[0] or q[1] for q in quotes if (q[0] or q[1])]
-            if quoted:
-                return [q.strip() for q in quoted if plausible_claim(q)]
-            # Fallback to sentence split
-            sents = []
-            for s in SENT_SPLIT.split(text):
-                s = s.strip()
-                if plausible_claim(s):
-                    sents.append(s)
-            return sents
-
-        # Extract candidate claims with sources
-        candidates = []
-        for pg in pages:
-            text = pg["text"]
-            sents = extract_sentences(text)
-            # Preferred single URL
-            src_urls = []
-            if pg.get("url"):
-                src_urls = [pg["url"]]
-            elif pg.get("urls"):
-                src_urls = [u for u in pg["urls"] if u]
-            for s in sents:
-                candidates.append({
-                    "text": s,
-                    "urls": src_urls or [],
-                    "title": pg.get("title", "")
-                })
-
-        if not candidates:
-            output.append("## No Verifiable Claims Found\n")
-            output.append("Results lacked extractable claims or quotes.\n")
-            return "\n".join(output)
-
-        # Group paraphrased/duplicate claims using token overlap
-        groups = []  # each: {"repr": text, "tokens": tokens, "items":[{text,urls,title}]}
-        for c in candidates:
-            toks = tokenize(c["text"])
-            placed = False
-            for g in groups:
-                if jaccard(toks, g["tokens"]) >= 0.65:
-                    g["items"].append(c)
-                    # Keep the longest representative
-                    if len(c["text"]) > len(g["repr"]):
-                        g["repr"] = c["text"]
-                        g["tokens"] = toks
-                    placed = True
-                    break
-            if not placed:
-                groups.append({"repr": c["text"], "tokens": toks, "items": [c]})
-
-        # Build verification records
-        verified = []
-        for g in groups:
-            # Aggregate sources
-            src_urls = []
-            for it in g["items"]:
-                src_urls.extend(it.get("urls", []))
-            src_urls = [u for u in src_urls if u]
-            domains = {domain(u) for u in src_urls if domain(u)}
-            support_count = len(src_urls)
-            domain_count = len(domains)
-
-            # Lightweight confidence: distinct domains then total sources, and presence of dates
-            has_date = bool(re.search(r'\b(19|20)\d{2}\b', g["repr"]))
-            confidence = min(0.99, 0.4 + 0.25 * domain_count + 0.1 * min(5, support_count) + (0.1 if has_date else 0.0))
-
-            verified.append({
-                "claim": g["repr"],
-                "sources": src_urls[:8],  # cap to keep output concise
-                "domains": sorted(list(domains))[:6],
-                "support_count": support_count,
-                "domain_count": domain_count,
-                "confidence": confidence
-            })
-
-        # Rank: more domains, then more sources, then longer claim
-        verified.sort(key=lambda x: (x["domain_count"], x["support_count"], len(x["claim"])), reverse=True)
-
-        # Output
-        output.append("## Verified Findings\n")
-        if not verified:
-            output.append("No multi-source-supported findings could be verified.\n")
-            return "\n".join(output)
-
-        # Determine how many to show: if user asked a specific number, respect it; else show top 5
-        m = re.search(r'\b(\d{1,2})\b', task_description)
-        desired = int(m.group(1)) if m else 5
-
-        for i, v in enumerate(verified[:desired], 1):
-            badge = "✅" if v["domain_count"] >= 2 else "⚠️"
-            conf_pct = int(round(v["confidence"] * 100))
-            output.append(f"**Finding {i} {badge} (confidence {conf_pct}%)**\n")
-            output.append(f"{v['claim']}\n")
-            if v["sources"]:
-                output.append("Sources:\n")
-                for u in v["sources"]:
-                    output.append(f"- {u}\n")
-            output.append("\n")
-
-        # Add a compact provenance section
-        output.append("## Method\n")
-        output.append("- Extracted candidate statements from page content and search-snippet text.\n")
-        output.append("- Grouped paraphrases via token-overlap; verified by counting distinct domains.\n")
-
-        return "\n".join(output)
-
-    def _synthesize_aggregate_and_filter(self, task_description, results):
-        """Synthesize results for aggregate and filter strategy."""
-        output = [f"# {task_description}\n"]
-        
-        # Collect all entities and organize them
-        all_entities = []
-        search_results = []
-        
-        for result in results:
-            if result.get("status") == "success":
-                result_output = result.get("output", {})
-                
-                # Collect search results
-                if isinstance(result_output, dict) and "results" in result_output:
-                    search_results.extend(result_output["results"])
-                
-                # Collect entities from memory (expecting a dict by type)
-                entities = self.memory.get_entities()
-                if isinstance(entities, dict):
-                    for etype, elist in entities.items():
-                        for ent in elist or []:
-                            all_entities.append(f"{ent} ({etype})")
-                elif isinstance(entities, list):
-                    all_entities.extend(entities)
-        
-        output.append("## Results\n")
-        output.append("| Item | Details | Status |\n")
-        output.append("|------|---------|--------|\n")
-        
-        # Add unique entities
-        seen_items = set()
-        for entity in all_entities:
-            if entity not in seen_items:
-                output.append(f"| {entity} | Found in research | Requires verification |\n")
-                seen_items.add(entity)
-        
-        # Add search results as potential items
-        for result in search_results[:20]:  # Limit to prevent overwhelming output
-            title = result.get("title", "Unknown")
-            if title not in seen_items:
-                output.append(f"| {title} | Found in research | Requires verification |\n")
-                seen_items.add(title)
-        
-        output.append(f"\n**Total found:** {len(seen_items)}\n")
-        
-        return "\n".join(output)
-
-    def _synthesize_collect_and_organize(self, task_description, results):
-        """Task-agnostic collect & organize synthesis."""
-        import re
-        output_lines = [f"# {task_description}\n", "## Research Findings\n"]
-
-        # Infer requested count from task text
-        m = re.search(r'\b(\d{1,3})\b', task_description)
-        desired_count = int(m.group(1)) if m else 10
-
-        output_lines.append("### Items Found\n")
-
-        # Gather search results and extracted page content
-        search_results = []
-        extracted_pages = []
-        for result in results:
-            if result.get("status") == "success":
-                payload = result.get("output", {})
-                if isinstance(payload, dict):
-                    if "results" in payload and isinstance(payload["results"], list):
-                        search_results.extend(payload["results"])
-                    if "items" in payload and isinstance(payload["items"], list):
-                        for it in payload["items"]:
-                            if it.get("content") and len(it["content"]) > 100:
-                                extracted_pages.append(it)
-                    elif payload.get("content") and len(payload["content"]) > 100:
-                        extracted_pages.append({
-                            "title": payload.get("title", ""),
-                            "url": payload.get("url", ""),
-                            "content": payload["content"]
-                        })
-
-        # Helper to extract a date or fallback key
-        def _extract_date_or_key(text, title, url):
-            patterns = [
-                r'\b(?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|'
-                r'Jul(?:y)?|Aug(?:ust)?|Sep(?:tember)?|Oct(?:ober)?|Nov(?:ember)?|'
-                r'Dec(?:ember)?)\s+\d{1,2},\s+\d{4}\b',
-                r'\b\d{4}-\d{2}-\d{2}\b',
-                r'\b\d{1,2}\s+(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\.?,?\s+\d{4}\b'
-            ]
-            source = f"{title}\n{url}\n{text[:2000]}"
-            for p in patterns:
-                m = re.search(p, source)
-                if m:
-                    return m.group(0)
-            return url or title or None
-
-        # Extract quotes/statements generically from full content
-        items = []
-        seen_text = set()
-        seen_occurrence = set()
-
-        for page in extracted_pages:
-            text = page.get("content", "")
-            url = page.get("url", "")
-            title = page.get("title", "")
-            occ_key = _extract_date_or_key(text, title, url)
-
-            # Quotes between quotes; fallback to sentence-like patterns if no quotes
-            quotes = re.findall(r'“([^”]{10,500})”|"([^"]{10,500})"', text)
-            quotes = [q[0] or q[1] for q in quotes if (q[0] or q[1])]
-            if not quotes:
-                quotes = re.findall(r'([A-Z][^.!?]{40,400}[.!?])', text)
-
-            for q in quotes:
-                norm = re.sub(r'\s+', ' ', q.strip()).strip('“”"')
-                if not norm or norm.lower() in seen_text:
-                    continue
-                if occ_key in seen_occurrence:
-                    continue
-                items.append({"text": norm, "source": url, "title": title, "date": occ_key})
-                seen_text.add(norm.lower())
-                seen_occurrence.add(occ_key)
-                if len(items) >= desired_count:
-                    break
-            if len(items) >= desired_count:
-                break
-
-        # If not enough, fall back to search snippets generically
-        if len(items) < desired_count and search_results:
-            # Collect entities from memory if available (generic)
-            entities = []
-            if hasattr(self, "memory") and hasattr(self.memory, "get_entities"):
-                ent_map = self.memory.get_entities() or {}
-                for _, arr in ent_map.items():
-                    for e in arr or []:
-                        s = str(e).strip()
-                        if s:
-                            entities.append(s)
-            entity_set = {e.lower() for e in entities}
-            speech_verbs = {"said", "says", "state", "stated", "remarks", "remarked", "announced", "declared", "told", "wrote", "noted", "argued"}
-
-            for r in search_results:
-                snippet = r.get("snippet") or ""
-                src = r.get("link") or r.get("url") or ""
-                title = r.get("title") or ""
-                if not snippet:
-                    continue
-                lower = snippet.lower()
-                has_entity = any(e in lower for e in entity_set) if entity_set else True
-                has_speech = any(v in lower for v in speech_verbs)
-                if not has_speech or not has_entity:
-                    continue
-                norm = re.sub(r'\s+', ' ', snippet.strip())
-                if norm.lower() in seen_text:
-                    continue
-                occ_key = src or title
-                if occ_key in seen_occurrence:
-                    continue
-                items.append({"text": norm, "source": src, "title": title, "date": _extract_date_or_key("", title, src)})
-                seen_text.add(norm.lower())
-                seen_occurrence.add(occ_key)
-                if len(items) >= desired_count:
-                    break
-
-        # Adaptive backfill: expand search/browse until we reach desired_count or hit limits
-        if len(items) < desired_count:
-            items = self._backfill_collect_and_organize(
-                task_description=task_description,
-                items=items,
-                desired_count=desired_count,
-                seen_text=seen_text,
-                seen_occurrence=seen_occurrence
-            )
-
-        # Format output
-        for i, it in enumerate(items[:desired_count]):
-            output_lines.append(f"**Item {i+1}:** {it['text']}\n")
-            src_title = it.get("title") or "Source"
-            output_lines.append(f"Source: [{src_title}]({it.get('source','')})\n\n")
-
-        return "\n".join(output_lines)
-
-    def _backfill_collect_and_organize(self, task_description, items, desired_count, seen_text, seen_occurrence):
-        """Adaptive, task-agnostic backfill to reach the requested count."""
-        import re
-        from urllib.parse import urlparse
-
-        def tokenize_query(text):
-            STOP = {"the","and","for","with","that","this","from","into","over","under","their","your","our","they","them","are","was","were","have","has","had","each","must","made","more","than","what","which","who","when","where","why","how","of","to","in","on","by","as","it","an","a","or","be","is","any","all","data","information"}
-            words = re.findall(r"[A-Za-z0-9%€\-]+", text)
-            kws, seen = [], set()
-            for w in words:
-                wl = w.lower()
-                if wl in STOP or len(wl) < 3:
-                    continue
-                if wl not in seen:
-                    kws.append(w)
-                    seen.add(wl)
-            return " ".join(kws[:12]) if kws else text.strip()
-
-        # Build a generic base query + optional entity hints
-        base_query = tokenize_query(task_description)
-        ent_hints = []
-        if hasattr(self, "memory") and hasattr(self.memory, "get_entities"):
-            ent_map = self.memory.get_entities() or {}
-            for _, arr in ent_map.items():
-                for e in arr or []:
-                    s = str(e).strip()
-                    if s:
-                        ent_hints.append(f'"{s}"')
-        if ent_hints:
-            base_query = f"{base_query} {' '.join(ent_hints[:4])}"
-
-        search_tool = self.tool_registry.get_tool("search")
-        browser_tool = self.tool_registry.get_tool("browser")
-        if not search_tool or not browser_tool:
-            return items  # Tools unavailable; nothing to do
-
-        # Helper to extract quotes from page content (generic)
-        def extract_from_text(text, title, url):
-            new = []
-            quotes = re.findall(r'“([^”]{10,500})”|"([^"]{10,500})"', text or "")
-            quotes = [q[0] or q[1] for q in quotes if (q[0] or q[1])]
-            if not quotes:
-                quotes = re.findall(r'([A-Z][^.!?]{40,400}[.!?])', text or "")
-            # date/url key
-            def date_or_key():
-                pats = [
-                    r'\b(?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:tember)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?)\s+\d{1,2},\s+\d{4}\b',
-                    r'\b\d{4}-\d{2}-\d{2}\b',
-                    r'\b\d{1,2}\s+(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\.?,?\s+\d{4}\b'
-                ]
-                source = f"{title}\n{url}\n{(text or '')[:2000]}"
-                for p in pats:
-                    m = re.search(p, source)
-                    if m:
-                        return m.group(0)
-                return url or title or None
-            occ_key = date_or_key()
-            for q in quotes:
-                norm = re.sub(r'\s+', ' ', q.strip()).strip('“”"')
-                if not norm or norm.lower() in seen_text:
-                    continue
-                if occ_key in seen_occurrence:
-                    continue
-                new.append({"text": norm, "source": url, "title": title, "date": occ_key})
-                seen_text.add(norm.lower())
-                seen_occurrence.add(occ_key)
-            return new
-
-        # Try several backfill rounds with increasing breadth
-        for round_idx in range(3):
-            if len(items) >= desired_count:
-                break
-            num_results = min(30, 10 + round_idx * 10)
-            top_k = min(15, 5 + round_idx * 5)
-            # Search
-            try:
-                s_out = search_tool.execute({"query": base_query, "num_results": num_results}, self.memory)
-            except Exception:
-                s_out = {}
-            results = (s_out or {}).get("results", [])
-            if results:
-                # make available to browser fallback
-                self.memory.search_results = results
-            # Browse additional URLs
-            tried = 0
-            for res in results[:top_k]:
-                if len(items) >= desired_count:
-                    break
-                url = res.get("link") or res.get("url")
-                title = res.get("title") or ""
-                if not url:
-                    continue
-                try:
-                    b_out = browser_tool.execute({"url": url, "extract_type": "main_content"}, self.memory)
-                    if isinstance(b_out, dict) and b_out.get("status") == "success":
-                        payload = b_out.get("output", {})
-                        content = payload.get("content") or payload.get("extracted_text") or ""
-                        if content and len(content) > 100:
-                            new_items = extract_from_text(content, title, url)
-                            for ni in new_items:
-                                if len(items) >= desired_count:
-                                    break
-                                items.append(ni)
-                except Exception:
-                    pass
-                tried += 1
-
-            # If still short, try snippet extraction for breadth
-            if len(items) < desired_count and results:
-                try:
-                    snip = browser_tool.execute({"url": None, "use_search_snippets": True, "top_k": top_k}, self.memory)
-                    payload = (snip or {}).get("output", {})
-                    text = payload.get("extracted_text") or ""
-                    if text:
-                        # Treat snippet sentences as quotes-like fallback
-                        for sent in re.findall(r'([A-Z][^.!?]{40,400}[.!?])', text):
-                            if len(items) >= desired_count:
-                                break
-                            norm = re.sub(r'\s+', ' ', sent.strip())
-                            if norm.lower() in seen_text:
-                                continue
-                            # approximate occ key by sentence hash
-                            occ_key = hash(norm)  # stable enough for de-dup in this run
-                            if occ_key in seen_occurrence:
-                                continue
-                            items.append({"text": norm, "source": "", "title": "Search Snippet", "date": None})
-                            seen_text.add(norm.lower())
-                            seen_occurrence.add(occ_key)
-                except Exception:
-                    pass
-
-        return items
+    def _clean_present_output(self, text: str) -> str:
+        return (text or "").strip()
 
     def _synthesize_comprehensive_synthesis(self, task_description, results):
-        """Generic fallback synthesis over search results (task-agnostic)."""
-        import re
-
-        # Infer desired count (default 5)
-        nums = re.findall(r'\b(\d{1,3})\b', task_description or "")
-        desired = int(nums[-1]) if nums else 5
-
-        # Collect search results
-        search_results = []
-        for r in results or []:
-            if r.get("status") != "success":
-                continue
-            out = r.get("output", {})
-            if isinstance(out, dict) and isinstance(out.get("results"), list):
-                search_results.extend(out["results"])
-
-        # Deduplicate by title similarity
-        STOP = {"the","and","for","with","that","this","from","into","over","under","their","your","our","of","to","in","on","by","as","it","an","a","or","be","is"}
-        def norm_title(t):
-            t = (t or "").strip().lower()
-            t = re.sub(r'…$', '', t)
-            t = re.sub(r'[^a-z0-9 ]+', ' ', t)
-            return [w for w in t.split() if w and w not in STOP][:20]
-        def jaccard(a, b):
-            sa, sb = set(a), set(b)
-            return (len(sa & sb) / max(1, len(sa | sb))) if sa and sb else 0.0
-
-        items, seen = [], []
-        for res in search_results:
-            title = res.get("title") or ""
-            link = res.get("link") or res.get("url") or ""
-            snippet = res.get("snippet") or ""
-            if not title or not link:
-                continue
-            nt = norm_title(title)
-            dup = False
-            for i, (ptoks, _) in enumerate(seen):
-                if jaccard(nt, ptoks) >= 0.8:
-                    if len(snippet or "") > len(items[i].get("snippet") or ""):
-                        items[i] = {"title": title, "url": link, "snippet": snippet}
-                        seen[i] = (nt, link)
-                    dup = True
-                    break
-            if dup:
-                continue
-            items.append({"title": title, "url": link, "snippet": snippet})
-            seen.append((nt, link))
-            if len(items) >= desired:
-                break
-
-        lines = ["## Research Findings", "", "### Search Results Found", ""]
-        for idx, it in enumerate(items, 1):
-            lines.append(f"**{idx}. {it['title']}**\n")
-            if it["snippet"]:
-                lines.append(f"{it['snippet']}\n")
-            lines.append(f"Source: {it['url']}\n\n")
-        if not items:
-            lines.append("No results to display.\n")
-        return "\n".join(lines)
+        # Kept for future use; current flow uses utils.formatters
+        pass
