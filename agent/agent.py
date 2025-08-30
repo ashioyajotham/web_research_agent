@@ -96,11 +96,11 @@ class WebResearchAgent:
             
             # Prepare parameters with enhanced variable substitution
             parameters = dict(step.parameters or {})
-            
+            # Apply dynamic placeholder/URL resolution before any tool call
+            parameters = self._substitute_parameters(parameters, results)
             # Special handling for browser steps with unresolved URLs
             if (step.tool_name == "browser" and 
                 (not parameters.get("url") or parameters.get("use_search_snippets"))):
-                
                 logger.info("Browser step will use search snippets due to URL resolution failure")
                 # The browser tool will handle snippet extraction
             
@@ -110,10 +110,8 @@ class WebResearchAgent:
                 extract_type = parameters.get("extract_type", "main_content")
 
                 if hasattr(self.memory, "search_results") and self.memory.search_results:
-                    logger.info(f"No URL provided for browser step; fetching top {top_k} search results")
                     aggregated_contents = []
                     per_page_results = []
-
                     for item in self.memory.search_results[:top_k]:
                         url = item.get("link") or item.get("url")
                         title = item.get("title", "")
@@ -121,39 +119,29 @@ class WebResearchAgent:
                             continue
                         try:
                             page_out = tool.execute({"url": url, "extract_type": extract_type}, self.memory)
-                            # Normalize a common shape for downstream synthesis
                             if isinstance(page_out, dict) and page_out.get("status") == "success":
                                 out_payload = page_out.get("output", {})
                                 content = out_payload.get("content") or out_payload.get("text") or ""
                                 if content and len(content) > 100:
-                                    aggregated_contents.append(
-                                        f"# {title}\nSource: {url}\n\n{content}\n"
-                                    )
-                                # Keep per-page metadata for synthesis
-                                per_page_results.append({
-                                    "title": title,
-                                    "url": url,
-                                    "content": content
-                                })
+                                    aggregated_contents.append(f"# {title}\nSource: {url}\n\n{content}\n")
+                                per_page_results.append({"title": title, "url": url, "content": content})
                         except Exception as e:
                             logger.warning(f"Failed to browse {url}: {e}")
 
                     if aggregated_contents or per_page_results:
-                        combined = "\n\n".join(aggregated_contents)
                         results.append({
                             "step": step.description,
                             "status": "success",
                             "output": {
-                                "content": combined,
+                                "content": "\n\n".join(aggregated_contents),
                                 "items": per_page_results
                             }
                         })
-                        # Continue to next step
-                        continue
+                        continue  # move to next step
                     else:
-                        logger.warning("No content fetched from search results; will fall back to default execution")
+                        logger.warning("No content fetched from search results; will fall back to normal execution")
 
-            # Normal tool execution (includes 403 snippet-fallback later)
+            # Normal tool execution
             output = tool.execute(parameters, self.memory)
             
             # Check if the step actually accomplished its objective
@@ -473,37 +461,191 @@ class WebResearchAgent:
             return self._synthesize_comprehensive_synthesis(task_description, results)
 
     def _synthesize_extract_and_verify(self, task_description, results):
-        """Synthesize results for extract and verify strategy."""
+        """Synthesize results for extract and verify strategy (task-agnostic, cross-source)."""
+        import re
+        from urllib.parse import urlparse
+
         output = [f"# {task_description}\n"]
-        
-        # Find successful results
-        successful_results = [r for r in results if r.get("status") == "success"]
-        
-        if not successful_results:
+
+        # Collect successful outputs
+        successful = [r for r in results if r.get("status") == "success"]
+        if not successful:
             output.append("## No Results Found\n")
-            output.append("The research was unable to find the requested information.\n")
+            output.append("The research did not produce any usable outputs.\n")
             return "\n".join(output)
-        
-        # Extract key information
-        output.append("## Answer\n")
-        
-        for result in successful_results:
-            if isinstance(result.get("output"), dict) and "extracted_text" in result["output"]:
-                output.append(result["output"]["extracted_text"])
-                output.append("\n")
-        
-        # Add source verification
-        output.append("## Source Verification\n")
-        output.append("Sources that support this finding:\n\n")
-        
-        for result in successful_results:
-            if isinstance(result.get("output"), dict):
-                urls = result["output"].get("urls", [])
-                for url in urls:
-                    if url and not self._is_placeholder_url(url):
-                        title = result["output"].get("title", "Unknown Source")
-                        output.append(f"- {url} ({title})\n")
-        
+
+        # Aggregate raw text chunks and source metadata from tool outputs
+        pages = []
+        for r in successful:
+            payload = r.get("output", {})
+            if not isinstance(payload, dict):
+                continue
+
+            # From direct browse outputs
+            page_text = payload.get("content") or payload.get("extracted_text")
+            if page_text and len(str(page_text)) > 50:
+                pages.append({
+                    "text": str(page_text),
+                    "url": payload.get("url", ""),
+                    "title": payload.get("title", "")
+                })
+
+            # From snippet fallback (multiple URLs but single combined text)
+            if not payload.get("content") and payload.get("extracted_text") and payload.get("urls"):
+                pages.append({
+                    "text": str(payload["extracted_text"]),
+                    "url": "",  # multiple, handled below
+                    "title": payload.get("title", "Combined Search Results"),
+                    "urls": payload.get("urls", [])
+                })
+
+        if not pages:
+            output.append("## No Results Found\n")
+            output.append("The research did not produce any text to verify.\n")
+            return "\n".join(output)
+
+        # Helpers
+        SENT_SPLIT = re.compile(r'(?<=[.!?])\s+')
+        STOP = {
+            "the","and","for","with","that","this","from","into","over","under","their","your","our",
+            "they","them","are","was","were","have","has","had","each","must","made","more","than",
+            "what","which","who","when","where","why","how","of","to","in","on","by","as","it","an","a","or","be","is"
+        }
+
+        def tokenize(s):
+            return [w for w in re.findall(r"[a-z0-9%€$\-]+", s.lower()) if w and w not in STOP]
+
+        def jaccard(a, b):
+            sa, sb = set(a), set(b)
+            if not sa or not sb:
+                return 0.0
+            return len(sa & sb) / max(1, len(sa | sb))
+
+        def domain(u):
+            try:
+                return urlparse(u).netloc.lower()
+            except Exception:
+                return ""
+
+        def plausible_claim(sent):
+            s = sent.strip()
+            if len(s) < 40 or len(s) > 400:
+                return False
+            # Indicators of verifiable statements
+            has_number = bool(re.search(r'[\d%€$]', s))
+            has_date = bool(re.search(r'\b(19|20)\d{2}\b', s))
+            has_verbs = bool(re.search(r'\b(said|stated|announced|reported|estimated|reduced|increased|will|plans?|agreed)\b', s, re.I))
+            has_caps = len(re.findall(r'\b[A-Z][a-z]{2,}\b', s)) >= 2
+            return has_number or has_date or has_verbs or has_caps
+
+        def extract_sentences(text):
+            # Prefer quoted spans, else split into sentences
+            quotes = re.findall(r'“([^”]{10,500})”|"([^"]{10,500})"', text)
+            quoted = [q[0] or q[1] for q in quotes if (q[0] or q[1])]
+            if quoted:
+                return [q.strip() for q in quoted if plausible_claim(q)]
+            # Fallback to sentence split
+            sents = []
+            for s in SENT_SPLIT.split(text):
+                s = s.strip()
+                if plausible_claim(s):
+                    sents.append(s)
+            return sents
+
+        # Extract candidate claims with sources
+        candidates = []
+        for pg in pages:
+            text = pg["text"]
+            sents = extract_sentences(text)
+            # Preferred single URL
+            src_urls = []
+            if pg.get("url"):
+                src_urls = [pg["url"]]
+            elif pg.get("urls"):
+                src_urls = [u for u in pg["urls"] if u]
+            for s in sents:
+                candidates.append({
+                    "text": s,
+                    "urls": src_urls or [],
+                    "title": pg.get("title", "")
+                })
+
+        if not candidates:
+            output.append("## No Verifiable Claims Found\n")
+            output.append("Results lacked extractable claims or quotes.\n")
+            return "\n".join(output)
+
+        # Group paraphrased/duplicate claims using token overlap
+        groups = []  # each: {"repr": text, "tokens": tokens, "items":[{text,urls,title}]}
+        for c in candidates:
+            toks = tokenize(c["text"])
+            placed = False
+            for g in groups:
+                if jaccard(toks, g["tokens"]) >= 0.65:
+                    g["items"].append(c)
+                    # Keep the longest representative
+                    if len(c["text"]) > len(g["repr"]):
+                        g["repr"] = c["text"]
+                        g["tokens"] = toks
+                    placed = True
+                    break
+            if not placed:
+                groups.append({"repr": c["text"], "tokens": toks, "items": [c]})
+
+        # Build verification records
+        verified = []
+        for g in groups:
+            # Aggregate sources
+            src_urls = []
+            for it in g["items"]:
+                src_urls.extend(it.get("urls", []))
+            src_urls = [u for u in src_urls if u]
+            domains = {domain(u) for u in src_urls if domain(u)}
+            support_count = len(src_urls)
+            domain_count = len(domains)
+
+            # Lightweight confidence: distinct domains then total sources, and presence of dates
+            has_date = bool(re.search(r'\b(19|20)\d{2}\b', g["repr"]))
+            confidence = min(0.99, 0.4 + 0.25 * domain_count + 0.1 * min(5, support_count) + (0.1 if has_date else 0.0))
+
+            verified.append({
+                "claim": g["repr"],
+                "sources": src_urls[:8],  # cap to keep output concise
+                "domains": sorted(list(domains))[:6],
+                "support_count": support_count,
+                "domain_count": domain_count,
+                "confidence": confidence
+            })
+
+        # Rank: more domains, then more sources, then longer claim
+        verified.sort(key=lambda x: (x["domain_count"], x["support_count"], len(x["claim"])), reverse=True)
+
+        # Output
+        output.append("## Verified Findings\n")
+        if not verified:
+            output.append("No multi-source-supported findings could be verified.\n")
+            return "\n".join(output)
+
+        # Determine how many to show: if user asked a specific number, respect it; else show top 5
+        m = re.search(r'\b(\d{1,2})\b', task_description)
+        desired = int(m.group(1)) if m else 5
+
+        for i, v in enumerate(verified[:desired], 1):
+            badge = "✅" if v["domain_count"] >= 2 else "⚠️"
+            conf_pct = int(round(v["confidence"] * 100))
+            output.append(f"**Finding {i} {badge} (confidence {conf_pct}%)**\n")
+            output.append(f"{v['claim']}\n")
+            if v["sources"]:
+                output.append("Sources:\n")
+                for u in v["sources"]:
+                    output.append(f"- {u}\n")
+            output.append("\n")
+
+        # Add a compact provenance section
+        output.append("## Method\n")
+        output.append("- Extracted candidate statements from page content and search-snippet text.\n")
+        output.append("- Grouped paraphrases via token-overlap; verified by counting distinct domains.\n")
+
         return "\n".join(output)
 
     def _synthesize_aggregate_and_filter(self, task_description, results):
@@ -522,9 +664,14 @@ class WebResearchAgent:
                 if isinstance(result_output, dict) and "results" in result_output:
                     search_results.extend(result_output["results"])
                 
-                # Collect entities from memory
+                # Collect entities from memory (expecting a dict by type)
                 entities = self.memory.get_entities()
-                all_entities.extend(entities)
+                if isinstance(entities, dict):
+                    for etype, elist in entities.items():
+                        for ent in elist or []:
+                            all_entities.append(f"{ent} ({etype})")
+                elif isinstance(entities, list):
+                    all_entities.extend(entities)
         
         output.append("## Results\n")
         output.append("| Item | Details | Status |\n")
@@ -549,152 +696,127 @@ class WebResearchAgent:
         return "\n".join(output)
 
     def _synthesize_collect_and_organize(self, task_description, results):
-        """Synthesize results for collect and organize strategy."""
+        """Task-agnostic collect & organize synthesis."""
         import re
-        output = [f"# {task_description}\n", "## Research Findings\n"]
+        output_lines = [f"# {task_description}\n", "## Research Findings\n"]
 
-        # Determine requested count from task text (e.g., '10 statements'), default to 10
+        # Infer requested count from task text
         m = re.search(r'\b(\d{1,3})\b', task_description)
         desired_count = int(m.group(1)) if m else 10
 
-        if "statement" in task_description.lower() or "quote" in task_description.lower():
-            output.append("### Statements Found\n")
+        output_lines.append("### Items Found\n")
 
-            # Collect search results and extracted content
-            search_results = []
-            extracted_content = []
+        # Gather search results and extracted page content
+        search_results = []
+        extracted_pages = []
+        for result in results:
+            if result.get("status") == "success":
+                payload = result.get("output", {})
+                if isinstance(payload, dict):
+                    if "results" in payload and isinstance(payload["results"], list):
+                        search_results.extend(payload["results"])
+                    if "items" in payload and isinstance(payload["items"], list):
+                        for it in payload["items"]:
+                            if it.get("content") and len(it["content"]) > 100:
+                                extracted_pages.append(it)
+                    elif payload.get("content") and len(payload["content"]) > 100:
+                        extracted_pages.append({
+                            "title": payload.get("title", ""),
+                            "url": payload.get("url", ""),
+                            "content": payload["content"]
+                        })
 
-            for result in results:
-                if result.get("status") == "success":
-                    result_output = result.get("output", {})
-                    if isinstance(result_output, dict):
-                        if "results" in result_output:
-                            search_results.extend(result_output["results"])
-                        # Accept either aggregated combined content or per-page items
-                        if "items" in result_output and isinstance(result_output["items"], list):
-                            for it in result_output["items"]:
-                                if it.get("content") and len(it["content"]) > 100:
-                                    extracted_content.append({
-                                        "content": it["content"],
-                                        "url": it.get("url", ""),
-                                        "title": it.get("title", "")
-                                    })
-                        if "content" in result_output and len(result_output["content"]) > 100:
-                            extracted_content.append({
-                                "content": result_output["content"],
-                                "url": result_output.get("url", ""),
-                                "title": result_output.get("title", "")
-                            })
+        # Helper to extract a date or fallback key
+        def _extract_date_or_key(text, title, url):
+            patterns = [
+                r'\b(?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|'
+                r'Jul(?:y)?|Aug(?:ust)?|Sep(?:tember)?|Oct(?:ober)?|Nov(?:ember)?|'
+                r'Dec(?:ember)?)\s+\d{1,2},\s+\d{4}\b',
+                r'\b\d{4}-\d{2}-\d{2}\b',
+                r'\b\d{1,2}\s+(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\.?,?\s+\d{4}\b'
+            ]
+            source = f"{title}\n{url}\n{text[:2000]}"
+            for p in patterns:
+                m = re.search(p, source)
+                if m:
+                    return m.group(0)
+            return url or title or None
 
-            # Helper: extract a probable date from content/title/url
-            def _extract_date(text, title, url):
-                patterns = [
-                    r'\b(?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|'
-                    r'Jul(?:y)?|Aug(?:ust)?|Sep(?:tember)?|Oct(?:ober)?|Nov(?:ember)?|'
-                    r'Dec(?:ember)?)\s+\d{1,2},\s+\d{4}\b',
-                    r'\b\d{4}-\d{2}-\d{2}\b',
-                    r'\b\d{1,2}\s+(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\.?,?\s+\d{4}\b',
-                    r'\b\d{4}\b'
-                ]
-                source = f"{title}\n{url}\n{text[:2000]}"
-                for p in patterns:
-                    m = re.search(p, source)
-                    if m:
-                        return m.group(0)
-                return None
+        # Extract quotes/statements generically from full content
+        items = []
+        seen_text = set()
+        seen_occurrence = set()
 
-            # Extract quotes/statements from full content first
-            statements = []
-            seen_text = set()
-            seen_occurrence = set()  # (date or url) to enforce separate occasions generically
+        for page in extracted_pages:
+            text = page.get("content", "")
+            url = page.get("url", "")
+            title = page.get("title", "")
+            occ_key = _extract_date_or_key(text, title, url)
 
-            for content_item in extracted_content:
-                content_text = content_item["content"]
-                source_url = content_item.get("url", "")
-                title = content_item.get("title", "")
+            # Quotes between quotes; fallback to sentence-like patterns if no quotes
+            quotes = re.findall(r'“([^”]{10,500})”|"([^"]{10,500})"', text)
+            quotes = [q[0] or q[1] for q in quotes if (q[0] or q[1])]
+            if not quotes:
+                quotes = re.findall(r'([A-Z][^.!?]{40,400}[.!?])', text)
 
-                page_date = _extract_date(content_text, title, source_url) or source_url
+            for q in quotes:
+                norm = re.sub(r'\s+', ' ', q.strip()).strip('“”"')
+                if not norm or norm.lower() in seen_text:
+                    continue
+                if occ_key in seen_occurrence:
+                    continue
+                items.append({"text": norm, "source": url, "title": title, "date": occ_key})
+                seen_text.add(norm.lower())
+                seen_occurrence.add(occ_key)
+                if len(items) >= desired_count:
+                    break
+            if len(items) >= desired_count:
+                break
 
-                quotes = re.findall(r'"([^"]{10,500})"', content_text)
-                for quote in quotes:
-                    norm = re.sub(r'\s+', ' ', quote.strip()).strip('“”"')
-                    if not norm or norm.lower() in seen_text:
-                        continue
-                    # Enforce distinct occasion by date or at least by URL
-                    occ_key = (page_date or source_url)
-                    if occ_key in seen_occurrence:
-                        continue
+        # If not enough, fall back to search snippets generically
+        if len(items) < desired_count and search_results:
+            # Collect entities from memory if available (generic)
+            entities = []
+            if hasattr(self, "memory") and hasattr(self.memory, "get_entities"):
+                ent_map = self.memory.get_entities() or {}
+                for _, arr in ent_map.items():
+                    for e in arr or []:
+                        s = str(e).strip()
+                        if s:
+                            entities.append(s)
+            entity_set = {e.lower() for e in entities}
+            speech_verbs = {"said", "says", "state", "stated", "remarks", "remarked", "announced", "declared", "told", "wrote", "noted", "argued"}
 
-                    statements.append({
-                        "text": norm,
-                        "source": source_url or "",
-                        "title": title or "",
-                        "date": page_date
-                    })
-                    seen_text.add(norm.lower())
-                    seen_occurrence.add(occ_key)
-                    if len(statements) >= desired_count:
-                        break
-                if len(statements) >= desired_count:
+            for r in search_results:
+                snippet = r.get("snippet") or ""
+                src = r.get("link") or r.get("url") or ""
+                title = r.get("title") or ""
+                if not snippet:
+                    continue
+                lower = snippet.lower()
+                has_entity = any(e in lower for e in entity_set) if entity_set else True
+                has_speech = any(v in lower for v in speech_verbs)
+                if not has_speech or not has_entity:
+                    continue
+                norm = re.sub(r'\s+', ' ', snippet.strip())
+                if norm.lower() in seen_text:
+                    continue
+                occ_key = src or title
+                if occ_key in seen_occurrence:
+                    continue
+                items.append({"text": norm, "source": src, "title": title, "date": _extract_date_or_key("", title, src)})
+                seen_text.add(norm.lower())
+                seen_occurrence.add(occ_key)
+                if len(items) >= desired_count:
                     break
 
-            # If not enough statements, use search snippets generically (entity-aware)
-            if len(statements) < desired_count and search_results:
-                # Gather entity strings from memory (generic, not task-specific)
-                entities = []
-                if hasattr(self, "memory") and hasattr(self.memory, "get_entities"):
-                    ents = self.memory.get_entities()
-                    for _, arr in (ents or {}).items():
-                        for e in arr or []:
-                            s = str(e).strip()
-                            if s:
-                                entities.append(s)
-                entity_set = {e for e in entities}
+        # Format output
+        for i, it in enumerate(items[:desired_count]):
+            output_lines.append(f"**Item {i+1}:** {it['text']}\n")
+            src_title = it.get("title") or "Source"
+            output_lines.append(f"Source: [{src_title}]({it.get('source','')})\n\n")
 
-                speech_verbs = {"said", "says", "state", "stated", "remarks", "remarked", "announced", "declared", "told", "wrote", "noted", "argued"}
-
-                for result in search_results:
-                    snippet = result.get("snippet", "") or ""
-                    source = result.get("link", "") or result.get("url", "") or ""
-                    title = result.get("title", "") or ""
-
-                    if not snippet:
-                        continue
-
-                    lower = snippet.lower()
-                    # Generic filter: must mention at least one entity and a speech/action verb
-                    has_entity = any(e.lower() in lower for e in entity_set) if entity_set else True
-                    has_speech = any(v in lower for v in speech_verbs)
-
-                    if has_entity and has_speech:
-                        norm = re.sub(r'\s+', ' ', snippet.strip())
-                        if norm.lower() in seen_text:
-                            continue
-                        occ_key = source or title
-                        if occ_key in seen_occurrence:
-                            continue
-
-                        statements.append({
-                            "text": norm,
-                            "source": source,
-                            "title": title,
-                            "date": _extract_date("", title, source)
-                        })
-                        seen_text.add(norm.lower())
-                        seen_occurrence.add(occ_key)
-                        if len(statements) >= desired_count:
-                            break
-
-            # Format output
-            for i, statement in enumerate(statements[:desired_count]):
-                output.append(f"**Statement {i+1}:** {statement['text']}\n")
-                src_title = statement.get("title") or "Source"
-                output.append(f"Source: [{src_title}]({statement.get('source','')})\n\n")
-
-            return "\n".join(output)
-
-        # Fallback for other collect-and-organize tasks
-        # ...existing code...
+        return "\n".join(output_lines)
     
     def _synthesize_comprehensive_synthesis(self, task_description, results):
         """Synthesize results for comprehensive synthesis strategy."""

@@ -4,44 +4,44 @@
 
 ## Research Findings
 
-### Statements Found
+### Items Found
 
-**Statement 1:** It's a great pleasure to see you again, President Biden. Over the past four years, China-US relations have gone through ups and downs.
-
-Source: [Remarks by President Biden and President Xi Jinping of the ...](https://china.usembassy-china.org.cn/remarks-by-president-biden-and-president-xi-jinping-of-the-peoples-republic-of-china-before-bilateral-meeting-lima-peru/)
-
-
-**Statement 2:** Remarks by President Biden on His Actions to Protect American Workers and Businesses from China's Unfair Trade Practices.
+**Item 1:** I said, “Look, we'll play by the same rules if you want. If you want to do business in China, you got to have a 51 percent Chinese owner, you ...
 
 Source: [Remarks by President Biden on His Actions to Protect American ...](https://bidenwhitehouse.archives.gov/briefing-room/speeches-remarks/2024/05/14/remarks-by-president-biden-remarks-by-president-biden-on-his-actions-to-protect-american-workers-and-businesses-from-chinas-unfair-trade-practices/)
 
 
-**Statement 3:** It's a great pleasure to see you again, President Biden. Over the past four years, China-US relations have gone through ups and downs.
+**Item 2:** President Biden stated that the U.S.-China relationship is the most important relationship in the world, not just for the two peoples, but ...
 
-Source: [Remarks by President Biden and President Xi Jinping of the ...](https://bidenwhitehouse.archives.gov/briefing-room/speeches-remarks/2024/11/16/remarks-by-president-biden-and-president-xi-jinping-of-the-peoples-republic-of-china-before-bilateral-meeting-lima-peru/)
-
-
-**Statement 4:** US President Joe Biden said US forces would defend Taiwan in the event of a Chinese invasion, his most explicit statement on the issue.
-
-Source: [Biden says U.S. forces would defend Taiwan in the event ... - Reuters](https://www.reuters.com/world/biden-says-us-forces-would-defend-taiwan-event-chinese-invasion-2022-09-18/)
+Source: [President Xi Jinping Meets with U.S. President Joe Biden in ...](https://www.fmprc.gov.cn/eng/xw/zyxw/202411/t20241117_11527672.html)
 
 
-**Statement 5:** US President Joe Biden on Thursday criticized China's "unfair economic practices" and insisted he has done a better job standing up to Beijing.
-
-Source: [Biden Targets China During State of Union Speech - VOA](https://www.voanews.com/a/biden-targets-china-during-state-of-union-speech/7519040.html)
-
-
-**Statement 6:** In his last State of the Union address before the general election, President Joe Biden said he wants “competition with China, not conflict” ...
-
-Source: [WATCH: Biden says he wants 'competition with China, not conflict'](https://www.youtube.com/watch?v=hQkfFIcYrds)
-
-
-**Statement 7:** US-China relations entered a new phase. It is one of the most challenging foreign policy relationship that President Biden inherited from his predecessor.
+**Item 3:** In his first press conference, President Biden said: “This is a battle between the utility of democracies in the 21st century and autocracies.” He further said: ...
 
 Source: [US-China Relations under President Joe Biden](https://www.icwa.in/show_content.php?lang=1&level=3&ls_id=7181&lid=4855)
 
 
-**Statement 8:** Day 476: May 11, 2022 – Joe Biden says US may lift tariffs on Chinese goods to combat inflation. In a speech on Tuesday, May 10, President Joe Biden stated ...
+**Item 4:** " He said competition between China and the U.S. must not veer into conflict, a point he has been stressing for months. U.S. President Joe Biden ...
+
+Source: [Biden says 'real progress' was made after meeting with China's Xi ...](https://www.nbcnews.com/politics/joe-biden/biden-chinas-xi-jinping-meet-effort-smooth-tensions-rcna124924)
+
+
+**Item 5:** “In the next 50 years, the most important thing in international relations is that China and the United States must find the right way to get ...
+
+Source: [US-China relations: key quotes from Xi Jinping and Joe Biden's ...](https://www.scmp.com/news/china/diplomacy/article/3156252/us-china-relations-key-quotes-xi-jinping-and-joe-bidens)
+
+
+**Item 6:** He reiterated that the world expects the United States and China to manage competition responsibly to prevent it from veering into conflict, ...
+
+Source: [Readout of President Joe Biden's Meeting with President Xi Jinping ...](https://china.usembassy-china.org.cn/readout-of-president-joe-bidens-meeting-with-president-xi-jinping-of-the-peoples-republic-of-china-2/)
+
+
+**Item 7:** Day 476: May 11, 2022 – Joe Biden says US may lift tariffs on Chinese goods to combat inflation. In a speech on Tuesday, May 10, President Joe Biden stated ...
 
 Source: [US-China Relations in the Biden-Era: A Timeline](https://www.china-briefing.com/news/us-china-relations-in-the-biden-era-a-timeline/)
+
+
+**Item 8:** US President Joe Biden said in his State of the Union address on Tuesday (Feb 7) that the US would cooperate with China but vowed to protect ...
+
+Source: [Joe Biden State of the Union speech: China relations - YouTube](https://www.youtube.com/watch?v=79PIdAdf9Ro)
 

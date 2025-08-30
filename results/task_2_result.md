@@ -4,45 +4,75 @@
 
 ## Research Findings
 
+### Information Found
+
+**Source 1:**
+
+- China and the United States held their first intergovernmental meeting on artificial intelligence (AI) in Geneva, Switzerland on May 14, 2024.
+
+- Top envoys from the U.S. and China huddled Tuesday in closed-door talks in Geneva to discuss ways to ensure that emerging artificial ...
+
+- In a candid and constructive discussion, the United States and PRC exchanged perspectives on their respective approaches to AI safety and risk management.
+
+- The U.S. and China will meet in Geneva to discuss artificial intelligence on Tuesday and U.S. officials stressed that Washington's policies ...
+
+- by S Siddiqui · 2025 — We identify potential common ground for productive dialogue by conducting a systematic analysis of more than 40 primary AI policy and corporate governance ...
+
+
+
+**Source 2:**
+
+- China and the United States held their first intergovernmental meeting on artificial intelligence (AI) in Geneva, Switzerland on May 14, 2024.
+
+- Top envoys from the U.S. and China huddled Tuesday in closed-door talks in Geneva to discuss ways to ensure that emerging artificial ...
+
+- In a candid and constructive discussion, the United States and PRC exchanged perspectives on their respective approaches to AI safety and risk management.
+
+- The U.S. and China will meet in Geneva to discuss artificial intelligence on Tuesday and U.S. officials stressed that Washington's policies ...
+
+- by S Siddiqui · 2025 — We identify potential common ground for productive dialogue by conducting a systematic analysis of more than 40 primary AI policy and corporate governance ...
+
+
+
 ### Search Results Found
 
-**1. China and US envoys will hold the first top-level dialogue on ...**
+**1. China and the United States Begin Official AI Dialogue**
 
-High-level envoys from the United States and China are set to meet in Geneva on Tuesday for talks about artificial intelligence, including the ...
+China and the United States held their first intergovernmental meeting on artificial intelligence (AI) in Geneva, Switzerland on May 14, 2024.
 
-Source: https://www.startribune.com/china-and-us-envoys-will-hold-first-top-level-dialogue-on-artificial-intelligence/600365545
-
-
-
-**2. Summit 2025 Programme - AI for Good**
-
-Explore the AI for Good Summit 2025—keynotes, panels, workshops & demos advancing AI solutions for global development challenges.
-
-Source: https://aiforgood.itu.int/summit25/programme/
+Source: https://www.chinausfocus.com/peace-security/china-and-the-united-states-begin-official-ai-dialogue
 
 
 
-**3. RebootDemocracy.AI**
+**2. Top US and Chinese officials begin talks on AI in Geneva**
 
-The real debate shouldn't be about regulation versus innovation, but about the AI we need to build, buy, and design to strengthen democracy. Published on June ...
-
-Source: https://rebootdemocracy.ai/
-
-
-
-**4. Top US and Chinese officials begin talks on AI in Geneva - WAVY.com**
-
-The talks, which Presidents Joe Biden and Xi Jinping agreed to launch in last 2023, are meant to open up bilateral dialogue between the world's ...
-
-Source: https://www.wavy.com/news/technology/ap-top-us-and-chinese-officials-begin-talks-on-ai-in-geneva/
-
-
-
-**5. Top US and Chinese officials begin talks on AI in Geneva | AP News**
-
-Missing: mediator officer
+Top envoys from the U.S. and China huddled Tuesday in closed-door talks in Geneva to discuss ways to ensure that emerging artificial ...
 
 Source: https://apnews.com/article/artificial-intelligence-china-united-states-geneva-switzerland-1aa4451f82f250a47039a213f3d72879
+
+
+
+**3. Statement from NSC Spokesperson Adrienne Watson on ...**
+
+In a candid and constructive discussion, the United States and PRC exchanged perspectives on their respective approaches to AI safety and risk management.
+
+Source: https://geneva.usmission.gov/2024/05/15/statement-from-nsc-spokesperson-adrienne-watson-on-the-us-prc-talks-on-ai-risk-and-safety/
+
+
+
+**4. US, China meet in Geneva to discuss AI risks**
+
+The U.S. and China will meet in Geneva to discuss artificial intelligence on Tuesday and U.S. officials stressed that Washington's policies ...
+
+Source: https://www.reuters.com/technology/us-china-meet-geneva-discuss-ai-risks-2024-05-13/
+
+
+
+**5. Promising Topics for US–China Dialogues on AI Risks and ...**
+
+by S Siddiqui · 2025 — We identify potential common ground for productive dialogue by conducting a systematic analysis of more than 40 primary AI policy and corporate governance ...
+
+Source: https://dl.acm.org/doi/full/10.1145/3715275.3732080
 
 
 
@@ -53,10 +83,10 @@ Source: https://apnews.com/article/artificial-intelligence-china-united-states-g
 
 **Research scope:**
 
-- 2 search operations completed
+- 4 search operations completed
 
-- 0 web pages processed
+- 3 web pages processed
 
-- 0 content extracts from search snippets
+- 2 content extracts from search snippets
 
-- 10 search results analyzed
+- 15 search results analyzed

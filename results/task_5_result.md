@@ -16,45 +16,61 @@
 
 ## Research Findings
 
+### Information Found
+
+**Source 1:**
+
+- Our research analyzes the current progress of European automotive companies on their sustainability journey.
+
+- Missing: satisfying criteria
+
+- New rules for the motor vehicle sector designed to enhance competition between distributors in relation to the sale of new motor vehicles.
+
+- The European automotive sector is faced with potentially disruptive challenges. In particular, the projected increase in the share of electric vehicles ...
+
+- More specifically, it deals with the personal data: (i) processed inside the vehicle, (ii) exchanged between the vehicle and personal devices.
+
+
+
 ### Search Results Found
 
-**1. Setting up a European Company (SE) - Your Europe**
+**1. Building a sustainable automotive industry in Europe | Deloitte Insights**
 
-To establish a European Company you must abide by all the requirements listed below: Your registered office and your head office must be in the same EU country.
+Our research analyzes the current progress of European automotive companies on their sustainability journey.
 
-Source: https://europa.eu/youreurope/business/running-business/developing-business/setting-up-european-company/index_en.htm
-
-
-
-**2. Common provisions - Taxation and Customs Union**
-
-Products have originating status if they are either "wholly obtained" or sufficiently worked or processed. This applies to all preferential origin arrangements.
-
-Source: https://taxation-customs.ec.europa.eu/customs-4/international-affairs/origin-goods/preferential-origin/common-provisions_en
+Source: https://www.deloitte.com/us/en/insights/environmental-social-governance/automotive-industry-sustainability.html
 
 
 
-**3. The Corporate Sustainability Reporting Directive - EBU**
+**2. European automotive industry: What it takes to regain competitiveness**
 
-The aim is to enable investors, civil society organisations, consumers and other stakeholders to evaluate how sustainable these companies are.
+Missing: satisfying criteria
 
-Source: https://www.ebu.ch/case-studies/open/legal-policy/eu-sustainability-rulebook-the-corporate-sustainability-reporting-directive
-
-
-
-**4. 12 Facts about GDPR Compliance | Osano**
-
-We've compiled a list of essential facts about GDPR rules and regulations. Use these as your guide to improving your organization's data security.
-
-Source: https://www.osano.com/articles/gdpr-compliance-regulations
+Source: https://www.mckinsey.com/industries/automotive-and-assembly/our-insights/european-automotive-industry-what-it-takes-to-regain-competitiveness
 
 
 
-**5. Exporting to the EU – A guide for Canadian business**
+**3. Motor vehicle distribution and after-sales service - EUR-Lex**
 
-The purpose of this guide is to provide Canadian businesses, particularly small and medium-sized enterprises (SMEs), with an overview of the ...
+New rules for the motor vehicle sector designed to enhance competition between distributors in relation to the sale of new motor vehicles.
 
-Source: https://www.tradecommissioner.gc.ca/en/market-industry-info/search-country-region/region/canada-europe-export/export-guide-european-union.html
+Source: https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=legissum:l26098
+
+
+
+**4. Resource effectiveness of the European automotive sector**
+
+The European automotive sector is faced with potentially disruptive challenges. In particular, the projected increase in the share of electric vehicles ...
+
+Source: https://www.sciencedirect.com/science/article/pii/S0921344921001658
+
+
+
+**5. [PDF] Guidelines 01/2020 on processing personal data in the context of ...**
+
+More specifically, it deals with the personal data: (i) processed inside the vehicle, (ii) exchanged between the vehicle and personal devices.
+
+Source: https://www.edpb.europa.eu/system/files/2021-03/edpb_guidelines_202001_connected_vehicles_v2.0_adopted_en.pdf
 
 
 
@@ -69,6 +85,6 @@ Source: https://www.tradecommissioner.gc.ca/en/market-industry-info/search-count
 
 - 0 web pages processed
 
-- 0 content extracts from search snippets
+- 1 content extracts from search snippets
 
 - 10 search results analyzed
