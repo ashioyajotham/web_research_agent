@@ -75,6 +75,33 @@ class ToolRegistry:
         """
         return {name: tool.description for name, tool in self.tools.items()}
     
+    async def execute_tool(self, name: str, parameters: Dict[str, Any], memory: Any) -> Dict[str, Any]:
+        """
+        Find and execute a tool by name.
+        
+        Args:
+            name (str): Name of the tool to execute.
+            parameters (dict): Parameters for the tool.
+            memory (Memory): The agent's memory object.
+            
+        Returns:
+            dict: A dictionary containing the status and output of the execution.
+        """
+        tool = self.get_tool(name)
+        if not tool:
+            error_message = f"Tool '{name}' not found."
+            logger.error(error_message)
+            return {"status": "error", "error": error_message}
+        
+        try:
+            # The tool's execute method is synchronous, but we call it from this async method.
+            result = tool.execute(parameters, memory)
+            return result
+        except Exception as e:
+            error_message = f"Error executing tool {name}: {e}"
+            logger.exception(f"An exception occurred while executing tool '{name}'")
+            return {"status": "error", "error": error_message}
+
     def register_function_as_tool(self, name: str, description: str, func: Callable) -> None:
         """
         Register a function as a tool.

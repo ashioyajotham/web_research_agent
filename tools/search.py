@@ -1,6 +1,6 @@
 from typing import Any, Dict, List
-import requests
 import json
+import requests
 from .tool_registry import BaseTool
 from utils.logger import get_logger
 from config.config import get_config
@@ -38,81 +38,40 @@ class SearchTool(BaseTool):
         self.api_key = self.config.get("serper_api_key")
         self.base_url = "https://google.serper.dev/search"
     
-    def _normalize_result_item(self, item: Any) -> Dict[str, Any]:
-        if isinstance(item, dict):
-            return {
-                "title": item.get("title"),
-                "link": item.get("link") or item.get("url"),
-                "snippet": item.get("snippet") or item.get("description") or "",
-            }
-        if hasattr(item, "__dict__"):
-            d = vars(item)
-            return {
-                "title": d.get("title"),
-                "link": d.get("link") or d.get("url"),
-                "snippet": d.get("snippet") or d.get("description") or "",
-            }
-        try:
-            title, link, snippet = item
-            return {"title": title, "link": link, "snippet": snippet}
-        except Exception:
-            return {"title": str(item), "link": None, "snippet": ""}
-
     def execute(self, parameters: Dict[str, Any], memory: Any) -> Dict[str, Any]:
-        """
-        Execute a web search with the given parameters.
-        
-        Args:
-            parameters (dict): Parameters for the search
-                - query (str): Search query string
-                - num_results (int, optional): Number of results to return (default: 10)
-            memory (Memory): Agent's memory
-            
-        Returns:
-            dict: Search results with metadata
-        """
         query = parameters.get("query")
         if not query:
-            return {"error": "No search query provided"}
+            return {"status": "error", "error": "No search query provided"}
         
         num_results = int(parameters.get("num_results", self.config.get("max_search_results", 10)))
-        
         logger.info(f"Searching for: {query}")
         
         try:
-            results = self._search(query, num_results)
-            
-            # Cache results in memory
-            memory.cache_web_content(
-                url=f"search:{query}",
-                content=json.dumps([r.to_dict() for r in results]),
-                metadata={"query": query, "count": len(results)}
-            )
-            
-            # Format results for output
-            formatted_results = {
+            raw_results: List[SearchResult] = self._search(query, num_results)
+            normalized_results: List[Dict[str, Any]] = [r.to_dict() for r in raw_results]
+
+            if memory is not None:
+                try:
+                    setattr(memory, "search_results", normalized_results)
+                except Exception as e:
+                    logger.warning(f"Failed to set search_results in memory: {e}")
+
+            # This is the direct payload the agent loop expects.
+            output_payload = {
                 "query": query,
-                "result_count": len(results),
-                "results": [r.to_dict() for r in results]
+                "results": normalized_results
             }
             
-            result = {"status": "success", "output": {"query": query, "results": results}}
-            try:
-                if memory is not None and isinstance(results, list) and results:
-                    # normalize keys and persist for downstream tools
-                    setattr(memory, "search_results", [
-                        {"title": r.get("title"), "link": r.get("link") or r.get("url"), "snippet": r.get("snippet", "")}
-                        for r in results
-                    ])
-            except Exception:
-                pass
-            return result
+            # --- THIS IS THE FIX ---
+            # Unpack the payload into the top-level dictionary.
+            return {"status": "success", **output_payload}
         
         except Exception as e:
             error_message = f"Error performing search: {str(e)}"
             logger.error(error_message)
-            return {"error": error_message}
-    
+            # Return a flat error structure as well for consistency.
+            return {"status": "error", "error": error_message}
+
     def _search(self, query: str, num_results: int = 5) -> List[SearchResult]:
         """
         Perform the actual search using serper.dev API.

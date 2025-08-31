@@ -1,4 +1,4 @@
-from typing import Dict, Any, Optional, List
+from typing import Dict, Any, Optional
 from bs4 import BeautifulSoup
 from .tool_registry import BaseTool
 from utils.logger import get_logger
@@ -55,14 +55,13 @@ def _resolve_url_placeholder(raw_url: Optional[str], memory: Any) -> Optional[st
 
 class BrowserTool(BaseTool):
     """Tool for browsing websites and extracting content."""
-    
     def __init__(self):
         super().__init__(name="browser", description="Fetch web pages and extract text")
         self.config = get_config()
         self.base_headers = {
             "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,application/json;q=0.8,*/*;q=0.6",
             "Accept-Language": "en-US,en;q=0.9",
-            "Accept-Encoding": "gzip, deflate",  # avoid 'br' unless brotli installed
+            "Accept-Encoding": "gzip, deflate",
         }
 
     def execute(self, parameters: Dict[str, Any], memory: Any) -> Dict[str, Any]:
@@ -71,11 +70,13 @@ class BrowserTool(BaseTool):
         url = _resolve_url_placeholder(raw_url, memory)
         if not url:
             return {"status": "error", "error": "Missing URL"}
+        
         headers = {**self.base_headers, "User-Agent": random.choice(UA_LIST)}
         try:
             resp = requests.get(url, headers=headers, timeout=self.config.get("http_timeout", 25))
             ct = resp.headers.get("Content-Type", "")
             is_text = bool(TEXT_CT_PAT.search(ct))
+            
             output: Dict[str, Any] = {"url": url, "title": "", "extracted_text": "", "_binary": False}
             if is_text:
                 html = _safe_decode(resp)
@@ -84,7 +85,8 @@ class BrowserTool(BaseTool):
                 output["extracted_text"] = tt["text"]
             else:
                 output["_binary"] = True
-            return {"status": "success", "output": output}
+                
+            return {"status": "success", **output}
         except Exception as e:
             logger.warning(f"Fetch failed for {url}: {e}")
             return {"status": "error", "error": str(e), "url": url}

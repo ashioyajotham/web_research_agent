@@ -1,17 +1,18 @@
 import argparse
 import os
+import asyncio
 from agent.agent import WebResearchAgent
 from utils.console_ui import (
     console, configure_logging, display_title, display_task_header,
     create_progress_context, display_plan, display_result, display_completion_message
 )
 from utils.logger import get_logger
-from utils.task_parser import parse_tasks_from_file  # New import
+from utils.task_parser import parse_tasks_from_file
 
 # Initialize the logger 
-logger = get_logger(__name__)  # Add this line
+logger = get_logger(__name__)
 
-def process_tasks(task_file_path, output_dir="results"):
+async def process_tasks(task_file_path, output_dir="results"):
     """Process tasks from a file and write results to output directory."""
     # Configure rich logging
     configure_logging()
@@ -62,7 +63,7 @@ def process_tasks(task_file_path, output_dir="results"):
                     continue
                 
                 # Prepare parameters with variable substitution
-                parameters = agent._substitute_parameters(step.parameters, results)
+                parameters = agent._substitute_parameters(step.parameters)
                 
                 # Special handling for browser steps with unresolved URLs
                 if step.tool_name == "browser":
@@ -90,24 +91,29 @@ def process_tasks(task_file_path, output_dir="results"):
                         else:
                             logger.warning("No search results available for browser fallback")
                 
-                # Execute the tool
+                # Execute the step
                 try:
-                    output = tool.execute(parameters, agent.memory)
+                    # Substitute placeholders before execution
+                    parameters = agent._substitute_parameters(step.parameters)
                     
-                    # Check if the output is an error dictionary
-                    if isinstance(output, dict) and "error" in output:
+                    # Use step.tool_name instead of step.tool
+                    result = await agent.tool_registry.execute_tool(step.tool_name, parameters, agent.memory)
+                    status = result.get("status", "error")
+                    
+                    # Add result to memory
+                    if status == "error":
                         # Tool executed but returned an error
-                        error_msg = output["error"]
+                        error_msg = result.get("output", "Unknown error")
                         results.append({"step": step.description, "status": "error", "output": error_msg})
                         logger.warning(f"Tool execution returned error: {error_msg}")
                     else:
                         # Tool executed successfully
-                        results.append({"step": step.description, "status": "success", "output": output})
-                        agent.memory.add_result(step.description, output)
+                        results.append({"step": step.description, "status": "success", "output": result})
+                        agent.memory.add_result(step.description, result)
                         
                         # Store search results for browser fallback - handle different formats
-                        if step.tool_name == "search" and isinstance(output, dict):
-                            search_results = output.get("results") or output.get("search_results") or []
+                        if step.tool_name == "search" and isinstance(result, dict):
+                            search_results = result.get("results") or result.get("search_results") or []
                             if search_results:
                                 agent.memory.search_results = search_results
                                 logger.info(f"Stored {len(search_results)} search results in memory")
@@ -142,4 +148,4 @@ if __name__ == "__main__":
     parser.add_argument("--output", default="results", help="Output directory for results")
     args = parser.parse_args()
     
-    process_tasks(args.task_file, args.output)
+    asyncio.run(process_tasks(args.task_file, args.output))

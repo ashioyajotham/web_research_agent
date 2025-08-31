@@ -116,35 +116,49 @@ class Memory:
     def add_entities(self, entities):
         """
         Add or update extracted entities in memory intelligently.
+        This version uses a more robust deduplication logic.
         
         Args:
             entities (dict): Dictionary of entity types and values
         """
-        # For each entity type
         for entity_type, values in entities.items():
             if entity_type not in self.extracted_entities:
                 self.extracted_entities[entity_type] = []
             
-            # Add new unique entities with deduplication
+            # Use a set for faster lookups of existing entities (case-insensitive)
+            existing_set = {e.lower() for e in self.extracted_entities[entity_type]}
+            
             for value in values:
                 # Skip very short entities as they're often false positives
                 if len(str(value)) < 3:
                     continue
-                    
-                # Check if this or a similar entity already exists
-                exists = False
-                value_lower = value.lower()
                 
-                for existing in self.extracted_entities[entity_type]:
-                    # Check for exact match or if one contains the other
-                    if (existing.lower() == value_lower or 
-                        existing.lower() in value_lower or 
-                        value_lower in existing.lower()):
-                        exists = True
+                value_lower = str(value).lower()
+                
+                # Simple check for exact duplicates
+                if value_lower in existing_set:
+                    continue
+
+                # Check if a more specific version of this entity already exists
+                # e.g., if 'Stripe, Inc.' exists, don't add 'Stripe'.
+                is_less_specific = any(value_lower in existing for existing in existing_set)
+                if is_less_specific:
+                    continue
+
+                # Check if this new entity is a more specific version of an existing one
+                # e.g., if 'Stripe' exists, replace it with 'Stripe, Inc.'.
+                found_less_specific = False
+                for i, existing in enumerate(self.extracted_entities[entity_type]):
+                    if existing.lower() in value_lower:
+                        self.extracted_entities[entity_type][i] = value # Replace with more specific
+                        existing_set.remove(existing.lower()) # Update the set
+                        existing_set.add(value_lower)
+                        found_less_specific = True
                         break
                 
-                if not exists:
+                if not found_less_specific:
                     self.extracted_entities[entity_type].append(value)
+                    existing_set.add(value_lower)
 
     def update_entities(self, entities):
         """
@@ -159,6 +173,7 @@ class Memory:
     def find_entity_by_role(self, role_name):
         """
         Find a person entity associated with a specific role.
+        This version uses more flexible parsing.
         
         Args:
             role_name (str): Role name to search for (e.g., "CEO", "founder")
@@ -169,22 +184,23 @@ class Memory:
         if "role" not in self.extracted_entities:
             return None, None
             
-        role_name = role_name.lower()
+        role_name_lower = role_name.lower()
         
-        # Look through all roles for a match
         for role in self.extracted_entities["role"]:
-            if role_name in role.lower():
-                # Parse the role if it's in the format "Role: Person @ Organization"
-                if ":" in role and "@" in role:
-                    parts = role.split(":")
-                    if len(parts) >= 2:
-                        person_org = parts[1].strip().split("@")
-                        if len(person_org) >= 2:
-                            person = person_org[0].strip()
-                            org = person_org[1].strip()
-                            return person, org
-                # Return just the role if it doesn't follow the format
-                return role, None
+            if role_name_lower in role.lower():
+                # Flexible parsing for "Role: Person @ Organization" or similar formats
+                # This is more robust than rigid splitting.
+                parts = [p.strip() for p in role.replace(":", "@").split("@")]
+                
+                if len(parts) == 3: # e.g., "CEO", "John Doe", "Acme"
+                    # Assuming the format is Role, Person, Org
+                    return parts[1], parts[2]
+                elif len(parts) == 2: # e.g., "John Doe", "Acme" (role was matched in the if)
+                    return parts[0], parts[1]
+                else:
+                    # If parsing fails, return the full role string as the person
+                    # and let the agent figure it out.
+                    return role, None
         
         return None, None
 
@@ -236,19 +252,27 @@ class Memory:
             return self.extracted_entities.get(entity_type, [])
         return self.extracted_entities
 
-    def get_results(self):
+    def get_results(self, step_description=None):
         """
-        Get all results from the current task.
+        Get results from the current task.
+        
+        Args:
+            step_description (str, optional): If provided, get the result for a specific step.
         
         Returns:
-            list: List of result dictionaries
+            dict or list: A single result dict or a list of all result dicts.
         """
+        if step_description:
+            return self.task_results.get(step_description)
+            
         # Convert task_results dict to a list of dicts with step info
         results = []
         for step_desc, output in self.task_results.items():
+            # Determine status based on the presence of an 'error' key
+            status = "error" if isinstance(output, dict) and 'error' in output else "success"
             results.append({
                 "step": step_desc,
-                "status": "success" if output else "error", 
+                "status": status, 
                 "output": output
             })
         return results

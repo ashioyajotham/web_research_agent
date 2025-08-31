@@ -13,38 +13,63 @@ from utils.logger import get_logger
 logger = get_logger(__name__)
 
 class WebResearchAgent:
-    """Main agent class for web research."""
+    """Main agent class to coordinate the research process."""
     
-    def __init__(self):
+    def __init__(self, config_path=None):
         self.memory = Memory()
         self.planner = Planner()
         self.comprehension = Comprehension()
         self.registry = ToolRegistry()
-        self.tool_registry = self.registry  # back-compat
-        self.registry.register(SearchTool())
-        self.registry.register(BrowserTool())
-        self.registry.register(PresentationTool())
+        # Back-compat alias
+        self.tool_registry = self.registry
 
-    def execute_task(self, task_description):
-        # ...existing or planned logic...
+        # Register tools with best-effort compatibility
+        self.tool_registry.register(SearchTool())
+        self.tool_registry.register(BrowserTool())
+        self.tool_registry.register(PresentationTool())
+
+    def _substitute_parameters(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Substitute placeholders in tool parameters with values from memory.
+        """
+        substituted_params = {}
+        if not parameters:
+            return {}
+
+        for key, value in parameters.items():
+            if isinstance(value, str):
+                # Corrected regex to find placeholders like {{search_result_0_url}}
+                # The original was likely missing the double curly braces.
+                match = re.search(r"\{\{search_result_(\d+)_url\}\}", value)
+                if match:
+                    try:
+                        index = int(match.group(1))
+                        if self.memory.search_results and len(self.memory.search_results) > index:
+                            url = self.memory.search_results[index].get("link")
+                            if url:
+                                substituted_params[key] = url
+                                logger.info(f"Substituted placeholder with URL: {url}")
+                            else:
+                                substituted_params[key] = None
+                                logger.warning(f"Search result {index} found but has no 'link' key.")
+                        else:
+                            substituted_params[key] = None
+                            logger.warning(f"Could not find search result with index {index} in memory.")
+                    except (ValueError, IndexError) as e:
+                        logger.error(f"Failed to substitute parameter for value {value}: {e}")
+                        substituted_params[key] = None
+                else:
+                    # If no placeholder is found, use the original value
+                    substituted_params[key] = value
+            else:
+                # If the value is not a string, use it as is
+                substituted_params[key] = value
+        
+        return substituted_params
+
+    async def run(self):
+        """Main execution loop for the agent."""
         pass
-
-    def _substitute_parameters(self, parameters, previous_results):
-        params = dict(parameters or {})
-        url = params.get("url")
-        if isinstance(url, str):
-            m = re.fullmatch(r"\{\{\s*search_result_(\d+)_url\s*\}\}", url.strip(), flags=re.I)
-            if m:
-                idx = int(m.group(1))
-                results = getattr(self.memory, "search_results", None) or []
-                if 0 <= idx < len(results):
-                    params["url"] = results[idx].get("link") or results[idx].get("url")
-                    return params
-        if url and self._is_placeholder_url(url):
-            resolved = self._resolve_url_from_search_results(previous_results)
-            if resolved:
-                params["url"] = resolved
-        return params
 
     def _resolve_url_from_search_results(self, previous_results):
         """Pick a URL from latest successful search results."""
