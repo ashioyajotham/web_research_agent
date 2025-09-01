@@ -1,5 +1,6 @@
 import re
 from urllib.parse import urlparse
+from typing import Dict, Any
 
 from .memory import Memory
 from .planner import Planner
@@ -23,10 +24,10 @@ class WebResearchAgent:
         # Back-compat alias
         self.tool_registry = self.registry
 
-        # Register tools with best-effort compatibility
-        self.tool_registry.register(SearchTool())
-        self.tool_registry.register(BrowserTool())
-        self.tool_registry.register(PresentationTool())
+        # Explicitly register tools with their designated names for clarity and correctness.
+        self.tool_registry.register_tool("search", SearchTool())
+        self.tool_registry.register_tool("browser", BrowserTool())
+        self.tool_registry.register_tool("present", PresentationTool())
 
     def _substitute_parameters(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
         """
@@ -38,9 +39,8 @@ class WebResearchAgent:
 
         for key, value in parameters.items():
             if isinstance(value, str):
-                # Corrected regex to find placeholders like {{search_result_0_url}}
-                # The original was likely missing the double curly braces.
-                match = re.search(r"\{\{search_result_(\d+)_url\}\}", value)
+                # This regex now correctly looks for single-brace placeholders like {search_result_0_url}
+                match = re.search(r"\{search_result_(\d+)_url\}", value)
                 if match:
                     try:
                         index = int(match.group(1))
