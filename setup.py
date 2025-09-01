@@ -25,7 +25,7 @@ setup(
     author="Victor Jotham Ashioya",
     author_email="victorashioya960@gmail.com",
     description="An agent for web research, capable of understanding complex tasks and executing them using various tools.",
-    long_description=open("README.md").read(),
+    long_description=open("README.md", encoding="utf-8").read(),
     long_description_content_type="text/markdown",
     url="https://github.com/ashioyajotham/web_research_agent",
     project_urls={

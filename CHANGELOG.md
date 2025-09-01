@@ -3,38 +3,46 @@
 ## [1.1.11] - 2025-06-15
 
 ### Fixed
+
 - Fixed web page processing in browser tool to correctly process URLs instead of falling back to snippets
 - Enhanced statement extraction for "compile a list" tasks, properly identifying and processing quotes
 - Fixed task analysis for statement compilation tasks to use the correct synthesis strategy
+- Fixed `UnicodeDecodeError` in `setup.py` on Windows by specifying UTF-8 encoding for `README.md`.
 - Increased default search result count from 5 to 10 for more comprehensive research
 
 ### Enhanced
+
 - Improved statement compilation strategy to extract quotes from both web content and search snippets
 - Added better error recovery in URL fetching to attempt processing before falling back to snippets
 
 ## [1.1.10] - 2025-06-12
 
 ### Fixed
+
 - Fixed unpacking error in browser tool's URL validation method where placeholder patterns were incorrectly treated as tuples
 - Enhanced JSON parsing robustness in the comprehension module with improved error recovery for malformed API responses
 - Added better fallback mechanisms when JSON extraction fails in task analysis
 - Fixed entity extraction methods to properly handle list data structures
 
 ### Enhanced
+
 - Improved error handling with detailed logging to aid debugging
 - Added more graceful failure modes to maintain workflow progress despite partial errors
 
 ## [1.1.9] - 2025-05-30
 
 ### Enhanced
+
 - Improved robustness with consistent handling of curly-brace placeholders in browser.py
 
 ### Fixed
+
 - Added try/except blocks around response.json() calls in search.py to handle non-JSON responses more gracefully
 
 ## [1.1.8] - 2025-05-28
 
 ### Added
+
 - **Dynamic Task Analysis System**: Intelligent pattern recognition that analyzes any research question to determine expected answer type and appropriate synthesis strategy without hardcoded rules
 - **Multi-Strategy Synthesis Framework**: Four distinct synthesis approaches (extract-and-verify, aggregate-and-filter, collect-and-organize, comprehensive-synthesis) selected based on task characteristics
 - **Answer Type Detection**: System automatically identifies whether tasks expect factual answers, comparisons, lists, or comprehensive analysis
@@ -47,6 +55,7 @@
 - **Temporal Pattern Recognition**: Improved handling of date ranges and time-based queries
 
 ### Enhanced
+
 - **Complete Results Formatting Overhaul**: System now produces direct answers to research questions instead of defaulting to entity tables
 - **Task-Adaptive Reasoning**: Agent adapts its approach based on semantic analysis of question structure and intent
 - **Dynamic Answer Synthesis**: Flexible synthesis that matches the expected output structure for each specific question type
@@ -56,6 +65,7 @@
 - **Comprehensive Logging**: Detailed tracking of reasoning processes and synthesis strategy decisions
 
 ### Fixed
+
 - **Critical Answer Format Issue**: Resolved core problem where agent produced entity-focused tables instead of direct answers to research questions
 - **Multiple Syntax Errors**: Fixed indentation issues, missing method implementations, and class structure problems in agent.py
 - **TypeError in Numerical Processing**: Resolved tuple handling errors in numerical data formatting
@@ -64,6 +74,7 @@
 - **Method Scope Issues**: Corrected parameter handling and method accessibility throughout the agent system
 
 ### Technical Details
+
 - **New Dynamic Analysis Methods**: `_analyze_task_for_answer_type()`, `_extract_primary_intent()`, `_infer_output_structure()`, `_identify_information_targets()`
 - **New Synthesis Strategy Methods**: `_synthesize_extract_and_verify()`, `_synthesize_aggregate_and_filter()`, `_synthesize_collect_and_organize()`, `_synthesize_comprehensive_synthesis()`
 - **Enhanced URL Handling**: `_get_search_result_url()`, `_is_valid_url()`, `_extract_all_urls_from_results()` with comprehensive fallback strategies
@@ -73,6 +84,7 @@
 ## [1.1.7] - 2025-05-25
 
 ### Added
+
 - Multi-criteria task parser for handling complex, structured tasks
 - Task parser utility with intelligent recognition of indentation patterns
 - Enhanced documentation focusing on ReAct research implementation
@@ -80,6 +92,7 @@
 - Explicit ReAct paradigm cycle in task execution flow
 
 ### Enhanced
+
 - Planner now generates better plans for multi-criteria tasks with specific guidance
 - Main task processing loop better handles structured tasks with multiple conditions
 - README updated to align with research focus on ReAct implementation
@@ -87,6 +100,7 @@
 - Better alignment with ReAct (Reasoning + Acting) paradigm throughout code base
 
 ### Fixed
+
 - Tasks with indented criteria are now properly processed as a single task
 - Fixed parsing issues in tasks.txt for multi-line structured tasks
 - Improved handling of JSON parsing in plan generation
