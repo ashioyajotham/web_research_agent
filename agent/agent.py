@@ -73,37 +73,37 @@ class WebResearchAgent:
 
         # 1. Comprehension: Analyze the task
         analysis = self.comprehension.analyze_task(task_description)
-        logger.info(f"Task analysis complete. Synthesis strategy: {analysis.synthesis_strategy}")
+        logger.info(f"Task analysis complete. Synthesis strategy: {analysis['synthesis_strategy']}")
 
-        # 2. Planning: Create a plan
-        plan = self.planner.create_plan(task_description, analysis.synthesis_strategy, analysis.information_targets)
+        # 2. Planning: Create a plan - pass the entire analysis dict
+        plan = self.planner.create_plan(task_description, analysis)
         logger.info("Execution plan created.")
         
         # 3. Execution: Run the plan steps
         execution_results = []
         for i, step in enumerate(plan.steps):
             logger.info(f"Executing step {i+1}/{len(plan.steps)}: {step.description}")
-            tool = self.tool_registry.get_tool(step.tool)
+            tool = self.tool_registry.get_tool(step.tool_name)
             if not tool:
-                logger.error(f"Tool '{step.tool}' not found in registry.")
-                execution_results.append({"step": i+1, "status": "error", "output": f"Tool '{step.tool}' not found."})
+                logger.error(f"Tool '{step.tool_name}' not found in registry.")
+                execution_results.append({"step": i+1, "status": "error", "output": f"Tool '{step.tool_name}' not found."})
                 continue
 
             # Substitute placeholders like {search_result_0_url} with actual values from memory
             params = self._substitute_parameters(step.parameters)
             
             # For the final presentation step, pass all previous results
-            if step.tool == "present":
+            if step.tool_name == "present":
                 params['results'] = execution_results
 
             try:
-                output = await tool.execute(**params)
+                output = tool.execute(params, self.memory)
                 status = "success"
                 # Store search results in memory for later steps
-                if step.tool == "search" and isinstance(output, dict):
+                if step.tool_name == "search" and isinstance(output, dict):
                     self.memory.search_results = output.get("results", [])
             except Exception as e:
-                output = f"Error executing tool {step.tool}: {e}"
+                output = f"Error executing tool {step.tool_name}: {e}"
                 status = "error"
                 logger.error(output)
 

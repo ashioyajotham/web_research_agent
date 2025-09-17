@@ -12,42 +12,46 @@ from utils.task_parser import parse_tasks_from_file
 # Initialize the logger 
 logger = get_logger(__name__)
 
-async def process_tasks(task_file_path):
-    """Process tasks from a file and save results."""
+async def process_tasks(task_file_path, output_dir="results"):
+    """Process tasks from a file and write results to output directory."""
+    # Configure rich logging
+    configure_logging()
     
-    # Initialize the agent
+    # Ensure output directory exists
+    os.makedirs(output_dir, exist_ok=True)
+    
+    # Display title
+    display_title("Web Research Agent")
+    
+    # Read tasks from file using the new parser
+    tasks = parse_tasks_from_file(task_file_path)
+    
+    console.print(f"[bold]Loaded {len(tasks)} tasks from {task_file_path}[/]")
+    
+    # Initialize agent
     agent = WebResearchAgent()
     
-    # Read tasks from file
-    with open(task_file_path, 'r', encoding='utf-8') as file:
-        tasks = [line.strip() for line in file if line.strip()]
-    
     # Process each task
-    for i, task in enumerate(tasks, 1):
-        if not task:
-            continue
-            
-        logger.info(f"Processing task {i}: {task}")
+    for i, task in enumerate(tasks):
+        display_task_header(i+1, len(tasks), task)
         
         try:
             # Use the agent's run method instead of manual orchestration
             result = await agent.run(task)
             
             # Save the result
-            result_filename = os.path.join("results", f"task_{i}_result.md")
-            os.makedirs("results", exist_ok=True)
+            result_filename = os.path.join(output_dir, f"task_{i+1}_result.md")
             
             with open(result_filename, 'w', encoding='utf-8') as result_file:
                 result_file.write(result)
             
-            logger.info(f"Task {i} completed. Result saved to {result_filename}")
+            display_completion_message(i+1, len(tasks))
             
         except Exception as e:
-            logger.error(f"Error processing task {i}: {e}")
+            logger.error(f"Error processing task {i+1}: {e}")
             # Save error result
-            error_result = f"# Task {i} - Error\n\nAn error occurred while processing this task:\n\n```\n{str(e)}\n```"
-            result_filename = os.path.join("results", f"task_{i}_result.md")
-            os.makedirs("results", exist_ok=True)
+            error_result = f"# Task {i+1} - Error\n\nAn error occurred while processing this task:\n\n```\n{str(e)}\n```"
+            result_filename = os.path.join(output_dir, f"task_{i+1}_result.md")
             
             with open(result_filename, 'w', encoding='utf-8') as result_file:
                 result_file.write(error_result)
