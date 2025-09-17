@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="web-research-agent",
-    version="1.1.11",
+    version="1.1.12",
     packages=find_packages(),
     include_package_data=True,
     py_modules=["cli"],
