@@ -67,9 +67,51 @@ class WebResearchAgent:
         
         return substituted_params
 
-    async def run(self):
+    async def run(self, task_description: str):
         """Main execution loop for the agent."""
-        pass
+        logger.info(f"Starting research task: {task_description}")
+
+        # 1. Comprehension: Analyze the task
+        analysis = self.comprehension.analyze_task(task_description)
+        logger.info(f"Task analysis complete. Synthesis strategy: {analysis.synthesis_strategy}")
+
+        # 2. Planning: Create a plan
+        plan = self.planner.create_plan(task_description, analysis.synthesis_strategy, analysis.information_targets)
+        logger.info("Execution plan created.")
+        
+        # 3. Execution: Run the plan steps
+        execution_results = []
+        for i, step in enumerate(plan.steps):
+            logger.info(f"Executing step {i+1}/{len(plan.steps)}: {step.description}")
+            tool = self.tool_registry.get_tool(step.tool)
+            if not tool:
+                logger.error(f"Tool '{step.tool}' not found in registry.")
+                execution_results.append({"step": i+1, "status": "error", "output": f"Tool '{step.tool}' not found."})
+                continue
+
+            # Substitute placeholders like {search_result_0_url} with actual values from memory
+            params = self._substitute_parameters(step.parameters)
+            
+            # For the final presentation step, pass all previous results
+            if step.tool == "present":
+                params['results'] = execution_results
+
+            try:
+                output = await tool.execute(**params)
+                status = "success"
+                # Store search results in memory for later steps
+                if step.tool == "search" and isinstance(output, dict):
+                    self.memory.search_results = output.get("results", [])
+            except Exception as e:
+                output = f"Error executing tool {step.tool}: {e}"
+                status = "error"
+                logger.error(output)
+
+            execution_results.append({"step": i+1, "description": step.description, "status": status, "output": output})
+
+        # 4. Formatting: Generate the final report
+        final_output = self._format_results(task_description, plan, execution_results)
+        return self._clean_present_output(final_output)
 
     def _resolve_url_from_search_results(self, previous_results):
         """Pick a URL from latest successful search results."""

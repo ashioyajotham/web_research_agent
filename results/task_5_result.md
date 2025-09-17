@@ -16,19 +16,18 @@
 
 ## Plan
 
-1. **Search for EU-based motor vehicle companies with environmental information** (using search)
+1. **Search for EU-based automotive companies with environmental disclosures** (using search)
 2. **Fetch and extract content from search result 0** (using browser)
 3. **Fetch and extract content from search result 1** (using browser)
 4. **Fetch and extract content from search result 2** (using browser)
 5. **Fetch and extract content from search result 3** (using browser)
 6. **Fetch and extract content from search result 4** (using browser)
-7. **Iterate through remaining search results (5-49)** (using browser)
-8. **Analyze extracted data for criteria match** (using browser)
-9. **Organize and present the matching companies** (using present)
+7. **Fetch and extract content from search result 5-19** (using browser)
+8. **Organize and present findings** (using present)
 
 ## Results
 
-### 1. Search for EU-based motor vehicle companies with environmental information
+### 1. Search for EU-based automotive companies with environmental disclosures
 **Status**: success
 
 **Search Query**: EU based automotive companies environmental report 2023 revenue > 1B EFRAG
@@ -40,140 +39,59 @@
 2. [[PDF] EFRAG | Annual Review 2023](https://www.efrag.org/sites/default/files/2024-07/EFRAG_AR2023_template_web.pdf)
    In 2023, EFRAG's Administrative Board worked intensely on EFRAG's long-term strategy, which outlines specific goals and objectives to be ...
 
-3. [CO2 emissions performance of new passenger cars in Europe](https://www.eea.europa.eu/en/analysis/indicators/co2-performance-of-new-passenger)
-   In 2023, the average CO2 emissions of new registered passenger cars in the EU decreased by 1.6% compared to 2022 and reached 106.4gCO2/km. The ...
+3. [[PDF] Economic and Market Report - Global and EU auto industry](https://www.acea.auto/files/Economic_and_Market_Report-Full_year_2023.pdf)
+   Sales in Europe increased by 18.6% in 2023 compared to 2022. Similar trends in both EU and Eastern European markets drove this region-wide ...
 
 4. [ESRS Set 1 - EFRAG](https://xbrl.efrag.org/e-esrs/esrs-set1-2023.html)
    1. The objective of European Sustainability Reporting Standards (ESRS) is to specify the sustainability information that an undertaking shall ...
 
-5. [Environmental statement 2023 - European Environment Agency](https://www.eea.europa.eu/en/analysis/publications/environmental-statement-2023)
-   The report contains information on the EEA′s environmental management system (EMS), its environmental performance in 2023, and the updated environmental ...
-
-6. [Economic and Market Report: Global and EU auto industry](https://www.acea.auto/publication/economic-and-market-report-global-and-eu-auto-industry-full-year-2023/)
-   ACEA's Economic and Market Report provides data on car sales, production, and trade in Europe and globally.
-
-7. [[PDF] Sustainability Report 2023 Allianz Group](https://www.allianz.com/content/dam/onemarketing/azcom/Allianz_com/sustainability/documents/Allianz_Group_Sustainability_Report_2023-web.pdf)
+5. [[PDF] Sustainability Report 2023 Allianz Group](https://www.allianz.com/content/dam/onemarketing/azcom/Allianz_com/sustainability/documents/Allianz_Group_Sustainability_Report_2023-web.pdf)
    Our reporting approach. This report is designed to meet the information needs of our stakeholders, relevant regulations and sustainability.
 
-8. [EFRAG's Annual Review 2023 is now available](https://www.efrag.org/en/news-and-calendar/news/efrags-annual-review-2023-is-now-available)
-   EFRAG is pleased to present its key developments for 2023 and in Q1 of 2024 in the Annual Review 2023. The EFRAG Annual Review includes ...
+6. [[PDF] The crisis facing the EU's automotive industry - European Parliament](https://www.europarl.europa.eu/RegData/etudes/ATAG/2024/762419/EPRS_ATA(2024)762419_EN.pdf)
+   The industry accounts for 8 % of European manufacturing value added. The EU has. 255 automotive plants assembling vehicles and making batteries ...
 
-9. [[PDF] Economic and Market Report - Global and EU auto industry](https://www.acea.auto/files/Economic_and_Market_Report-Full_year_2023.pdf)
-   Sales in Europe increased by 18.6% in 2023 compared to 2022. Similar trends in both EU and Eastern European markets drove this region-wide ...
+7. [[PDF] 2023 Corporate Responsibility & Sustainability Report](https://corporate.visa.com/content/dam/VCOM/regional/na/us/about-visa/documents/2023-corporate-responsibility-sustainability-report.pdf)
+   We updated our methodology to incorporate the 2021 GRI Standards' emphasis on impact materiality, the European Sustainability Reporting.
 
-10. [EFRAG: Why EU Firms Struggle with Sustainability Reports](https://fintechmagazine.com/news/efrag-eu-firms-struggle-with-first-sustainability-reports)
+8. [EFRAG: Why EU Firms Struggle with Sustainability Reports](https://fintechmagazine.com/news/efrag-eu-firms-struggle-with-first-sustainability-reports)
    EFRAG examined 656 sustainability statements from companies required to report under the Corporate Sustainability Reporting Directive for 2024.
 
-11. [[PDF] 2023 Corporate Responsibility & Sustainability Report](https://corporate.visa.com/content/dam/VCOM/regional/na/us/about-visa/documents/2023-corporate-responsibility-sustainability-report.pdf)
-   We updated our methodology to incorporate the 2021 GRI Standards' emphasis on impact materiality, the European Sustainability Reporting.
+9. [EFRAG's Annual Review 2023 is now available](https://www.efrag.org/en/news-and-calendar/news/efrags-annual-review-2023-is-now-available)
+   EFRAG is pleased to present its key developments for 2023 and in Q1 of 2024 in the Annual Review 2023. The EFRAG Annual Review includes ...
+
+10. [Corporate sustainability reporting - Finance - European Commission](https://finance.ec.europa.eu/capital-markets-union-and-financial-markets/company-reporting-and-auditing/company-reporting/corporate-sustainability-reporting_en)
+   EU rules require large companies and listed companies to publish regular reports on the social and environmental risks they face.
+
+11. [[PDF] Compilation of Explanations: January – November 2024 - EFRAG](https://www.efrag.org/sites/default/files/media/document/2024-12/Explanations%20January%20-%20November%202024.pdf)
+   This Compilation of Explanations by EFRAG provides non-authoritative and accompanies the. European Sustainability Reporting Standards (ESRS), as stipulated in ...
 
 12. [EFRAG: Are Companies Struggling with Sustainability Reports?](https://sustainabilitymag.com/news/efrag-eu-firms-struggle-with-first-sustainability-reports)
    More than half of the companies report having a transition plan for climate change mitigation, though EFRAG found that quality levels vary.
 
-13. [[PDF] Compilation of Explanations: January – November 2024 - EFRAG](https://www.efrag.org/sites/default/files/media/document/2024-12/Explanations%20January%20-%20November%202024.pdf)
-   This Compilation of Explanations by EFRAG provides non-authoritative and accompanies the. European Sustainability Reporting Standards (ESRS), as stipulated in ...
+13. [[PDF] How the Automotive industry can prepare for CSRD/ESRS](https://media-publications.bcg.com/How-the-Automotive-Industry-Can-Prepare-for-CSRD-ESRS.pdf)
+   European Sustainability Reporting Standards (ESRS). • Developed by the European Financial Reporting Advisory Group (EFRAG). • Builds on CSRD ...
 
 14. [[PDF] Sustainability Report 2023 - Indra](https://www.indracompany.com/sites/default/files/sustainability_report_en_2023_05042024.pdf)
    Once again, I have the pleasure of addressing you as we publish our Sustainability Report and Non-. Financial Information Statement for the ...
 
-15. [[PDF] Compilation of Explanations January—July 2024 - EFRAG](https://www.efrag.org/sites/default/files/media/document/2024-07/Compilation%20Explanations%20January%20-%20July%202024.pdf)
-   This Compilation of Explanations by EFRAG provides non-authoritative and accompanies the. European Sustainability Reporting Standards (ESRS), as ...
-
-16. [[PDF] ESRS Foundations - KPMG agentic corporate services](https://assets.kpmg.com/content/dam/kpmgsites/xx/pdf/ifrg/2024/isg-handbook-esrs-foundations.pdf.coredownload.pdf)
+15. [[PDF] ESRS Foundations - KPMG agentic corporate services](https://assets.kpmg.com/content/dam/kpmgsites/xx/pdf/ifrg/2024/isg-handbook-esrs-foundations.pdf.coredownload.pdf)
    The EU Taxonomy applies to all companies that prepare a sustainability statement. The EU Taxonomy is a classification system for sustainable activities. The ...
 
-17. [[PDF] Explanations January - November 2024 - PwC Viewpoint](https://viewpoint.pwc.com/dt/gx/en/esrs/efrag-qa/assets/Explanations_January_November_2024.pdf)
+16. [[PDF] Compilation of Explanations January—July 2024 - EFRAG](https://www.efrag.org/sites/default/files/media/document/2024-07/Compilation%20Explanations%20January%20-%20July%202024.pdf)
    This Compilation of Explanations by EFRAG provides non-authoritative and accompanies the. European Sustainability Reporting Standards (ESRS), as ...
 
-18. [[PDF] How the Automotive industry can prepare for CSRD/ESRS](https://media-publications.bcg.com/How-the-Automotive-Industry-Can-Prepare-for-CSRD-ESRS.pdf)
-   European Sustainability Reporting Standards (ESRS). • Developed by the European Financial Reporting Advisory Group (EFRAG). • Builds on CSRD ...
-
-19. [[PDF] UNIVERSAL REGISTRATION DOCUMENT 2024 | OPmobility](https://www.opmobility.com/wp-content/uploads/2025/03/opmobility-urd-2024-en.pdf)
-   Including the integrated report, the annual financial report, the corporate governance report, the sustainability statement. Universal ...
-
-20. [[PDF] Atea annual report 2024](https://www.atea.com/media/quubhnul/atea-annual-report-2024.pdf)
-   This is Atea's first annual report which has been prepared in accordance with the EU Corporate Sustainability Reporting. Directive (CSRD) and ...
-
-21. [[PDF] 2024 Annual Report - Iveco Group](https://www.ivecogroup.com/-/media/investors/shareholder_meetings/docs/agm_2025/doc/2024_IvecoGroup_Annual_Report.pdf)
-   Disclaimer: this document is a PDF copy of the Annual Report of Iveco Group N.V. at 31 December 2024 and is not presented in the ESEF-format as specified in ...
-
-22. [[PDF] Ambu's annual report 2023/24](https://www.ambu.com/Files/Files/Ambu/Financial%20Reports/2023-2024/Ambu-annual-report-2023-24-1.pdf)
-   For the full year, we nearly doubled our organic revenue growth to 13.8%, from 7.6% last year, as well as our profitability, with an.
-
-23. [[PDF] 2023 Corporate Social Responsibility. - Sanofi](https://www.sanofi.com/assets/dotcom/content-app/publications/esg-reports/2023-01-01-declaration-of-extra-financial-performance-en.pdf)
-   These statements include projections and estimates and their underlying assumptions, statements regarding plans, objectives, intentions and ...
-
-24. [[PDF] Consolidated Management Report 2024 | Repsol](https://www.repsol.com/content/dam/repsol-corporate/en_gb/accionistas-e-inversores/informes-anuales/2024/consolidated-management-report-2024.pdf)
-   This Management Report faithfully presents the Repsol Group's business, results and financial position, together with a description of the main ...
-
-25. [[PDF] Novo Nordisk Annual Report 2024 (PDF)](https://www.novonordisk.com/content/dam/nncorp/global/en/investors/irmaterial/annual_report/2025/novo-nordisk-annual-report-2024.pdf)
-   This year, our Sustainability statement is for the first time prepared according to the EU Corporate Sustainability Reporting. Directive ...
-
-26. [[PDF] BASF Report 2024_EN](https://www.basf.com/dam/jcr:a0caf160-c019-40b1-a4ea-eaedb29b0685/basf/www/global/documents/en/investor-relations/calendar-and-publications/reports/2025/BASF_Report_2024.pdf)
-   Content and Structure. This integrated BASF Report 2024 documents BASF's economic, environmental and social performance in 2024.
-
-27. [[PDF] 2023 Corporate Sustainability & ESG Report - Talgo](https://www.talgo.com/inversores/wp-content/uploads/Memoria_ENG-comprimido.pdf)
-   Balance sheets and consolidated income statement. Table of contents of the corporate sustainability report and statement of non-financial.
-
-28. [[PDF] Annual Report 2023 - Ferragamo Sustainability](https://sustainability.ferragamo.com/resource/blob/887206/e33285df62d1e6dc58a890015dcd79e4/ferragamo-eng-2023-singlepg-data.pdf)
-   Despite a particu- larly challenging market environment for the luxury sector, we made good progress in implementing our strategic priorities.
-
-29. [[PDF] Eurofins Environmental, Social and Governance Report 2023](https://cdnmedia.eurofins.com/corporate-eurofins/media/28487574/eurofins_esg_report_2023.pdf)
-   This report shares an overview of our Environmental, Social, and Governance (ESG) vision, achievements, and progress in the year from ...
-
-30. [[PDF] Frequentis Non-financial Report 2023](https://www.frequentis.com/sites/default/files/support/2024-04/Frequentis_Non-financial-Report_2023.pdf)
-   As set out in a joint statement by the European. Financial Reporting Advisory Group (EFRAG) and the GRI in September 2023, a high level of.
-
-31. [[PDF] Annual Report 2023 | ArcelorMittal](https://corporate.arcelormittal.com/media/upipeqnl/annual-report-2023.pdf)
-   ArcelorMittal is the largest steel producer in. Europe and among the largest in the Americas, and a growing presence in Asia including India ...
-
-32. [[PDF] Annual and sustainability report 2023 - H&M Group](https://hmgroup.com/wp-content/uploads/2024/03/HM-Group-Annual-and-Sustainability-Report-2023.pdf)
-   Our Annual and Sustainability Report complies with the applicable Swedish and EU legislation and the International. Financial Reporting ...
-
-33. [[PDF] Statement of Non-Finantial Information 2023.pdf - Inditex](https://static.inditex.com/annual_report_2023/en/Statement%20of%20Non-Finantial%20Information%202023.pdf)
-   Our purpose is to offer them products conceived of and made with the utmost attention to detail, beautiful designs and excellent materials.
-
-34. [[PDF] Syensqo-annual-Integrated-Report-2023-en.pdf](https://www.syensqo.com/sites/g/files/alwlxe161/files/2024-04/Syensqo-annual-Integrated-Report-2023-en.pdf)
-   Syensqo's 2023 Annual Integrated Report provides material information on Syensqo for the financial year ending December 31, 2023.
-
-35. [[PDF] Yara Integrated Report 2023](https://www.yara.com/siteassets/investors/057-reports-and-presentations/annual-reports/2023/yara-integrated-report-2023.pdf)
-   Going forward, we know that the focus will be on halting both climate change and environmental degradation, while ensuring a sufficient supply.
-
-36. [[PDF] SUSTAINABILITY REPORT 2023 - Nice S.p.A.](https://www.niceforyou.com/sites/default/files/upload/corporate/Nice_Sustainability-Report-2023.pdf)
-   We aim to cut our carbon footprint by 2030, ultimately reaching Net Zero by 2050. Energy efficiency is a key focus and the consistency of the path we have taken.
-
-37. [[PDF] Integrated Annual Report 2023 Document - Bekaert](https://www.bekaert.com/content/dam/corporate/en/annual-report/2023/pdf-files/Integrated%20Annual%20Report%202023%20Document.pdf)
-   Bekaert's Integrated Annual Report 2023 provides material information on Bekaert for the year ending. 31 December 2023. It offers a ...
-
-38. [[PDF] ESRS Q&A platform - EFRAG](https://www.efrag.org/sites/default/files/sites/webpublishing/SiteAssets/Explanations%20January%20-%20May%202024%20(final%20version).pdf)
-   In its sustainability reporting activities, EFRAG provides technical advice to the European Commission in the form of draft European Sustainability Reporting ...
-
-39. [[PDF] Sustainability reporting guide - PwC Viewpoint](https://viewpoint.pwc.com/dt/gx/en/pwc/sustainability-reporting-guide/assets/srgguide0824.pdf)
+17. [[PDF] Sustainability reporting guide - PwC Viewpoint](https://viewpoint.pwc.com/dt/gx/en/pwc/sustainability-reporting-guide/assets/srgguide0824.pdf)
    In addition, this guide has chapters dedicated to greenhouse gas emissions reporting as well as an introduction to the EU Taxonomy Regulation. The guide ...
 
-40. [[PDF] UNIVERSAL REGISTRATION DOCUMENT 2023 | OPmobility](https://www.opmobility.com/wp-content/uploads/2024/03/plastic-omnium-universal-registration-document-2023-en.pdf)
-   With €11.4 billion economic revenue in 2023 and a global network of. 152 plants and 40 R&D centers, Plastic Omnium relies on its 40,300 ...
+18. [[PDF] UNIVERSAL REGISTRATION DOCUMENT 2024 | OPmobility](https://www.opmobility.com/wp-content/uploads/2025/03/opmobility-urd-2024-en.pdf)
+   Including the integrated report, the annual financial report, the corporate governance report, the sustainability statement. Universal ...
 
-41. [[XLS] MAIG - EFRAG](https://efrag-website.azurewebsites.net/Assets/Download?assetUrl=%2Fsites%2Fwebpublishing%2FSiteAssets%2FIG%2520feedback%2520via%2520survey%2520Feb%25202024.xlsx)
-   ... corporate sustainability reporting in the EU is strengthened wherever possible. ... However, the sustainability statement should be based on a thorough ...
+19. [[PDF] Ambu's annual report 2023/24](https://www.ambu.com/Files/Files/Ambu/Financial%20Reports/2023-2024/Ambu-annual-report-2023-24-1.pdf)
+   For the full year, we nearly doubled our organic revenue growth to 13.8%, from 7.6% last year, as well as our profitability, with an.
 
-42. [EFRAG Proposes Streamlined European Sustainability Reporting ...](https://esgnews.com/efrag-proposes-streamlined-european-sustainability-reporting-standards-to-cut-reporting-burden/)
-   EFRAG incorporated extensive input from companies currently reporting under CSRD and those preparing to do so. Using a combination of top-down ...
-
-43. [[PDF] Billerud Annual and Sustainability Report 2024](https://www.billerud.com/globalassets/cision/documents/2025/20250327-billeruds-annual-and-sustainability-report-2024-en-0-5016394.pdf)
-   ... industry in the EU. Nonetheless, the long-term demand for fiber-based pack- aging materials is expected to be signifi- cant and to grow by ...
-
-44. [[PDF] 03-01 SR TEG 3 February 2023 - ESRS SEC1 Sector Classification ...](https://www.efrag.org/system/files/sites/webpublishing/Meeting%20Documents/2212281611289416/03-01%20SR%20TEG%203%20February%202023%20-%20ESRS%20SEC1%20Sector%20Classification%20January%202023.pdf)
-   EFRAG SRT 3 February 2023. Page 2 of 38,. Paper 03-01. [Draft] European Sustainability Reporting Standard SEC1 Sector Classification....3.
-
-45. [Sustainability reporting - EFRAG](https://www.efrag.org/en/sustainability-reporting)
-   EFRAG provides technical advice to the European Commission in the form of draft European Sustainability Reporting Standards (ESRS) elaborated under a robust ...
-
-46. [EFRAG: Europe's Voice in Corporate Reporting](https://www.efrag.org/en)
-   EFRAG's mission is to serve the European public interest in both financial and sustainability reporting by developing and promoting European views in the ...
-
-47. [About sustainability reporting - EFRAG](https://www.efrag.org/en/sustainability-reporting/about-sustainability-reporting)
-   Under the proposed CSRD, EFRAG was appointed technical adviser to the European Commission developing draft ESRS. This was confirmed by the text of 21 June ...
+20. [[PDF] Annual and sustainability report 2023 - H&M Group](https://hmgroup.com/wp-content/uploads/2024/03/HM-Group-Annual-and-Sustainability-Report-2023.pdf)
+   Our Annual and Sustainability Report complies with the applicable Swedish and EU legislation and the International. Financial Reporting ...
 
 ### 2. Fetch and extract content from search result 0
 **Status**: success
@@ -207,10 +125,10 @@
 ```json
 {
   "status": "success",
-  "url": "https://www.eea.europa.eu/en/analysis/indicators/co2-performance-of-new-passenger",
-  "title": "CO2 emissions performance of new passenger cars in Europe | European Environment Agency's home page",
-  "extracted_text": "CO2 emissions performance of new passenger cars in Europe | European Environment Agency's home page Skip to main content Skip to navigation Skip to footer An official website of the European Union | How do you know? All official European Union website addresses are in the europa.eu domain. See all EU institutions and bodies Environmental information systems European Environment Agency website WISE marine - Marine information system for Europe WISE freshwater - Freshwater information system for Europe BISE - Biodiversity information system for Europe FISE - Forest information system for Europe European Climate and health observatory ClimateADAPT European Industrial Emissions Portal Climate and energy in the EU Copernicus Land Monitoring Service Copernicus InSitu Topics Analysis and data Countries Newsroom About us Analysis and data Indicators CO2 emissions performance of new passenger cars in Europe CO2 emissions performance of new passenger cars in Europe Published 16 Dec 2024 Share Average CO 2 emissions from new passenger cars registered in Europe have fallen steadily in recent years, resulting in a 28% reduction between 2019 and 2023. The main driver of this decrease in emissions is the surge in electric vehicle registrations, which reached 23.6% of the European Union\u2019s new car fleet in 2023. Almost all car manufacturers met their binding targets in 2023. Figure 1. Average CO\u2082 emissions from new passenger cars and future targets Emissions from transport account for one quarter of the EU\u2019s greenhouse gas emissions . To achieve climate neutrality , the European Green Deal calls for a 90% reduction in greenhouse gas emissions from transport by 2050. To help achieve these targets, Regulation (EU) 2019/631 sets fleet-wide targets for the average CO 2 emissions from all new passenger cars in Europe, and these targets are set to become stricter over time. For the years 2020-2024, the target is 95gCO 2 /km (NEDC), equivalent to around 115.1gCO 2 /km (WLTP). From 2025 onwards, stricter EU-wide fleet targets will apply: 93.6g/km until 2029, 49.5g/km from 2030 to 2034 and 0g/km from 2035. This is illustrated in Figure 1. Calculated based on those fleet-wide targets, specific emission targets also apply. These are binding for manufacturers, either individually or organised in pools (see below). In 2023, the average CO 2 emissions of new registered passenger cars in the EU decreased by 1.6% compared to 2022 and reached 106.4gCO 2 /km. The main reason for the reduction observed in the last year is the growing share of battery electric vehicle (BEV) registrations, which increased from 13.5% in 2022 to 15.5% in 2023. Still, petrol cars continued to be the most sold fuel type in 2023, constituting more than half of all new registrations (including hybrid cars), followed by diesel cars (17%). Figure 2. Average CO\u2082 performance of pools of car manufacturers in the EU, Iceland, Norway in 2023 Specific emission targets are set annually for each manufacturer or pool, i.e. a group of manufacturers acting together for the purpose of target compliance. These targets are based on the average mass of the manufacturer's or pool's new vehicle fleet in the given year. Until 2024, this means that manufacturers of heavier cars have higher emissions targets than manufacturers of lighter cars. Manufacturers or pools that are responsible for fewer than 300,000 newly registered cars per year may benefit from a derogation target. In 2023, 98 out of 101 manufacturers - individually or as members of a pool - met their binding target . In some cases, this was facilitated by the use of eco-innovation savings. Three individual manufacturers (DFSK Motor Co Ltd, General Motors Holdings LLC and Lotus Cars Limited), each responsible for fewer than 1,600 vehicles newly registered in Europe, exceeded their respective emission targets. The average CO 2 emissions of all pools are below 125gCO 2 /km. Pools with the lowest average CO 2 emissions were Kia, BMW and Stellantis, reporting between 100 and 103gCO 2 /km. This is illustrated in Figure 2. Among individual manufacturers, Tesla registered more than 300,000 new zero-emission vehicles in Europe in 2023. Polestar registered some 22,000, BYD around 15,000 and Smart around 9,700. Supporting information Definition Average specific Specific emission targets are based on the average mass of the manufacturer's or pool's new vehicle fleet in the given year. Methodology Methodology for indicator calculation EU average specific CO 2 emissions are calculated as the average emissions (as recorded in the certificates of conformity, based on type approval values) of all new passenger cars first registered in the EU, Norway and Iceland in a particular year. For calculating manufacturers/pools\u2019 average emissions, eco-innovation savings and super-credits (for 2020-2022) are also taken into account. For each manufacturer/pool, an annual specific emissions target is calculated on the basis of the fleet-wide target and the average \u2018mass in running order\u2019 of the registered vehicles, using the formula in ANNEX 1, part A of Regulation (EU) 2019/631. Policy/environmental relevance The transport sector is one of the largest sources of greenhouse gas emissions in the European Union. The sector has shown little progress in the reduction of emissions in recent decades. Despite efforts to reduce emissions from transport, emissions have not significantly decreased since 2005. Estimates of 2023 emissions indicate a small drop of 0.8% compared with 2022. That makes the transport sector a major factor to realising the EU\u2019s climate goals. Accuracy and uncertainties No uncertainties have been specified. Data sources and providers Monitoring of CO2 emissions from passenger cars, 2023 - Final , European Environment Agency (EEA) Metadata DPSIR Driving forces Topics Climate change mitigation Transport and mobility Road transport Tags CO2 emissions Passenger cars TERM017 Electric vehicles Temporal coverage 2000-2023 2025 2030 2035 Geographic coverage Austria Belgium Bulgaria Croatia Cyprus Czechia Denmark Estonia Finland France Germany Greece Hungary Iceland Ireland Italy Latvia Lithuania Luxembourg Malta Netherlands Norway Poland Portugal Romania Slovakia Slovenia Spain Sweden Typology Performance indicator (Type B - Does it matter?) UN SDGs SDG13: Climate action Unit of measure gCO 2 /km Frequency of dissemination Once a year References and footnotes <div class=\"csl-bib-body\" style=\"line-height: 1.35; \"> <div class=\"csl-entry\">EU, 2019, Regulation (EU) 2019/631 of the European Parliament and of the Council of 17 April 2019 setting CO<sub>2</sub> emission performance standards for new passenger cars and for new light commercial vehicles, and repealing Regulations (EC) No 443/2009 and (EU) No 510/2011, OJ L 111, 25.4.2019, p. 13-53.</div> </div> \u21b5 <div class=\"csl-bib-body\" style=\"line-height: 1.35; \"> <div class=\"csl-entry\">EU, 2019, Regulation (EU) 2019/631 of the European Parliament and of the Council of 17 April 2019 setting CO2 emission performance standards for new passenger cars and for new light commercial vehicles, and repealing Regulations (EC) No 443/2009 and (EU) No 510/2011 (Text with EEA relevance.)</div> </div> \u21b5 About us FAQs Careers Contact us Sign up to our newsletter Explore our environmental information systems Privacy statement Accessibility Legal notice Sitemap System status Login top",
-  "_binary": false
+  "url": "https://www.acea.auto/files/Economic_and_Market_Report-Full_year_2023.pdf",
+  "title": "",
+  "extracted_text": "",
+  "_binary": true
 }
 ```
 
@@ -233,31 +151,26 @@
 ```json
 {
   "status": "success",
-  "url": "https://www.eea.europa.eu/en/analysis/publications/environmental-statement-2023",
-  "title": "Environmental statement 2023 | European Environment Agency's home page",
-  "extracted_text": "Environmental statement 2023 | European Environment Agency's home page Skip to main content Skip to navigation Skip to footer An official website of the European Union | How do you know? All official European Union website addresses are in the europa.eu domain. See all EU institutions and bodies Environmental information systems European Environment Agency website WISE marine - Marine information system for Europe WISE freshwater - Freshwater information system for Europe BISE - Biodiversity information system for Europe FISE - Forest information system for Europe European Climate and health observatory ClimateADAPT European Industrial Emissions Portal Climate and energy in the EU Copernicus Land Monitoring Service Copernicus InSitu Topics Analysis and data Countries Newsroom About us Analysis and data Publications Environmental statement 2023 EEA Report 10/2024 Environmental statement 2023 Report (PDF) Published 17 Oct 2024 Share Download Environmental statement 2023 EEA Report 10/2024 17 Oct 2024 The EEA\u2032s annual environmental statement report for 2023 conforms to requirements stipulated in the EU Eco-Management and Audit Scheme (EMAS) Regulation and takes into account the sectoral reference document for the public administration sector. The report contains information on the EEA\u2032s environmental management system (EMS), its environmental performance in 2023, and the updated environmental targets and an action plan for 2024. EN PDF: TH-01-24-003-EN-N - ISBN: 978-92-9480-679-6 - ISSN: 1977-8449 - doi: 10.2800/7636500 Download PDF report Key messages The EEA achieved all its environmental targets for 2023, except in the area of water. The EEA\u2019s environmental performance in 2023 showed a rebound effect compared to the years still influenced by the COVID-19 pandemic. Most of the environmental performance indicators, such as energy consumption and water consumption showed an increase compared to 2022. Areas such as paper consumption, waste reduction and sorting continued to improve. The EEA\u2032s electricity provider guarantees that an amount (100 %) of the EEA's electricity is produced from renewable resources in Europe. Over the last 3 years, an increase in staff related electricity consumption (total and per full-time equivalent (FTE)) was observed, but it was still below the pre-pandemic level. The systematic use of energy efficient docking stations, as well as the teleworking practices of staff and the deployment of the newly refurbished areas of the building may have slightly mitigated the overall increase in staff. On the other hand, energy consumption linked to heating decreased, which could be associated with the application of EU and Danish guidance for limiting indoor heating, as well as the closure of the floors undergoing refurbishment. Despite not being accounted for directly in the EEA\u2032s energy consumption, an increase was seen in the electricity consumption (+12%) of the EEA\u2032s IT server infrastructure, which has been co-located in an external, energy efficient data centre since 2022. Paper consumption continued to decrease, with the ongoing digitalisation of administrative workflows and the continued fall in printed materials. The application of the zero-print policy for EEA publications continued, with no discernible negative impact on outreach and the visibility of EEA products. A new target for water consumption was introduced in the 2023 environmental management programme. The target was not achieved. Water consumption showed continuous growth over the last 2 years, peaking far above the pre-pandemic level. Water use in the canteen accounts for 1/3 of overall consumption and may explain part of this increase as the consumption almost doubled in 2023. The increase in staff, as well as a higher occupancy of the premises with the opening of newly refurbished floors in Kongens Nytorv 6 (KN6) and the increased use of the canteen services may explain this jump. The newly renovated f loors include green walls that require extra watering compared to the previous setup. Regarding waste, trends in waste generated and the rate of waste collected as recyclables are improving. The EEA\u2032s separate collection performance increased over time with the gradual introduction of more waste materials collected separately (44%). In May 2023, separate collection of several new waste fractions was introduced, following Danish national requirements. As part of the EMAS activities for 2023, a new waste sorting system was introduced on all floors of the EEA building, with accompanying information for EEA staff. The data for 2023 on separately collected waste fractions indicated an increase in the amounts of plastics, metals, cardboard and glass collected compared to 2022, indicating that this new system seems to be taking effect. Thanks to the donation policy, a significant share of old canteen porcelain and cutlery has been donated. A reduced budget for business travel and visitor meetings, alongside the EEA\u2032s climate neutrality pledge and the growing use of videoconferencing have kept 2023 greenhouse gas emissions from staff and visitor travel at a relatively low level. Staff related travel, as well as meetings on the EEA premises have, to some extent, been replaced by videoconferencing and blended meetings. However, maintaining this low level of emissions appears to be a key challenge for the organisation. Related contents Becoming a climate neutral agency About us FAQs Careers Contact us Sign up to our newsletter Explore our environmental information systems Privacy statement Accessibility Legal notice Sitemap System status Login top",
+  "url": "https://www.allianz.com/content/dam/onemarketing/azcom/Allianz_com/sustainability/documents/Allianz_Group_Sustainability_Report_2023-web.pdf",
+  "title": "Just a moment...",
+  "extracted_text": "Just a moment...",
   "_binary": false
 }
 ```
 
-### 7. Iterate through remaining search results (5-49)
+### 7. Fetch and extract content from search result 5-19
 **Status**: error
 
 **Error**: Unknown error
 
-### 8. Analyze extracted data for criteria match
-**Status**: error
-
-**Error**: Unknown error
-
-### 9. Organize and present the matching companies
+### 8. Organize and present findings
 **Status**: success
 
 ```json
 {
   "status": "success",
   "output": {
-    "final_text": "Present a list of companies meeting the specified criteria. Include company name, country, 2023 revenue, and a link to their environmental report if available."
+    "final_text": "Compile a list of companies meeting the specified criteria.  For each company, include: Company Name, 2021 GHG Emissions, 2022 GHG Emissions, 2023 GHG Emissions, 2023 Revenue (EUR).  Only include companies meeting ALL criteria: EU-based, operates within the motor vehicle sector (as defined by EFRAG), provides detailed environmental information for automotive operations, total GHG emissions available for 2021, 2022, and 2023, earned more than \u20ac1B in revenue in 2023, and is not a subsidiary unless the parent is a holding company. Format as a table."
   }
 }
 ```

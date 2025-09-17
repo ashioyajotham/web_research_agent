@@ -12,135 +12,45 @@ from utils.task_parser import parse_tasks_from_file
 # Initialize the logger 
 logger = get_logger(__name__)
 
-async def process_tasks(task_file_path, output_dir="results"):
-    """Process tasks from a file and write results to output directory."""
-    # Configure rich logging
-    configure_logging()
+async def process_tasks(task_file_path):
+    """Process tasks from a file and save results."""
     
-    # Ensure output directory exists
-    os.makedirs(output_dir, exist_ok=True)
-    
-    # Display title
-    display_title("Web Research Agent")
-    
-    # Read tasks from file using the new parser
-    tasks = parse_tasks_from_file(task_file_path)
-    
-    console.print(f"[bold]Loaded {len(tasks)} tasks from {task_file_path}[/]")
-    
-    # Initialize agent
+    # Initialize the agent
     agent = WebResearchAgent()
     
+    # Read tasks from file
+    with open(task_file_path, 'r', encoding='utf-8') as file:
+        tasks = [line.strip() for line in file if line.strip()]
+    
     # Process each task
-    for i, task in enumerate(tasks):
-        display_task_header(i+1, len(tasks), task)
-        
-        # Create a plan
-        with console.status("[bold blue]Planning...", spinner="dots"):
-            # This will trigger task analysis and planning
-            # But we'll capture the actual execution inside our progress context
-            agent.memory.add_task(task)
-            task_analysis = agent.comprehension.analyze_task(task)
-            plan = agent.planner.create_plan(task, task_analysis)
-        
-        # Display the plan
-        display_plan([{"description": step.description, "tool": step.tool_name} for step in plan.steps])
-        
-        # Execute the task with progress tracking
-        results = []
-        with create_progress_context() as progress:
-            task_progress = progress.add_task("Executing task...", total=len(plan.steps))
+    for i, task in enumerate(tasks, 1):
+        if not task:
+            continue
             
-            for step_index, step in enumerate(plan.steps):
-                progress.update(task_progress, description=f"Step {step_index+1}: {step.description[:30]}...")
-                
-                # Get the appropriate tool
-                tool = agent.tool_registry.get_tool(step.tool_name)
-                if not tool:
-                    error_msg = f"Tool '{step.tool_name}' not found"
-                    results.append({"step": step.description, "status": "error", "output": error_msg})
-                    progress.update(task_progress, advance=1)
-                    continue
-                
-                # Prepare parameters with variable substitution
-                parameters = agent._substitute_parameters(step.parameters)
-                
-                # Special handling for browser steps with unresolved URLs
-                if step.tool_name == "browser":
-                    url = parameters.get("url")
-                    if not url or url is None or not agent._is_valid_url(url):
-                        # Force use of search snippets and ensure search results are available
-                        parameters["use_search_snippets"] = True
-                        parameters["url"] = None
-                        
-                        # Ensure search results are in memory
-                        search_results = []
-                        for result in results:
-                            if (result.get("status") == "success" and 
-                                "search" in result.get("step", "").lower()):
-                                result_output = result.get("output", {})
-                                if isinstance(result_output, dict):
-                                    if "results" in result_output:
-                                        search_results.extend(result_output["results"])
-                                    elif "search_results" in result_output:
-                                        search_results.extend(result_output["search_results"])
-                        
-                        if search_results:
-                            agent.memory.search_results = search_results
-                            logger.info(f"Set {len(search_results)} search results in memory for browser fallback")
-                        else:
-                            logger.warning("No search results available for browser fallback")
-                
-                # Execute the step
-                try:
-                    # Substitute placeholders before execution
-                    parameters = agent._substitute_parameters(step.parameters)
-                    
-                    # Use step.tool_name instead of step.tool
-                    result = await agent.tool_registry.execute_tool(step.tool_name, parameters, agent.memory)
-                    status = result.get("status", "error")
-                    
-                    # Add result to memory
-                    if status == "error":
-                        # Tool executed but returned an error
-                        error_msg = result.get("output", "Unknown error")
-                        results.append({"step": step.description, "status": "error", "output": error_msg})
-                        logger.warning(f"Tool execution returned error: {error_msg}")
-                    else:
-                        # Tool executed successfully
-                        results.append({"step": step.description, "status": "success", "output": result})
-                        agent.memory.add_result(step.description, result)
-                        
-                        # Store search results for browser fallback - handle different formats
-                        if step.tool_name == "search" and isinstance(result, dict):
-                            search_results = result.get("results") or result.get("search_results") or []
-                            if search_results:
-                                agent.memory.search_results = search_results
-                                logger.info(f"Stored {len(search_results)} search results in memory")
-                            else:
-                                logger.warning("Search step completed but no results found in output")
-                except Exception as e:
-                    # Exception during tool execution
-                    logger.error(f"Error executing tool {step.tool_name}: {str(e)}")
-                    results.append({"step": step.description, "status": "error", "output": str(e)})
-                
-                # Display the result of this step
-                display_result(step_index+1, step.description, results[-1]["status"], results[-1]["output"])
-                
-                # Update progress
-                progress.update(task_progress, advance=1)
+        logger.info(f"Processing task {i}: {task}")
         
-        # Format the results
-        formatted_results = agent._format_results(task, plan, results)
-        
-        # Write result to file
-        output_file = os.path.join(output_dir, f"task_{i+1}_result.md")
-        with open(output_file, "w", encoding="utf-8") as f:  # Added encoding="utf-8"
-            f.write(f"# Task: {task}\n\n")
-            f.write(formatted_results)
-        
-        # Display completion message
-        display_completion_message(task, output_file)
+        try:
+            # Use the agent's run method instead of manual orchestration
+            result = await agent.run(task)
+            
+            # Save the result
+            result_filename = os.path.join("results", f"task_{i}_result.md")
+            os.makedirs("results", exist_ok=True)
+            
+            with open(result_filename, 'w', encoding='utf-8') as result_file:
+                result_file.write(result)
+            
+            logger.info(f"Task {i} completed. Result saved to {result_filename}")
+            
+        except Exception as e:
+            logger.error(f"Error processing task {i}: {e}")
+            # Save error result
+            error_result = f"# Task {i} - Error\n\nAn error occurred while processing this task:\n\n```\n{str(e)}\n```"
+            result_filename = os.path.join("results", f"task_{i}_result.md")
+            os.makedirs("results", exist_ok=True)
+            
+            with open(result_filename, 'w', encoding='utf-8') as result_file:
+                result_file.write(error_result)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Web Research Agent")
