@@ -1,5 +1,36 @@
 # Changelog
 
+## [1.1.12] - 2025-09-17
+
+### Major Improvements
+
+- **Complete Agent Architecture Redesign**: Implemented proper ReAct (Reasoning + Acting) execution loop in WebResearchAgent
+- **Centralized Task Execution**: Moved all task orchestration from main.py into the agent's run() method for cleaner architecture
+- **Fixed Core Synthesis Pipeline**: Resolved critical issue where final synthesis step was not being executed properly
+- **Enhanced Planning Integration**: Fixed parameter passing between comprehension, planning, and execution phases
+
+### Fixed
+
+- Fixed parameter substitution for search result URLs using correct single-brace placeholder format {search_result_N_url}
+- Resolved tool registry issues by implementing proper tool registration with explicit names
+- Fixed async/sync execution conflicts in tool calling
+- Corrected method signature mismatches in planner.create_plan() calls
+- Fixed display_completion_message() argument count error
+- Enhanced error handling throughout the execution pipeline
+
+### Technical Improvements
+
+- Implemented complete agent.run() method that handles: task analysis → planning → tool execution → synthesis
+- Added proper memory management for search results across tool executions
+- Improved tool parameter substitution with robust placeholder replacement
+- Enhanced execution logging and error reporting for better debugging
+- Streamlined main.py to focus purely on task file processing and result saving
+
+### Breaking Changes
+
+- Agent execution now requires calling agent.run(task) instead of manual tool orchestration
+- Tool registry now uses explicit registration: register_tool(name, instance) instead of auto-detection
+
 ## [1.1.11] - 2025-06-15
 
 ### Fixed
@@ -200,6 +231,7 @@
 ## [1.0.4] - 2025-03-11
 
 ### Fixed
+
 - Refactored the output formatters by converting the "utils/formatters" module into a package. The new __init__.py file now re-exports the format_results function, ensuring consistent imports between editable and installed versions.
 
 ## [1.0.3] - 2025-03-10
