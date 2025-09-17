@@ -450,7 +450,7 @@ This research implementation draws from established agent concepts and developme
 
 - [OpenAI Function Calling Guide](https://platform.openai.com/docs/guides/function-calling) - Best practices for tool-using agents
 - [Anthropic's Claude Agent Guide](https://www.anthropic.com/research/claude-agent) - Methods for reliable agent construction
-- [LangChain ReAct Implementation](https://python.langchain.com/docs/modules/agents/agent_types/react) - Technical approaches for implementing ReAct
+- [Tongyi DeepResearch](https://tongyi-agent.github.io/blog/introducing-tongyi-deep-research/) - Inspiration for structured web research agents
 
 ### Related Research
 
