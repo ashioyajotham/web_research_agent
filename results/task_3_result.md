@@ -21,7 +21,7 @@
    We present a dataset of 81 large-scale models, from AlphaGo to Gemini, developed across 18 countries, at the leading edge of scale and capabilities.
 
 2. [Data on the Trajectory of AI | Epoch AI Database](https://epoch.ai/data)
-   Our public database, the largest of its kind, tracks over 3000 machine learning models from 1950 to today. Explore data and graphs showing the trajectory of AI.
+   Our public datasets catalog over 3000 machine learning models. Explore data and graphs showing the growth and trajectory of AI from 1950 to today.
 
 3. [Visualizing epoched data — MNE 1.10.1 documentation](https://mne.tools/stable/auto_tutorials/epochs/20_visualize_epochs.html)
    This tutorial shows how to plot epoched data as time series, how to plot the spectral density of epoched data, how to plot epochs as an imagemap,
@@ -35,17 +35,17 @@
 6. [MONSTER Monash Scalable Time Series Evaluation ...](https://arxiv.org/html/2502.15122v1)
    We introduce Monster—the MONash Scalable Time Series Evaluation Repository—a collection of large datasets for time series classification.
 
-7. [COSMOS How to extract the Gaia ancillary data using datalink](https://www.cosmos.esa.int/web/gaia-users/archive/datalink-products)
-   This intermediate-level tutorial introduces the concepts needed to retrieve these non-tabular products using the Gaia ESA Archive web interface via its ...
+7. [How to Select a Model For Time Series Prediction Task ...](https://neptune.ai/blog/select-model-for-time-series-prediction-task)
+   This guide explains how to select and evaluate time series models based on predictive performance—including classical, supervised, and deep learning-based ...
 
 8. [Time-series data analysis using LSTM (Tutorial)](https://www.kaggle.com/code/amirrezaeian/time-series-data-analysis-using-lstm-tutorial)
    This Notebook is a sort of tutorial for the beginners in Deep Learning and time-series data analysis.
 
-9. [How to Select a Model For Time Series Prediction Task ...](https://neptune.ai/blog/select-model-for-time-series-prediction-task)
-   This guide explains how to select and evaluate time series models based on predictive performance—including classical, supervised, and deep learning-based ...
+9. [COSMOS How to extract the Gaia ancillary data using datalink](https://www.cosmos.esa.int/web/gaia-users/archive/datalink-products)
+   This intermediate-level tutorial introduces the concepts needed to retrieve these non-tabular products using the Gaia ESA Archive web interface via its ...
 
-10. [Time series forecasting | TensorFlow Core](https://www.tensorflow.org/tutorials/structured_data/time_series)
-   This tutorial is an introduction to time series forecasting using TensorFlow. It builds a few different styles of models including Convolutional and Recurrent ...
+10. [The Epochs data structure: discontinuous data](https://mne.tools/stable/auto_tutorials/epochs/10_epochs_overview.html)
+   Epochs objects are a data structure for representing and analyzing equal-duration chunks of the EEG/MEG signal.
 
 ### 2. 2
 **Status**: success
