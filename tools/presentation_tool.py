@@ -6,7 +6,7 @@ from utils.logger import get_logger
 logger = get_logger(__name__)
 
 class PresentationTool(BaseTool):
-    """Tool for synthesizing research findings into coherent answers."""
+    """Presentation tool focused on clear, relevant answer synthesis."""
 
     def __init__(self):
         super().__init__(name="present", description="Synthesize and present research results")
@@ -15,17 +15,18 @@ class PresentationTool(BaseTool):
         params = parameters or {}
         title = params.get("title", "Research Results")
         prompt = params.get("prompt", "") or ""
-        data = params.get("data")
         results = params.get("results", [])
         suppress_debug = bool(params.get("suppress_debug", False))
 
-        # Extract the research question from the prompt
+        # Extract the research question
         research_question = self._extract_research_question(prompt)
+        logger.info(f"Processing research question: {research_question}")
         
-        # Collect all research content from execution results
-        research_content = self._collect_research_content(results, memory)
+        # Collect and validate research content
+        research_content = self._collect_research_content(results)
+        logger.info(f"Collected {len(research_content)} content items")
         
-        # Synthesize answer based on collected content
+        # Synthesize answer with clear logic
         synthesized_answer = self._synthesize_answer(research_question, research_content, prompt)
         
         if suppress_debug:
@@ -34,515 +35,510 @@ class PresentationTool(BaseTool):
             return {"status": "success", "output": {"title": title, "content": synthesized_answer}}
 
     def _extract_research_question(self, prompt: str) -> str:
-        """Extract the core research question from the synthesis prompt."""
+        """Extract the core research question with simple, reliable patterns."""
         if not prompt:
-            return ""
+            return "Research Question"
         
-        # Look for patterns like "answer to: {question}" or "provide a direct answer to: {question}"
+        # Look for explicit question markers
         patterns = [
             r"answer to:\s*(.+?)(?:\n|$)",
-            r"provide.+?answer to:\s*(.+?)(?:\n|$)",
             r"question:\s*(.+?)(?:\n|$)",
-            r"task:\s*(.+?)(?:\n|$)"
+            r"find:\s*(.+?)(?:\n|$)",
         ]
         
         for pattern in patterns:
-            match = re.search(pattern, prompt, re.IGNORECASE)
+            match = re.search(pattern, prompt, re.IGNORECASE | re.DOTALL)
             if match:
-                return match.group(1).strip()
+                question = match.group(1).strip()
+                # Clean up the question
+                question = re.sub(r'\s+', ' ', question)
+                return question[:200]  # Reasonable length limit
         
-        # Fallback: take first line that looks like a question
-        lines = prompt.split('\n')
-        for line in lines:
-            if '?' in line or any(word in line.lower() for word in ['find', 'identify', 'locate', 'what', 'who', 'when', 'where']):
-                return line.strip()
+        # Fallback: use first meaningful line
+        lines = [line.strip() for line in prompt.split('\n') if line.strip()]
+        if lines:
+            return lines[0][:200]
         
-        return prompt.split('\n')[0].strip() if prompt else ""
+        return "Research Question"
 
-    def _collect_research_content(self, results: List[Dict], memory: Any) -> List[Dict]:
-        """Collect all text content from research steps."""
+    def _collect_research_content(self, results: List[Dict]) -> List[Dict]:
+        """Collect content with better validation and structure."""
         content_items = []
         
         for i, result in enumerate(results):
             if result.get("status") != "success":
+                logger.debug(f"Skipping failed result {i}: {result.get('status')}")
                 continue
                 
             output = result.get("output", {})
-            if not isinstance(output, dict):
+            if not output:
                 continue
             
-            # Extract content and metadata
-            content_text = ""
-            url = ""
-            title = ""
-            
-            # Handle different output formats
-            if "extracted_text" in output:
-                content_text = output["extracted_text"]
-                url = output.get("url", "")
-                title = output.get("title", "")
-            elif "content" in output:
-                content_text = output["content"]
-            elif "results" in output:
-                # Handle search results
-                search_results = output["results"]
-                if isinstance(search_results, list):
-                    content_text = "\n".join([
-                        f"{item.get('title', '')}: {item.get('snippet', '')}"
-                        for item in search_results if isinstance(item, dict)
-                    ])
-            
-            if content_text and content_text.strip():
-                content_items.append({
-                    "step_number": i + 1,
-                    "content": content_text.strip(),
-                    "url": url,
-                    "title": title,
-                    "description": result.get("description", "")
-                })
+            # Extract content based on type
+            content_item = self._extract_content_from_result(output, i + 1)
+            if content_item:
+                content_items.append(content_item)
         
         return content_items
 
-    def _synthesize_answer(self, question: str, content_items: List[Dict], original_prompt: str) -> str:
-        """Synthesize a coherent answer from the collected content."""
-        if not content_items:
-            return "No research content was successfully collected."
+    def _extract_content_from_result(self, output: Any, step_number: int) -> Optional[Dict]:
+        """Extract content from a single result with clear logic."""
+        content_item = {
+            "step_number": step_number,
+            "content": "",
+            "url": "",
+            "title": "",
+            "type": "unknown"
+        }
         
-        # Apply sophisticated entity extraction and synthesis
-        synthesized_content = self._apply_progressive_synthesis(question, content_items)
-        
-        if synthesized_content:
-            return synthesized_content
-        
-        # Fallback to basic synthesis
-        return self._basic_synthesis(question, content_items, original_prompt)
-
-    def _apply_progressive_synthesis(self, question: str, content_items: List[Dict]) -> str:
-        """Apply intelligent, dynamic synthesis based on question content."""
-        try:
-            # Dynamic entity and information extraction without hardcoded patterns
-            return self._extract_intelligent_information(content_items, question)
-        except Exception as e:
-            logger.error(f"Progressive synthesis failed: {e}")
-            return self._extract_general_information(content_items, question)
-
-    def _extract_intelligent_information(self, content_items: List[Dict], question: str) -> str:
-        """Dynamically extract relevant information based on question context."""
-        # Identify key terms and entities from the question
-        question_keywords = self._extract_question_keywords(question)
-        
-        # Find content items most relevant to the question
-        relevant_content = self._find_relevant_content(content_items, question_keywords)
-        
-        # Extract key facts and entities dynamically
-        key_facts = self._extract_key_facts(relevant_content, question_keywords)
-        
-        # Synthesize answer based on extracted facts
-        if key_facts:
-            return self._synthesize_from_facts(key_facts, question, relevant_content)
-        else:
-            return self._extract_general_information(content_items, question)
-
-    def _extract_question_keywords(self, question: str) -> List[str]:
-        """Extract important keywords and entities from the research question."""
-        # Common question patterns and their associated keywords
-        question_lower = question.lower()
-        keywords = []
-        
-        # Extract explicit keywords from question
-        words = re.findall(r'\b[a-zA-Z]{3,}\b', question_lower)
-        
-        # Filter out common stop words but keep important ones
-        stop_words = {'the', 'and', 'are', 'for', 'what', 'who', 'where', 'when', 'how', 'why', 'can', 'could', 'would', 'should'}
-        keywords = [word for word in words if word not in stop_words]
-        
-        return keywords
-
-    def _find_relevant_content(self, content_items: List[Dict], keywords: List[str]) -> List[Dict]:
-        """Find content items most relevant to the question keywords."""
-        relevant_items = []
-        
-        for item in content_items:
-            relevance_score = 0
-            content_lower = item["content"].lower()
+        if isinstance(output, dict):
+            # Browser/fetch results
+            if "extracted_text" in output:
+                content_item.update({
+                    "content": output["extracted_text"],
+                    "url": output.get("url", ""),
+                    "title": output.get("title", f"Source {step_number}"),
+                    "type": "webpage"
+                })
+                return content_item if content_item["content"].strip() else None
             
-            # Calculate relevance based on keyword presence
-            for keyword in keywords:
-                if keyword in content_lower:
-                    relevance_score += content_lower.count(keyword)
-            
-            if relevance_score > 0:
-                item_copy = item.copy()
-                item_copy["relevance_score"] = relevance_score
-                relevant_items.append(item_copy)
-        
-        # Sort by relevance and return top items
-        relevant_items.sort(key=lambda x: x["relevance_score"], reverse=True)
-        return relevant_items[:5]  # Top 5 most relevant items
-
-    def _extract_key_facts(self, relevant_content: List[Dict], keywords: List[str]) -> List[Dict]:
-        """Extract key facts from relevant content using dynamic pattern matching."""
-        facts = []
-        
-        for item in relevant_content:
-            content = item["content"]
-            
-            # Look for sentences containing our keywords
-            sentences = re.split(r'[.!?]+', content)
-            
-            for sentence in sentences:
-                sentence = sentence.strip()
-                if len(sentence) < 20:  # Skip very short sentences
-                    continue
+            # Search results
+            elif "search_results" in output:
+                search_results = output["search_results"]
+                if isinstance(search_results, list) and search_results:
+                    # Create a summary of search results
+                    result_summaries = []
+                    for result in search_results[:5]:  # Limit to top 5
+                        if isinstance(result, dict):
+                            title = result.get("title", "")
+                            snippet = result.get("snippet", "")
+                            if title and snippet:
+                                result_summaries.append(f"{title}: {snippet}")
                     
-                # Check if sentence contains our keywords
-                sentence_lower = sentence.lower()
-                keyword_count = sum(1 for keyword in keywords if keyword in sentence_lower)
-                
-                if keyword_count >= 1:  # Sentence mentions at least one keyword
-                    fact = {
-                        "content": sentence,
-                        "source": item.get("title", "Unknown source"),
-                        "url": item.get("url", ""),
-                        "relevance": keyword_count
-                    }
-                    facts.append(fact)
-        
-        # Sort facts by relevance
-        facts.sort(key=lambda x: x["relevance"], reverse=True)
-        return facts[:10]  # Top 10 most relevant facts
-
-    def _synthesize_from_facts(self, facts: List[Dict], question: str, content_items: List[Dict]) -> str:
-        """Synthesize a coherent answer from extracted facts."""
-        if not facts:
-            return self._extract_general_information(content_items, question)
-        
-        # Get the most relevant fact as the primary answer
-        primary_fact = facts[0]
-        answer_parts = [f"Based on the research findings, {primary_fact['content'].strip()}."]
-        
-        # Add supporting facts if they provide additional context
-        supporting_facts = []
-        for fact in facts[1:3]:  # Up to 2 supporting facts
-            if fact['content'].strip() != primary_fact['content'].strip():
-                supporting_facts.append(fact['content'].strip())
-        
-        if supporting_facts:
-            answer_parts.append("\nAdditional context:")
-            for fact in supporting_facts:
-                answer_parts.append(f"- {fact}")
-        
-        # Add sources
-        sources = []
-        seen_sources = set()
-        for fact in facts[:5]:  # Include sources from top 5 facts
-            source = fact.get('source', '')
-            url = fact.get('url', '')
-            if source and source not in seen_sources:
-                if url:
-                    sources.append(f"- {source} ({url})")
-                else:
-                    sources.append(f"- {source}")
-                seen_sources.add(source)
-        
-        if sources:
-            answer_parts.append(f"\nSources:")
-            answer_parts.extend(sources)
-        
-        return "\n".join(answer_parts)
-
-    def _extract_general_information(self, content_items: List[Dict], question: str) -> str:
-        """Enhanced general information extraction that adapts to any question type."""
-        if not content_items:
-            return f"No research content was found to answer: {question}"
-        
-        # Look for direct answers first
-        direct_answer = self._find_direct_answer(content_items, question)
-        if direct_answer:
-            return direct_answer
-        
-        # Fallback to key insights extraction
-        key_insights = []
-        sources = set()
-        
-        # Process each content item
-        for item in content_items:
-            content = self._clean_content(item["content"])  # Clean content first
-            title = item.get("title", "Research Source")
-            url = item.get("url", "")
-            
-            # Split content into sentences and find the most relevant ones
-            sentences = re.split(r'[.!?]+', content)
-            
-            for sentence in sentences:
-                sentence = sentence.strip()
-                if len(sentence) > 20:  # Only consider substantial sentences
-                    # Skip sentences with navigation elements
-                    if any(nav in sentence.lower() for nav in ['edit', 'links', 'categories', 'references', 'external', 'toggle', 'sidebar', 'wikipedia']):
-                        continue
-                        
-                    # Simple relevance scoring based on question keywords
-                    relevance_score = self._calculate_sentence_relevance(sentence, question)
-                    
-                    if relevance_score > 0:
-                        key_insights.append({
-                            "content": sentence,
-                            "relevance": relevance_score,
-                            "source": title,
-                            "url": url
+                    if result_summaries:
+                        content_item.update({
+                            "content": "\n".join(result_summaries),
+                            "title": f"Search Results {step_number}",
+                            "type": "search"
                         })
-                        sources.add((title, url))
+                        return content_item
+            
+            # Direct text content
+            elif "content" in output:
+                content_item.update({
+                    "content": str(output["content"]),
+                    "title": output.get("title", f"Content {step_number}"),
+                    "type": "text"
+                })
+                return content_item if content_item["content"].strip() else None
         
-        # Sort insights by relevance
-        key_insights.sort(key=lambda x: x["relevance"], reverse=True)
+        # Handle string outputs
+        elif isinstance(output, str) and output.strip():
+            content_item.update({
+                "content": output,
+                "title": f"Result {step_number}",
+                "type": "text"
+            })
+            return content_item
         
-        if key_insights:
-            # Build answer from top insights
-            answer_parts = []
+        return None
+
+    def _synthesize_answer(self, question: str, content_items: List[Dict], original_prompt: str) -> str:
+        """Main synthesis method with clear question type routing."""
+        if not content_items:
+            return self._handle_no_content(question)
+        
+        # Detect question type
+        question_type = self._detect_question_type(question)
+        logger.info(f"Detected question type: {question_type}")
+        
+        # Route to appropriate synthesis method
+        if question_type == "factual":
+            return self._synthesize_factual_answer(question, content_items)
+        elif question_type == "quantitative":
+            return self._synthesize_quantitative_answer(question, content_items)
+        elif question_type == "list":
+            return self._synthesize_list_answer(question, content_items)
+        elif question_type == "comprehensive":
+            return self._synthesize_comprehensive_answer(question, content_items)
+        else:
+            return self._synthesize_general_answer(question, content_items)
+
+    def _detect_question_type(self, question: str) -> str:
+        """Simple, reliable question type detection."""
+        question_lower = question.lower()
+        
+        # Factual questions (who, what, when, where is/are)
+        if re.search(r'\b(who|what|when|where)\s+(?:is|are|was|were)\b', question_lower):
+            return "factual"
+        
+        # Quantitative questions (how many, how much, what percentage)
+        if re.search(r'\b(how many|how much|what percentage|what number)\b', question_lower):
+            return "quantitative"
+        
+        # List questions (list, compile, find all)
+        if re.search(r'\b(list|compile|find all|identify all|what are the)\b', question_lower):
+            return "list"
+        
+        # Comprehensive questions (explain, describe, analyze)
+        if re.search(r'\b(explain|describe|analyze|discuss|compare|evaluate)\b', question_lower):
+            return "comprehensive"
+        
+        return "general"
+
+    def _synthesize_factual_answer(self, question: str, content_items: List[Dict]) -> str:
+        """Synthesize direct factual answers."""
+        logger.debug(f"Synthesizing factual answer for: {question}")
+        
+        # Look for direct answers in content
+        best_answer = self._find_direct_factual_answer(question, content_items)
+        if best_answer:
+            return best_answer
+        
+        # Fallback to key facts
+        key_facts = self._extract_key_facts(question, content_items, max_facts=3)
+        if key_facts:
+            answer_parts = [f"Based on the research findings:"]
+            answer_parts.extend([f"• {fact['content']}" for fact in key_facts[:2]])
             
-            # Primary answer from most relevant insight
-            primary_insight = key_insights[0]
-            answer_parts.append(f"Based on the research findings: {primary_insight['content']}")
-            
-            # Add supporting insights
-            supporting_insights = []
-            seen_content = {primary_insight['content']}
-            
-            for insight in key_insights[1:4]:  # Up to 3 additional insights
-                if insight['content'] not in seen_content:
-                    supporting_insights.append(insight['content'])
-                    seen_content.add(insight['content'])
-            
-            if supporting_insights:
-                answer_parts.append("\nAdditional relevant information:")
-                for insight in supporting_insights:
-                    answer_parts.append(f"- {insight}")
-            
-            # Add sources (deduplicated)
+            # Add sources
+            sources = self._get_unique_sources(key_facts)
             if sources:
                 answer_parts.append("\nSources:")
-                for title, url in list(sources)[:5]:  # Limit to 5 sources
-                    if url:
-                        answer_parts.append(f"- {title} ({url})")
-                    else:
-                        answer_parts.append(f"- {title}")
+                answer_parts.extend([f"- {source}" for source in sources[:3]])
             
             return "\n".join(answer_parts)
-        else:
-            return self._report_no_specific_findings("relevant information", content_items, question)
-
-    def _find_direct_answer(self, content_items: List[Dict], question: str) -> Optional[str]:
-        """Look for direct, concise answers to the question."""
-        question_lower = question.lower()
         
-        # For CEO questions, look for clean factual statements
-        if "who" in question_lower and "ceo" in question_lower:
-            return self._find_clean_ceo_answer(content_items)
-        elif "what" in question_lower or "who" in question_lower:
-            return self._find_clean_factual_answer(content_items, question)
-        
-        return None
+        return self._handle_no_relevant_content(question, content_items)
 
-    def _find_clean_ceo_answer(self, content_items: List[Dict]) -> Optional[str]:
-        """Find a clean, direct answer about Microsoft's CEO."""
-        # Look for clear statements about Satya Nadella being CEO
+    def _synthesize_quantitative_answer(self, question: str, content_items: List[Dict]) -> str:
+        """Synthesize answers for quantitative questions."""
+        logger.debug(f"Synthesizing quantitative answer for: {question}")
+        
+        # Look for numbers and statistics
+        numbers_found = []
+        
+        for item in content_items:
+            content = item["content"]
+            # Find numbers with context
+            number_patterns = [
+                r'(\d+(?:\.\d+)?(?:\s*%|\s*percent))',  # Percentages
+                r'(\d+(?:,\d{3})*(?:\.\d+)?)',  # Regular numbers
+                r'(\$\d+(?:,\d{3})*(?:\.\d+)?)',  # Money
+            ]
+            
+            for pattern in number_patterns:
+                matches = re.finditer(pattern, content)
+                for match in matches:
+                    # Get context around the number
+                    start = max(0, match.start() - 50)
+                    end = min(len(content), match.end() + 50)
+                    context = content[start:end].strip()
+                    
+                    numbers_found.append({
+                        "number": match.group(1),
+                        "context": context,
+                        "source": item["title"]
+                    })
+        
+        if numbers_found:
+            answer_parts = [f"Based on the research findings:"]
+            
+            # Add the most relevant numbers
+            for num_info in numbers_found[:3]:
+                answer_parts.append(f"• {num_info['context']}")
+            
+            # Add sources
+            sources = list(set([num_info["source"] for num_info in numbers_found[:3]]))
+            if sources:
+                answer_parts.append("\nSources:")
+                answer_parts.extend([f"- {source}" for source in sources])
+            
+            return "\n".join(answer_parts)
+        
+        return self._synthesize_general_answer(question, content_items)
+
+    def _synthesize_list_answer(self, question: str, content_items: List[Dict]) -> str:
+        """Synthesize answers for list-type questions."""
+        logger.debug(f"Synthesizing list answer for: {question}")
+        
+        # Extract list items from content
+        list_items = []
+        
         for item in content_items:
             content = item["content"]
             
-            # Look for simple, clean statements
-            sentences = re.split(r'[.!?]+', content)
-            for sentence in sentences:
-                sentence = sentence.strip()
-                sentence_lower = sentence.lower()
-                
-                # Look for direct statements about Satya Nadella being CEO
-                if ("satya nadella" in sentence_lower and 
-                    ("ceo" in sentence_lower or "chief executive" in sentence_lower) and 
-                    ("microsoft" in sentence_lower) and
-                    len(sentence) < 200 and  # Not too long
-                    not any(noise in sentence_lower for noise in ['edit', 'links', 'toggle', 'wikipedia', 'references'])):
-                    
-                    # Found a good sentence - return it cleaned up
-                    clean_sentence = re.sub(r'\[\d+\]', '', sentence).strip()
-                    sources_text = f"- {item.get('title', 'Source')}"
-                    if item.get('url'):
-                        sources_text += f" ({item['url']})"
-                    
-                    return f"Based on the research findings: {clean_sentence}\n\nSources:\n{sources_text}"
+            # Look for bullet points, numbered lists, etc.
+            list_patterns = [
+                r'(?:^|\n)\s*[•\-\*]\s*(.+?)(?=\n|$)',  # Bullet points
+                r'(?:^|\n)\s*\d+\.\s*(.+?)(?=\n|$)',    # Numbered lists
+                r'(?:^|\n)([A-Z][^.!?]*(?:Inc|Ltd|Corp|Company|Organization)[^.!?]*)\.?', # Company names
+            ]
+            
+            for pattern in list_patterns:
+                matches = re.finditer(pattern, content, re.MULTILINE)
+                for match in matches:
+                    list_item = match.group(1).strip()
+                    if len(list_item) > 10 and len(list_item) < 200:  # Reasonable length
+                        list_items.append({
+                            "item": list_item,
+                            "source": item["title"]
+                        })
         
-        # Fallback - create a clean answer from what we know
-        source_titles = []
-        for item in content_items:
-            if "satya nadella" in item["content"].lower():
-                title = item.get("title", "Source")
-                url = item.get("url", "")
-                if url:
-                    source_titles.append(f"- {title} ({url})")
-                else:
-                    source_titles.append(f"- {title}")
+        if list_items:
+            # Remove duplicates and limit
+            unique_items = []
+            seen_items = set()
+            
+            for item_info in list_items:
+                item_lower = item_info["item"].lower()
+                if item_lower not in seen_items:
+                    unique_items.append(item_info)
+                    seen_items.add(item_lower)
+                    if len(unique_items) >= 10:  # Limit to 10 items
+                        break
+            
+            answer_parts = [f"Based on the research findings, here are the key items:"]
+            for i, item_info in enumerate(unique_items, 1):
+                answer_parts.append(f"{i}. {item_info['item']}")
+            
+            # Add sources
+            sources = list(set([item_info["source"] for item_info in unique_items]))
+            if sources:
+                answer_parts.append("\nSources:")
+                answer_parts.extend([f"- {source}" for source in sources[:5]])
+            
+            return "\n".join(answer_parts)
         
-        if source_titles:
-            sources_text = "\n".join(source_titles[:3])
-            return f"Based on the research findings: **Satya Nadella** is the current chairman and CEO of Microsoft.\n\nSources:\n{sources_text}"
-        
-        return None
+        return self._synthesize_general_answer(question, content_items)
 
-    def _find_clean_factual_answer(self, content_items: List[Dict], question: str) -> Optional[str]:
-        """Find clean factual answers for general questions."""
-        question_terms = self._extract_question_keywords(question)
+    def _synthesize_comprehensive_answer(self, question: str, content_items: List[Dict]) -> str:
+        """Synthesize comprehensive answers."""
+        logger.debug(f"Synthesizing comprehensive answer for: {question}")
         
-        best_answer = None
+        # Extract key themes and organize information
+        key_facts = self._extract_key_facts(question, content_items, max_facts=8)
+        
+        if key_facts:
+            # Group facts by theme/source
+            answer_parts = [f"Based on the research findings:"]
+            
+            # Add main findings
+            for i, fact in enumerate(key_facts[:6], 1):
+                if len(fact["content"]) > 20:  # Only substantial facts
+                    answer_parts.append(f"\n{i}. {fact['content']}")
+            
+            # Add sources
+            sources = self._get_unique_sources(key_facts)
+            if sources:
+                answer_parts.append("\nSources:")
+                answer_parts.extend([f"- {source}" for source in sources[:5]])
+            
+            return "\n".join(answer_parts)
+        
+        return self._handle_no_relevant_content(question, content_items)
+
+    def _synthesize_general_answer(self, question: str, content_items: List[Dict]) -> str:
+        """General synthesis for unclear question types."""
+        logger.debug(f"Synthesizing general answer for: {question}")
+        
+        # Extract most relevant facts
+        key_facts = self._extract_key_facts(question, content_items, max_facts=5)
+        
+        if key_facts:
+            answer_parts = [f"Based on the research findings:"]
+            
+            # Add the most relevant information
+            for fact in key_facts[:3]:
+                if len(fact["content"]) > 15:
+                    answer_parts.append(f"• {fact['content']}")
+            
+            # Add sources
+            sources = self._get_unique_sources(key_facts)
+            if sources:
+                answer_parts.append("\nSources:")
+                answer_parts.extend([f"- {source}" for source in sources[:3]])
+            
+            return "\n".join(answer_parts)
+        
+        return self._handle_no_relevant_content(question, content_items)
+
+    def _find_direct_factual_answer(self, question: str, content_items: List[Dict]) -> Optional[str]:
+        """Find direct answers for factual questions."""
+        question_lower = question.lower()
+        question_keywords = self._extract_question_keywords(question)
+        
+        best_sentence = None
         best_score = 0
         best_source = None
         
         for item in content_items:
-            content = item["content"]
-            sentences = re.split(r'[.!?]+', content)
+            content = self._clean_content_lightly(item["content"])
+            sentences = self._split_into_sentences(content)
             
             for sentence in sentences:
-                sentence = sentence.strip()
-                if len(sentence) < 30 or len(sentence) > 200:
+                if len(sentence) < 20 or len(sentence) > 300:
                     continue
                 
-                # Skip navigation/markup sentences
-                if any(noise in sentence.lower() for noise in ['edit', 'links', 'toggle', 'wikipedia', 'references', 'categories', 'navigation']):
+                # Skip navigation sentences
+                if self._is_navigation_sentence(sentence):
                     continue
                 
                 # Score the sentence
-                score = 0
-                sentence_lower = sentence.lower()
-                for term in question_terms:
-                    if term in sentence_lower:
-                        score += 2 if len(term) > 5 else 1
+                score = self._score_sentence_relevance(sentence, question_keywords)
                 
                 if score > best_score:
                     best_score = score
-                    best_answer = sentence
+                    best_sentence = sentence
                     best_source = item
         
-        if best_answer and best_score >= 2:
-            clean_answer = re.sub(r'\[\d+\]', '', best_answer).strip()
-            source_text = f"- {best_source.get('title', 'Source')}"
+        if best_sentence and best_score >= 2:
+            clean_sentence = self._clean_sentence(best_sentence)
+            source_text = f"- {best_source['title']}"
             if best_source.get('url'):
                 source_text += f" ({best_source['url']})"
             
-            return f"Based on the research findings: {clean_answer}\n\nSources:\n{source_text}"
+            return f"Based on the research findings: {clean_sentence}\n\nSource:\n{source_text}"
         
         return None
 
-    def _clean_content(self, content: str) -> str:
-        """Clean content by removing navigation elements and markup."""
-        if not content:
-            return content
-            
-        # Remove large blocks of problematic content first
-        # Remove language lists and navigation elements
-        content = re.sub(r'\d+\s+languages\s+[^\n]*?العربية.*?中文', '', content, flags=re.DOTALL | re.IGNORECASE)
+    def _extract_key_facts(self, question: str, content_items: List[Dict], max_facts: int = 5) -> List[Dict]:
+        """Extract key facts relevant to the question."""
+        question_keywords = self._extract_question_keywords(question)
+        facts = []
         
-        # Remove navigation patterns and markup
+        for item in content_items:
+            content = self._clean_content_lightly(item["content"])
+            sentences = self._split_into_sentences(content)
+            
+            for sentence in sentences:
+                if len(sentence) < 20 or len(sentence) > 400:
+                    continue
+                
+                if self._is_navigation_sentence(sentence):
+                    continue
+                
+                score = self._score_sentence_relevance(sentence, question_keywords)
+                
+                if score > 0:
+                    facts.append({
+                        "content": self._clean_sentence(sentence),
+                        "score": score,
+                        "source": item["title"],
+                        "url": item.get("url", "")
+                    })
+        
+        # Sort by score and return top facts
+        facts.sort(key=lambda x: x["score"], reverse=True)
+        return facts[:max_facts]
+
+    def _extract_question_keywords(self, question: str) -> List[str]:
+        """Extract meaningful keywords from the question."""
+        # Remove common question words
+        stop_words = {
+            'who', 'what', 'when', 'where', 'why', 'how', 'is', 'are', 'was', 'were',
+            'the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for',
+            'of', 'with', 'by', 'about', 'into', 'through', 'during', 'before', 'after'
+        }
+        
+        # Extract words
+        words = re.findall(r'\b[a-zA-Z]{3,}\b', question.lower())
+        keywords = [word for word in words if word not in stop_words]
+        
+        return keywords
+
+    def _score_sentence_relevance(self, sentence: str, keywords: List[str]) -> int:
+        """Score how relevant a sentence is to the question keywords."""
+        sentence_lower = sentence.lower()
+        score = 0
+        
+        for keyword in keywords:
+            if keyword in sentence_lower:
+                # Higher score for longer, more specific keywords
+                if len(keyword) > 6:
+                    score += 3
+                elif len(keyword) > 4:
+                    score += 2
+                else:
+                    score += 1
+        
+        # Bonus for sentences that look like direct statements
+        if re.search(r'\b(is|are|was|were|serves as|known as)\b', sentence_lower):
+            score += 1
+        
+        return score
+
+    def _clean_content_lightly(self, content: str) -> str:
+        """Light cleaning that preserves information."""
+        if not content:
+            return ""
+        
+        # Remove obvious navigation elements but preserve content
         patterns_to_remove = [
-            r'\d+\s+(?:References|External links|See also|Categories|Navigation|Contents|Boards and committees|Awards and recognition|Personal life|Publications)',
-            r'Toggle the table of contents',
-            r'Edit links\s+Article\s+Talk\s+English',
-            r'Tools\s+Tools\s+move to sidebar hide',
-            r'Actions\s+Read\s+View source\s+View history',
-            r'General\s+What links here\s+Related changes',
-            r'In other projects\s+Wikimedia\s+Commons',
-            r'Appearance\s+move to sidebar hide',
-            r'From Wikipedia, the free encyclopedia',
-            r'Indian-American business executive \(born 1967\)',
-            r'Born\s+Satya Narayana Nadella.*?Signature',
-            r'Website\s+Microsoft profile\s+Signature',
-            r'\b(?:Padma Bhushan|BTech|MBA|MS)\b\s*\([^)]*\)',
-            r'\d{4}\s*\u2013\s*present',
-            r'Years active\s+\d{4}',
-            r'Spouse\s+[^\n]*Children\s+\d+',
-            r'Awards\s+[^\n]*Website',
-            r'\[\s*\d+\s*\]',  # Wikipedia citation numbers
-            r'\u200b',  # Zero-width space
-            r'\s+\(\s*\)',  # Empty parentheses
-            r'Print/export\s+Download as PDF',
-            r'Upload file\s+Permanent link',
-            r'Get shortened URL\s+Download QR code',
+            r'Edit\s+links',
+            r'Jump to navigation',
+            r'Toggle.*?navigation',
+            r'View source',
+            r'Print.*?page',
         ]
         
         for pattern in patterns_to_remove:
-            content = re.sub(pattern, '', content, flags=re.IGNORECASE | re.MULTILINE | re.DOTALL)
+            content = re.sub(pattern, '', content, flags=re.IGNORECASE)
         
-        # Clean up excessive whitespace
+        # Clean up whitespace
         content = re.sub(r'\s+', ' ', content)
-        content = re.sub(r'\n\s*\n\s*\n+', '\n\n', content)
-        
         return content.strip()
 
-    def _calculate_sentence_relevance(self, sentence: str, question: str) -> int:
-        """Calculate how relevant a sentence is to the research question."""
+    def _split_into_sentences(self, content: str) -> List[str]:
+        """Split content into sentences."""
+        # Simple sentence splitting
+        sentences = re.split(r'[.!?]+', content)
+        return [s.strip() for s in sentences if s.strip()]
+
+    def _is_navigation_sentence(self, sentence: str) -> bool:
+        """Check if a sentence is navigation/markup."""
         sentence_lower = sentence.lower()
-        question_lower = question.lower()
+        navigation_indicators = [
+            'edit', 'links', 'navigation', 'menu', 'sidebar', 'footer',
+            'toggle', 'collapse', 'expand', 'show', 'hide', 'references',
+            'external links', 'see also', 'categories', 'wikipedia'
+        ]
         
-        # Clean the sentence first
-        sentence_clean = self._clean_content(sentence)
-        if len(sentence_clean) < 20:  # Too short after cleaning
-            return 0
-        
-        # Extract keywords from question
-        question_words = re.findall(r'\b[a-zA-Z]{3,}\b', question_lower)
-        question_words = [w for w in question_words if w not in {'the', 'and', 'are', 'for', 'what', 'who', 'where', 'when', 'how', 'why'}]
-        
-        # Calculate relevance score
-        relevance = 0
-        for word in question_words:
-            if word in sentence_lower:
-                relevance += sentence_lower.count(word)
-        
-        # Bonus for sentences that look like direct answers
-        if any(pattern in sentence_lower for pattern in ['is the', 'are the', 'was the', 'serves as', 'appointed as']):
-            relevance += 2
-            
-        # Penalty for sentences with navigation/markup elements
-        if any(nav in sentence_lower for nav in ['edit', 'links', 'categories', 'references', 'external', 'toggle', 'sidebar']):
-            relevance -= 5
-            
-        return max(0, relevance)
+        return any(indicator in sentence_lower for indicator in navigation_indicators)
 
-    def _basic_synthesis(self, question: str, content_items: List[Dict], original_prompt: str) -> str:
-        """Basic synthesis fallback method."""
-        if not content_items:
-            return "No research content available for synthesis."
-        
-        # Combine first few content items
-        combined_content = []
+    def _clean_sentence(self, sentence: str) -> str:
+        """Clean a sentence for presentation."""
+        # Remove citation markers
+        sentence = re.sub(r'\[\d+\]', '', sentence)
+        # Clean up whitespace
+        sentence = re.sub(r'\s+', ' ', sentence)
+        return sentence.strip()
+
+    def _get_unique_sources(self, facts: List[Dict]) -> List[str]:
+        """Get unique source descriptions from facts."""
         sources = []
+        seen_titles = set()
         
-        for item in content_items[:3]:  # Use top 3 items
-            if item["content"]:
-                preview = item["content"][:200] + "..." if len(item["content"]) > 200 else item["content"]
-                combined_content.append(preview)
-                if item.get("url"):
-                    sources.append(f"- {item.get('title', 'Source')} ({item['url']})")
+        for fact in facts:
+            title = fact.get("source", "")
+            if title and title not in seen_titles:
+                if fact.get("url"):
+                    sources.append(f"{title} ({fact['url']})")
+                else:
+                    sources.append(title)
+                seen_titles.add(title)
         
-        content_text = "\n\n".join(combined_content)
-        sources_text = "\n".join(sources) if sources else "Research sources collected"
-        
-        return f"Research findings for: {question}\n\n{content_text}\n\nSources:\n{sources_text}"
+        return sources
 
-    def _report_no_specific_findings(self, search_type: str, content_items: List[Dict], question: str) -> str:
-        """Report when no specific findings are found but content was collected."""
-        content_count = len(content_items)
-        
-        # Deduplicate sources
-        unique_sources = {}
-        for item in content_items[:5]:  # Only check first 5 items
-            if item.get('title') and item.get('url'):
-                url = item['url']
-                title = item['title']
-                if url not in unique_sources:
-                    unique_sources[url] = title
-        
-        sources = [f"- {title} ({url})" for url, title in unique_sources.items()]
-        sources_text = "\n".join(sources) if sources else "Research sources"
-        
-        return f"Could not find specific {search_type} in the collected research content.\n\nSearched {content_count} sources:\n{sources_text}\n\nThe research content may not contain the specific information requested, or it may require different search terms."
+    def _handle_no_content(self, question: str) -> str:
+        """Handle cases where no content was found."""
+        return f"No research content was available to answer the question: {question}"
+
+    def _handle_no_relevant_content(self, question: str, content_items: List[Dict]) -> str:
+        """Handle cases where content exists but isn't relevant."""
+        source_count = len(content_items)
+        return (f"Based on {source_count} source(s) reviewed, "
+                f"no specific information was found to directly answer: {question}")
 
 # Back-compat alias for older imports
 PresentTool = PresentationTool
