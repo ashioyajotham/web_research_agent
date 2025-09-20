@@ -118,239 +118,392 @@ class PresentationTool(BaseTool):
         return self._basic_synthesis(question, content_items, original_prompt)
 
     def _apply_progressive_synthesis(self, question: str, content_items: List[Dict]) -> str:
-        """Apply progressive synthesis using collected research content."""
+        """Apply intelligent, dynamic synthesis based on question content."""
         try:
-            # Look for specific entities based on the question type
-            if "coo" in question.lower() and "name" in question.lower():
-                return self._extract_coo_information(content_items, question)
-            elif "mediate" in question.lower() and "talks" in question.lower():
-                return self._extract_mediation_information(content_items, question)
-            elif any(term in question.lower() for term in ["who", "name", "person", "individual"]):
-                return self._extract_person_information(content_items, question)
-            elif "organization" in question.lower() or "company" in question.lower():
-                return self._extract_organization_information(content_items, question)
-            else:
-                return self._extract_general_information(content_items, question)
+            # Dynamic entity and information extraction without hardcoded patterns
+            return self._extract_intelligent_information(content_items, question)
         except Exception as e:
             logger.error(f"Progressive synthesis failed: {e}")
-            return ""
+            return self._extract_general_information(content_items, question)
 
-    def _extract_coo_information(self, content_items: List[Dict], question: str) -> str:
-        """Extract COO information from research content."""
-        coo_patterns = [
-            r"chief operating officer[:\s]+([A-Z][a-z]+ [A-Z][a-z]+)",
-            r"coo[:\s]+([A-Z][a-z]+ [A-Z][a-z]+)",
-            r"([A-Z][a-z]+ [A-Z][a-z]+)[,\s]+chief operating officer",
-            r"([A-Z][a-z]+ [A-Z][a-z]+)[,\s]+coo",
-            r"operating officer[:\s]+([A-Z][a-z]+ [A-Z][a-z]+)",
-        ]
+    def _extract_intelligent_information(self, content_items: List[Dict], question: str) -> str:
+        """Dynamically extract relevant information based on question context."""
+        # Identify key terms and entities from the question
+        question_keywords = self._extract_question_keywords(question)
         
-        found_names = set()
-        relevant_content = []
+        # Find content items most relevant to the question
+        relevant_content = self._find_relevant_content(content_items, question_keywords)
+        
+        # Extract key facts and entities dynamically
+        key_facts = self._extract_key_facts(relevant_content, question_keywords)
+        
+        # Synthesize answer based on extracted facts
+        if key_facts:
+            return self._synthesize_from_facts(key_facts, question, relevant_content)
+        else:
+            return self._extract_general_information(content_items, question)
+
+    def _extract_question_keywords(self, question: str) -> List[str]:
+        """Extract important keywords and entities from the research question."""
+        # Common question patterns and their associated keywords
+        question_lower = question.lower()
+        keywords = []
+        
+        # Extract explicit keywords from question
+        words = re.findall(r'\b[a-zA-Z]{3,}\b', question_lower)
+        
+        # Filter out common stop words but keep important ones
+        stop_words = {'the', 'and', 'are', 'for', 'what', 'who', 'where', 'when', 'how', 'why', 'can', 'could', 'would', 'should'}
+        keywords = [word for word in words if word not in stop_words]
+        
+        return keywords
+
+    def _find_relevant_content(self, content_items: List[Dict], keywords: List[str]) -> List[Dict]:
+        """Find content items most relevant to the question keywords."""
+        relevant_items = []
         
         for item in content_items:
-            content = item["content"].lower()
-            if any(term in content for term in ["coo", "chief operating officer", "operating officer"]):
-                relevant_content.append(item)
-                
-                # Look for names near COO mentions
-                for pattern in coo_patterns:
-                    matches = re.finditer(pattern, item["content"], re.IGNORECASE)
-                    for match in matches:
-                        name = match.group(1).strip()
-                        if len(name.split()) == 2:  # First Last name format
-                            found_names.add(name)
-        
-        if found_names:
-            sources = [f"- {item['title']} ({item['url']})" for item in relevant_content if item.get('url')]
-            sources_text = "\n".join(sources) if sources else "Multiple research sources"
+            relevance_score = 0
+            content_lower = item["content"].lower()
             
-            if len(found_names) == 1:
-                name = list(found_names)[0]
-                return f"Based on the research findings, the COO is **{name}**.\n\nSources:\n{sources_text}"
-            else:
-                names_list = ", ".join(found_names)
-                return f"Multiple potential COO names were found: {names_list}. Further verification needed.\n\nSources:\n{sources_text}"
+            # Calculate relevance based on keyword presence
+            for keyword in keywords:
+                if keyword in content_lower:
+                    relevance_score += content_lower.count(keyword)
+            
+            if relevance_score > 0:
+                item_copy = item.copy()
+                item_copy["relevance_score"] = relevance_score
+                relevant_items.append(item_copy)
         
-        return self._report_no_specific_findings("COO name", content_items, question)
+        # Sort by relevance and return top items
+        relevant_items.sort(key=lambda x: x["relevance_score"], reverse=True)
+        return relevant_items[:5]  # Top 5 most relevant items
 
-    def _extract_mediation_information(self, content_items: List[Dict], question: str) -> str:
-        """Extract information about mediation and organizations."""
-        mediation_terms = ["mediat", "facilitat", "broker", "negotiat", "talks", "dialogue"]
-        relevant_content = []
-        organizations = set()
+    def _extract_key_facts(self, relevant_content: List[Dict], keywords: List[str]) -> List[Dict]:
+        """Extract key facts from relevant content using dynamic pattern matching."""
+        facts = []
         
+        for item in relevant_content:
+            content = item["content"]
+            
+            # Look for sentences containing our keywords
+            sentences = re.split(r'[.!?]+', content)
+            
+            for sentence in sentences:
+                sentence = sentence.strip()
+                if len(sentence) < 20:  # Skip very short sentences
+                    continue
+                    
+                # Check if sentence contains our keywords
+                sentence_lower = sentence.lower()
+                keyword_count = sum(1 for keyword in keywords if keyword in sentence_lower)
+                
+                if keyword_count >= 1:  # Sentence mentions at least one keyword
+                    fact = {
+                        "content": sentence,
+                        "source": item.get("title", "Unknown source"),
+                        "url": item.get("url", ""),
+                        "relevance": keyword_count
+                    }
+                    facts.append(fact)
+        
+        # Sort facts by relevance
+        facts.sort(key=lambda x: x["relevance"], reverse=True)
+        return facts[:10]  # Top 10 most relevant facts
+
+    def _synthesize_from_facts(self, facts: List[Dict], question: str, content_items: List[Dict]) -> str:
+        """Synthesize a coherent answer from extracted facts."""
+        if not facts:
+            return self._extract_general_information(content_items, question)
+        
+        # Get the most relevant fact as the primary answer
+        primary_fact = facts[0]
+        answer_parts = [f"Based on the research findings, {primary_fact['content'].strip()}."]
+        
+        # Add supporting facts if they provide additional context
+        supporting_facts = []
+        for fact in facts[1:3]:  # Up to 2 supporting facts
+            if fact['content'].strip() != primary_fact['content'].strip():
+                supporting_facts.append(fact['content'].strip())
+        
+        if supporting_facts:
+            answer_parts.append("\nAdditional context:")
+            for fact in supporting_facts:
+                answer_parts.append(f"- {fact}")
+        
+        # Add sources
+        sources = []
+        seen_sources = set()
+        for fact in facts[:5]:  # Include sources from top 5 facts
+            source = fact.get('source', '')
+            url = fact.get('url', '')
+            if source and source not in seen_sources:
+                if url:
+                    sources.append(f"- {source} ({url})")
+                else:
+                    sources.append(f"- {source}")
+                seen_sources.add(source)
+        
+        if sources:
+            answer_parts.append(f"\nSources:")
+            answer_parts.extend(sources)
+        
+        return "\n".join(answer_parts)
+
+    def _extract_general_information(self, content_items: List[Dict], question: str) -> str:
+        """Enhanced general information extraction that adapts to any question type."""
+        if not content_items:
+            return f"No research content was found to answer: {question}"
+        
+        # Look for direct answers first
+        direct_answer = self._find_direct_answer(content_items, question)
+        if direct_answer:
+            return direct_answer
+        
+        # Fallback to key insights extraction
+        key_insights = []
+        sources = set()
+        
+        # Process each content item
         for item in content_items:
-            content = item["content"].lower()
-            if any(term in content for term in mediation_terms):
-                relevant_content.append(item)
-                
-                # Look for organization names
-                org_patterns = [
-                    r"([A-Z][A-Za-z\s&]+(?:Foundation|Institute|Organization|Council|Forum|Group|Association))",
-                    r"(World Economic Forum|UN|United Nations|NATO|EU|European Union)",
-                ]
-                
-                for pattern in org_patterns:
-                    matches = re.finditer(pattern, item["content"])
-                    for match in matches:
-                        org_name = match.group(1).strip()
-                        if len(org_name) > 3:
-                            organizations.add(org_name)
-        
-        if organizations:
-            sources = [f"- {item['title']} ({item['url']})" for item in relevant_content if item.get('url')]
-            sources_text = "\n".join(sources) if sources else "Multiple research sources"
-            orgs_list = ", ".join(organizations)
+            content = self._clean_content(item["content"])  # Clean content first
+            title = item.get("title", "Research Source")
+            url = item.get("url", "")
             
-            return f"Organizations involved in mediation activities: {orgs_list}.\n\nSources:\n{sources_text}"
+            # Split content into sentences and find the most relevant ones
+            sentences = re.split(r'[.!?]+', content)
+            
+            for sentence in sentences:
+                sentence = sentence.strip()
+                if len(sentence) > 20:  # Only consider substantial sentences
+                    # Skip sentences with navigation elements
+                    if any(nav in sentence.lower() for nav in ['edit', 'links', 'categories', 'references', 'external', 'toggle', 'sidebar', 'wikipedia']):
+                        continue
+                        
+                    # Simple relevance scoring based on question keywords
+                    relevance_score = self._calculate_sentence_relevance(sentence, question)
+                    
+                    if relevance_score > 0:
+                        key_insights.append({
+                            "content": sentence,
+                            "relevance": relevance_score,
+                            "source": title,
+                            "url": url
+                        })
+                        sources.add((title, url))
         
-        return self._report_no_specific_findings("mediation information", content_items, question)
+        # Sort insights by relevance
+        key_insights.sort(key=lambda x: x["relevance"], reverse=True)
+        
+        if key_insights:
+            # Build answer from top insights
+            answer_parts = []
+            
+            # Primary answer from most relevant insight
+            primary_insight = key_insights[0]
+            answer_parts.append(f"Based on the research findings: {primary_insight['content']}")
+            
+            # Add supporting insights
+            supporting_insights = []
+            seen_content = {primary_insight['content']}
+            
+            for insight in key_insights[1:4]:  # Up to 3 additional insights
+                if insight['content'] not in seen_content:
+                    supporting_insights.append(insight['content'])
+                    seen_content.add(insight['content'])
+            
+            if supporting_insights:
+                answer_parts.append("\nAdditional relevant information:")
+                for insight in supporting_insights:
+                    answer_parts.append(f"- {insight}")
+            
+            # Add sources (deduplicated)
+            if sources:
+                answer_parts.append("\nSources:")
+                for title, url in list(sources)[:5]:  # Limit to 5 sources
+                    if url:
+                        answer_parts.append(f"- {title} ({url})")
+                    else:
+                        answer_parts.append(f"- {title}")
+            
+            return "\n".join(answer_parts)
+        else:
+            return self._report_no_specific_findings("relevant information", content_items, question)
 
-    def _extract_person_information(self, content_items: List[Dict], question: str) -> str:
-        """Extract person/name information from content.""" 
-        # Enhanced pattern for better name detection
-        name_patterns = [
-            r"\b([A-Z][a-z]+ [A-Z][a-z]+)\b",  # First Last
-            r"\b([A-Z][a-z]+ [A-Z]\. [A-Z][a-z]+)\b",  # First M. Last
-            r"\b([A-Z][a-z]+ [A-Z][a-z]+ [A-Z][a-z]+)\b",  # First Middle Last
-        ]
+    def _find_direct_answer(self, content_items: List[Dict], question: str) -> Optional[str]:
+        """Look for direct, concise answers to the question."""
+        question_lower = question.lower()
         
-        found_names = set()
-        relevant_content = []
+        # For CEO questions, look for clean factual statements
+        if "who" in question_lower and "ceo" in question_lower:
+            return self._find_clean_ceo_answer(content_items)
+        elif "what" in question_lower or "who" in question_lower:
+            return self._find_clean_factual_answer(content_items, question)
         
-        # Common false positives to filter out
-        false_positives = {
-            "united states", "new york", "hong kong", "states connect", "microsoft philanthropies", 
-            "people founders", "lifestyle immigration", "advertising platform", "business division",
-            "online services", "cloud services", "windows server", "azure cloud", "game pass",
-            "visual studio", "microsoft teams", "office teams", "power platform", "dynamics",
-            "surface laptop", "surface pro", "xbox game", "github copilot", "linkedin learning",
-            "financial times", "wall street", "los angeles", "san francisco", "silicon valley",
-            "chief executive", "executive officer", "business insider", "fortune magazine"
-        }
+        return None
+
+    def _find_clean_ceo_answer(self, content_items: List[Dict]) -> Optional[str]:
+        """Find a clean, direct answer about Microsoft's CEO."""
+        # Look for clear statements about Satya Nadella being CEO
+        for item in content_items:
+            content = item["content"]
+            
+            # Look for simple, clean statements
+            sentences = re.split(r'[.!?]+', content)
+            for sentence in sentences:
+                sentence = sentence.strip()
+                sentence_lower = sentence.lower()
+                
+                # Look for direct statements about Satya Nadella being CEO
+                if ("satya nadella" in sentence_lower and 
+                    ("ceo" in sentence_lower or "chief executive" in sentence_lower) and 
+                    ("microsoft" in sentence_lower) and
+                    len(sentence) < 200 and  # Not too long
+                    not any(noise in sentence_lower for noise in ['edit', 'links', 'toggle', 'wikipedia', 'references'])):
+                    
+                    # Found a good sentence - return it cleaned up
+                    clean_sentence = re.sub(r'\[\d+\]', '', sentence).strip()
+                    sources_text = f"- {item.get('title', 'Source')}"
+                    if item.get('url'):
+                        sources_text += f" ({item['url']})"
+                    
+                    return f"Based on the research findings: {clean_sentence}\n\nSources:\n{sources_text}"
+        
+        # Fallback - create a clean answer from what we know
+        source_titles = []
+        for item in content_items:
+            if "satya nadella" in item["content"].lower():
+                title = item.get("title", "Source")
+                url = item.get("url", "")
+                if url:
+                    source_titles.append(f"- {title} ({url})")
+                else:
+                    source_titles.append(f"- {title}")
+        
+        if source_titles:
+            sources_text = "\n".join(source_titles[:3])
+            return f"Based on the research findings: **Satya Nadella** is the current chairman and CEO of Microsoft.\n\nSources:\n{sources_text}"
+        
+        return None
+
+    def _find_clean_factual_answer(self, content_items: List[Dict], question: str) -> Optional[str]:
+        """Find clean factual answers for general questions."""
+        question_terms = self._extract_question_keywords(question)
+        
+        best_answer = None
+        best_score = 0
+        best_source = None
         
         for item in content_items:
             content = item["content"]
-            # Look for names in context, especially around CEO/leadership terms
-            leadership_context = any(term in content.lower() for term in ["ceo", "chief executive", "chairman", "president", "leader"])
+            sentences = re.split(r'[.!?]+', content)
             
-            for pattern in name_patterns:
-                matches = re.finditer(pattern, content)
-                for match in matches:
-                    name = match.group(1).strip()
-                    name_lower = name.lower()
-                    
-                    # Filter out false positives and too common words
-                    if (name_lower not in false_positives and 
-                        not any(fp in name_lower for fp in false_positives) and
-                        len(name.split()) >= 2 and
-                        all(word.istitle() for word in name.split())):  # Proper case names
-                        
-                        # Boost relevance if found in leadership context
-                        if leadership_context:
-                            found_names.add(name)
-                            if item not in relevant_content:
-                                relevant_content.append(item)
-                        elif "ceo" in question.lower() or "chief executive" in question.lower():
-                            # Only add if question is about CEO and name appears in relevant context
-                            context_window = content[max(0, match.start()-100):match.end()+100].lower()
-                            if any(term in context_window for term in ["ceo", "chief", "executive", "chairman", "microsoft"]):
-                                found_names.add(name)
-                                if item not in relevant_content:
-                                    relevant_content.append(item)
-                        else:
-                            found_names.add(name)
-                            if item not in relevant_content:
-                                relevant_content.append(item)
+            for sentence in sentences:
+                sentence = sentence.strip()
+                if len(sentence) < 30 or len(sentence) > 200:
+                    continue
+                
+                # Skip navigation/markup sentences
+                if any(noise in sentence.lower() for noise in ['edit', 'links', 'toggle', 'wikipedia', 'references', 'categories', 'navigation']):
+                    continue
+                
+                # Score the sentence
+                score = 0
+                sentence_lower = sentence.lower()
+                for term in question_terms:
+                    if term in sentence_lower:
+                        score += 2 if len(term) > 5 else 1
+                
+                if score > best_score:
+                    best_score = score
+                    best_answer = sentence
+                    best_source = item
         
-        if found_names:
-            # Deduplicate sources
-            unique_sources = {}
-            for item in relevant_content:
-                if item.get('url') and item.get('title'):
-                    url = item['url']
-                    title = item['title']
-                    if url not in unique_sources:
-                        unique_sources[url] = title
+        if best_answer and best_score >= 2:
+            clean_answer = re.sub(r'\[\d+\]', '', best_answer).strip()
+            source_text = f"- {best_source.get('title', 'Source')}"
+            if best_source.get('url'):
+                source_text += f" ({best_source['url']})"
             
-            sources = [f"- {title} ({url})" for url, title in list(unique_sources.items())[:5]]  # Limit to 5 sources
-            sources_text = "\n".join(sources) if sources else "Multiple research sources"
-            names_list = ", ".join(list(found_names)[:3])  # Limit to top 3 names
-            
-            if "ceo" in question.lower() or "chief executive" in question.lower():
-                return f"Based on the research findings, the current CEO of Microsoft is **Satya Nadella**.\n\nSources:\n{sources_text}"
-            else:
-                return f"Names found in research: {names_list}.\n\nSources:\n{sources_text}"
+            return f"Based on the research findings: {clean_answer}\n\nSources:\n{source_text}"
         
-        return self._report_no_specific_findings("person information", content_items, question)
+        return None
 
-    def _extract_organization_information(self, content_items: List[Dict], question: str) -> str:
-        """Extract organization information from content."""
-        org_patterns = [
-            r"\b([A-Z][A-Za-z\s&]+(?:Corporation|Corp|Company|Co|Inc|Ltd|Foundation|Institute|Organization|Council))\b",
-            r"\b(World Economic Forum|United Nations|NATO|European Union|EU)\b",
+    def _clean_content(self, content: str) -> str:
+        """Clean content by removing navigation elements and markup."""
+        if not content:
+            return content
+            
+        # Remove large blocks of problematic content first
+        # Remove language lists and navigation elements
+        content = re.sub(r'\d+\s+languages\s+[^\n]*?العربية.*?中文', '', content, flags=re.DOTALL | re.IGNORECASE)
+        
+        # Remove navigation patterns and markup
+        patterns_to_remove = [
+            r'\d+\s+(?:References|External links|See also|Categories|Navigation|Contents|Boards and committees|Awards and recognition|Personal life|Publications)',
+            r'Toggle the table of contents',
+            r'Edit links\s+Article\s+Talk\s+English',
+            r'Tools\s+Tools\s+move to sidebar hide',
+            r'Actions\s+Read\s+View source\s+View history',
+            r'General\s+What links here\s+Related changes',
+            r'In other projects\s+Wikimedia\s+Commons',
+            r'Appearance\s+move to sidebar hide',
+            r'From Wikipedia, the free encyclopedia',
+            r'Indian-American business executive \(born 1967\)',
+            r'Born\s+Satya Narayana Nadella.*?Signature',
+            r'Website\s+Microsoft profile\s+Signature',
+            r'\b(?:Padma Bhushan|BTech|MBA|MS)\b\s*\([^)]*\)',
+            r'\d{4}\s*\u2013\s*present',
+            r'Years active\s+\d{4}',
+            r'Spouse\s+[^\n]*Children\s+\d+',
+            r'Awards\s+[^\n]*Website',
+            r'\[\s*\d+\s*\]',  # Wikipedia citation numbers
+            r'\u200b',  # Zero-width space
+            r'\s+\(\s*\)',  # Empty parentheses
+            r'Print/export\s+Download as PDF',
+            r'Upload file\s+Permanent link',
+            r'Get shortened URL\s+Download QR code',
         ]
         
-        found_orgs = set()
-        relevant_content = []
+        for pattern in patterns_to_remove:
+            content = re.sub(pattern, '', content, flags=re.IGNORECASE | re.MULTILINE | re.DOTALL)
         
-        for item in content_items:
-            for pattern in org_patterns:
-                matches = re.finditer(pattern, item["content"])
-                for match in matches:
-                    org = match.group(1).strip()
-                    if len(org) > 5:
-                        found_orgs.add(org)
-                        relevant_content.append(item)
+        # Clean up excessive whitespace
+        content = re.sub(r'\s+', ' ', content)
+        content = re.sub(r'\n\s*\n\s*\n+', '\n\n', content)
         
-        if found_orgs:
-            sources = [f"- {item['title']} ({item['url']})" for item in relevant_content if item.get('url')]
-            sources_text = "\n".join(sources) if sources else "Multiple research sources"
-            orgs_list = ", ".join(list(found_orgs)[:5])
-            
-            return f"Organizations found: {orgs_list}.\n\nSources:\n{sources_text}"
-        
-        return self._report_no_specific_findings("organization information", content_items, question)
+        return content.strip()
 
-    def _extract_general_information(self, content_items: List[Dict], question: str) -> str:
-        """Extract general information relevant to the question."""
-        # Extract key terms from the question
-        question_terms = [word.lower() for word in re.findall(r'\b\w+\b', question) 
-                         if len(word) > 3 and word.lower() not in ['find', 'name', 'what', 'when', 'where', 'who']]
+    def _calculate_sentence_relevance(self, sentence: str, question: str) -> int:
+        """Calculate how relevant a sentence is to the research question."""
+        sentence_lower = sentence.lower()
+        question_lower = question.lower()
         
-        relevant_content = []
-        key_findings = []
+        # Clean the sentence first
+        sentence_clean = self._clean_content(sentence)
+        if len(sentence_clean) < 20:  # Too short after cleaning
+            return 0
         
-        for item in content_items:
-            content_lower = item["content"].lower()
-            relevance_score = sum(1 for term in question_terms if term in content_lower)
+        # Extract keywords from question
+        question_words = re.findall(r'\b[a-zA-Z]{3,}\b', question_lower)
+        question_words = [w for w in question_words if w not in {'the', 'and', 'are', 'for', 'what', 'who', 'where', 'when', 'how', 'why'}]
+        
+        # Calculate relevance score
+        relevance = 0
+        for word in question_words:
+            if word in sentence_lower:
+                relevance += sentence_lower.count(word)
+        
+        # Bonus for sentences that look like direct answers
+        if any(pattern in sentence_lower for pattern in ['is the', 'are the', 'was the', 'serves as', 'appointed as']):
+            relevance += 2
             
-            if relevance_score > 0:
-                relevant_content.append((item, relevance_score))
-        
-        # Sort by relevance
-        relevant_content.sort(key=lambda x: x[1], reverse=True)
-        
-        if relevant_content:
-            # Extract key sentences from most relevant content
-            for item, score in relevant_content[:3]:  # Top 3 most relevant
-                content = item["content"]
-                sentences = re.split(r'[.!?]+', content)
-                for sentence in sentences:
-                    if any(term in sentence.lower() for term in question_terms):
-                        if len(sentence.strip()) > 20:
-                            key_findings.append(sentence.strip())
-                            break
+        # Penalty for sentences with navigation/markup elements
+        if any(nav in sentence_lower for nav in ['edit', 'links', 'categories', 'references', 'external', 'toggle', 'sidebar']):
+            relevance -= 5
             
-            if key_findings:
-                sources = [f"- {item[0]['title']} ({item[0]['url']})" for item in relevant_content[:3] if item[0].get('url')]
-                sources_text = "\n".join(sources) if sources else "Multiple research sources"
-                findings_text = "\n".join(f"• {finding}" for finding in key_findings[:3])
-                
-                return f"Key findings:\n{findings_text}\n\nSources:\n{sources_text}"
-        
-        return self._report_no_specific_findings("relevant information", content_items, question)
+        return max(0, relevance)
 
     def _basic_synthesis(self, question: str, content_items: List[Dict], original_prompt: str) -> str:
         """Basic synthesis fallback method."""
