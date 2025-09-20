@@ -88,10 +88,12 @@ def _format_as_markdown(task_description: str, plan: Any, results: List[Dict[str
                 output.append(f"\n**Source**: [{step_output.get('title', 'Web content')}]({step_output.get('url', '#')})\n")
                 output.append(f"\n{_truncate_content(step_output['content'], 2000)}\n")
             elif "results" in step_output:  # Search results
+                results_list = step_output.get('results', [])
+                result_count = len(results_list)
                 output.append(f"\n**Search Query**: {step_output.get('query', 'Unknown query')}")
-                output.append(f"**Found**: {step_output.get('result_count', 0)} results\n")
+                output.append(f"**Found**: {result_count} results\n")
                 
-                for j, search_result in enumerate(step_output.get('results', [])):
+                for j, search_result in enumerate(results_list):
                     output.append(f"{j+1}. [{search_result.get('title', 'No title')}]({search_result.get('link', '#')})")
                     output.append(f"   {search_result.get('snippet', 'No description')}\n")
             else:
@@ -185,11 +187,13 @@ def _format_as_html(task_description: str, plan: Any, results: List[Dict[str, An
                 content = step_output['content'].replace("\n", "<br>")
                 html.append(f"<div>{_truncate_content(content, 2000)}</div>")
             elif "results" in step_output:  # Search results
+                results_list = step_output.get('results', [])
+                result_count = len(results_list)
                 html.append(f"<p><strong>Search Query</strong>: {step_output.get('query', 'Unknown query')}</p>")
-                html.append(f"<p><strong>Found</strong>: {step_output.get('result_count', 0)} results</p>")
+                html.append(f"<p><strong>Found</strong>: {result_count} results</p>")
                 
                 html.append("<ol>")
-                for search_result in step_output.get('results', []):
+                for search_result in results_list:
                     html.append("<li class='search-result'>")
                     html.append(f"<a href='{search_result.get('link', '#')}'>{search_result.get('title', 'No title')}</a>")
                     html.append(f"<p>{search_result.get('snippet', 'No description')}</p>")
