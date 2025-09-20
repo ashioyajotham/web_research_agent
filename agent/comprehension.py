@@ -2,8 +2,27 @@ from utils.logger import get_logger
 import re
 from typing import Dict, List, Any, Optional, Tuple
 from datetime import datetime
+from dataclasses import dataclass
 
 logger = get_logger(__name__)
+
+@dataclass
+class TaskComponent:
+    """Represents a component of a multistep task."""
+    description: str
+    required_entities: List[str]
+    depends_on: Optional[str] = None  # Previous component this depends on
+    search_strategy: str = "direct"  # direct, entity_focused, relationship
+
+@dataclass 
+class TaskAnalysis:
+    """Enhanced task analysis with decomposition."""
+    task_type: str
+    complexity: str  # simple, multistep, comparative
+    components: List[TaskComponent]
+    synthesis_strategy: str
+    expected_entities: List[str]
+    information_flow: Dict[str, str]  # how information flows between components
 
 class ProgressiveSynthesis:
     """Manages progressive synthesis of research findings with hypothesis tracking."""
@@ -284,29 +303,41 @@ class ProgressiveSynthesis:
         return high_confidence
     
     def synthesize_for_task(self, task_description: str) -> Dict[str, Any]:
-        """Synthesize findings specifically for the given task."""
+        """Synthesize findings specifically for the given task using semantic analysis."""
         task_lower = task_description.lower()
         synthesis = {}
         
-        # Task-specific synthesis
-        if "statements" in task_lower and "biden" in task_lower:
+        # Task-agnostic synthesis based on patterns
+        if any(term in task_lower for term in ["statements", "quotes", "said", "declared"]):
+            # Statement extraction task
             statements = self.working_hypothesis.get("statements", [])
-            # Filter and format Biden statements
-            biden_statements = []
-            for stmt in statements:
-                if isinstance(stmt, dict) and stmt.get("speaker", "").lower() == "biden":
-                    biden_statements.append(stmt)
-            synthesis["biden_statements"] = biden_statements
+            synthesis["statements"] = [
+                stmt for stmt in statements
+                if isinstance(stmt, dict) and stmt.get("confidence", 0) > 0.6
+            ]
         
-        elif "coo" in task_lower:
+        elif any(term in task_lower for term in ["coo", "ceo", "cto", "president", "director"]):
+            # Role-based search task
             roles = self.working_hypothesis.get("roles_people", [])
-            coo_info = [r for r in roles if isinstance(r, dict) and "coo" in r.get("role", "").lower()]
-            synthesis["coo_candidates"] = coo_info
+            # Extract role mentioned in task
+            target_roles = [role for role in ["coo", "ceo", "cto", "president", "director"] if role in task_lower]
+            role_info = []
+            for role in roles:
+                if isinstance(role, dict):
+                    role_title = role.get("role", "").lower()
+                    if any(target in role_title for target in target_roles):
+                        role_info.append(role)
+            synthesis["role_candidates"] = role_info
         
-        elif "percentage" in task_lower:
+        elif any(term in task_lower for term in ["percentage", "percent", "rate", "number"]):
+            # Quantitative data task
             numerical = self.working_hypothesis.get("numerical_data", [])
-            percentages = [n for n in numerical if isinstance(n, dict) and n.get("unit") == "percentage"]
-            synthesis["percentage_data"] = percentages
+            # Filter by relevance to task
+            relevant_data = []
+            for data in numerical:
+                if isinstance(data, dict) and data.get("confidence", 0) > 0.5:
+                    relevant_data.append(data)
+            synthesis["numerical_data"] = relevant_data
         
         # Add confidence scores
         synthesis["confidence_summary"] = {
@@ -316,7 +347,235 @@ class ProgressiveSynthesis:
         
         return synthesis
 
+class WorkspaceReconstructor:
+    """Implements Tongyi's IterResearch workspace reconstruction pattern."""
+    
+    def __init__(self):
+        self.research_rounds = []  # History of research rounds
+        self.essential_facts = {}  # Core findings that persist
+        self.entity_graph = {}  # Discovered entity relationships
+        self.current_workspace = {}  # Clean workspace for current round
+        
+    def reconstruct_workspace_for_round(self, research_objective: str, 
+                                      previous_round_results: Dict[str, Any] = None) -> Dict[str, Any]:
+        """
+        Reconstruct a clean, focused workspace for the current research round.
+        
+        This is Tongyi's key innovation: instead of accumulating all context,
+        extract only essential insights and start each round with a clean slate.
+        """
+        # Extract essential insights from previous round
+        if previous_round_results:
+            essential_insights = self._extract_essential_insights(previous_round_results)
+            self._update_essential_facts(essential_insights)
+            self._update_entity_graph(essential_insights)
+        
+        # Create focused workspace
+        self.current_workspace = {
+            "objective": research_objective,
+            "essential_facts": dict(self.essential_facts),
+            "known_entities": self._get_relevant_entities(research_objective),
+            "research_gaps": self._identify_research_gaps(research_objective),
+            "search_strategy": self._determine_search_strategy(research_objective)
+        }
+        
+        return self.current_workspace
+    
+    def _extract_essential_insights(self, round_results: Dict[str, Any]) -> Dict[str, Any]:
+        """Extract only the most essential insights from a research round."""
+        insights = {
+            "verified_facts": {},
+            "discovered_entities": {},
+            "relationships": {},
+            "confidence_scores": {}
+        }
+        
+        # Extract high-confidence findings
+        if "findings" in round_results:
+            for finding_type, findings in round_results["findings"].items():
+                if isinstance(findings, list):
+                    # Keep only high-confidence findings
+                    high_conf_findings = [
+                        f for f in findings 
+                        if isinstance(f, dict) and f.get("confidence", 0) > 0.7
+                    ]
+                    if high_conf_findings:
+                        insights["verified_facts"][finding_type] = high_conf_findings
+        
+        # Extract entity mentions and relationships
+        if "entities" in round_results:
+            for entity_type, entities in round_results["entities"].items():
+                if entities:
+                    insights["discovered_entities"][entity_type] = entities
+        
+        return insights
+    
+    def _update_essential_facts(self, insights: Dict[str, Any]):
+        """Update the persistent essential facts with new insights."""
+        for fact_type, facts in insights.get("verified_facts", {}).items():
+            if fact_type not in self.essential_facts:
+                self.essential_facts[fact_type] = []
+            
+            # Merge new facts, avoiding duplicates
+            existing_facts = {str(f) for f in self.essential_facts[fact_type]}
+            for fact in facts:
+                if str(fact) not in existing_facts:
+                    self.essential_facts[fact_type].append(fact)
+    
+    def _update_entity_graph(self, insights: Dict[str, Any]):
+        """Update the entity relationship graph with new discoveries."""
+        for entity_type, entities in insights.get("discovered_entities", {}).items():
+            if entity_type not in self.entity_graph:
+                self.entity_graph[entity_type] = {}
+            
+            for entity in entities:
+                entity_name = entity if isinstance(entity, str) else entity.get("name", str(entity))
+                if entity_name not in self.entity_graph[entity_type]:
+                    self.entity_graph[entity_type][entity_name] = {
+                        "mentions": [],
+                        "relationships": {},
+                        "attributes": {}
+                    }
+    
+    def _get_relevant_entities(self, objective: str) -> Dict[str, List[str]]:
+        """Get entities relevant to the current research objective."""
+        relevant = {}
+        objective_lower = objective.lower()
+        
+        for entity_type, entities in self.entity_graph.items():
+            relevant_entities = []
+            for entity_name, entity_data in entities.items():
+                # Check if entity is mentioned in objective
+                if entity_name.lower() in objective_lower:
+                    relevant_entities.append(entity_name)
+                # Check if entity has relevant attributes
+                elif any(attr.lower() in objective_lower for attr in entity_data.get("attributes", {}).keys()):
+                    relevant_entities.append(entity_name)
+            
+            if relevant_entities:
+                relevant[entity_type] = relevant_entities
+        
+        return relevant
+    
+    def _identify_research_gaps(self, objective: str) -> List[str]:
+        """Identify what information is still needed for the objective."""
+        gaps = []
+        
+        # Abstract gap detection based on objective structure
+        if "who" in objective.lower() or "person" in objective.lower():
+            if not any("person" in entities for entities in self.entity_graph.values()):
+                gaps.append("Need to identify key people")
+        
+        if "organization" in objective.lower() or "company" in objective.lower():
+            if not any("organization" in entities for entities in self.entity_graph.values()):
+                gaps.append("Need to identify organizations")
+        
+        if "when" in objective.lower() or "date" in objective.lower():
+            if "events" not in self.essential_facts:
+                gaps.append("Need to find dates and timeline")
+        
+        if "how much" in objective.lower() or "percentage" in objective.lower():
+            if "numerical_data" not in self.essential_facts:
+                gaps.append("Need quantitative data")
+        
+        return gaps
+    
+    def _determine_search_strategy(self, objective: str) -> str:
+        """Determine the best search strategy for current objective."""
+        objective_lower = objective.lower()
+        
+        # If we have relevant entities, use entity-focused search
+        if self._get_relevant_entities(objective):
+            return "entity_focused"
+        
+        # If we need specific data types, use targeted search
+        if any(term in objective_lower for term in ["statements", "quotes", "said"]):
+            return "statement_extraction"
+        elif any(term in objective_lower for term in ["percentage", "number", "amount"]):
+            return "quantitative_search"
+        elif any(term in objective_lower for term in ["list", "compile", "enumerate"]):
+            return "comprehensive_collection"
+        else:
+            return "exploratory"
+    
+    def get_current_workspace_summary(self) -> str:
+        """Get a concise summary of the current workspace for context."""
+        summary_parts = []
+        
+        if self.current_workspace.get("essential_facts"):
+            summary_parts.append("Essential Facts:")
+            for fact_type, facts in self.current_workspace["essential_facts"].items():
+                summary_parts.append(f"- {fact_type}: {len(facts)} items")
+        
+        if self.current_workspace.get("known_entities"):
+            summary_parts.append("Known Entities:")
+            for entity_type, entities in self.current_workspace["known_entities"].items():
+                summary_parts.append(f"- {entity_type}: {', '.join(entities[:3])}")
+        
+        if self.current_workspace.get("research_gaps"):
+            summary_parts.append("Research Gaps:")
+            for gap in self.current_workspace["research_gaps"]:
+                summary_parts.append(f"- {gap}")
+        
+        return "\n".join(summary_parts) if summary_parts else "Clean workspace - starting fresh research"
+
 class ContextWindow:
+    """Manages context window with relevance-based filtering."""
+    
+    def __init__(self, max_size: int = 8000):
+        self.max_size = max_size
+        self.core_facts = {}  # Always preserved
+        self.phase_context = {}  # Current phase relevant info
+        self.entity_summaries = {}  # Compressed entity knowledge
+        self.content_priority = {}  # Priority scores for content
+        
+    def add_content(self, content: str, source_url: str, relevance_score: float, 
+                   phase: str, content_type: str = "general"):
+        """Add content with relevance scoring."""
+        content_id = f"{phase}_{len(self.phase_context)}"
+        
+        self.phase_context[content_id] = {
+            "content": content,
+            "source": source_url,
+            "relevance": relevance_score,
+            "phase": phase,
+            "type": content_type,
+            "timestamp": datetime.now().isoformat()
+        }
+        
+        self.content_priority[content_id] = relevance_score
+        
+        # Manage context size
+        self._manage_context_size()
+    
+    def get_focused_context(self, current_phase: str, target_entities: List[str]) -> str:
+        """Get context focused on current phase and target entities."""
+        context_parts = []
+        
+        # Always include core facts
+        if self.core_facts:
+            context_parts.append("=== Core Facts ===")
+            for key, fact in self.core_facts.items():
+                context_parts.append(f"{key}: {fact}")
+        
+        # Add relevant phase context
+        relevant_content = []
+        for content_id, content_info in self.phase_context.items():
+            if (content_info["phase"] == current_phase or 
+                any(entity.lower() in content_info["content"].lower() for entity in target_entities)):
+                relevant_content.append((content_info["relevance"], content_info))
+        
+        # Sort by relevance and add top content
+        relevant_content.sort(key=lambda x: x[0], reverse=True)
+        
+        if relevant_content:
+            context_parts.append(f"\n=== Phase Context: {current_phase} ===")
+            for _, content_info in relevant_content[:5]:  # Top 5 most relevant
+                context_parts.append(f"Source: {content_info['source']}")
+                context_parts.append(content_info["content"][:500] + "...")
+                context_parts.append("")
+        
+        return "\n".join(context_parts)
     """Manages context window with relevance-based filtering."""
     
     def __init__(self, max_size: int = 8000):
@@ -410,7 +669,7 @@ class ContextWindow:
             self.content_priority.pop(content_id, None)
 
 class Comprehension:
-    """Enhanced text understanding and reasoning capabilities with progressive synthesis."""
+    """Enhanced text understanding and reasoning capabilities with workspace reconstruction."""
     
     def __init__(self):
         """Initialize the comprehension module."""
@@ -418,7 +677,9 @@ class Comprehension:
         self.last_strategy = None
         self.progressive_synthesis = ProgressiveSynthesis()
         self.context_window = ContextWindow()
+        self.workspace_reconstructor = WorkspaceReconstructor()  # Tongyi's IterResearch pattern
         self.entity_patterns = self._initialize_entity_patterns()
+        self.current_research_round = 0
     
     def _initialize_entity_patterns(self) -> Dict[str, List[str]]:
         """Initialize patterns for different entity types."""
@@ -476,7 +737,9 @@ class Comprehension:
                 "required_entities": task_analysis["entities"],
                 "multi_step": True,
                 "research_phases": task_analysis["phases"],
-                "complexity": task_analysis["complexity"]
+                "complexity": task_analysis["complexity"],
+                "components": task_analysis.get("components", []),
+                "information_flow": task_analysis.get("information_flow", {})
             }
             self.last_strategy = "progressive_synthesis"
             return analysis
@@ -496,8 +759,22 @@ class Comprehension:
         """Detect specific task patterns and their requirements."""
         task_lower = task_description.lower()
         
-        # Pattern 1: COO/Role finding
+        # Pattern 1: COO/Role finding with sophisticated decomposition
         if re.search(r'find.*(?:coo|ceo|cto|president|director).*(?:organization|company)', task_lower):
+            components = [
+                TaskComponent(
+                    description="Identify the organization that performed the action",
+                    required_entities=["organization", "event", "location", "temporal"],
+                    search_strategy="entity_focused"
+                ),
+                TaskComponent(
+                    description="Find the specific role holder at that organization", 
+                    required_entities=["person", "role"],
+                    depends_on="organization",
+                    search_strategy="relationship"
+                )
+            ]
+            
             return {
                 "is_multi_step": True,
                 "pattern": "role_finding",
@@ -505,13 +782,24 @@ class Comprehension:
                 "phases": ["identify_organization", "find_leadership"],
                 "answer_type": "specific_person",
                 "format": "factual",
-                "complexity": "medium"
+                "complexity": "medium",
+                "components": components,
+                "information_flow": self._map_component_flow(components)
             }
         
-        # Pattern 2: Statement compilation
+        # Pattern 2: Statement compilation with detailed component analysis
         elif re.search(r'compile.*\d+.*statement.*by.*about', task_lower):
             count = re.search(r'\b(\d+)\b', task_description)
             target_count = int(count.group(1)) if count else 10
+            
+            components = [
+                TaskComponent(
+                    description="Gather statements from various sources",
+                    required_entities=["person", "statement", "date", "source"],
+                    search_strategy="comprehensive_collection"
+                )
+            ]
+            
             return {
                 "is_multi_step": False,
                 "pattern": "statement_compilation",
@@ -520,11 +808,33 @@ class Comprehension:
                 "answer_type": "structured_list",
                 "format": "list",
                 "complexity": "high",
-                "target_count": target_count
+                "target_count": target_count,
+                "components": components,
+                "information_flow": self._map_component_flow(components)
             }
         
-        # Pattern 3: Percentage calculation
+        # Pattern 3: Percentage calculation with multi-step analysis
         elif re.search(r'(?:what percentage|by what percentage).*(?:reduce|increase|change)', task_lower):
+            components = [
+                TaskComponent(
+                    description="Find baseline metrics",
+                    required_entities=["organization", "metric", "date", "baseline"],
+                    search_strategy="quantitative_search"
+                ),
+                TaskComponent(
+                    description="Find current metrics",
+                    required_entities=["organization", "metric", "date", "current"],
+                    depends_on="baseline",
+                    search_strategy="quantitative_search"
+                ),
+                TaskComponent(
+                    description="Calculate percentage change",
+                    required_entities=["calculation"],
+                    depends_on="current",
+                    search_strategy="analytical"
+                )
+            ]
+            
             return {
                 "is_multi_step": True,
                 "pattern": "percentage_calculation",
@@ -532,11 +842,33 @@ class Comprehension:
                 "phases": ["find_baseline", "find_current", "calculate"],
                 "answer_type": "calculation",
                 "format": "numerical",
-                "complexity": "medium"
+                "complexity": "medium",
+                "components": components,
+                "information_flow": self._map_component_flow(components)
             }
-        
-        # Pattern 4: Dataset extraction
+
+        # Pattern 4: Dataset extraction with sophisticated workflow
         elif re.search(r'download.*dataset.*extract', task_lower):
+            components = [
+                TaskComponent(
+                    description="Locate the dataset source",
+                    required_entities=["organization", "dataset", "location"],
+                    search_strategy="direct"
+                ),
+                TaskComponent(
+                    description="Extract timeline data",
+                    required_entities=["timeline", "metrics"],
+                    depends_on="dataset",
+                    search_strategy="data_extraction"
+                ),
+                TaskComponent(
+                    description="Format as structured timeline",
+                    required_entities=["formatted_data"],
+                    depends_on="timeline",
+                    search_strategy="formatting"
+                )
+            ]
+            
             return {
                 "is_multi_step": True,
                 "pattern": "dataset_extraction",
@@ -544,11 +876,27 @@ class Comprehension:
                 "phases": ["locate_dataset", "extract_data", "format_timeline"],
                 "answer_type": "time_series",
                 "format": "timeline",
-                "complexity": "high"
+                "complexity": "high",
+                "components": components,
+                "information_flow": self._map_component_flow(components)
             }
-        
-        # Pattern 5: Company listing with criteria
+
+        # Pattern 5: Company listing with criteria filtering
         elif re.search(r'(?:list|compile).*compan.*(?:criteria|satisfying)', task_lower):
+            components = [
+                TaskComponent(
+                    description="Identify candidate companies",
+                    required_entities=["organization", "location", "sector"],
+                    search_strategy="comprehensive_collection"
+                ),
+                TaskComponent(
+                    description="Verify criteria compliance",
+                    required_entities=["revenue", "emissions", "metrics"],
+                    depends_on="candidates",
+                    search_strategy="verification"
+                )
+            ]
+            
             return {
                 "is_multi_step": True,
                 "pattern": "company_listing",
@@ -556,8 +904,19 @@ class Comprehension:
                 "phases": ["identify_candidates", "verify_criteria"],
                 "answer_type": "filtered_list",
                 "format": "list",
-                "complexity": "high"
+                "complexity": "high",
+                "components": components,
+                "information_flow": self._map_component_flow(components)
             }
+
+        # Default general pattern
+        components = [
+            TaskComponent(
+                description="Research the requested information",
+                required_entities=["general"],
+                search_strategy="direct"
+            )
+        ]
         
         return {
             "is_multi_step": False,
@@ -566,9 +925,21 @@ class Comprehension:
             "phases": ["research"],
             "answer_type": "summary",
             "format": "summary",
-            "complexity": "low"
+            "complexity": "low",
+            "components": components,
+            "information_flow": self._map_component_flow(components)
         }
     
+    def _map_component_flow(self, components: List[TaskComponent]) -> Dict[str, str]:
+        """Map how information flows between task components."""
+        flow = {}
+        for component in components:
+            if component.depends_on:
+                flow[component.description] = f"Requires {component.depends_on} from previous step"
+            else:
+                flow[component.description] = "Independent starting component"
+        return flow
+
     def process_content(self, content: str, source_url: str, current_phase: str = "general") -> Dict[str, Any]:
         """Process content with progressive synthesis."""
         # Extract entities and integrate into synthesis
@@ -597,14 +968,14 @@ class Comprehension:
         
         # Phase-specific relevance boosters
         phase_keywords = {
-            "identify_organization": ["organization", "company", "mediated", "talks", "geneva"],
+            "identify_organization": ["organization", "company", "mediated", "talks"],
             "find_leadership": ["coo", "ceo", "president", "director", "leadership"],
-            "gather_statements": ["said", "stated", "declared", "quoted", "biden"],
-            "find_baseline": ["2021", "baseline", "emissions", "scope 1", "scope 2"],
-            "find_current": ["2023", "current", "latest", "recent"],
-            "locate_dataset": ["dataset", "download", "epoch ai", "models"],
+            "gather_statements": ["said", "stated", "declared", "quoted"],
+            "find_baseline": ["baseline", "emissions", "scope 1", "scope 2"],
+            "find_current": ["current", "latest", "recent"],
+            "locate_dataset": ["dataset", "download"],
             "extract_data": ["compute", "training", "maximum", "record"],
-            "identify_candidates": ["eu", "european", "motor vehicle", "automotive"],
+            "identify_candidates": ["motor vehicle", "automotive"],
             "verify_criteria": ["revenue", "billion", "emissions", "subsidiary"]
         }
         

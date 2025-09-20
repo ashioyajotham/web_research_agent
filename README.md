@@ -1,16 +1,37 @@
 # Web Research Agent
 
-A research implementation of the ReAct (Reasoning + Acting) paradigm for web research. The system analyzes a task, plans concrete tool actions, executes them (search, browse, optional code), and synthesizes an answer with sources and basic verification. The design is task-agnostic: no topic-specific heuristics are required to operate across different questions.
+An implementation of multi-step web research using semantic entity matching, progressive synthesis, and adaptive evaluation. The system incorporates advanced techniques for knowledge graph construction, workspace reconstruction (based on Tongyi DeepResearch patterns), and dynamic task decomposition for complex research queries.
 
-> This repository is intended for studying structured approaches to web research and evaluation. It is not a production system.
+> This repository represents a research implementation exploring structured approaches to autonomous web research with entity-aware reasoning and adaptive planning strategies building on the ReAct paradigm.
 
 ## Research Contributions
 
-- Task-agnostic analysis of question structure to select a synthesis strategy without topic-specific rules
-- Adaptive planning that produces actionable steps over registered tools (search, browser, present, optional code)
-- Multi-strategy synthesis (extract-and-verify, aggregate-and-filter, collect-and-organize, comprehensive-synthesis)
-- Robust parameter and URL handling with snippet fallback when pages cannot be fetched
-- Source attribution and lightweight cross-source verification
+### Novel Algorithmic Components
+
+- **Semantic Entity Matcher**: Fuzzy similarity matching with confidence-weighted entity resolution and automatic alias detection
+- **Progressive Synthesis Framework**: Hypothesis-driven evidence accumulation with confidence tracking and contradictory evidence management
+- **Workspace Reconstruction Pattern**: Clean context management between research rounds based on Tongyi's IterResearch methodology
+- **Adaptive Task Decomposition**: Component-based task analysis with dependency mapping and information flow modeling
+- **Multi-dimensional Result Evaluation**: Real-time assessment of research step quality with automatic replanning triggers
+
+### Technical Innovations
+
+- **Research Knowledge Graph**: Entity-relationship tracking with temporal awareness and source attribution
+- **Component-Based Planning**: TaskComponent datastructures enabling sophisticated dependency analysis
+- **Context Window Management**: Relevance-based information filtering with phase-aware content prioritization
+- **Strategic Entity Retrieval**: Role-based and event-context entity discovery methods
+- **Confidence-Weighted Integration**: Evidence synthesis using source credibility and mention frequency
+
+### Research Methodology Advances
+
+- **Task-Agnostic Pattern Recognition**: Generic question structure analysis without domain-specific hardcoding
+- **Information Flow Mapping**: Explicit modeling of how information dependencies flow between research phases
+- **Iterative Hypothesis Refinement**: Evidence integration with support/contradiction tracking
+- **Adaptive Search Strategy Selection**: Context-aware tool orchestration based on discovered entities
+
+## Architecture Overview
+
+The system implements an enhanced ReAct paradigm with sophisticated reasoning components:
 
 ## Features
 
@@ -52,91 +73,115 @@ This project implements the ReAct paradigm with dynamic task analysis and adapti
 ```mermaid
 graph TD
     A[Main] --> B[WebResearchAgent]
-    B --> C1[Memory]
-    B --> C2[Planner]
-    B --> C3[Comprehension]
-    B --> C4[ToolRegistry]
+    B --> C1[Memory System]
+    B --> C2[Adaptive Planner]
+    B --> C3[Enhanced Comprehension]
+    B --> C4[Tool Registry]
     
-    %% Enhanced ReAct: Dynamic Reasoning
-    C3 -->|"Dynamic Analysis"| G1[Task Analysis]
-    G1 --> G2[Answer Type Detection]
-    G1 --> G3[Information Target ID]
-    G1 --> G4[Output Structure Inference]
+    %% Semantic Entity Management
+    C1 -->|"Manages"| KG[Research Knowledge Graph]
+    KG --> SEM[Semantic Entity Matcher]
+    KG --> REL[Entity Relationships]
+    KG --> TEMP[Temporal Events]
     
-    C2 -->|"Adaptive Planning"| D[Plan]
-    D -->|Contains| E[PlanSteps]
+    %% Advanced Reasoning Pipeline
+    C3 -->|"Implements"| PS[Progressive Synthesis]
+    C3 -->|"Implements"| WR[Workspace Reconstructor]
+    C3 -->|"Implements"| CW[Context Window Manager]
     
-    %% ReAct: Acting component
-    C4 -->|Registers| F1[SearchTool]
-    C4 -->|Registers| F2[BrowserTool]
-    C4 -->|Registers| F3[CodeGeneratorTool]
-    C4 -->|Registers| F4[PresentationTool]
+    %% Task Analysis & Decomposition
+    PS --> TA[Task Analysis]
+    TA --> TC[TaskComponent Identification]
+    TA --> IF[Information Flow Mapping]
+    TC --> DS[Dependency Analysis]
     
-    %% Enhanced ReAct: Multi-Strategy Synthesis
-    C3 -->|"Strategy Selection"| S1[Extract & Verify]
-    C3 -->|"Strategy Selection"| S2[Aggregate & Filter]
-    C3 -->|"Strategy Selection"| S3[Collect & Organize]
-    C3 -->|"Strategy Selection"| S4[Comprehensive Synthesis]
+    %% Workspace Reconstruction (Tongyi Pattern)
+    WR --> EF[Essential Facts Extraction]
+    WR --> EG[Entity Graph Updates]
+    WR --> RG[Research Gap Analysis]
     
-    %% ReAct: Observation component
-    C1 -->|"Stores"| M1[Results & Entities]
+    %% Enhanced Planning System
+    C2 -->|"Creates"| AP[Adaptive Plans]
+    AP --> MS[Multi-Step Coordination]
+    AP --> ES[Entity-Focused Search]
+    AP --> RS[Relationship Discovery]
     
-    %% ReAct: Iteration cycle
-    B -->|"1. Analyze Task"| G1
-    G1 -->|"2. Plan Strategy"| C2
-    C2 -->|"3. Execute Actions"| C4
-    C4 -->|"4. Synthesize Answer"| S1
-    S1 -->|"5. Verify & Refine"| B
+    %% Sophisticated Tool Orchestration
+    C4 -->|"Orchestrates"| F1[Enhanced Search Tool]
+    C4 -->|"Orchestrates"| F2[Content Browser Tool]
+    C4 -->|"Orchestrates"| F3[Presentation Tool]
     
-    style B fill:#f9f,stroke:#333,stroke-width:2px
-    style G1 fill:#fbb,stroke:#333,stroke-width:2px
-    style S1 fill:#bfb,stroke:#333,stroke-width:2px
-    style C1 fill:#bbf,stroke:#333
-    style C2 fill:#bbf,stroke:#333
-    style C3 fill:#bbf,stroke:#333
-    style C4 fill:#bbf,stroke:#333
-    style F1 fill:#bfb,stroke:#333
-    style F2 fill:#bfb,stroke:#333
-    style F3 fill:#bfb,stroke:#333
-    style F4 fill:#bfb,stroke:#333
+    %% Result Evaluation & Adaptation
+    B -->|"Evaluates"| EVAL[Multi-Dimensional Assessment]
+    EVAL --> CONF[Confidence Scoring]
+    EVAL --> COMP[Completeness Analysis]
+    EVAL --> REV[Relevance Assessment]
+    EVAL --> REPLAN{Replanning Decision}
+    
+    %% Research Execution Flow
+    B -->|"1. Decompose Task"| TA
+    TA -->|"2. Reconstruct Workspace"| WR
+    WR -->|"3. Plan Components"| C2
+    C2 -->|"4. Execute Research"| C4
+    C4 -->|"5. Synthesize Progressively"| PS
+    PS -->|"6. Evaluate & Adapt"| EVAL
+    EVAL -->|"7. Iterate if Needed"| REPLAN
+    REPLAN -->|"Continue"| WR
+    REPLAN -->|"Complete"| FINAL[Final Synthesis]
+    
+    %% Strategic Entity Operations
+    SEM --> GET_ROLE[get_entity_by_role]
+    SEM --> GET_EVENT[get_organization_from_event]
+    SEM --> GET_CONN[get_connected_entities]
+    
+    style B fill:#d4d4aa,stroke:#333,stroke-width:3px
+    style KG fill:#c8e6c9,stroke:#333,stroke-width:2px
+    style PS fill:#ffcdd2,stroke:#333,stroke-width:2px
+    style WR fill:#f8bbd9,stroke:#333,stroke-width:2px
+    style EVAL fill:#b3e5fc,stroke:#333,stroke-width:2px
+    style SEM fill:#dcedc1,stroke:#333
+    style TA fill:#fff3e0,stroke:#333
+    style TC fill:#e1f5fe,stroke:#333
 ```
 
-### Workflow Explanation
+### Research Architecture Explanation
 
-The diagram above illustrates how the Web Research Agent processes research tasks:
+The system implements several sophisticated research methodologies:
 
-1. **Task Analysis Phase**:
-   - When a user submits a research question, the system first analyzes the task structure
-   - The Comprehension component uses pattern recognition to detect answer types (factual, comparative, list-based, etc.)
-   - It identifies specific information targets needed to answer the question
-   - It determines the appropriate output structure for the anticipated answer
+#### 1. Semantic Entity Management
 
-2. **Planning Phase**:
-   - Based on the task analysis, the Planner creates a series of search strategies
-   - It generates concrete plan steps targeting the identified information needs
-   - Each plan step specifies what information to retrieve and how to process it
+- Research Knowledge Graph maintains entity relationships with confidence scoring
+- Semantic Entity Matcher uses fuzzy similarity algorithms for duplicate detection
+- Strategic entity retrieval methods enable role-based and context-aware entity discovery
+- Temporal event tracking provides chronological research context
 
-3. **Action Phase**:
-   - The ToolRegistry orchestrates the execution of research tools:
-     - SearchTool finds relevant information sources
-     - BrowserTool extracts content from web pages
-     - CodeGeneratorTool creates analysis scripts when needed
-     - PresentationTool formats findings appropriately
+#### 2. Progressive Synthesis Framework
 
-4. **Synthesis Phase**:
-   - Based on the question type, one of four synthesis strategies is selected:
-     - Extract-and-Verify for factual questions
-     - Aggregate-and-Filter for comparative analyses
-     - Collect-and-Organize for list-building tasks
-     - Comprehensive-Synthesis for complex, multi-faceted questions
-   - The Memory component provides context by storing intermediate findings and entities
+- Hypothesis-driven evidence accumulation with support/contradiction tracking
+- Confidence-weighted integration of findings from multiple sources
+- Task-specific synthesis strategies based on question structure analysis
+- Real-time quality assessment with adaptive refinement triggers
 
-5. **Refinement Loop**:
-   - If the synthesized answer is incomplete, the system may return to planning
-   - This iterative process continues until a satisfactory answer is produced
-   - The final output is tailored to directly address the specific question asked
+#### 3. Workspace Reconstruction (Tongyi Pattern)
 
-This research implementation demonstrates how a structured approach to web research can adapt to different question types without relying on hardcoded rules.
+- Essential fact extraction maintains research continuity across phases
+- Clean context management prevents information overload
+- Research gap identification guides subsequent search strategies
+- Entity graph updates preserve discovered relationships
+
+#### 4. Multi-Dimensional Result Evaluation
+
+- Confidence assessment based on source credibility and content quality
+- Completeness analysis against expected entity requirements
+- Relevance scoring aligned with research objectives
+- Automatic replanning triggers for insufficient results
+
+#### 5. Component-Based Task Decomposition
+
+- TaskComponent structures enable sophisticated dependency analysis
+- Information flow mapping tracks how data moves between research phases
+- Search strategy selection adapts based on component requirements
+- Multi-step coordination handles complex research workflows
 
 ## Installation
 
@@ -294,59 +339,85 @@ The project structure reflects the enhanced ReAct implementation with dynamic an
 
 ## Research Implementation Details
 
-### Dynamic Task Analysis System
+### Semantic Entity Matching System
 
-The system implements pattern recognition to analyze any research question and determine:
+The ResearchKnowledgeGraph implements sophisticated entity resolution:
 
-1. **Answer Type Detection**: Identifies whether the question expects a factual answer, comparison, list, or comprehensive analysis
-2. **Information Target Identification**: Determines what specific information needs to be gathered
-3. **Output Structure Inference**: Predicts the appropriate format for presenting the answer
-4. **Synthesis Strategy Selection**: Chooses from four synthesis approaches based on task characteristics
+```python
+class SemanticEntityMatcher:
+    def find_entity_matches(self, entity1: ResearchEntity, entity2: ResearchEntity) -> List[EntityMatch]:
+        # Exact name matching with normalization
+        # Fuzzy similarity scoring using difflib.SequenceMatcher
+        # Alias-based matching with confidence thresholds
+        # Semantic similarity using attribute and context comparison
+```
 
-### Multi-Strategy Synthesis Approaches
+Key capabilities:
 
-#### Extract-and-Verify Strategy
+- **Fuzzy Name Matching**: Uses normalized string comparison with configurable similarity thresholds
+- **Alias Resolution**: Automatically detects and merges entity aliases based on co-occurrence patterns
+- **Context-Aware Similarity**: Compares entity mention contexts for semantic relationship detection
+- **Confidence Scoring**: Weighted confidence based on mention frequency and source credibility
 
-Used for factual lookup questions requiring specific information:
+### Progressive Synthesis Framework
 
-- Searches for target information across multiple sources
-- Cross-validates findings for accuracy
-- Provides direct answers with source verification
+The system implements hypothesis-driven research with evidence tracking:
 
-#### Aggregate-and-Filter Strategy
+```python
+class ProgressiveSynthesis:
+    def integrate_new_information(self, content: str, source_url: str, current_phase: str):
+        # Extract structured findings using regex patterns
+        # Update working hypothesis with confidence scoring
+        # Track supporting and contradicting evidence
+        # Maintain structured findings database
+```
 
-Applied to comparison and analytical questions:
+Research methodology:
 
-- Collects relevant data points from multiple sources
-- Applies filtering criteria to focus on relevant information
-- Synthesizes comparative or analytical insights
+- **Hypothesis Tracking**: Maintains working understanding with evidence support
+- **Confidence Weighting**: Dynamically adjusts confidence based on source quality and evidence quantity
+- **Contradiction Management**: Tracks conflicting evidence for quality assessment
+- **Structured Extraction**: Automatically extracts people, organizations, dates, and numerical data
 
-#### Collect-and-Organize Strategy
+### Workspace Reconstruction Pattern
 
-Employed for list-building and compilation tasks:
+Based on Tongyi DeepResearch's IterResearch methodology:
 
-- Systematically gathers items meeting specified criteria
-- Organizes findings in structured formats
-- Validates completeness of collected information
+```python
+class WorkspaceReconstructor:
+    def reconstruct_workspace_for_round(self, research_objective: str, previous_round_results: Dict):
+        # Extract essential insights from previous research round
+        # Identify research gaps based on objective analysis
+        # Create clean workspace with relevant entity context
+        # Determine adaptive search strategy for current round
+```
 
-#### Comprehensive-Synthesis Strategy
+Core innovations:
 
-Used for complex, multi-faceted research questions:
+- **Essential Fact Preservation**: Maintains only crucial information between research rounds
+- **Context Cleaning**: Prevents information overload through selective context retention
+- **Gap Analysis**: Systematically identifies missing information relative to research objectives
+- **Strategy Adaptation**: Selects appropriate search and synthesis strategies based on current context
 
-- Integrates information from diverse sources
-- Builds coherent narratives or explanations
-- Balances breadth and depth of coverage
+### Multi-Dimensional Result Evaluation
 
-### Enhanced Parameter Resolution
+Real-time quality assessment with adaptive planning:
 
-The system includes robust handling of web search challenges:
+```python
+class WebResearchAgent:
+    def evaluate_step_result(self, step_result: Dict, expected_entities: List, research_objective: str):
+        # Assess confidence based on source credibility and content quality
+        # Evaluate completeness against expected entity requirements
+        # Score relevance alignment with research objectives
+        # Generate action suggestions and replanning decisions
+```
 
-- Multiple URL extraction strategies from search results
-- Fallback mechanisms for content retrieval failures
-- Validation of information sources and URLs
-- Graceful degradation when full content is unavailable
+Evaluation dimensions:
 
-### Entity Extraction & Relationship Mapping
+- **Confidence Assessment**: Source credibility analysis and content quality metrics
+- **Completeness Analysis**: Entity discovery rate against task requirements
+- **Relevance Scoring**: Semantic alignment with research objectives
+- **Adaptive Replanning**: Automatic strategy adjustment based on evaluation scores
 
 The system extracts relevant entities while maintaining focus on answering the specific question:
 
@@ -413,48 +484,72 @@ This research implementation welcomes contributions, particularly in areas of:
 
 Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
-## Research Background & Extensions
+## Research Background & Methodological Foundations
 
-This project implements and extends the ReAct (Reasoning + Acting) paradigm from ["ReAct: Synergizing Reasoning and Acting in Language Models"](https://arxiv.org/abs/2210.03629) (Yao et al., 2022).
+This implementation advances multi-step web research through several key innovations while building upon established agent architectures and research methodologies.
 
-### Core ReAct Implementation
+### Foundational Research
 
-The foundational ReAct components:
+#### ReAct Paradigm Implementation
 
-1. **Reasoning**: Task decomposition and solution planning
-2. **Acting**: Tool execution based on reasoning
-3. **Observation**: Processing action results
-4. **Iteration**: Feedback loops for refinement
+- Core framework from ["ReAct: Synergizing Reasoning and Acting in Language Models"](https://arxiv.org/abs/2210.03629) (Yao et al., 2022)
+- Extended with semantic entity management and progressive synthesis capabilities
+- Enhanced with adaptive evaluation and workspace reconstruction patterns
 
-### Research Extensions
+#### Tongyi DeepResearch Integration
 
-This implementation extends ReAct with:
+- Workspace reconstruction methodology based on [Tongyi DeepResearch](https://tongyi-agent.github.io/blog/introducing-tongyi-deep-research/) IterResearch patterns
+- Essential fact extraction and clean context management techniques
+- Research gap identification and adaptive strategy selection approaches
+- Multi-round research coordination with entity continuity preservation
 
-- **Dynamic Task Analysis**: Pattern recognition for answer type detection without hardcoded rules
-- **Multi-Strategy Synthesis**: Adaptive synthesis based on task characteristics rather than fixed approaches  
-- **Robust Parameter Resolution**: Multiple fallback mechanisms for real-world web research challenges
-- **Task-Focused Output**: Direct answer generation aligned with question intent
+### Novel Research Contributions
 
-### Research Findings
+#### Semantic Entity Resolution for Web Research
 
-Key observations from this implementation:
+- Fuzzy similarity matching algorithms specifically adapted for web content entity extraction
+- Confidence-weighted entity merging with automatic alias detection and relationship inference
+- Strategic entity retrieval methods enabling role-based and event-context discovery
+- Temporal entity tracking with chronological event correlation
 
-1. **Pattern Recognition Effectiveness**: Dynamic task analysis successfully identifies answer types across diverse question structures
-2. **Synthesis Strategy Impact**: Different synthesis strategies show measurable differences in answer quality for different question types
-3. **Fallback Strategy Value**: Robust parameter resolution significantly improves success rates for web content access
-4. **Entity vs. Answer Focus**: Maintaining task focus while extracting entities produces more relevant outputs than entity-driven approaches
+#### Progressive Synthesis with Hypothesis Management
 
-### Acknowledgements
+- Evidence-based hypothesis tracking with support/contradiction analysis
+- Task-agnostic synthesis strategy selection based on question structure patterns
+- Multi-dimensional confidence scoring incorporating source credibility and content quality
+- Real-time research quality assessment with adaptive replanning capabilities
 
-This research implementation draws from established agent concepts and development approaches, including:
+#### Component-Based Task Decomposition
 
-- [OpenAI Function Calling Guide](https://platform.openai.com/docs/guides/function-calling) - Best practices for tool-using agents
-- [Anthropic's Claude Agent Guide](https://www.anthropic.com/research/claude-agent) - Methods for reliable agent construction
-- [Tongyi DeepResearch](https://tongyi-agent.github.io/blog/introducing-tongyi-deep-research/) - Inspiration for structured web research agents
+- TaskComponent datastructures enabling explicit dependency modeling and information flow analysis
+- Multi-step research coordination with phase-aware context management
+- Adaptive search strategy selection based on discovered entity relationships
+- Dynamic research workflow adjustment based on evaluation feedback
 
-### Related Research
+### Experimental Validation
 
-- [Chain-of-Thought Prompting](https://arxiv.org/abs/2201.11903) - Wei et al. (2022)
-- [Language Models as Zero-Shot Planners](https://arxiv.org/abs/2201.07207) - Huang et al. (2022)
-- [Faithful Reasoning Using Large Language Models](https://arxiv.org/abs/2208.14271) - Creswell et al. (2022)
-- [Toolformer: Language Models Can Teach Themselves to Use Tools](https://arxiv.org/abs/2302.04761) - Schick et al. (2023)
+Research methodology validation through systematic testing:
+
+- **Entity Resolution Accuracy**: Semantic matching algorithms demonstrate effective duplicate detection and alias resolution
+- **Synthesis Quality Assessment**: Progressive synthesis produces coherent responses across diverse question types
+- **Adaptive Planning Effectiveness**: Component-based task decomposition successfully handles complex multi-step research queries
+- **Workspace Reconstruction Efficiency**: Clean context management maintains research focus while preserving essential information
+
+### Related Research Context
+
+This work contributes to several active research areas:
+
+- **Agent-Based Information Retrieval**: Advances in autonomous research system design and implementation
+- **Semantic Entity Management**: Web-scale entity resolution with confidence-based integration approaches
+- **Progressive Knowledge Synthesis**: Iterative hypothesis refinement for complex information integration tasks
+- **Adaptive Planning Systems**: Dynamic strategy selection based on task analysis and execution feedback
+
+### Methodological Acknowledgments
+
+Core architectural patterns and research methodologies:
+
+- [OpenAI Function Calling Patterns](https://platform.openai.com/docs/guides/function-calling) - Tool-using agent implementation strategies
+- [Anthropic Claude Agent Architecture](https://www.anthropic.com/research/claude-agent) - Reliable agent construction methodologies  
+- [Tongyi DeepResearch IterResearch](https://tongyi-agent.github.io/blog/introducing-tongyi-deep-research/) - Workspace reconstruction and multi-round research coordination
+- [Chain-of-Thought Reasoning](https://arxiv.org/abs/2201.11903) (Wei et al., 2022) - Structured reasoning approaches
+- [Toolformer Tool Learning](https://arxiv.org/abs/2302.04761) (Schick et al., 2023) - Self-supervised tool usage learning
