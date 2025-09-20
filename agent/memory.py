@@ -1,8 +1,11 @@
 from datetime import datetime
 import json
 import re
+import hashlib
+import difflib
 from typing import Dict, List, Set, Optional, Tuple, Any
 from dataclasses import dataclass
+from collections import defaultdict
 
 @dataclass
 class EntityMention:
@@ -31,8 +34,202 @@ class ResearchEntity:
         if not self.aliases:
             self.aliases = set()
 
+@dataclass
+class EntityMatch:
+    """Represents a match between entities."""
+    entity1_id: str
+    entity2_id: str
+    similarity_score: float
+    match_type: str  # "exact", "fuzzy", "semantic", "acronym", "alias"
+    confidence: float
+
+class SemanticEntityMatcher:
+    """Advanced entity matching using multiple similarity techniques."""
+    
+    def __init__(self):
+        # Common organization name variations
+        self.org_normalizations = {
+            'inc': 'incorporated',
+            'corp': 'corporation', 
+            'llc': 'limited liability company',
+            'ltd': 'limited',
+            'co': 'company',
+            '&': 'and',
+            'intl': 'international',
+            'natl': 'national',
+            'assn': 'association',
+            'inst': 'institute'
+        }
+        
+        # Common person name patterns
+        self.name_patterns = {
+            'jr': 'junior',
+            'sr': 'senior',
+            'ii': 'second',
+            'iii': 'third',
+            'iv': 'fourth'
+        }
+        
+        # Role synonyms
+        self.role_synonyms = {
+            'ceo': ['chief executive officer', 'chief exec', 'president and ceo'],
+            'coo': ['chief operating officer', 'chief operations officer', 'president and coo'],
+            'cto': ['chief technology officer', 'chief technical officer'],
+            'cfo': ['chief financial officer'],
+            'president': ['pres', 'chairman and president'],
+        }
+    
+    def find_entity_matches(self, entity1: ResearchEntity, entity2: ResearchEntity) -> List[EntityMatch]:
+        """Find all possible matches between two entities."""
+        matches = []
+        
+        # Exact name match
+        if self._normalize_for_comparison(entity1.name) == self._normalize_for_comparison(entity2.name):
+            matches.append(EntityMatch(
+                entity1_id=entity1.name,
+                entity2_id=entity2.name,
+                similarity_score=1.0,
+                match_type="exact",
+                confidence=1.0
+            ))
+        
+        # Fuzzy name match
+        fuzzy_score = self._calculate_fuzzy_similarity(entity1.name, entity2.name)
+        if fuzzy_score > 0.8:
+            matches.append(EntityMatch(
+                entity1_id=entity1.name,
+                entity2_id=entity2.name,
+                similarity_score=fuzzy_score,
+                match_type="fuzzy",
+                confidence=fuzzy_score
+            ))
+        
+        # Alias matches
+        for alias1 in entity1.aliases:
+            for alias2 in entity2.aliases:
+                alias_score = self._calculate_fuzzy_similarity(alias1, alias2)
+                if alias_score > 0.9:
+                    matches.append(EntityMatch(
+                        entity1_id=entity1.name,
+                        entity2_id=entity2.name,
+                        similarity_score=alias_score,
+                        match_type="alias",
+                        confidence=alias_score
+                    ))
+        
+        # Semantic/role-based matches for organizations and people
+        if entity1.entity_type == entity2.entity_type:
+            semantic_score = self._calculate_semantic_similarity(entity1, entity2)
+            if semantic_score > 0.7:
+                matches.append(EntityMatch(
+                    entity1_id=entity1.name,
+                    entity2_id=entity2.name,
+                    similarity_score=semantic_score,
+                    match_type="semantic",
+                    confidence=semantic_score
+                ))
+        
+        return matches
+    
+    def _normalize_for_comparison(self, name: str) -> str:
+        """Normalize entity name for comparison."""
+        normalized = name.lower().strip()
+        
+        # Remove common punctuation
+        normalized = re.sub(r'[.,!?;:"\'()]', '', normalized)
+        
+        # Handle organization suffixes
+        for short, long in self.org_normalizations.items():
+            normalized = re.sub(rf'\b{short}\b', long, normalized)
+        
+        # Handle person name suffixes
+        for short, long in self.name_patterns.items():
+            normalized = re.sub(rf'\b{short}\b', long, normalized)
+        
+        # Normalize whitespace
+        normalized = re.sub(r'\s+', ' ', normalized).strip()
+        
+        return normalized
+    
+    def _calculate_fuzzy_similarity(self, name1: str, name2: str) -> float:
+        """Calculate fuzzy string similarity."""
+        norm1 = self._normalize_for_comparison(name1)
+        norm2 = self._normalize_for_comparison(name2)
+        
+        return difflib.SequenceMatcher(None, norm1, norm2).ratio()
+    
+    def _calculate_semantic_similarity(self, entity1: ResearchEntity, entity2: ResearchEntity) -> float:
+        """Calculate semantic similarity based on attributes and context."""
+        if entity1.entity_type != entity2.entity_type:
+            return 0.0
+        
+        similarity = 0.0
+        
+        # Compare attributes
+        attr1 = entity1.attributes
+        attr2 = entity2.attributes
+        
+        common_attributes = set(attr1.keys()).intersection(set(attr2.keys()))
+        if common_attributes:
+            matching_attrs = sum(1 for attr in common_attributes 
+                               if self._attributes_match(attr1[attr], attr2[attr]))
+            similarity += (matching_attrs / len(common_attributes)) * 0.6
+        
+        # Compare contexts from mentions
+        context_similarity = self._compare_mention_contexts(entity1.mentions, entity2.mentions)
+        similarity += context_similarity * 0.4
+        
+        return similarity
+    
+    def _attributes_match(self, value1: Any, value2: Any) -> bool:
+        """Check if two attribute values match."""
+        if isinstance(value1, str) and isinstance(value2, str):
+            return self._calculate_fuzzy_similarity(value1, value2) > 0.8
+        return value1 == value2
+    
+    def _compare_mention_contexts(self, mentions1: List[EntityMention], mentions2: List[EntityMention]) -> float:
+        """Compare contexts from entity mentions."""
+        if not mentions1 or not mentions2:
+            return 0.0
+        
+        # Sample a few mentions from each
+        sample1 = mentions1[:3]
+        sample2 = mentions2[:3]
+        
+        max_similarity = 0.0
+        for m1 in sample1:
+            for m2 in sample2:
+                context_sim = self._calculate_fuzzy_similarity(m1.context, m2.context)
+                max_similarity = max(max_similarity, context_sim)
+        
+        return max_similarity
+    
+    def merge_entities(self, primary_entity: ResearchEntity, duplicate_entity: ResearchEntity) -> ResearchEntity:
+        """Merge two entities that are determined to be the same."""
+        # Use the entity with higher confidence as primary
+        if duplicate_entity.confidence > primary_entity.confidence:
+            primary_entity, duplicate_entity = duplicate_entity, primary_entity
+        
+        # Merge mentions
+        primary_entity.mentions.extend(duplicate_entity.mentions)
+        
+        # Merge aliases
+        primary_entity.aliases.update(duplicate_entity.aliases)
+        primary_entity.aliases.add(duplicate_entity.name)
+        
+        # Merge attributes (prefer primary, but add missing ones)
+        for key, value in duplicate_entity.attributes.items():
+            if key not in primary_entity.attributes:
+                primary_entity.attributes[key] = value
+        
+        # Update confidence based on more evidence
+        evidence_count = len(primary_entity.mentions)
+        primary_entity.confidence = min(1.0, primary_entity.confidence + (evidence_count * 0.05))
+        
+        return primary_entity
+
 class ResearchKnowledgeGraph:
-    """Knowledge graph for tracking entities and relationships during research."""
+    """Enhanced knowledge graph with semantic entity matching for tracking entities and relationships during research."""
     
     def __init__(self):
         self.entities: Dict[str, ResearchEntity] = {}  # entity_id -> ResearchEntity
@@ -40,6 +237,8 @@ class ResearchKnowledgeGraph:
         self.relationships: Dict[Tuple[str, str], Dict[str, Any]] = {}  # (entity1_id, entity2_id) -> relationship_info
         self.source_entities: Dict[str, List[str]] = {}  # source_url -> [entity_ids]
         self.temporal_events: List[Dict[str, Any]] = []  # Chronological events
+        self.semantic_matcher = SemanticEntityMatcher()  # Advanced entity matching
+        self.entity_clusters: Dict[str, List[str]] = {}  # Grouped duplicate entities
         
     def _generate_entity_id(self, name: str, entity_type: str) -> str:
         """Generate a unique entity ID."""
@@ -48,6 +247,194 @@ class ResearchKnowledgeGraph:
     
     def _normalize_name(self, name: str) -> str:
         """Normalize entity name for comparison."""
+        return self.semantic_matcher._normalize_for_comparison(name)
+    
+    def add_entity(self, name: str, entity_type: str, source_url: str, 
+                   context: str = "", confidence: float = 1.0, 
+                   attributes: Dict[str, Any] = None) -> str:
+        """Add entity with advanced duplicate detection and merging."""
+        
+        # Create candidate entity
+        mention = EntityMention(
+            source_url=source_url,
+            context=context,
+            timestamp=datetime.now().isoformat(),
+            confidence=confidence
+        )
+        
+        candidate_entity = ResearchEntity(
+            name=name,
+            entity_type=entity_type,
+            confidence=confidence,
+            mentions=[mention],
+            attributes=attributes or {},
+            aliases=set()
+        )
+        
+        # Check for existing entities that might be duplicates
+        existing_matches = self._find_duplicate_entities(candidate_entity)
+        
+        if existing_matches:
+            # Merge with the best match
+            best_match = max(existing_matches, key=lambda m: m.confidence)
+            existing_entity = self.entities[best_match.entity1_id]
+            
+            # Merge entities
+            merged_entity = self.semantic_matcher.merge_entities(existing_entity, candidate_entity)
+            self.entities[best_match.entity1_id] = merged_entity
+            
+            # Update indexes
+            self._update_entity_index(merged_entity.name, best_match.entity1_id)
+            
+            return best_match.entity1_id
+        
+        else:
+            # Add as new entity
+            entity_id = self._generate_entity_id(name, entity_type)
+            self.entities[entity_id] = candidate_entity
+            
+            # Update indexes
+            self._update_entity_index(name, entity_id)
+            self._update_source_index(source_url, entity_id)
+            
+            return entity_id
+    
+    def _find_duplicate_entities(self, candidate: ResearchEntity) -> List[EntityMatch]:
+        """Find potential duplicate entities using semantic matching."""
+        matches = []
+        
+        # Check against entities of the same type
+        for entity_id, existing_entity in self.entities.items():
+            if existing_entity.entity_type == candidate.entity_type:
+                entity_matches = self.semantic_matcher.find_entity_matches(candidate, existing_entity)
+                for match in entity_matches:
+                    match.entity1_id = entity_id  # Update to use actual entity ID
+                    matches.append(match)
+        
+        # Filter to only high-confidence matches
+        high_confidence_matches = [m for m in matches if m.confidence > 0.8]
+        
+        return high_confidence_matches
+    
+    def _update_entity_index(self, name: str, entity_id: str):
+        """Update the entity index for fuzzy matching."""
+        normalized_name = self._normalize_name(name)
+        if normalized_name not in self.entity_index:
+            self.entity_index[normalized_name] = []
+        if entity_id not in self.entity_index[normalized_name]:
+            self.entity_index[normalized_name].append(entity_id)
+    
+    def _update_source_index(self, source_url: str, entity_id: str):
+        """Update the source index."""
+        if source_url not in self.source_entities:
+            self.source_entities[source_url] = []
+        if entity_id not in self.source_entities[source_url]:
+            self.source_entities[source_url].append(entity_id)
+    
+    def find_entities_by_type(self, entity_type: str, min_confidence: float = 0.5) -> List[ResearchEntity]:
+        """Find entities by type with minimum confidence."""
+        return [
+            entity for entity in self.entities.values()
+            if entity.entity_type == entity_type and entity.confidence >= min_confidence
+        ]
+    
+    def find_entities_by_attributes(self, **attribute_filters) -> List[ResearchEntity]:
+        """Find entities by specific attributes."""
+        matching_entities = []
+        
+        for entity in self.entities.values():
+            if all(
+                attr_name in entity.attributes and 
+                entity.attributes[attr_name] == attr_value
+                for attr_name, attr_value in attribute_filters.items()
+            ):
+                matching_entities.append(entity)
+        
+        return matching_entities
+    
+    def get_entity_relationships(self, entity_id: str) -> List[Tuple[str, Dict[str, Any]]]:
+        """Get all relationships for an entity."""
+        relationships = []
+        
+        for (e1, e2), rel_info in self.relationships.items():
+            if e1 == entity_id:
+                relationships.append((e2, rel_info))
+            elif e2 == entity_id:
+                relationships.append((e1, rel_info))
+        
+        return relationships
+    
+    def add_entity_relationship(self, entity1_id: str, entity2_id: str, 
+                              relationship_type: str, confidence: float = 1.0,
+                              source_url: str = "", context: str = ""):
+        """Add relationship between entities."""
+        key = (entity1_id, entity2_id) if entity1_id < entity2_id else (entity2_id, entity1_id)
+        
+        self.relationships[key] = {
+            "type": relationship_type,
+            "confidence": confidence,
+            "source": source_url,
+            "context": context,
+            "timestamp": datetime.now().isoformat()
+        }
+    
+    def get_entities_summary(self) -> Dict[str, Any]:
+        """Get summary of all entities in the knowledge graph."""
+        summary = {
+            "total_entities": len(self.entities),
+            "by_type": defaultdict(int),
+            "high_confidence_entities": 0,
+            "total_relationships": len(self.relationships),
+            "sources_covered": len(self.source_entities)
+        }
+        
+        for entity in self.entities.values():
+            summary["by_type"][entity.entity_type] += 1
+            if entity.confidence > 0.8:
+                summary["high_confidence_entities"] += 1
+        
+        return dict(summary)
+    
+    def get_most_mentioned_entities(self, limit: int = 10) -> List[Tuple[str, ResearchEntity, int]]:
+        """Get entities with the most mentions across sources."""
+        entity_mention_counts = []
+        
+        for entity_id, entity in self.entities.items():
+            mention_count = len(entity.mentions)
+            entity_mention_counts.append((entity_id, entity, mention_count))
+        
+        # Sort by mention count descending
+        entity_mention_counts.sort(key=lambda x: x[2], reverse=True)
+        
+        return entity_mention_counts[:limit]
+    
+    def export_entity_graph(self) -> Dict[str, Any]:
+        """Export the entire entity graph for persistence or analysis."""
+        return {
+            "entities": {
+                entity_id: {
+                    "name": entity.name,
+                    "type": entity.entity_type,
+                    "confidence": entity.confidence,
+                    "mentions": [
+                        {
+                            "source": mention.source_url,
+                            "context": mention.context[:200],  # Truncate for size
+                            "timestamp": mention.timestamp,
+                            "confidence": mention.confidence
+                        }
+                        for mention in entity.mentions
+                    ],
+                    "attributes": entity.attributes,
+                    "aliases": list(entity.aliases)
+                }
+                for entity_id, entity in self.entities.items()
+            },
+            "relationships": {
+                f"{k[0]}_{k[1]}": v for k, v in self.relationships.items()
+            },
+            "summary": self.get_entities_summary()
+        }
         return re.sub(r'[^\w\s]', '', name.lower().strip())
     
     def find_similar_entities(self, name: str, entity_type: str) -> List[str]:

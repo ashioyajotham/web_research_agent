@@ -1,6 +1,7 @@
 import re
 from urllib.parse import urlparse
-from typing import Dict, Any
+from typing import Dict, Any, List, Optional
+from dataclasses import dataclass
 
 from .memory import Memory
 from .planner import Planner
@@ -11,10 +12,23 @@ from tools.browser import BrowserTool
 from tools.presentation_tool import PresentationTool
 from utils.formatters import format_results
 from utils.logger import get_logger
+
 logger = get_logger(__name__)
 
+@dataclass
+class EvaluationResult:
+    """Results of evaluating a research step or phase."""
+    confidence: float  # 0.0 to 1.0
+    completeness: float  # 0.0 to 1.0
+    relevance: float  # 0.0 to 1.0
+    overall_score: float  # 0.0 to 1.0
+    missing_entities: List[str]
+    quality_issues: List[str]
+    suggested_actions: List[str]
+    should_replan: bool
+
 class WebResearchAgent:
-    """Main agent class to coordinate the research process."""
+    """Main agent class to coordinate the research process with adaptive evaluation."""
     
     def __init__(self, config_path=None):
         self.memory = Memory()
@@ -23,11 +37,238 @@ class WebResearchAgent:
         self.registry = ToolRegistry()
         # Back-compat alias
         self.tool_registry = self.registry
+        
+        # Result evaluation state
+        self.evaluation_history = []
+        self.execution_metadata = {
+            "step_results": [],
+            "discovered_entities": {},
+            "quality_scores": []
+        }
 
         # Explicitly register tools with their designated names for clarity and correctness.
         self.tool_registry.register_tool("search", SearchTool())
         self.tool_registry.register_tool("browser", BrowserTool())
         self.tool_registry.register_tool("present", PresentationTool())
+    
+    def evaluate_step_result(self, step_result: Dict[str, Any], 
+                           expected_entities: List[str],
+                           research_objective: str) -> EvaluationResult:
+        """Evaluate the result of a single research step."""
+        # Extract content from step result
+        content = self._extract_content_from_result(step_result)
+        
+        # Evaluate different dimensions
+        confidence = self._assess_confidence(content, step_result)
+        completeness = self._assess_completeness(content, expected_entities, research_objective)
+        relevance = self._assess_relevance(content, research_objective)
+        
+        # Overall score is weighted average
+        overall_score = (confidence * 0.3 + completeness * 0.4 + relevance * 0.3)
+        
+        # Identify issues and suggestions
+        missing_entities = self._identify_missing_entities(content, expected_entities)
+        quality_issues = self._identify_quality_issues(content, step_result)
+        suggested_actions = self._generate_action_suggestions(
+            overall_score, missing_entities, quality_issues, research_objective
+        )
+        
+        # Decide if replanning is needed
+        should_replan = overall_score < 0.6 or len(missing_entities) > len(expected_entities) / 2
+        
+        result = EvaluationResult(
+            confidence=confidence,
+            completeness=completeness,
+            relevance=relevance,
+            overall_score=overall_score,
+            missing_entities=missing_entities,
+            quality_issues=quality_issues,
+            suggested_actions=suggested_actions,
+            should_replan=should_replan
+        )
+        
+        # Store for learning
+        self.evaluation_history.append({
+            "timestamp": f"{len(self.evaluation_history)}",
+            "objective": research_objective,
+            "result": result,
+            "content_length": len(content) if content else 0
+        })
+        
+        return result
+    
+    def _extract_content_from_result(self, result: Dict[str, Any]) -> str:
+        """Extract text content from various result formats."""
+        if not result:
+            return ""
+        
+        # Handle different result structures
+        if "output" in result:
+            output = result["output"]
+            if isinstance(output, dict):
+                return output.get("extracted_text", "") or output.get("content", "") or str(output)
+            elif isinstance(output, str):
+                return output
+        
+        if "extracted_text" in result:
+            return result["extracted_text"]
+        
+        if "content" in result:
+            return result["content"]
+        
+        return str(result)
+    
+    def _assess_confidence(self, content: str, result: Dict[str, Any]) -> float:
+        """Assess confidence in the result quality."""
+        if not content:
+            return 0.0
+        
+        confidence = 0.5  # Base confidence
+        
+        # Content length indicates substance
+        if len(content) > 500:
+            confidence += 0.2
+        elif len(content) > 200:
+            confidence += 0.1
+        
+        # Check for error indicators
+        error_indicators = ["error", "not found", "access denied", "404", "blocked"]
+        if any(indicator in content.lower() for indicator in error_indicators):
+            confidence -= 0.3
+        
+        # Check for quality indicators
+        quality_indicators = ["published", "source", "date", "author", "official"]
+        quality_score = sum(1 for indicator in quality_indicators if indicator in content.lower())
+        confidence += min(quality_score * 0.05, 0.2)
+        
+        # Check result status
+        if result.get("status") == "success":
+            confidence += 0.1
+        elif result.get("status") == "error":
+            confidence -= 0.4
+        
+        return max(0.0, min(1.0, confidence))
+    
+    def _assess_completeness(self, content: str, expected_entities: List[str], objective: str) -> float:
+        """Assess how completely the content addresses the research objective."""
+        if not content:
+            return 0.0
+        
+        content_lower = content.lower()
+        objective_lower = objective.lower()
+        
+        # Check for expected entities
+        entity_coverage = 0.0
+        if expected_entities:
+            found_entities = sum(1 for entity in expected_entities 
+                               if entity.lower() in content_lower)
+            entity_coverage = found_entities / len(expected_entities)
+        
+        # Check for objective keywords
+        objective_words = [word for word in objective_lower.split() 
+                          if len(word) > 3 and word not in ["find", "identify", "locate"]]
+        if objective_words:
+            keyword_coverage = sum(1 for word in objective_words 
+                                 if word in content_lower) / len(objective_words)
+        else:
+            keyword_coverage = 0.5
+        
+        # Weighted average
+        completeness = entity_coverage * 0.6 + keyword_coverage * 0.4
+        
+        return max(0.0, min(1.0, completeness))
+    
+    def _assess_relevance(self, content: str, objective: str) -> float:
+        """Assess how relevant the content is to the research objective."""
+        if not content:
+            return 0.0
+        
+        content_lower = content.lower()
+        objective_lower = objective.lower()
+        
+        # Simple relevance based on keyword overlap
+        objective_keywords = set(word for word in objective_lower.split() if len(word) > 3)
+        content_words = set(word for word in content_lower.split() if len(word) > 3)
+        
+        if not objective_keywords:
+            return 0.5
+        
+        overlap = len(objective_keywords.intersection(content_words))
+        relevance = overlap / len(objective_keywords)
+        
+        # Boost for exact phrase matches
+        if any(phrase in content_lower for phrase in objective_lower.split()):
+            relevance += 0.2
+        
+        return max(0.0, min(1.0, relevance))
+    
+    def _identify_missing_entities(self, content: str, expected_entities: List[str]) -> List[str]:
+        """Identify which expected entities are missing from the content."""
+        if not content:
+            return expected_entities.copy()
+        
+        content_lower = content.lower()
+        missing = []
+        
+        for entity in expected_entities:
+            entity_lower = entity.lower()
+            # Check for entity or related terms
+            if entity_lower not in content_lower:
+                # Check for variations
+                if entity_lower == "person" and not any(term in content_lower for term in ["ceo", "president", "director", "manager"]):
+                    missing.append(entity)
+                elif entity_lower == "organization" and not any(term in content_lower for term in ["company", "corporation", "firm"]):
+                    missing.append(entity)
+                elif entity_lower not in ["person", "organization"]:
+                    missing.append(entity)
+        
+        return missing
+    
+    def _identify_quality_issues(self, content: str, result: Dict[str, Any]) -> List[str]:
+        """Identify quality issues with the content."""
+        issues = []
+        
+        if not content:
+            issues.append("No content extracted")
+            return issues
+        
+        # Check for various quality issues
+        if len(content) < 100:
+            issues.append("Content too short")
+        
+        if "error" in content.lower():
+            issues.append("Contains error messages")
+        
+        if content.count(".") < 3:  # Very few sentences
+            issues.append("Insufficient detail")
+        
+        # Check for blocked/denied content
+        blocked_indicators = ["access denied", "blocked", "403", "401", "subscription required"]
+        if any(indicator in content.lower() for indicator in blocked_indicators):
+            issues.append("Access restrictions")
+        
+        return issues
+    
+    def _generate_action_suggestions(self, score: float, missing_entities: List[str], 
+                                   issues: List[str], objective: str) -> List[str]:
+        """Generate specific action suggestions based on evaluation."""
+        suggestions = []
+        
+        if score < 0.4:
+            suggestions.append("Consider changing search strategy entirely")
+        elif score < 0.7:
+            suggestions.append("Refine search terms for better results")
+        
+        if missing_entities:
+            suggestions.append(f"Add entity-focused search for: {', '.join(missing_entities)}")
+        
+        if "Content too short" in issues:
+            suggestions.append("Try alternative sources or expand search scope")
+        
+        if "Access restrictions" in issues:
+            suggestions.append("Find alternative sources without access restrictions")
+        
+        return suggestions
 
     def _substitute_parameters(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
         """
