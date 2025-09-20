@@ -2,6 +2,7 @@ from typing import Dict, Any, List, Optional
 import re
 from .tool_registry import BaseTool
 from utils.logger import get_logger
+from config.config import load_presentation_config
 
 logger = get_logger(__name__)
 
@@ -10,6 +11,7 @@ class PresentationTool(BaseTool):
 
     def __init__(self):
         super().__init__(name="present", description="Synthesize and present research results")
+        self.config = load_presentation_config()
 
     def execute(self, parameters: Dict[str, Any], memory: Any) -> Dict[str, Any]:
         params = parameters or {}
@@ -64,8 +66,12 @@ class PresentationTool(BaseTool):
     def _collect_research_content(self, results: List[Dict]) -> List[Dict]:
         """Collect content with better validation and structure."""
         content_items = []
+        max_items = self.config.get("max_content_items", 5)
         
         for i, result in enumerate(results):
+            if len(content_items) >= max_items:
+                break
+                
             if result.get("status") != "success":
                 logger.debug(f"Skipping failed result {i}: {result.get('status')}")
                 continue
@@ -190,12 +196,26 @@ class PresentationTool(BaseTool):
         """Synthesize direct factual answers."""
         logger.debug(f"Synthesizing factual answer for: {question}")
         
-        # Look for direct answers in content
-        best_answer = self._find_direct_factual_answer(question, content_items)
-        if best_answer:
-            return best_answer
+        # Extract key terms from question
+        key_terms = self._extract_key_terms(question)
+        logger.info(f"Key terms: {key_terms}")
         
-        # Fallback to key facts
+        # Find most relevant content
+        best_content = self._find_most_relevant_content(content_items, key_terms)
+        
+        if not best_content:
+            return self._create_fallback_answer(question, content_items)
+        
+        # Extract specific answer from content
+        answer_sentences = self._extract_answer_sentences(best_content, key_terms)
+        
+        if answer_sentences:
+            primary_answer = answer_sentences[0]
+            sources = self._format_sources([best_content])
+            
+            return f"Based on the research: {primary_answer}\n\n{sources}"
+        
+        # Fallback to key facts approach
         key_facts = self._extract_key_facts(question, content_items, max_facts=3)
         if key_facts:
             answer_parts = [f"Based on the research findings:"]
@@ -209,7 +229,7 @@ class PresentationTool(BaseTool):
             
             return "\n".join(answer_parts)
         
-        return self._handle_no_relevant_content(question, content_items)
+        return self._create_fallback_answer(question, content_items)
 
     def _synthesize_quantitative_answer(self, question: str, content_items: List[Dict]) -> str:
         """Synthesize answers for quantitative questions."""
@@ -529,6 +549,115 @@ class PresentationTool(BaseTool):
                 seen_titles.add(title)
         
         return sources
+
+    def _extract_key_terms(self, question: str) -> List[str]:
+        """Extract key terms from question with simple logic."""
+        # Remove common question words
+        stop_words = {
+            'what', 'who', 'when', 'where', 'why', 'how', 'is', 'are', 'was', 'were',
+            'the', 'a', 'an', 'of', 'in', 'on', 'at', 'by', 'for', 'with', 'to'
+        }
+        
+        words = re.findall(r'\b[a-zA-Z]{3,}\b', question.lower())
+        key_terms = [word for word in words if word not in stop_words]
+        
+        # Return top 5 terms
+        return key_terms[:5]
+
+    def _find_most_relevant_content(self, content_items: List[Dict], key_terms: List[str]) -> Optional[Dict]:
+        """Find the most relevant content item."""
+        if not content_items or not key_terms:
+            return content_items[0] if content_items else None
+        
+        best_item = None
+        best_score = 0
+        
+        for item in content_items:
+            content_lower = item["content"].lower()
+            score = sum(1 for term in key_terms if term in content_lower)
+            
+            if score > best_score:
+                best_score = score
+                best_item = item
+        
+        return best_item if best_score > 0 else content_items[0]
+
+    def _extract_answer_sentences(self, content_item: Dict, key_terms: List[str]) -> List[str]:
+        """Extract sentences that likely contain the answer."""
+        content = content_item["content"]
+        sentences = re.split(r'[.!?]+', content)
+        max_sentences = self.config.get("max_answer_sentences", 2)
+        
+        answer_sentences = []
+        
+        for sentence in sentences:
+            sentence = sentence.strip()
+            if len(sentence) < 20 or len(sentence) > 200:
+                continue
+                
+            sentence_lower = sentence.lower()
+            
+            # Check if sentence contains key terms
+            term_count = sum(1 for term in key_terms if term in sentence_lower)
+            
+            if term_count >= 1:  # At least one key term
+                # Clean the sentence
+                clean_sentence = self._clean_sentence(sentence)
+                if clean_sentence:
+                    answer_sentences.append(clean_sentence)
+        
+        return answer_sentences[:max_sentences]  # Use config value
+
+    def _format_sources(self, content_items: List[Dict]) -> str:
+        """Format source information clearly."""
+        if not content_items:
+            return "Sources: Research data collected"
+        
+        max_sources = self.config.get("max_sources", 5)
+        sources = []
+        seen_titles = set()
+        
+        for item in content_items[:max_sources]:  # Use config value
+            title = item.get("title", "Unknown Source")
+            url = item.get("url", "")
+            
+            if title not in seen_titles:
+                if url:
+                    sources.append(f"- {title} ({url})")
+                else:
+                    sources.append(f"- {title}")
+                seen_titles.add(title)
+        
+        if sources:
+            return "Sources:\n" + "\n".join(sources)
+        else:
+            return "Sources: Research data collected"
+
+    def _create_fallback_answer(self, question: str, content_items: List[Dict]) -> str:
+        """Create a fallback answer when specific extraction fails."""
+        if not content_items:
+            return f"Unable to find specific information to answer: {question}"
+        
+        # Provide available information
+        available_info = []
+        sources = []
+        
+        for item in content_items[:2]:  # Use top 2 items
+            content = self._clean_content_lightly(item["content"])
+            if content:
+                preview = content[:300] + "..." if len(content) > 300 else content
+                available_info.append(preview)
+                sources.append(item)
+        
+        answer = f"Research conducted for: {question}\n\n"
+        answer += "Available information:\n\n"
+        
+        for i, info in enumerate(available_info, 1):
+            answer += f"{i}. {info}\n\n"
+        
+        answer += self._format_sources(sources)
+        
+        return answer
 
     def _handle_no_content(self, question: str) -> str:
         """Handle cases where no content was found."""
