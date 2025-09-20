@@ -5,6 +5,7 @@ import json
 
 from utils.logger import get_logger
 from config.config import get_config
+from .result_evaluator import ResultEvaluator, EvaluationResult
 
 logger = get_logger(__name__)
 
@@ -44,6 +45,79 @@ class AdaptivePlanner:
     def __init__(self):
         self.discovered_entities = {}
         self.current_phase = None
+        self.result_evaluator = ResultEvaluator()
+        self.entity_extraction_patterns = self._initialize_entity_patterns()
+        
+    def _initialize_entity_patterns(self) -> Dict[str, List[str]]:
+        """Initialize patterns for extracting different entity types."""
+        return {
+            "person": [
+                r'\b([A-Z][a-z]+ [A-Z][a-z]+)\b',  # First Last
+                r'\b(CEO|COO|CTO|President|Director)\s+([A-Z][a-z]+ [A-Z][a-z]+)',
+                r'\b([A-Z][a-z]+)\s+(?:said|stated|announced|declared)'
+            ],
+            "organization": [
+                r'\b([A-Z][a-zA-Z]*(?:\s+[A-Z][a-zA-Z]*)*)\s+(?:Inc|Corp|LLC|Ltd|Company|Corporation)\b',
+                r'\b(Apple|Microsoft|Google|Amazon|Facebook|Meta|Tesla|Netflix|Spotify)\b',
+                r'\bthe\s+([A-Z][a-zA-Z\s]+?)\s+(?:organization|company|firm)\b'
+            ],
+            "metric": [
+                r'\b(\d+(?:\.\d+)?%)\b',  # Percentages
+                r'\b(\$\d+(?:\.\d+)?(?:\s*(?:billion|million|thousand))?)\b',  # Money
+                r'\b(\d+(?:\.\d+)?)\s+(tons?|pounds?|kilograms?|emissions?)\b'
+            ],
+            "date": [
+                r'\b(\d{4})\b',  # Years
+                r'\b(\d{1,2}/\d{1,2}/\d{4})\b',  # MM/DD/YYYY
+                r'\b((?:January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{1,2},?\s+\d{4})\b'
+            ]
+        }
+    
+    def extract_entities_from_content(self, content: str) -> Dict[str, List[str]]:
+        """Extract entities from content using semantic patterns."""
+        entities = {}
+        
+        for entity_type, patterns in self.entity_extraction_patterns.items():
+            found_entities = []
+            
+            for pattern in patterns:
+                matches = re.findall(pattern, content, re.IGNORECASE)
+                if isinstance(matches[0], tuple) if matches else False:
+                    # Pattern returns tuples, extract relevant groups
+                    for match in matches:
+                        relevant_text = ' '.join(filter(None, match))
+                        if relevant_text and relevant_text not in found_entities:
+                            found_entities.append(relevant_text)
+                else:
+                    # Pattern returns strings
+                    for match in matches:
+                        if match and match not in found_entities:
+                            found_entities.append(match)
+            
+            if found_entities:
+                entities[entity_type] = found_entities[:5]  # Limit to top 5 per type
+        
+        return entities
+    
+    def update_discovered_entities(self, new_entities: Dict[str, List[str]]):
+        """Update the running list of discovered entities."""
+        for entity_type, entities in new_entities.items():
+            if entity_type not in self.discovered_entities:
+                self.discovered_entities[entity_type] = []
+            
+            for entity in entities:
+                if entity not in self.discovered_entities[entity_type]:
+                    self.discovered_entities[entity_type].append(entity)
+    
+    def evaluate_search_effectiveness(self, step_result: Dict[str, Any], 
+                                    current_phase: ResearchPhase) -> EvaluationResult:
+        """Evaluate how effective a search step was for the current phase."""
+        expected_entities = current_phase.required_entities
+        research_objective = current_phase.objective
+        
+        return self.result_evaluator.evaluate_step_result(
+            step_result, expected_entities, research_objective
+        )
         
     def decompose_multistep_question(self, task_description: str) -> List[ResearchPhase]:
         """Break down complex questions into research phases."""
@@ -136,31 +210,75 @@ class AdaptivePlanner:
         return phases
     
     def plan_entity_focused_search(self, discovered_entities: Dict[str, Any], phase: ResearchPhase) -> str:
-        """Create search query based on discovered entities."""
+        """Create search query based on discovered entities with smart combination."""
         query_parts = []
         
-        # Use discovered entities to build targeted queries
-        if "organization" in discovered_entities:
-            org = discovered_entities["organization"][0] if discovered_entities["organization"] else ""
-            if org:
-                query_parts.append(f'"{org}"')
+        # Use most specific entities first
+        entity_priority = ["person", "organization", "metric", "date"]
         
-        if "person" in discovered_entities:
-            person = discovered_entities["person"][0] if discovered_entities["person"] else ""
-            if person:
-                query_parts.append(f'"{person}"')
+        for entity_type in entity_priority:
+            if entity_type in discovered_entities and discovered_entities[entity_type]:
+                # Use first entity of this type, wrapped in quotes for exact matching
+                entity_value = discovered_entities[entity_type][0]
+                query_parts.append(f'"{entity_value}"')
+                
+                # For multi-phase research, add context
+                if entity_type == "person" and "organization" in discovered_entities:
+                    org = discovered_entities["organization"][0]
+                    query_parts.append(f'"{org}"')
+                    break  # Don't over-complicate query
+                elif entity_type == "organization" and len(query_parts) == 1:
+                    # Add role-based terms for organizational searches
+                    if any(role in phase.objective.lower() for role in ["coo", "ceo", "president", "director"]):
+                        query_parts.append("leadership OR executive OR management")
         
-        # Add phase-specific terms
-        if phase.objective:
-            objective_keywords = re.findall(r'\b\w{4,}\b', phase.objective.lower())
-            query_parts.extend(objective_keywords[:3])  # Top 3 keywords
+        # Add phase-specific search terms
+        objective_keywords = self._extract_objective_keywords(phase.objective)
+        query_parts.extend(objective_keywords[:2])  # Add top 2 keywords
         
-        # Add required entity types as search terms
+        # Add entity type hints for better targeting
         for entity_type in phase.required_entities:
-            if entity_type not in ["general"]:
+            if entity_type not in ["general"] and entity_type not in [discovered_entities.keys()]:
                 query_parts.append(entity_type)
         
-        return " ".join(query_parts[:8])  # Limit query length
+        # Construct final query with smart operators
+        if len(query_parts) >= 3:
+            # Use AND for more precise matching when we have enough terms
+            primary_terms = query_parts[:2]
+            secondary_terms = query_parts[2:]
+            return f"{' '.join(primary_terms)} AND ({' OR '.join(secondary_terms)})"
+        else:
+            return " ".join(query_parts[:6])  # Limit query length
+    
+    def _extract_objective_keywords(self, objective: str) -> List[str]:
+        """Extract meaningful keywords from research objective."""
+        import re
+        
+        # Remove common stop words and extract meaningful terms
+        stop_words = {"the", "and", "or", "for", "with", "that", "this", "from", "find", "identify", "specific"}
+        words = re.findall(r'\b\w{4,}\b', objective.lower())
+        
+        keywords = []
+        for word in words:
+            if word not in stop_words and len(word) > 3:
+                keywords.append(word)
+        
+        return keywords[:4]  # Return top 4 keywords
+    
+    def generate_fallback_query(self, phase: ResearchPhase, previous_query: str) -> str:
+        """Generate alternative query when primary search fails."""
+        # Try different search strategies
+        if phase.search_strategy == "broad":
+            # Switch to more targeted approach
+            return f"{phase.objective} specific information"
+        elif phase.search_strategy == "targeted":
+            # Switch to broader approach
+            objective_words = phase.objective.split()[:3]
+            return " ".join(objective_words)
+        else:
+            # Entity-focused fallback
+            entity_terms = " OR ".join(phase.required_entities)
+            return f"({entity_terms}) AND {phase.objective.split()[0]}"
     
     def should_proceed_to_next_phase(self, current_phase: ResearchPhase, 
                                    discovered_entities: Dict[str, Any]) -> bool:
@@ -194,6 +312,104 @@ class Planner:
         self.adaptive_planner = AdaptivePlanner()
         self.research_phases = []
         self.current_phase_index = 0
+        self.step_results_history = []
+    
+    def process_step_result(self, step_result: Dict[str, Any], step_index: int) -> Dict[str, Any]:
+        """Process a step result and extract entities for adaptive planning."""
+        self.step_results_history.append(step_result)
+        
+        # Extract entities from the result content
+        content = self._extract_content_from_result(step_result)
+        if content:
+            new_entities = self.adaptive_planner.extract_entities_from_content(content)
+            self.adaptive_planner.update_discovered_entities(new_entities)
+            
+            logger.info(f"Extracted entities: {new_entities}")
+        
+        # Evaluate step effectiveness if we're in a multi-phase research
+        evaluation_result = None
+        if self.research_phases and self.current_phase_index < len(self.research_phases):
+            current_phase = self.research_phases[self.current_phase_index]
+            evaluation_result = self.adaptive_planner.evaluate_search_effectiveness(step_result, current_phase)
+            
+            if evaluation_result.should_replan:
+                logger.warning(f"Step evaluation suggests replanning: {evaluation_result.suggested_actions}")
+        
+        return {
+            "original_result": step_result,
+            "extracted_entities": new_entities if content else {},
+            "total_discovered_entities": self.adaptive_planner.discovered_entities,
+            "evaluation": evaluation_result,
+            "should_adapt": self.should_trigger_adaptive_search(self.step_results_history, step_index)
+        }
+    
+    def _extract_content_from_result(self, result: Dict[str, Any]) -> str:
+        """Extract text content from various result formats."""
+        if not result:
+            return ""
+        
+        # Handle different result structures
+        if "output" in result:
+            output = result["output"]
+            if isinstance(output, dict):
+                return output.get("extracted_text", "") or output.get("content", "") or str(output)
+            elif isinstance(output, str):
+                return output
+        
+        if "extracted_text" in result:
+            return result["extracted_text"]
+        
+        if "content" in result:
+            return result["content"]
+        
+        return str(result)
+    
+    def generate_adaptive_next_steps(self, current_step_index: int) -> List[PlanStep]:
+        """Generate next steps based on discovered entities and evaluation results."""
+        if not self.research_phases or self.current_phase_index >= len(self.research_phases):
+            return []
+        
+        current_phase = self.research_phases[self.current_phase_index]
+        
+        # Check if we have enough entities to proceed to next phase
+        can_advance = self.adaptive_planner.should_proceed_to_next_phase(
+            current_phase, self.adaptive_planner.discovered_entities
+        )
+        
+        if can_advance and self.current_phase_index + 1 < len(self.research_phases):
+            # Generate steps for next phase
+            self.current_phase_index += 1
+            next_phase = self.research_phases[self.current_phase_index]
+            return self.create_adaptive_plan_step(self.adaptive_planner.discovered_entities, next_phase)
+        
+        elif not can_advance:
+            # Generate alternative search for current phase
+            alternative_query = self.adaptive_planner.generate_fallback_query(
+                current_phase, 
+                self.get_last_search_query()
+            )
+            
+            return [
+                PlanStep(
+                    description=f"Alternative search for {current_phase.description}",
+                    tool_name="search",
+                    parameters={"query": alternative_query, "num_results": 10}
+                ),
+                PlanStep(
+                    description="Extract content from alternative search",
+                    tool_name="browser",
+                    parameters={"url": "{search_result_0_url}", "extract_type": "main_content"}
+                )
+            ]
+        
+        return []
+    
+    def get_last_search_query(self) -> str:
+        """Get the last search query used."""
+        for result in reversed(self.step_results_history):
+            if isinstance(result, dict) and "query" in result:
+                return result["query"]
+        return ""
 
     def create_plan(self, task_description: str, task_analysis: Dict[str, Any]) -> Plan:
         """Create plan with phase-aware strategy."""
@@ -292,8 +508,12 @@ class Planner:
         """Create synthesis prompt based on research phases."""
         task_lower = task_description.lower()
         
-        if "statements" in task_lower and "biden" in task_lower:
-            return f"From all the research conducted across phases, extract exactly {desired_count} direct statements made by Joe Biden regarding US-China relations. Each statement must: 1) Be from a different occasion/date, 2) Include the exact quote in double quotes, 3) Provide the date (YYYY-MM-DD format when available), 4) Include source title and URL. Present as a numbered list with one statement per item."
+        # Semantic analysis for task-agnostic synthesis
+        if any(term in task_lower for term in ["statements", "quotes", "said"]):
+            # Extract the subject of statements  
+            subject = self._extract_statement_subject(task_description)
+            topic = self._extract_statement_topic(task_description)
+            return f"From all the research conducted across phases, extract exactly {desired_count} direct statements made by {subject} regarding {topic}. Each statement must: 1) Be from a different occasion/date, 2) Include the exact quote in double quotes, 3) Provide the date (YYYY-MM-DD format when available), 4) Include source title and URL. Present as a numbered list with one statement per item."
         
         elif "coo" in task_lower and "organization" in task_lower:
             return "From the research phases, first identify the specific organization that mediated the talks, then provide the name of their COO. Present the answer clearly with supporting evidence and sources."
@@ -428,7 +648,7 @@ Return JSON:
     {{"description":"Fetch and extract content from search result 2","tool":"browser","parameters":{{"url":"{{search_result_2_url}}","extract_type":"main_content"}}}},
     {{"description":"Fetch and extract content from search result 3","tool":"browser","parameters":{{"url":"{{search_result_3_url}}","extract_type":"main_content"}}}},
     {{"description":"Fetch and extract content from search result 4","tool":"browser","parameters":{{"url":"{{search_result_4_url}}","extract_type":"main_content"}}}},
-    {{"description":"Organize and present findings","tool":"present","parameters":{{"prompt":"Produce exactly {desired} direct statements by Joe Biden on US-China relations. Each item must be from a different occasion (unique date). For each item, include: the exact quote in double quotes, the date (YYYY-MM-DD if available), the source title, and the canonical URL. Only output a numbered Markdown list with one line per item. Do not include headings, explanations, or any debug fields. Do not print raw search results.","format_type":"list","title":"Results","suppress_debug":true}}}}
+    {{"description":"Organize and present findings","tool":"present","parameters":{{"prompt":"Based on the research conducted, provide a comprehensive answer to the task. Present findings in the requested format with supporting evidence and sources.","format_type":"summary","title":"Results","suppress_debug":true}}}}
   ]
 }}
 """.strip()
@@ -567,14 +787,61 @@ Return JSON:
                 description="Organize and present findings",
                 tool_name="present",
                 parameters={
-                    "prompt": f"Produce exactly {desired} direct statements by Joe Biden on US-China relations. Each item must be from a different occasion (unique date). For each item, include: the exact quote in double quotes, the date (YYYY-MM-DD if available), the source title, and the canonical URL. Only output a numbered Markdown list with one line per item. Do not include headings, explanations, or any debug fields. Do not print raw search results.",
-                    "format_type": "list",
+                    "prompt": f"Based on the research conducted, provide a comprehensive answer to: {task_description}. Present findings in the requested format with supporting evidence and sources.",
+                    "format_type": "summary",
                     "title": "Research Results",
                     "suppress_debug": True
                 }
             )
         )
         return Plan(task=task_description, steps=steps)
+    
+    def _extract_statement_subject(self, task_description: str) -> str:
+        """Extract the subject of statements from task description using semantic analysis."""
+        import re
+        
+        # Look for patterns like "statements by X" or "X said" or "quotes from X"
+        patterns = [
+            r'statements?\s+(?:by|from|made by)\s+([A-Z][a-zA-Z\s]+?)(?:\s+regarding|\s+about|\s+on|$)',
+            r'quotes?\s+(?:by|from)\s+([A-Z][a-zA-Z\s]+?)(?:\s+regarding|\s+about|\s+on|$)',
+            r'([A-Z][a-zA-Z\s]+?)\s+said',
+            r'([A-Z][a-zA-Z\s]+?)\s+stated',
+        ]
+        
+        for pattern in patterns:
+            match = re.search(pattern, task_description)
+            if match:
+                return match.group(1).strip()
+        
+        # Fallback: look for capitalized names
+        words = task_description.split()
+        for i, word in enumerate(words):
+            if word[0].isupper() and len(word) > 2:
+                # Check if next word is also capitalized (likely a full name)
+                if i + 1 < len(words) and words[i + 1][0].isupper():
+                    return f"{word} {words[i + 1]}"
+                elif word not in ["Compile", "Find", "Extract", "List"]:  # Not action words
+                    return word
+        
+        return "the specified person"
+    
+    def _extract_statement_topic(self, task_description: str) -> str:
+        """Extract the topic of statements from task description."""
+        import re
+        
+        # Look for patterns like "regarding X" or "about X" or "on X"
+        patterns = [
+            r'regarding\s+([a-zA-Z\s-]+?)(?:\.|$)',
+            r'about\s+([a-zA-Z\s-]+?)(?:\.|$)',
+            r'on\s+([a-zA-Z\s-]+?)(?:\.|$)',
+        ]
+        
+        for pattern in patterns:
+            match = re.search(pattern, task_description.lower())
+            if match:
+                return match.group(1).strip()
+        
+        return "the specified topic"
 
 def create_plan(task: str, analysis: dict) -> dict:
     planner = Planner()
