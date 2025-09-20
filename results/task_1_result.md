@@ -38,14 +38,14 @@
 7. [Timeline: U.S.-China Relations](https://www.cfr.org/timeline/us-china-relations)
    The Joe Biden administration affirms Pompeo's declaration; by the end of the year, it bans all imports from Xinjiang. 2021. 2021. March 19, 2021. Biden ...
 
-8. [Fact Sheet: The Biden-Harris Administration's New ...](https://ustr.gov/about-us/policy-offices/press-office/press-releases/2021/october/fact-sheet-biden-harris-administrations-new-approach-us-china-trade-relationship)
+8. [Remarks by President Biden Before the 79th Session of the ...](https://china.usembassy-china.org.cn/remarks-by-president-biden-before-the-79th-session-of-the-united-nations-general-assembly-new-york-ny/)
+   We also need to uphold our principles as we seek to responsibly manage the competition with China so it does not veer into conflict. We stand ...
+
+9. [Fact Sheet: The Biden-Harris Administration's New ...](https://ustr.gov/about-us/policy-offices/press-office/press-releases/2021/october/fact-sheet-biden-harris-administrations-new-approach-us-china-trade-relationship)
    The Biden administration undertook a comprehensive, thoughtful USTR-led, whole-of-government review of the bilateral trade relationship.
 
-9. [Joe Biden's China Journey](https://www.nytimes.com/2020/09/06/us/politics/biden-china.html)
+10. [Joe Biden's China Journey](https://www.nytimes.com/2020/09/06/us/politics/biden-china.html)
    As a United States senator, he spoke of transforming China through trade. As a presidential candidate two decades later, he denounces it as a “dictatorship.”
-
-10. [Remarks by President Biden Before the 79th Session of the ...](https://china.usembassy-china.org.cn/remarks-by-president-biden-before-the-79th-session-of-the-united-nations-general-assembly-new-york-ny/)
-   We also need to uphold our principles as we seek to responsibly manage the competition with China so it does not veer into conflict. We stand ...
 
 ### 2. 2
 **Status**: success

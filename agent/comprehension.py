@@ -2,8 +2,27 @@ from utils.logger import get_logger
 import re
 from typing import Dict, List, Any, Optional, Tuple
 from datetime import datetime
+from dataclasses import dataclass
 
 logger = get_logger(__name__)
+
+@dataclass
+class TaskComponent:
+    """Represents a component of a multistep task."""
+    description: str
+    required_entities: List[str]
+    depends_on: Optional[str] = None  # Previous component this depends on
+    search_strategy: str = "direct"  # direct, entity_focused, relationship
+
+@dataclass 
+class TaskAnalysis:
+    """Enhanced task analysis with decomposition."""
+    task_type: str
+    complexity: str  # simple, multistep, comparative
+    components: List[TaskComponent]
+    synthesis_strategy: str
+    expected_entities: List[str]
+    information_flow: Dict[str, str]  # how information flows between components
 
 class ProgressiveSynthesis:
     """Manages progressive synthesis of research findings with hypothesis tracking."""
@@ -718,7 +737,9 @@ class Comprehension:
                 "required_entities": task_analysis["entities"],
                 "multi_step": True,
                 "research_phases": task_analysis["phases"],
-                "complexity": task_analysis["complexity"]
+                "complexity": task_analysis["complexity"],
+                "components": task_analysis.get("components", []),
+                "information_flow": task_analysis.get("information_flow", {})
             }
             self.last_strategy = "progressive_synthesis"
             return analysis
@@ -738,8 +759,22 @@ class Comprehension:
         """Detect specific task patterns and their requirements."""
         task_lower = task_description.lower()
         
-        # Pattern 1: COO/Role finding
+        # Pattern 1: COO/Role finding with sophisticated decomposition
         if re.search(r'find.*(?:coo|ceo|cto|president|director).*(?:organization|company)', task_lower):
+            components = [
+                TaskComponent(
+                    description="Identify the organization that performed the action",
+                    required_entities=["organization", "event", "location", "temporal"],
+                    search_strategy="entity_focused"
+                ),
+                TaskComponent(
+                    description="Find the specific role holder at that organization", 
+                    required_entities=["person", "role"],
+                    depends_on="organization",
+                    search_strategy="relationship"
+                )
+            ]
+            
             return {
                 "is_multi_step": True,
                 "pattern": "role_finding",
@@ -747,13 +782,24 @@ class Comprehension:
                 "phases": ["identify_organization", "find_leadership"],
                 "answer_type": "specific_person",
                 "format": "factual",
-                "complexity": "medium"
+                "complexity": "medium",
+                "components": components,
+                "information_flow": self._map_component_flow(components)
             }
         
-        # Pattern 2: Statement compilation
+        # Pattern 2: Statement compilation with detailed component analysis
         elif re.search(r'compile.*\d+.*statement.*by.*about', task_lower):
             count = re.search(r'\b(\d+)\b', task_description)
             target_count = int(count.group(1)) if count else 10
+            
+            components = [
+                TaskComponent(
+                    description="Gather statements from various sources",
+                    required_entities=["person", "statement", "date", "source"],
+                    search_strategy="comprehensive_collection"
+                )
+            ]
+            
             return {
                 "is_multi_step": False,
                 "pattern": "statement_compilation",
@@ -762,11 +808,33 @@ class Comprehension:
                 "answer_type": "structured_list",
                 "format": "list",
                 "complexity": "high",
-                "target_count": target_count
+                "target_count": target_count,
+                "components": components,
+                "information_flow": self._map_component_flow(components)
             }
         
-        # Pattern 3: Percentage calculation
+        # Pattern 3: Percentage calculation with multi-step analysis
         elif re.search(r'(?:what percentage|by what percentage).*(?:reduce|increase|change)', task_lower):
+            components = [
+                TaskComponent(
+                    description="Find baseline metrics",
+                    required_entities=["organization", "metric", "date", "baseline"],
+                    search_strategy="quantitative_search"
+                ),
+                TaskComponent(
+                    description="Find current metrics",
+                    required_entities=["organization", "metric", "date", "current"],
+                    depends_on="baseline",
+                    search_strategy="quantitative_search"
+                ),
+                TaskComponent(
+                    description="Calculate percentage change",
+                    required_entities=["calculation"],
+                    depends_on="current",
+                    search_strategy="analytical"
+                )
+            ]
+            
             return {
                 "is_multi_step": True,
                 "pattern": "percentage_calculation",
@@ -774,11 +842,33 @@ class Comprehension:
                 "phases": ["find_baseline", "find_current", "calculate"],
                 "answer_type": "calculation",
                 "format": "numerical",
-                "complexity": "medium"
+                "complexity": "medium",
+                "components": components,
+                "information_flow": self._map_component_flow(components)
             }
-        
-        # Pattern 4: Dataset extraction
+
+        # Pattern 4: Dataset extraction with sophisticated workflow
         elif re.search(r'download.*dataset.*extract', task_lower):
+            components = [
+                TaskComponent(
+                    description="Locate the dataset source",
+                    required_entities=["organization", "dataset", "location"],
+                    search_strategy="direct"
+                ),
+                TaskComponent(
+                    description="Extract timeline data",
+                    required_entities=["timeline", "metrics"],
+                    depends_on="dataset",
+                    search_strategy="data_extraction"
+                ),
+                TaskComponent(
+                    description="Format as structured timeline",
+                    required_entities=["formatted_data"],
+                    depends_on="timeline",
+                    search_strategy="formatting"
+                )
+            ]
+            
             return {
                 "is_multi_step": True,
                 "pattern": "dataset_extraction",
@@ -786,11 +876,27 @@ class Comprehension:
                 "phases": ["locate_dataset", "extract_data", "format_timeline"],
                 "answer_type": "time_series",
                 "format": "timeline",
-                "complexity": "high"
+                "complexity": "high",
+                "components": components,
+                "information_flow": self._map_component_flow(components)
             }
-        
-        # Pattern 5: Company listing with criteria
+
+        # Pattern 5: Company listing with criteria filtering
         elif re.search(r'(?:list|compile).*compan.*(?:criteria|satisfying)', task_lower):
+            components = [
+                TaskComponent(
+                    description="Identify candidate companies",
+                    required_entities=["organization", "location", "sector"],
+                    search_strategy="comprehensive_collection"
+                ),
+                TaskComponent(
+                    description="Verify criteria compliance",
+                    required_entities=["revenue", "emissions", "metrics"],
+                    depends_on="candidates",
+                    search_strategy="verification"
+                )
+            ]
+            
             return {
                 "is_multi_step": True,
                 "pattern": "company_listing",
@@ -798,8 +904,19 @@ class Comprehension:
                 "phases": ["identify_candidates", "verify_criteria"],
                 "answer_type": "filtered_list",
                 "format": "list",
-                "complexity": "high"
+                "complexity": "high",
+                "components": components,
+                "information_flow": self._map_component_flow(components)
             }
+
+        # Default general pattern
+        components = [
+            TaskComponent(
+                description="Research the requested information",
+                required_entities=["general"],
+                search_strategy="direct"
+            )
+        ]
         
         return {
             "is_multi_step": False,
@@ -808,9 +925,21 @@ class Comprehension:
             "phases": ["research"],
             "answer_type": "summary",
             "format": "summary",
-            "complexity": "low"
+            "complexity": "low",
+            "components": components,
+            "information_flow": self._map_component_flow(components)
         }
     
+    def _map_component_flow(self, components: List[TaskComponent]) -> Dict[str, str]:
+        """Map how information flows between task components."""
+        flow = {}
+        for component in components:
+            if component.depends_on:
+                flow[component.description] = f"Requires {component.depends_on} from previous step"
+            else:
+                flow[component.description] = "Independent starting component"
+        return flow
+
     def process_content(self, content: str, source_url: str, current_phase: str = "general") -> Dict[str, Any]:
         """Process content with progressive synthesis."""
         # Extract entities and integrate into synthesis

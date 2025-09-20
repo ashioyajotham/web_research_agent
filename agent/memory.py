@@ -611,6 +611,69 @@ class ResearchKnowledgeGraph:
         """Get all entities of a specific type."""
         return [entity for entity in self.entities.values() if entity.entity_type == entity_type]
     
+    def get_entity_by_role(self, role: str, organization: str = None) -> Optional[ResearchEntity]:
+        """Find person entity with specific role, optionally at specific organization."""
+        role_lower = role.lower()
+        
+        for entity in self.entities.values():
+            if entity.entity_type == 'person':
+                # Check attributes for role
+                if 'role' in entity.attributes and role_lower in entity.attributes['role'].lower():
+                    if organization:
+                        # Check if person is related to the organization
+                        if self._entities_related(entity.name, organization):
+                            return entity
+                    else:
+                        return entity
+        
+        return None
+    
+    def get_organization_from_event(self, event_keywords: List[str]) -> Optional[ResearchEntity]:
+        """Find organization mentioned in context of specific event."""
+        for entity in self.entities.values():
+            if entity.entity_type == 'organization':
+                for mention in entity.mentions:
+                    context_lower = mention.context.lower()
+                    if any(keyword.lower() in context_lower for keyword in event_keywords):
+                        return entity
+        return None
+    
+    def get_connected_entities(self, entity_name: str, relationship_types: List[str] = None) -> List[ResearchEntity]:
+        """Get entities connected to given entity through relationships."""
+        connected = []
+        entity_id = self._find_entity_by_name(entity_name)
+        if not entity_id:
+            return connected
+            
+        for (e1_id, e2_id), rel_info in self.relationships.items():
+            if relationship_types and rel_info["type"] not in relationship_types:
+                continue
+                
+            connected_entity_id = None
+            if e1_id == entity_id:
+                connected_entity_id = e2_id
+            elif e2_id == entity_id:
+                connected_entity_id = e1_id
+                
+            if connected_entity_id and connected_entity_id in self.entities:
+                connected.append(self.entities[connected_entity_id])
+        
+        return connected
+    
+    def _entities_related(self, entity1_name: str, entity2_name: str) -> bool:
+        """Check if two entities are related through any relationship."""
+        entity1_id = self._find_entity_by_name(entity1_name)
+        entity2_id = self._find_entity_by_name(entity2_name)
+        
+        if not entity1_id or not entity2_id:
+            return False
+            
+        for (e1_id, e2_id), rel_info in self.relationships.items():
+            if (e1_id == entity1_id and e2_id == entity2_id) or \
+               (e1_id == entity2_id and e2_id == entity1_id):
+                return True
+        return False
+
     def get_entity_context(self, entity_name: str) -> str:
         """Get comprehensive context about an entity."""
         entity_id = self._find_entity_by_name(entity_name)
