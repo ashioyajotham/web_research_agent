@@ -174,8 +174,10 @@ class PresentationTool(BaseTool):
         """Simple, reliable question type detection."""
         question_lower = question.lower()
         
-        # Factual questions (who, what, when, where is/are)
-        if re.search(r'\b(who|what|when|where)\s+(?:is|are|was|were)\b', question_lower):
+        # Factual questions (who, what, when, where is/are OR name of)
+        if (re.search(r'\b(who|what|when|where)\s+(?:is|are|was|were)\b', question_lower) or
+            re.search(r'\b(name|names)\s+of\b', question_lower) or
+            re.search(r'\bfind\s+the\s+name\b', question_lower)):
             return "factual"
         
         # Quantitative questions (how many, how much, what percentage)
@@ -199,6 +201,13 @@ class PresentationTool(BaseTool):
         # Extract key terms from question
         key_terms = self._extract_key_terms(question)
         logger.info(f"Key terms: {key_terms}")
+        
+        # For specific "who" questions, try to extract names first
+        if re.search(r'\b(name|who|ceo|coo|president|director|founder)\b', question.lower()):
+            direct_name = self._extract_specific_name(question, content_items)
+            if direct_name:
+                sources = self._format_sources(content_items[:2])
+                return f"**{direct_name}**\n\n{sources}"
         
         # Find most relevant content
         best_content = self._find_most_relevant_content(content_items, key_terms)
@@ -549,6 +558,44 @@ class PresentationTool(BaseTool):
                 seen_titles.add(title)
         
         return sources
+
+    def _extract_specific_name(self, question: str, content_items: List[Dict]) -> Optional[str]:
+        """Extract specific names from content for 'who' questions."""
+        combined_content = ""
+        for item in content_items:
+            if item.get("content"):
+                combined_content += " " + item["content"]
+        
+        if not combined_content:
+            return None
+        
+        # Look for names with executive titles in sentences
+        position_words = r'\b(?:chief executive|CEO|COO|president|director|founder|head|leader|executive)\b'
+        sentences = re.split(r'[.!?]+', combined_content)
+        
+        for sentence in sentences:
+            if re.search(position_words, sentence, re.IGNORECASE):
+                # Look for capitalized names in this sentence
+                name_matches = re.findall(r'\b([A-Z][a-z]+ [A-Z][a-z]+)\b', sentence)
+                if name_matches:
+                    # Filter out common non-names
+                    for name in name_matches:
+                        if name.lower() not in ['united states', 'white house', 'new york', 'hong kong']:
+                            return name
+        
+        # Enhanced patterns for specific name extraction
+        name_patterns = [
+            r'([A-Z][a-z]+ [A-Z][a-z]+),?\s+(?:the\s+)?(?:chief executive|CEO|COO|president|director|founder)',
+            r'(?:CEO|COO|president|director|founder)\s+([A-Z][a-z]+ [A-Z][a-z]+)',
+            r'([A-Z][a-z]+ [A-Z][a-z]+)\s+(?:is|was|serves as)\s+(?:the\s+)?(?:chief executive|CEO|COO)',
+        ]
+        
+        for pattern in name_patterns:
+            matches = re.findall(pattern, combined_content, re.IGNORECASE)
+            if matches:
+                return matches[0].strip()
+        
+        return None
 
     def _extract_key_terms(self, question: str) -> List[str]:
         """Extract key terms from question with simple logic."""
