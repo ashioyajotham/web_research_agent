@@ -169,7 +169,8 @@ class AdaptivePlanner:
             parameters={
                 "prompt": self._create_simple_synthesis_prompt(task, analysis),
                 "format_type": analysis.get("presentation_format", "direct_answer"),
-                "title": "Research Results"
+                "title": "Research Results",
+                "suppress_debug": analysis.get("presentation_format") == "direct_answer"
             }
         ))
         

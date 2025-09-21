@@ -27,11 +27,15 @@ def format_results(task_description, plan, results):
         # Try to locate the present tool output
         present_text = None
         for r in (results or [])[::-1]:
-            if r.get("tool") in ("present", "presentation"):
+            # Check if this is the present tool by description or output structure
+            description = r.get("description", "").lower()
+            if "present" in description or "organize and present" in description or "synthesize" in description:
                 out = r.get("output")
                 if isinstance(out, dict):
+                    # Handle nested output structure from tools
+                    tool_output = out.get("output", out)
                     # Common fields used by presentation tool
-                    present_text = out.get("final_text") or out.get("text") or out.get("content")
+                    present_text = tool_output.get("final_text") or tool_output.get("text") or tool_output.get("content")
                 elif isinstance(out, str):
                     present_text = out
                 break

@@ -709,7 +709,18 @@ class Comprehension:
         # Detect task patterns and required entities
         task_analysis = self._detect_task_pattern(task_description)
         
-        # Traditional pattern detection (enhanced)
+        # Detect direct factual questions
+        if re.search(r'^(who|what|when|where|which|how many|how much)\s+', task_lower, re.IGNORECASE):
+            analysis = {
+                "task_type": "factual_question",
+                "answer_type": "direct_answer",
+                "synthesis_strategy": "direct_extraction",
+                "presentation_format": "direct_answer",
+                "required_entities": ["answer"],
+                "multi_step": False
+            }
+            self.last_strategy = "direct_extraction"
+            return analysis
         is_list_intent = any(w in task_lower for w in ["compile", "list", "gather", "collect"])
         targets_statements = any(w in task_lower for w in ["statement", "statements", "quote", "quotes", "remark", "remarks", "said", "says"])
         

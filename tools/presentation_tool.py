@@ -18,18 +18,19 @@ class PresentationTool(BaseTool):
         title = params.get("title", "Research Results")
         prompt = params.get("prompt", "") or ""
         results = params.get("results", [])
+        format_type = params.get("format_type", "general")
         suppress_debug = bool(params.get("suppress_debug", False))
 
         # Extract the research question
         research_question = self._extract_research_question(prompt)
-        logger.info(f"Processing research question: {research_question}")
+        logger.info(f"Processing research question: {research_question} (format: {format_type})")
         
         # Collect and validate research content
         research_content = self._collect_research_content(results)
         logger.info(f"Collected {len(research_content)} content items")
         
         # Synthesize answer with clear logic
-        synthesized_answer = self._synthesize_answer(research_question, research_content, prompt)
+        synthesized_answer = self._synthesize_answer(research_question, research_content, format_type)
         
         if suppress_debug:
             return {"status": "success", "output": {"final_text": synthesized_answer}}
@@ -149,65 +150,96 @@ class PresentationTool(BaseTool):
         
         return None
 
-    def _synthesize_answer(self, question: str, content_items: List[Dict], original_prompt: str) -> str:
-        """Main synthesis method with clear question type routing."""
+    def _synthesize_answer(self, question: str, content_items: List[Dict], format_type: str) -> str:
+        """Main synthesis method with clear question type routing based on format_type."""
         if not content_items:
             return self._handle_no_content(question)
         
-        # Detect question type
-        question_type = self._detect_question_type(question)
-        logger.info(f"Detected question type: {question_type}")
+        logger.info(f"Synthesizing answer with format_type: {format_type}")
         
-        # Route to appropriate synthesis method
-        if question_type == "factual":
-            return self._synthesize_factual_answer(question, content_items)
-        elif question_type == "quantitative":
-            return self._synthesize_quantitative_answer(question, content_items)
-        elif question_type == "list":
+        # Route to appropriate synthesis method based on format_type
+        if format_type == "direct_answer":
+            return self._synthesize_direct_answer(question, content_items)
+        elif format_type == "list":
             return self._synthesize_list_answer(question, content_items)
-        elif question_type == "comprehensive":
-            return self._synthesize_comprehensive_answer(question, content_items)
-        else:
+        elif format_type == "summary":
             return self._synthesize_general_answer(question, content_items)
+        elif format_type == "comparison_table":
+            return self._synthesize_comparative_answer(question, content_items)
+        else:
+            # Fallback to question type detection for backward compatibility
+            question_type = self._detect_question_type(question)
+            logger.info(f"Using detected question type: {question_type}")
+            
+            if question_type == "factual":
+                return self._synthesize_factual_answer(question, content_items)
+            elif question_type == "quantitative":
+                return self._synthesize_quantitative_answer(question, content_items)
+            elif question_type == "list":
+                return self._synthesize_list_answer(question, content_items)
+            elif question_type == "comprehensive":
+                return self._synthesize_comprehensive_answer(question, content_items)
+            else:
+                return self._synthesize_general_answer(question, content_items)
 
     def _detect_question_type(self, question: str) -> str:
-        """Simple, reliable question type detection."""
-        question_lower = question.lower()
+        """Improved question type detection with better pattern matching."""
+        question_lower = question.lower().strip()
         
-        # Factual questions (who, what, when, where is/are OR name of)
-        if (re.search(r'\b(who|what|when|where)\s+(?:is|are|was|were)\b', question_lower) or
-            re.search(r'\b(name|names)\s+of\b', question_lower) or
-            re.search(r'\bfind\s+the\s+name\b', question_lower)):
-            return "factual"
+        # Factual questions - direct answers expected
+        factual_patterns = [
+            r'^who\s+(is|are|was|were)\s+',
+            r'^what\s+(is|are|was|were)\s+',
+            r'^when\s+(is|are|was|were|did|do)\s+',
+            r'^where\s+(is|are|was|were)\s+',
+            r'^which\s+',
+            r'^how\s+many\s+',
+            r'^how\s+much\s+',
+        ]
         
-        # Quantitative questions (how many, how much, what percentage)
-        if re.search(r'\b(how many|how much|what percentage|what number)\b', question_lower):
+        for pattern in factual_patterns:
+            if re.search(pattern, question_lower):
+                return "factual"
+        
+        # Quantitative questions - numbers expected
+        if any(phrase in question_lower for phrase in [
+            'how many', 'how much', 'what percentage', 'what number',
+            'how old', 'how long', 'how tall', 'how big'
+        ]):
             return "quantitative"
         
-        # List questions (list, compile, find all)
-        if re.search(r'\b(list|compile|find all|identify all|what are the)\b', question_lower):
-            return "list"
+        # List questions - multiple items expected
+        list_patterns = [
+            r'\blist\s+(of|all)\b',
+            r'\bcompile\s+(a\s+)?list\b',
+            r'\bidentify\s+all\b',
+            r'\bfind\s+all\b',
+            r'\bwhat\s+are\s+the\s+',
+            r'\bwho\s+are\s+the\s+',
+            r'\bgive\s+me\s+(a\s+)?list\b',
+        ]
         
-        # Comprehensive questions (explain, describe, analyze)
-        if re.search(r'\b(explain|describe|analyze|discuss|compare|evaluate)\b', question_lower):
+        for pattern in list_patterns:
+            if re.search(pattern, question_lower):
+                return "list"
+        
+        # Comprehensive questions - detailed explanations expected
+        if any(word in question_lower for word in [
+            'explain', 'describe', 'analyze', 'discuss', 'compare', 
+            'evaluate', 'why', 'how does', 'how do', 'how to'
+        ]):
             return "comprehensive"
         
+        # Default to general
         return "general"
 
-    def _synthesize_factual_answer(self, question: str, content_items: List[Dict]) -> str:
-        """Synthesize direct factual answers."""
-        logger.debug(f"Synthesizing factual answer for: {question}")
+    def _synthesize_direct_answer(self, question: str, content_items: List[Dict]) -> str:
+        """Synthesize direct answers for factual questions - prioritize extraction over summarization."""
+        logger.debug(f"Synthesizing direct answer for: {question}")
         
         # Extract key terms from question
         key_terms = self._extract_key_terms(question)
         logger.info(f"Key terms: {key_terms}")
-        
-        # For specific "who" questions, try to extract names first
-        if re.search(r'\b(name|who|ceo|coo|president|director|founder)\b', question.lower()):
-            direct_name = self._extract_specific_name(question, content_items)
-            if direct_name:
-                sources = self._format_sources(content_items[:2])
-                return f"**{direct_name}**\n\n{sources}"
         
         # Find most relevant content
         best_content = self._find_most_relevant_content(content_items, key_terms)
@@ -215,28 +247,22 @@ class PresentationTool(BaseTool):
         if not best_content:
             return self._create_fallback_answer(question, content_items)
         
-        # Extract specific answer from content
+        # Try direct answer extraction first
+        direct_answer = self._extract_direct_answer(question, best_content, key_terms)
+        
+        if direct_answer:
+            sources = self._format_sources([best_content])
+            return f"{direct_answer}\n\n{sources}"
+        
+        # Fallback to sentence extraction if direct extraction fails
         answer_sentences = self._extract_answer_sentences(best_content, key_terms)
         
         if answer_sentences:
             primary_answer = answer_sentences[0]
             sources = self._format_sources([best_content])
-            
-            return f"Based on the research: {primary_answer}\n\n{sources}"
+            return f"{primary_answer}\n\n{sources}"
         
-        # Fallback to key facts approach
-        key_facts = self._extract_key_facts(question, content_items, max_facts=3)
-        if key_facts:
-            answer_parts = [f"Based on the research findings:"]
-            answer_parts.extend([f"• {fact['content']}" for fact in key_facts[:2]])
-            
-            # Add sources
-            sources = self._get_unique_sources(key_facts)
-            if sources:
-                answer_parts.append("\nSources:")
-                answer_parts.extend([f"- {source}" for source in sources[:3]])
-            
-            return "\n".join(answer_parts)
+        return self._create_fallback_answer(question, content_items)
         
         return self._create_fallback_answer(question, content_items)
 
@@ -288,7 +314,7 @@ class PresentationTool(BaseTool):
         return self._synthesize_general_answer(question, content_items)
 
     def _synthesize_list_answer(self, question: str, content_items: List[Dict]) -> str:
-        """Synthesize answers for list-type questions."""
+        """Synthesize answers for list-type questions - provide direct lists."""
         logger.debug(f"Synthesizing list answer for: {question}")
         
         # Extract list items from content
@@ -297,18 +323,20 @@ class PresentationTool(BaseTool):
         for item in content_items:
             content = item["content"]
             
-            # Look for bullet points, numbered lists, etc.
+            # Look for bullet points, numbered lists, company names, etc.
             list_patterns = [
                 r'(?:^|\n)\s*[•\-\*]\s*(.+?)(?=\n|$)',  # Bullet points
                 r'(?:^|\n)\s*\d+\.\s*(.+?)(?=\n|$)',    # Numbered lists
                 r'(?:^|\n)([A-Z][^.!?]*(?:Inc|Ltd|Corp|Company|Organization)[^.!?]*)\.?', # Company names
+                r'(?:^|\n)([A-Z][^.!?]*University[^.!?]*)\.?', # University names
+                r'(?:^|\n)([A-Z][^.!?]*Institute[^.!?]*)\.?', # Institute names
             ]
             
             for pattern in list_patterns:
                 matches = re.finditer(pattern, content, re.MULTILINE)
                 for match in matches:
                     list_item = match.group(1).strip()
-                    if len(list_item) > 10 and len(list_item) < 200:  # Reasonable length
+                    if len(list_item) > 5 and len(list_item) < 150:  # Reasonable length
                         list_items.append({
                             "item": list_item,
                             "source": item["title"]
@@ -320,75 +348,80 @@ class PresentationTool(BaseTool):
             seen_items = set()
             
             for item_info in list_items:
-                item_lower = item_info["item"].lower()
-                if item_lower not in seen_items:
+                # Normalize for deduplication
+                item_normalized = re.sub(r'[^\w\s]', '', item_info["item"].lower()).strip()
+                if item_normalized not in seen_items and len(item_normalized) > 3:
                     unique_items.append(item_info)
-                    seen_items.add(item_lower)
+                    seen_items.add(item_normalized)
                     if len(unique_items) >= 10:  # Limit to 10 items
                         break
             
-            answer_parts = [f"Based on the research findings, here are the key items:"]
-            for i, item_info in enumerate(unique_items, 1):
-                answer_parts.append(f"{i}. {item_info['item']}")
-            
-            # Add sources
-            sources = list(set([item_info["source"] for item_info in unique_items]))
-            if sources:
-                answer_parts.append("\nSources:")
-                answer_parts.extend([f"- {source}" for source in sources[:5]])
-            
-            return "\n".join(answer_parts)
+            if unique_items:
+                # Create direct list without generic prefixes
+                answer_lines = []
+                for i, item_info in enumerate(unique_items, 1):
+                    answer_lines.append(f"{i}. {item_info['item']}")
+                
+                # Add sources at the end
+                sources = list(set([item_info["source"] for item_info in unique_items]))
+                if sources:
+                    answer_lines.append("\nSources:")
+                    answer_lines.extend([f"- {source}" for source in sources[:5]])
+                
+                return "\n".join(answer_lines)
         
-        return self._synthesize_general_answer(question, content_items)
+        # Fallback if no structured list found
+        return self._create_fallback_answer(question, content_items)
 
     def _synthesize_comprehensive_answer(self, question: str, content_items: List[Dict]) -> str:
-        """Synthesize comprehensive answers."""
+        """Synthesize comprehensive answers - provide direct summaries."""
         logger.debug(f"Synthesizing comprehensive answer for: {question}")
         
         # Extract key themes and organize information
         key_facts = self._extract_key_facts(question, content_items, max_facts=8)
         
         if key_facts:
-            # Group facts by theme/source
-            answer_parts = [f"Based on the research findings:"]
+            # Create direct summary without generic prefixes
+            answer_lines = []
             
             # Add main findings
             for i, fact in enumerate(key_facts[:6], 1):
                 if len(fact["content"]) > 20:  # Only substantial facts
-                    answer_parts.append(f"\n{i}. {fact['content']}")
+                    answer_lines.append(f"{i}. {fact['content']}")
             
             # Add sources
             sources = self._get_unique_sources(key_facts)
             if sources:
-                answer_parts.append("\nSources:")
-                answer_parts.extend([f"- {source}" for source in sources[:5]])
+                answer_lines.append("\nSources:")
+                answer_lines.extend([f"- {source}" for source in sources[:5]])
             
-            return "\n".join(answer_parts)
+            return "\n".join(answer_lines)
         
         return self._handle_no_relevant_content(question, content_items)
 
     def _synthesize_general_answer(self, question: str, content_items: List[Dict]) -> str:
-        """General synthesis for unclear question types."""
+        """General synthesis for unclear question types - provide direct summaries."""
         logger.debug(f"Synthesizing general answer for: {question}")
         
         # Extract most relevant facts
         key_facts = self._extract_key_facts(question, content_items, max_facts=5)
         
         if key_facts:
-            answer_parts = [f"Based on the research findings:"]
+            # Create direct summary without generic prefixes
+            answer_lines = []
             
             # Add the most relevant information
             for fact in key_facts[:3]:
                 if len(fact["content"]) > 15:
-                    answer_parts.append(f"• {fact['content']}")
+                    answer_lines.append(f"• {fact['content']}")
             
             # Add sources
             sources = self._get_unique_sources(key_facts)
             if sources:
-                answer_parts.append("\nSources:")
-                answer_parts.extend([f"- {source}" for source in sources[:3]])
+                answer_lines.append("\nSources:")
+                answer_lines.extend([f"- {source}" for source in sources[:3]])
             
-            return "\n".join(answer_parts)
+            return "\n".join(answer_lines)
         
         return self._handle_no_relevant_content(question, content_items)
 
@@ -427,7 +460,7 @@ class PresentationTool(BaseTool):
             if best_source.get('url'):
                 source_text += f" ({best_source['url']})"
             
-            return f"Based on the research findings: {clean_sentence}\n\nSource:\n{source_text}"
+            return f"{clean_sentence}\n\nSource:\n{source_text}"
         
         return None
 
@@ -559,44 +592,6 @@ class PresentationTool(BaseTool):
         
         return sources
 
-    def _extract_specific_name(self, question: str, content_items: List[Dict]) -> Optional[str]:
-        """Extract specific names from content for 'who' questions."""
-        combined_content = ""
-        for item in content_items:
-            if item.get("content"):
-                combined_content += " " + item["content"]
-        
-        if not combined_content:
-            return None
-        
-        # Look for names with executive titles in sentences
-        position_words = r'\b(?:chief executive|CEO|COO|president|director|founder|head|leader|executive)\b'
-        sentences = re.split(r'[.!?]+', combined_content)
-        
-        for sentence in sentences:
-            if re.search(position_words, sentence, re.IGNORECASE):
-                # Look for capitalized names in this sentence
-                name_matches = re.findall(r'\b([A-Z][a-z]+ [A-Z][a-z]+)\b', sentence)
-                if name_matches:
-                    # Filter out common non-names
-                    for name in name_matches:
-                        if name.lower() not in ['united states', 'white house', 'new york', 'hong kong']:
-                            return name
-        
-        # Enhanced patterns for specific name extraction
-        name_patterns = [
-            r'([A-Z][a-z]+ [A-Z][a-z]+),?\s+(?:the\s+)?(?:chief executive|CEO|COO|president|director|founder)',
-            r'(?:CEO|COO|president|director|founder)\s+([A-Z][a-z]+ [A-Z][a-z]+)',
-            r'([A-Z][a-z]+ [A-Z][a-z]+)\s+(?:is|was|serves as)\s+(?:the\s+)?(?:chief executive|CEO|COO)',
-        ]
-        
-        for pattern in name_patterns:
-            matches = re.findall(pattern, combined_content, re.IGNORECASE)
-            if matches:
-                return matches[0].strip()
-        
-        return None
-
     def _extract_key_terms(self, question: str) -> List[str]:
         """Extract key terms from question with simple logic."""
         # Remove common question words
@@ -654,6 +649,141 @@ class PresentationTool(BaseTool):
                     answer_sentences.append(clean_sentence)
         
         return answer_sentences[:max_sentences]  # Use config value
+
+    def _extract_direct_answer(self, question: str, content_item: Dict, key_terms: List[str]) -> Optional[str]:
+        """Extract direct answers for factual questions (Who, What, When, Where)."""
+        content = content_item["content"]
+        question_lower = question.lower()
+        
+        # Determine what type of direct answer we need
+        if question_lower.startswith(('who ', 'who is ', 'who are ')):
+            return self._extract_person_answer(content, key_terms)
+        elif question_lower.startswith(('what ', 'what is ', 'what are ')):
+            return self._extract_what_answer(question, content, key_terms)
+        elif question_lower.startswith(('when ', 'when did ', 'when was ')):
+            return self._extract_date_answer(content, key_terms)
+        elif question_lower.startswith(('where ', 'where is ', 'where are ')):
+            return self._extract_location_answer(content, key_terms)
+        elif 'how many' in question_lower or 'how much' in question_lower:
+            return self._extract_quantity_answer(content, key_terms)
+        
+        return None
+
+    def _extract_person_answer(self, content: str, key_terms: List[str]) -> Optional[str]:
+        """Extract person names from content."""
+        # Look for patterns like "John Smith", "Dr. Jane Doe", etc.
+        name_patterns = [
+            r'\b([A-Z][a-z]+ [A-Z][a-z]+)\b',  # First Last
+            r'\b([A-Z][a-z]+ [A-Z]\. [A-Z][a-z]+)\b',  # First M. Last
+            r'\b(Dr\. [A-Z][a-z]+ [A-Z][a-z]+)\b',  # Dr. First Last
+            r'\b(Mr\. [A-Z][a-z]+ [A-Z][a-z]+)\b',  # Mr. First Last
+            r'\b(Ms\. [A-Z][a-z]+ [A-Z][a-z]+)\b',  # Ms. First Last
+        ]
+        
+        for pattern in name_patterns:
+            matches = re.findall(pattern, content)
+            if matches:
+                # Return the first name found (assuming it's the most relevant)
+                return matches[0]
+        
+        return None
+
+    def _extract_what_answer(self, question: str, content: str, key_terms: List[str]) -> Optional[str]:
+        """Extract 'what' answers - could be names, titles, things, etc."""
+        # For questions like "What is X?" look for direct definitions
+        sentences = re.split(r'[.!?]+', content)
+        
+        for sentence in sentences:
+            sentence = sentence.strip()
+            if len(sentence) < 10 or len(sentence) > 100:
+                continue
+                
+            # Look for sentences that seem to define or identify something
+            if any(term in sentence.lower() for term in ['is ', 'are ', 'was ', 'were ']):
+                # Clean and return the core of the sentence
+                return self._clean_direct_answer(sentence)
+        
+        return None
+
+    def _extract_date_answer(self, content: str, key_terms: List[str]) -> Optional[str]:
+        """Extract dates from content."""
+        # Look for various date formats
+        date_patterns = [
+            r'\b(\d{1,2} \w+ \d{4})\b',  # 15 January 2024
+            r'\b(\w+ \d{1,2}, \d{4})\b',  # January 15, 2024
+            r'\b(\d{4}-\d{2}-\d{2})\b',  # 2024-01-15
+            r'\b(\d{1,2}/\d{1,2}/\d{4})\b',  # 01/15/2024
+        ]
+        
+        for pattern in date_patterns:
+            matches = re.findall(pattern, content)
+            if matches:
+                return matches[0]
+        
+        return None
+
+    def _extract_location_answer(self, content: str, key_terms: List[str]) -> Optional[str]:
+        """Extract location/place names from content."""
+        # Look for capitalized place names
+        location_patterns = [
+            r'\b([A-Z][a-z]+(?: [A-Z][a-z]+)*)\b',  # City names, country names
+        ]
+        
+        # Common location indicators
+        location_indicators = ['based in', 'located in', 'headquartered in', 'in ', 'at ']
+        
+        sentences = re.split(r'[.!?]+', content)
+        for sentence in sentences:
+            sentence = sentence.strip()
+            for indicator in location_indicators:
+                if indicator in sentence.lower():
+                    # Extract what comes after the indicator
+                    parts = sentence.lower().split(indicator)
+                    if len(parts) > 1:
+                        after_indicator = parts[1].strip()
+                        # Look for capitalized words
+                        words = after_indicator.split()
+                        if words and words[0][0].isupper():
+                            return words[0]
+        
+        return None
+
+    def _extract_quantity_answer(self, content: str, key_terms: List[str]) -> Optional[str]:
+        """Extract quantities/numbers from content."""
+        # Look for numbers with context
+        number_patterns = [
+            r'\b(\d+(?:,\d{3})*(?:\.\d+)?)\b',  # Numbers with commas and decimals
+            r'\b(\d+(?:\.\d+)? (?:million|billion|thousand|hundred))\b',  # Numbers with units
+        ]
+        
+        for pattern in number_patterns:
+            matches = re.findall(pattern, content)
+            if matches:
+                return matches[0]
+        
+        return None
+
+    def _clean_direct_answer(self, answer: str) -> str:
+        """Clean direct answers by removing unnecessary prefixes/suffixes."""
+        answer = answer.strip()
+        
+        # Remove common prefixes that don't add value
+        prefixes_to_remove = [
+            'the ', 'a ', 'an ', 'this ', 'that ', 'these ', 'those ',
+            'it is ', 'it was ', 'they are ', 'they were ', 'he is ', 'she is ',
+            'we are ', 'i am ', 'you are '
+        ]
+        
+        for prefix in prefixes_to_remove:
+            if answer.lower().startswith(prefix):
+                answer = answer[len(prefix):].strip()
+                break
+        
+        # Capitalize first letter
+        if answer:
+            answer = answer[0].upper() + answer[1:]
+        
+        return answer
 
     def _format_sources(self, content_items: List[Dict]) -> str:
         """Format source information clearly."""
