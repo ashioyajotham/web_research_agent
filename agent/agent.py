@@ -50,7 +50,7 @@ class WebResearchAgent:
         self.tool_registry.register_tool("search", SearchTool())
         self.tool_registry.register_tool("browser", BrowserTool())
         self.tool_registry.register_tool("present", PresentationTool())
-    
+
     def evaluate_step_result(self, step_result: Dict[str, Any], 
                            expected_entities: List[str],
                            research_objective: str) -> EvaluationResult:
@@ -327,7 +327,7 @@ class WebResearchAgent:
             tool = self.tool_registry.get_tool(step.tool_name)
             if not tool:
                 logger.error(f"Tool '{step.tool_name}' not found in registry.")
-                execution_results.append({"step": i+1, "status": "error", "output": f"Tool '{step.tool_name}' not found."})
+                execution_results.append({"step": i+1, "description": step.description, "status": "error", "output": f"Tool '{step.tool_name}' not found."})
                 continue
 
             # Substitute placeholders like {search_result_0_url} with actual values from memory
@@ -348,10 +348,24 @@ class WebResearchAgent:
                 status = "error"
                 logger.error(output)
 
-            execution_results.append({"step": i+1, "description": step.description, "status": status, "output": output})
+            result_data = {"step": i + 1, "description": step.description, "status": status, "output": output}
+            execution_results.append(result_data)
 
-        # 4. Formatting: Generate the final report
-        final_output = self._format_results(task_description, plan, execution_results)
+            # New: Process content for synthesis after each relevant step
+            if step.tool_name == "browser" and status == "success":
+                content = self._extract_content_from_result(result_data)
+                url = output.get("url", "")
+                if content:
+                    logger.info(f"Processing content from {url} for synthesis.")
+                    self.comprehension.process_content(content, url)
+
+        # 4. Synthesis: Generate the final answer
+        logger.info("Synthesizing final answer from processed content.")
+        synthesized_answer = self.comprehension.synthesize_final_answer(task_description)
+        logger.info(f"Synthesized answer: {synthesized_answer}")
+
+        # 5. Formatting: Generate the final report
+        final_output = self._format_results(task_description, plan, execution_results, synthesized_answer)
         return self._clean_present_output(final_output)
 
     def _resolve_url_from_search_results(self, previous_results):
@@ -420,10 +434,10 @@ class WebResearchAgent:
         except Exception as e:
             print(f"display_error: {e}")
 
-    def _format_results(self, task_description, plan, results):
+    def _format_results(self, task_description, plan, results, synthesized_answer=None):
         """Delegate to unified formatter for consistent, task-agnostic outputs."""
         try:
-            return format_results(task_description, plan, results)
+            return format_results(task_description, plan, results, synthesized_answer)
         except Exception as e:
             logger.error(f"Formatting failed: {e}")
             # Minimal fallback with sources if available

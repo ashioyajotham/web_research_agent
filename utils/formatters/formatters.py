@@ -10,7 +10,7 @@ def _truncate_content(content, max_length=2000):
     
     return content[:max_length] + f"... [Content truncated, {len(content) - max_length} more characters]"
 
-def format_results(task_description, plan, results):
+def format_results(task_description, plan, results, synthesized_answer=None):
     """
     Format output. If the plan's present step requested suppress_debug,
     return only the present tool's final text (and optionally sources).
@@ -48,28 +48,72 @@ def format_results(task_description, plan, results):
     output_format = config.get("output_format", "markdown").lower()
     
     if output_format == "json":
-        return _format_as_json(task_description, plan, results)
+        return _format_as_json(task_description, plan, results, synthesized_answer)
     elif output_format == "html":
-        return _format_as_html(task_description, plan, results)
+        return _format_as_html(task_description, plan, results, synthesized_answer)
     else:  # Default to markdown
-        return _format_as_markdown(task_description, plan, results)
+        return _format_as_markdown(task_description, plan, results, synthesized_answer)
 
-def _format_as_markdown(task_description: str, plan: Any, results: List[Dict[str, Any]]) -> str:
+def _format_synthesized_answer(answer: Dict[str, Any]) -> str:
+    """Format the synthesized answer dictionary into a readable string."""
+    if not answer:
+        return "No direct answer could be synthesized."
+
+    lines = []
+    if "role_candidates" in answer and answer["role_candidates"]:
+        lines.append("Found the following potential roles:")
+        for candidate in answer["role_candidates"]:
+            person = candidate.get('person', 'N/A')
+            role = candidate.get('role', 'N/A')
+            source = candidate.get('source', 'N/A')
+            lines.append(f"- **{person}** as **{role}** (Source: {source})")
+
+    elif "statements" in answer and answer["statements"]:
+        lines.append("Found the following statements:")
+        for stmt in answer["statements"]:
+            quote = stmt.get('quote', 'N/A')
+            speaker = stmt.get('speaker', 'Unknown')
+            source = stmt.get('source', 'N/A')
+            lines.append(f'- "{quote}" - {speaker} (Source: {source})')
+
+    elif "numerical_data" in answer and answer["numerical_data"]:
+        lines.append("Found the following numerical data:")
+        for data in answer["numerical_data"]:
+            value = data.get('value', 'N/A')
+            unit = data.get('unit', '')
+            context = data.get('context', 'N/A')
+            source = data.get('source', 'N/A')
+            lines.append(f"- **{value} {unit}**: {context} (Source: {source})")
+
+    if not lines:
+        return "Could not synthesize a direct answer from the available information."
+
+    return "\n".join(lines)
+
+
+def _format_as_markdown(task_description: str, plan: Any, results: List[Dict[str, Any]], synthesized_answer: Dict[str, Any] = None) -> str:
     """Format results as Markdown."""
     output = [
         f"# Research Results: {task_description}",
-        "\n## Plan\n"
     ]
+
+    # Add synthesized answer at the top
+    if synthesized_answer:
+        output.append("\n## Answer\n")
+        output.append(_format_synthesized_answer(synthesized_answer))
+
+    output.append("\n## Plan\n")
     
     # Add plan details
-    for i, step in enumerate(plan.steps):
-        output.append(f"{i+1}. **{step.description}** (using {step.tool_name})")
+    if plan and hasattr(plan, "steps"):
+        for i, step in enumerate(plan.steps):
+            output.append(f"{i+1}. **{step.description}** (using {step.tool_name})")
     
     output.append("\n## Results\n")
     
     # Add results for each step
     for i, result in enumerate(results):
-        step_desc = result.get("step", f"Step {i+1}")
+        step_desc = result.get("description", f"Step {i+1}")
         status = result.get("status", "unknown")
         step_output = result.get("output", "")
         
@@ -120,10 +164,11 @@ def _format_as_markdown(task_description: str, plan: Any, results: List[Dict[str
     
     return "\n".join(output)
 
-def _format_as_json(task_description: str, plan: Any, results: List[Dict[str, Any]]) -> str:
+def _format_as_json(task_description: str, plan: Any, results: List[Dict[str, Any]], synthesized_answer: Dict[str, Any] = None) -> str:
     """Format results as JSON."""
     output = {
         "task": task_description,
+        "answer": synthesized_answer,
         "plan": [
             {
                 "description": step.description,
@@ -131,14 +176,14 @@ def _format_as_json(task_description: str, plan: Any, results: List[Dict[str, An
                 "parameters": step.parameters
             }
             for step in plan.steps
-        ],
+        ] if plan and hasattr(plan, "steps") else [],
         "results": results,
         "summary": "The agent has completed the research task."
     }
     
     return json.dumps(output, indent=2)
 
-def _format_as_html(task_description: str, plan: Any, results: List[Dict[str, Any]]) -> str:
+def _format_as_html(task_description: str, plan: Any, results: List[Dict[str, Any]], synthesized_answer: Dict[str, Any] = None) -> str:
     """Format results as HTML."""
     html = [
         "<!DOCTYPE html>",
@@ -156,20 +201,28 @@ def _format_as_html(task_description: str, plan: Any, results: List[Dict[str, An
         "</head>",
         "<body>",
         f"<h1>Research Results: {task_description}</h1>",
+    ]
+
+    if synthesized_answer:
+        html.append("<h2>Answer</h2>")
+        html.append(f"<div>{_format_synthesized_answer(synthesized_answer).replace('\n', '<br>')}</div>")
+
+    html.extend([
         "<h2>Plan</h2>",
         "<ol>"
-    ]
+    ])
     
     # Add plan details
-    for step in plan.steps:
-        html.append(f"<li><strong>{step.description}</strong> (using {step.tool_name})</li>")
+    if plan and hasattr(plan, "steps"):
+        for step in plan.steps:
+            html.append(f"<li><strong>{step.description}</strong> (using {step.tool_name})</li>")
     
     html.append("</ol>")
     html.append("<h2>Results</h2>")
     
     # Add results for each step
     for i, result in enumerate(results):
-        step_desc = result.get("step", f"Step {i+1}")
+        step_desc = result.get("description", f"Step {i+1}")
         status = result.get("status", "unknown")
         step_output = result.get("output", {})
         
