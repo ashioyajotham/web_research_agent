@@ -115,7 +115,7 @@ web_research_agent/
 
 ## License
 
-MIT License - see LICENSE file for details
+MIT License - see (LICENSE)[LICENSE] file for details
 
 ## Contributing
 
