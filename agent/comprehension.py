@@ -1,5 +1,7 @@
 from utils.logger import get_logger
 import re
+import subprocess
+import json
 from typing import Dict, List, Any, Optional, Tuple
 from datetime import datetime
 from dataclasses import dataclass
@@ -35,230 +37,48 @@ class ProgressiveSynthesis:
         self.structured_findings = {}  # Extracted structured data
         
     def integrate_new_information(self, content: str, source_url: str, current_phase: str) -> Dict[str, Any]:
-        """Integrate new content into working hypothesis."""
-        findings = {}
+        """Integrate new content into working hypothesis by summarizing and extracting key information."""
+        import subprocess
+        import json
         
-        # Extract structured information based on content patterns
-        findings.update(self._extract_statements(content, source_url))
-        findings.update(self._extract_roles_and_people(content, source_url))
-        findings.update(self._extract_organizations(content, source_url))
-        findings.update(self._extract_dates_and_events(content, source_url))
-        findings.update(self._extract_numerical_data(content, source_url))
-        
-        # Update working hypothesis
-        for key, value in findings.items():
-            if key not in self.working_hypothesis:
-                self.working_hypothesis[key] = []
-                self.evidence_for[key] = []
-                self.confidence_scores[key] = 0.0
-            
-            # Add evidence
-            self.evidence_for[key].append({
-                "content": value,
+        try:
+            command = f'python tools/summarizer.py "{source_url}" "{current_phase}'
+            result = subprocess.run(command, capture_output=True, text=True, shell=True)
+            if result.returncode == 0:
+                findings = json.loads(result.stdout)
+            else:
+                logger.error(f"Summarizer script failed: {result.stderr}")
+                return {}
+        except Exception as e:
+            logger.error(f"Error running summarizer script: {e}")
+            return {}
+
+        if 'statements' not in self.working_hypothesis:
+            self.working_hypothesis['statements'] = []
+            self.evidence_for['statements'] = []
+            self.confidence_scores['statements'] = 0.0
+
+        for sentence in findings.get('extracted_info', []):
+            self.evidence_for['statements'].append({
+                "content": sentence,
                 "source": source_url,
                 "phase": current_phase,
                 "timestamp": datetime.now().isoformat()
             })
             
-            # Update confidence based on source credibility and content quality
             source_credibility = self._assess_source_credibility(source_url)
-            content_quality = self._assess_content_quality(str(value))
+            content_quality = self._assess_content_quality(sentence)
             new_confidence = (source_credibility + content_quality) / 2
             
-            # Weighted average of confidence scores
-            total_evidence = len(self.evidence_for[key])
-            self.confidence_scores[key] = (
-                (self.confidence_scores[key] * (total_evidence - 1) + new_confidence) / total_evidence
+            total_evidence = len(self.evidence_for['statements'])
+            self.confidence_scores['statements'] = (
+                (self.confidence_scores['statements'] * (total_evidence - 1) + new_confidence) / total_evidence
             )
             
-            # Add to working hypothesis if confidence is high enough
-            if new_confidence > 0.6 and value not in self.working_hypothesis[key]:
-                self.working_hypothesis[key].append(value)
+            if new_confidence > 0.6 and sentence not in self.working_hypothesis['statements']:
+                self.working_hypothesis['statements'].append(sentence)
         
-        return findings
-    
-    def _extract_statements(self, content: str, source_url: str) -> Dict[str, List[Dict[str, Any]]]:
-        """Extract direct statements/quotes from content."""
-        statements = []
-        
-        # Pattern for quoted statements
-        quote_patterns = [
-            r'"([^"]{20,300})"',  # Direct quotes
-            r"'([^']{20,300})'",  # Single quotes
-            r'said:\s*"([^"]{20,300})"',  # Said: quotes
-            r'stated:\s*"([^"]{20,300})"',  # Stated: quotes
-        ]
-        
-        for pattern in quote_patterns:
-            matches = re.finditer(pattern, content, re.IGNORECASE | re.DOTALL)
-            for match in matches:
-                quote = match.group(1).strip()
-                # Extract context around the quote
-                start = max(0, match.start() - 100)
-                end = min(len(content), match.end() + 100)
-                context = content[start:end]
-                
-                # Try to extract speaker and date
-                speaker = self._extract_speaker_from_context(context)
-                date = self._extract_date_from_context(context)
-                
-                statements.append({
-                    "quote": quote,
-                    "speaker": speaker,
-                    "date": date,
-                    "source": source_url,
-                    "context": context.strip(),
-                    "confidence": 0.8
-                })
-        
-        return {"statements": statements} if statements else {}
-    
-    def _extract_roles_and_people(self, content: str, source_url: str) -> Dict[str, List[Dict[str, Any]]]:
-        """Extract people and their roles from content."""
-        roles_people = []
-        
-        # Pattern for role assignments
-        role_patterns = [
-            r'(\w+(?:\s+\w+)*)\s+(?:serves as|is the|acts as|holds the position of)\s+(CEO|COO|CTO|President|Director|Manager|Secretary|Chairman|Vice President|VP)',
-            r'(CEO|COO|CTO|President|Director|Manager|Secretary|Chairman|Vice President|VP)\s+(\w+(?:\s+\w+)*)',
-            r'(\w+(?:\s+\w+)*),?\s+(CEO|COO|CTO|President|Director|Manager|Secretary|Chairman|Vice President|VP)',
-        ]
-        
-        for pattern in role_patterns:
-            matches = re.finditer(pattern, content, re.IGNORECASE)
-            for match in matches:
-                groups = match.groups()
-                if len(groups) == 2:
-                    person, role = groups[0].strip(), groups[1].strip()
-                    # Validate that person looks like a name
-                    if re.match(r'^[A-Z][a-z]+(?:\s+[A-Z][a-z]+)+$', person):
-                        roles_people.append({
-                            "person": person,
-                            "role": role,
-                            "source": source_url,
-                            "confidence": 0.7
-                        })
-        
-        return {"roles_people": roles_people} if roles_people else {}
-    
-    def _extract_organizations(self, content: str, source_url: str) -> Dict[str, List[str]]:
-        """Extract organization names from content."""
-        organizations = []
-        
-        # Patterns for organizations
-        org_patterns = [
-            r'\b([A-Z][a-zA-Z\s&,.-]+(?:Inc|Corp|LLC|Ltd|Company|Organization|Institute|Foundation|Group|Association))\b',
-            r'\b([A-Z][A-Z\s&]+)\b',  # All caps organizations
-        ]
-        
-        for pattern in org_patterns:
-            matches = re.findall(pattern, content)
-            for match in matches:
-                org = match.strip()
-                if 3 < len(org) < 100:  # Reasonable length
-                    organizations.append(org)
-        
-        return {"organizations": list(set(organizations))} if organizations else {}
-    
-    def _extract_dates_and_events(self, content: str, source_url: str) -> Dict[str, List[Dict[str, Any]]]:
-        """Extract dates and associated events."""
-        events = []
-        
-        # Date patterns
-        date_patterns = [
-            r'\b(\d{1,2}[/-]\d{1,2}[/-]\d{2,4})\b',
-            r'\b(\d{4}[-/]\d{1,2}[-/]\d{1,2})\b',
-            r'\b([A-Z][a-z]+ \d{1,2},?\s\d{4})\b',
-            r'\b((?:January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{4})\b'
-        ]
-        
-        for pattern in date_patterns:
-            matches = re.finditer(pattern, content, re.IGNORECASE)
-            for match in matches:
-                date = match.group(1)
-                # Extract context around date
-                start = max(0, match.start() - 200)
-                end = min(len(content), match.end() + 200)
-                context = content[start:end]
-                
-                events.append({
-                    "date": date,
-                    "context": context.strip(),
-                    "source": source_url,
-                    "confidence": 0.6
-                })
-        
-        return {"events": events} if events else {}
-    
-    def _extract_numerical_data(self, content: str, source_url: str) -> Dict[str, List[Dict[str, Any]]]:
-        """Extract numerical data and metrics."""
-        numerical_data = []
-        
-        # Patterns for percentages, emissions, revenue, etc.
-        number_patterns = [
-            r'(\d+(?:\.\d+)?)\s*%',  # Percentages
-            r'€(\d+(?:,\d{3})*(?:\.\d+)?)\s*(?:billion|million|B|M)',  # European currency
-            r'\$(\d+(?:,\d{3})*(?:\.\d+)?)\s*(?:billion|million|B|M)',  # US currency
-            r'(\d+(?:,\d{3})*(?:\.\d+)?)\s*(?:tons?|tonnes?|kg|mt)',  # Emissions/weight
-        ]
-        
-        for pattern in number_patterns:
-            matches = re.finditer(pattern, content, re.IGNORECASE)
-            for match in matches:
-                value = match.group(1)
-                # Extract context
-                start = max(0, match.start() - 100)
-                end = min(len(content), match.end() + 100)
-                context = content[start:end]
-                
-                numerical_data.append({
-                    "value": value,
-                    "unit": self._extract_unit_from_match(match.group(0)),
-                    "context": context.strip(),
-                    "source": source_url,
-                    "confidence": 0.7
-                })
-        
-        return {"numerical_data": numerical_data} if numerical_data else {}
-    
-    def _extract_speaker_from_context(self, context: str) -> Optional[str]:
-        """Extract speaker name from quote context."""
-        # Look for patterns like "Biden said", "President Biden stated"
-        speaker_patterns = [
-            r'(?:President\s+)?(\w+)\s+(?:said|stated|remarked|noted|declared)',
-            r'(?:said|stated|according to)\s+(?:President\s+)?(\w+)',
-        ]
-        
-        for pattern in speaker_patterns:
-            match = re.search(pattern, context, re.IGNORECASE)
-            if match:
-                return match.group(1)
-        return None
-    
-    def _extract_date_from_context(self, context: str) -> Optional[str]:
-        """Extract date from quote context."""
-        date_patterns = [
-            r'\b(\d{4}[-/]\d{1,2}[-/]\d{1,2})\b',
-            r'\b([A-Z][a-z]+ \d{1,2},?\s\d{4})\b',
-        ]
-        
-        for pattern in date_patterns:
-            match = re.search(pattern, context)
-            if match:
-                return match.group(1)
-        return None
-    
-    def _extract_unit_from_match(self, match_text: str) -> str:
-        """Extract unit from numerical match."""
-        if '%' in match_text:
-            return 'percentage'
-        elif '€' in match_text:
-            return 'euros'
-        elif '$' in match_text:
-            return 'dollars'
-        elif any(unit in match_text.lower() for unit in ['ton', 'kg', 'mt']):
-            return 'emissions'
-        return 'number'
+        return {"statements": self.working_hypothesis['statements']}
     
     def _assess_source_credibility(self, source_url: str) -> float:
         """Assess credibility of source based on domain."""
@@ -307,19 +127,31 @@ class ProgressiveSynthesis:
         task_lower = task_description.lower()
         synthesis = {}
         
-        # Task-agnostic synthesis based on patterns
         if any(term in task_lower for term in ["statements", "quotes", "said", "declared"]):
-            # Statement extraction task
             statements = self.working_hypothesis.get("statements", [])
-            synthesis["statements"] = [
-                stmt for stmt in statements
-                if isinstance(stmt, dict) and stmt.get("confidence", 0) > 0.6
-            ]
-        
+            synthesis["statements"] = []
+            for statement in statements:
+                # Try to extract speaker
+                speaker = "Unknown"
+                match = re.search(r'(?:by|said|stated|from|according to)\s+([A-Z][a-zA-Z\s]+)', statement, re.IGNORECASE)
+                if match:
+                    speaker = match.group(1).strip()
+
+                # Find the corresponding evidence to get the source
+                source = "Unknown"
+                for evidence in self.evidence_for.get("statements", []):
+                    if evidence["content"] == statement:
+                        source = evidence["source"]
+                        break
+                
+                synthesis["statements"].append({
+                    "quote": statement,
+                    "speaker": speaker,
+                    "source": source
+                })
+
         elif any(term in task_lower for term in ["coo", "ceo", "cto", "president", "director"]):
-            # Role-based search task
             roles = self.working_hypothesis.get("roles_people", [])
-            # Extract role mentioned in task
             target_roles = [role for role in ["coo", "ceo", "cto", "president", "director"] if role in task_lower]
             role_info = []
             for role in roles:
@@ -330,16 +162,13 @@ class ProgressiveSynthesis:
             synthesis["role_candidates"] = role_info
         
         elif any(term in task_lower for term in ["percentage", "percent", "rate", "number"]):
-            # Quantitative data task
             numerical = self.working_hypothesis.get("numerical_data", [])
-            # Filter by relevance to task
             relevant_data = []
             for data in numerical:
                 if isinstance(data, dict) and data.get("confidence", 0) > 0.5:
                     relevant_data.append(data)
             synthesis["numerical_data"] = relevant_data
         
-        # Add confidence scores
         synthesis["confidence_summary"] = {
             key: score for key, score in self.confidence_scores.items()
             if score > 0.5

@@ -364,7 +364,12 @@ class WebResearchAgent:
         synthesized_answer = self.comprehension.synthesize_final_answer(task_description)
         logger.info(f"Synthesized answer: {synthesized_answer}")
 
-        # 5. Formatting: Generate the final report
+        # 5. Check for failure
+        if not synthesized_answer or not synthesized_answer.get("statements"):
+            logger.error("Task failed: Could not synthesize a final answer.")
+            synthesized_answer["answer"] = "Could not synthesize a direct answer from the available information."
+
+        # 6. Formatting: Generate the final report
         final_output = self._format_results(task_description, plan, execution_results, synthesized_answer)
         return self._clean_present_output(final_output)
 
