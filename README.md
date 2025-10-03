@@ -254,17 +254,30 @@ The codebase emphasizes:
 - **Logging**: Detailed execution traces for debugging
 - **Type Hints**: Clear interfaces using Python type annotations
 
-## License
-
-This project is provided as-is for educational and research purposes.
-
 ## Contributing
 
-To add new features:
-1. Follow the existing code structure and patterns
-2. Add comprehensive docstrings
-3. Update this README with new functionality
-4. Test with diverse tasks to ensure generalization
+We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for detailed guidelines on:
+
+- Setting up your development environment
+- Adding new tools and features
+- Code style and documentation standards
+- Testing requirements
+- Pull request process
+
+Quick contribution steps:
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes following our style guide
+4. Test thoroughly
+5. Submit a pull request
+
+For bug reports and feature requests, please open an issue on GitHub.
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+**TL;DR**: You are free to use, modify, and distribute this software, even for commercial purposes, as long as you include the original copyright notice.
 
 ## References
 
