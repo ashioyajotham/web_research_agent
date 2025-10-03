@@ -40,3 +40,4 @@ data/
 *.log
 agent_memory.db
 logs/
+results.txt
