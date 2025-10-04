@@ -55,7 +55,6 @@ webresearch/
 |
 ├── main.py              # Entry point script
 ├── cli.py              # Command-line interface
-├── cli.py              # Command-line interface
 ├── tasks.txt           # Example tasks
 ├── .env.example        # Environment variables template
 └── requirements.txt    # Python dependencies
