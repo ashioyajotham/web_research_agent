@@ -30,6 +30,7 @@ ENV/
 .vscode/
 *.swp
 *.swo
+*.zed
 .dist
 
 # Project specific
@@ -40,4 +41,3 @@ data/
 *.log
 agent_memory.db
 logs/
-results.txt
