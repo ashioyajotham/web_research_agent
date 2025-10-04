@@ -10,10 +10,16 @@ import os
 from datetime import datetime
 from typing import List
 
-from config import config
-from llm import LLMInterface
-from tools import ToolManager, SearchTool, ScrapeTool, CodeExecutorTool, FileOpsTool
-from agent import ReActAgent
+from webresearch.config import config
+from webresearch.llm import LLMInterface
+from webresearch.tools import (
+    ToolManager,
+    SearchTool,
+    ScrapeTool,
+    CodeExecutorTool,
+    FileOpsTool,
+)
+from webresearch.agent import ReActAgent
 
 
 # Configure logging

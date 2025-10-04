@@ -25,10 +25,10 @@ __author__ = "Victor Jotham Ashioya"
 __license__ = "MIT"
 
 # Import main components for easy access
-from agent import ReActAgent, Step
-from config import config, Config
-from llm import LLMInterface
-from tools import (
+from .agent import ReActAgent, Step
+from .config import config, Config
+from .llm import LLMInterface
+from .tools import (
     Tool,
     ToolManager,
     SearchTool,

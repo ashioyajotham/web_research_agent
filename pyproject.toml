@@ -53,6 +53,7 @@ dependencies = [
     "html2text>=2024.2.0",
     "python-dotenv>=1.0.0",
     "colorama>=0.4.6",
+    "rich>=13.0.0",
 ]
 
 [project.optional-dependencies]
@@ -74,8 +75,8 @@ Changelog = "https://github.com/victorashioya/web_research_agent/blob/main/CHANG
 webresearch = "cli:main"
 
 [tool.setuptools]
-packages = ["tools"]
-py-modules = ["agent", "cli", "config", "llm", "main"]
+packages = ["webresearch", "webresearch.tools"]
+py-modules = ["cli", "main"]
 
 [tool.setuptools.package-data]
 "*" = ["*.txt", "*.md"]

@@ -31,7 +31,8 @@ setup(
         "Source Code": "https://github.com/victorashioya/web_research_agent",
         "Changelog": "https://github.com/victorashioya/web_research_agent/blob/main/CHANGELOG.md",
     },
-    packages=find_packages(exclude=["tests", "tests.*", "docs", "docs.*"]),
+    packages=["webresearch", "webresearch.tools"],
+    py_modules=["cli", "main"],
     python_requires=">=3.8",
     install_requires=requirements,
     extras_require={
