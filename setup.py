@@ -20,7 +20,7 @@ setup(
     name="web-research-agent",
     version="1.2.0",
     author="Victor Jotham Ashioya",
-    author_email="your.email@example.com",  # Update this
+    author_email="victorashioya960@gmail.com",
     description="An AI agent using ReAct methodology for autonomous web research tasks",
     long_description=long_description,
     long_description_content_type="text/markdown",

@@ -10,10 +10,10 @@ readme = "README.md"
 requires-python = ">=3.8"
 license = {text = "MIT"}
 authors = [
-    {name = "Victor Jotham Ashioya", email = "victorashioya@gmail.com"}
+    {name = "Victor Jotham Ashioya", email = "victorashioya960@gmail.com"}
 ]
 maintainers = [
-    {name = "Victor Jotham Ashioya", email = "victorashioya@gmail.com"}
+    {name = "Victor Jotham Ashioya", email = "victorashioya960@gmail.com"}
 ]
 keywords = [
     "ai",
