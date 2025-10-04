@@ -41,7 +41,7 @@ ASCII_ART = r"""
  ╚══╝╚══╝ ╚══════╝╚═════╝     ╚═╝  ╚═╝╚══════╝╚══════╝╚══════╝╚═╝  ╚═╝╚═╝  ╚═╝ ╚═════╝╚═╝  ╚═╝
 """
 
-VERSION = "1.2.0"
+VERSION = "1.2.1"
 TAGLINE = "lock in, anon"
 
 # Spicy loading messages

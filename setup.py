@@ -18,7 +18,7 @@ with open("requirements.txt", "r", encoding="utf-8") as f:
 
 setup(
     name="web-research-agent",
-    version="1.2.0",
+    version="1.2.1",
     author="Victor Jotham Ashioya",
     author_email="victorashioya960@gmail.com",
     description="An AI agent using ReAct methodology for autonomous web research tasks",

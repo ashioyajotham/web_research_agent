@@ -15,6 +15,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - PDF parsing support
 - Automated evaluation suite
 
+## [1.2.1] - 2025-01-10
+
+### Added
+- Script for PATH management
+
+### Fixed
+- Import issues across multiple modules
+- UX improvements on color scheme
+- UX improvements on command line interface
+
+### Removed
+- Replaced Colorama with Rich
+
 ## [1.2.0] - 2025-01-10
 
 ### Added
@@ -491,10 +504,10 @@ When releasing a new version:
 
 ## Links
 
-- [Repository](https://github.com/victorashioya/web_research_agent)
-- [Issues](https://github.com/victorashioya/web_research_agent/issues)
-- [Pull Requests](https://github.com/victorashioya/web_research_agent/pulls)
-- [Releases](https://github.com/victorashioya/web_research_agent/releases)
+- [Repository](https://github.com/ashioyajotham/web_research_agent)
+- [Issues](https://github.com/ashioyajotham/web_research_agent/issues)
+- [Pull Requests](https://github.com/ashioyajotham/web_research_agent/pulls)
+- [Releases](https://github.com/ashioyajotham/web_research_agent/releases)
 
 ---
 
