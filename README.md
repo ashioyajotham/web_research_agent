@@ -61,6 +61,40 @@ webresearch
 
 The first time you run it, you'll be prompted to enter your API keys. These will be securely stored in `~/.webresearch/config.env`.
 
+#### Windows PATH Issue
+
+If you get `'webresearch' is not recognized` error on Windows, the Scripts folder isn't in your PATH. Here are solutions:
+
+**Quick Fix (Current Session Only)**:
+```powershell
+# Add to PATH temporarily
+$env:Path += ";$env:APPDATA\Python\Python313\Scripts"
+webresearch
+```
+
+**Permanent Fix (Recommended)**:
+1. Open PowerShell as Administrator
+2. Run:
+```powershell
+[Environment]::SetEnvironmentVariable(
+    "Path",
+    [Environment]::GetEnvironmentVariable("Path", "User") + ";$env:APPDATA\Python\Python313\Scripts",
+    "User"
+)
+```
+3. Restart your terminal
+4. Run `webresearch`
+
+**Alternative (No PATH needed)**:
+```bash
+python -m cli
+```
+
+**On Linux/Mac**: Usually works immediately, but if needed:
+```bash
+export PATH="$HOME/.local/bin:$PATH"
+```
+
 ### From Source
 
 1. **Clone the repository**:

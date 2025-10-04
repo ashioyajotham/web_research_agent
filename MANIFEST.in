@@ -13,6 +13,10 @@ include .env.example
 include example_simple.txt
 include tasks.txt
 
+# Include setup scripts
+include setup_path.ps1
+include setup_path.sh
+
 # Include requirements
 include requirements.txt
 

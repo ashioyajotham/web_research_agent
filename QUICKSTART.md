@@ -10,15 +10,49 @@ Get up and running with the Web Research Agent in 5 minutes.
 
 ## Setup Steps
 
-### 1. Install Dependencies
+### 1. Install the Package
 
+**From PyPI (Recommended):**
+```bash
+pip install web-research-agent
+```
+
+**From Source:**
 ```bash
 pip install -r requirements.txt
 ```
 
-### 2. Configure API Keys
+### 2. Fix PATH (Windows Users)
 
-Create a `.env` file in the project root:
+If you get `'webresearch' is not recognized` error on Windows:
+
+**Quick Fix:**
+```bash
+python -m cli
+```
+
+**Permanent Fix - Run PowerShell as Administrator:**
+```powershell
+.\setup_path.ps1
+```
+
+Or manually:
+```powershell
+[Environment]::SetEnvironmentVariable(
+    "Path",
+    [Environment]::GetEnvironmentVariable("Path", "User") + ";$env:APPDATA\Python\Python313\Scripts",
+    "User"
+)
+```
+
+**Linux/Mac:**
+```bash
+bash setup_path.sh
+```
+
+### 3. Configure API Keys
+
+The CLI will prompt you for API keys on first run, or create a `.env` file:
 
 ```bash
 cp .env.example .env
@@ -31,7 +65,7 @@ GEMINI_API_KEY=your_actual_gemini_api_key
 SERPER_API_KEY=your_actual_serper_api_key
 ```
 
-### 3. Verify Setup
+### 4. Verify Setup
 
 Run the setup checker:
 
@@ -41,17 +75,26 @@ python check_setup.py
 
 All checks should pass (✓).
 
-### 4. Run a Simple Test
+### 5. Run the Agent
 
-Test with simple questions:
+**Interactive Mode (Recommended):**
+```bash
+webresearch
+```
 
+Or if PATH isn't set:
+```bash
+python -m cli
+```
+
+**Batch Mode:**
 ```bash
 python main.py example_simple.txt
 ```
 
 This will answer basic questions and save results to `results.txt`.
 
-### 5. Run Real Tasks
+### 6. Run Real Tasks
 
 Process the full task set:
 
