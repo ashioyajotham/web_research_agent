@@ -15,7 +15,88 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - PDF parsing support
 - Automated evaluation suite
 
+## [1.2.0] - 2025-01-10
+
+### Added
+- **Interactive CLI** - Beautiful terminal interface with ASCII art banner
+  - Gradient colored ASCII art with version display
+  - Interactive menu system with 5 options
+  - First-run API key setup wizard
+  - Configuration stored in `~/.webresearch/config.env`
+  - Development mode support (uses local `.env` if available)
+- **Enhanced User Experience**
+  - Single query mode - Ask questions interactively
+  - Batch mode - Process tasks from file
+  - Log viewer - View recent execution logs directly in CLI
+  - Configuration management - Reconfigure API keys anytime
+  - Clean output without info overload
+  - Progress indicators and colored output
+  - Save results to file with custom names
+- **Console Script Entry Point**
+  - `webresearch` command for global CLI access
+  - Works after `pip install web-research-agent`
+- **PyPI Distribution**
+  - Clean `requirements.txt` with core dependencies only
+  - `setup.py` for package distribution
+  - `pyproject.toml` for modern Python packaging
+  - `MANIFEST.in` for package file inclusion
+  - Package metadata and classifiers
+- **Documentation Organization**
+  - Moved technical docs to `/docs` folder
+  - ARCHITECTURE.md → docs/
+  - EVALUATION_GUIDE.md → docs/
+  - IMPLEMENTATION_NOTES.md → docs/
+  - SOLUTION_SUMMARY.md → docs/
+  - QUICK_REFERENCE.md → docs/
+- **Package Structure**
+  - `__init__.py` for proper package imports
+  - Version consistency across all files
+  - Console scripts configuration
+
+### Changed
+- Simplified requirements.txt to essential dependencies only
+- Updated version to 1.2.0 across all files
+- CLI now checks for local .env before prompting for API keys
+- Logging output suppressed by default in interactive mode
+- `initialize_agent()` now accepts `verbose` parameter
+- Main menu provides cleaner user experience
+
+### Fixed
+- UTF-8 encoding issues in requirements.txt
+- Configuration handling in development vs production mode
+- Log output not overwhelming terminal in interactive mode
+
+### Technical Details
+- Colorama for cross-platform colored terminal output
+- Configuration stored in user home directory
+- Fallback to local .env for development
+- Entry point: `webresearch` command via console_scripts
+
 ## [1.0.0] - 2025-01-10
+
+### Added
+- **Interactive CLI Interface** with beautiful ASCII art banner and gradient colors
+- **First-time setup wizard** for API key configuration
+- **Config file management** - API keys stored securely in `~/.webresearch/config.env`
+- **Interactive query mode** - Ask research questions directly in the CLI
+- **Batch processing mode** - Process multiple tasks from files
+- **Log viewer** - View recent execution logs from within the CLI
+- **Console command** - Install via `pip install web-research-agent` and run with `webresearch`
+- **Colorama integration** for cross-platform colored terminal output
+- **Clean console output** - Reduced info overload with optional verbose mode
+- **Documentation organization** - Moved detailed docs to `/docs` folder
+- **PyPI packaging** - Complete setup for distribution via PyPI
+
+### Changed
+- **Improved main.py** - Added verbose flag to control logging output
+- **Enhanced initialize_agent()** - Now accepts verbose parameter
+- **Cleaner requirements.txt** - Minimal dependencies only
+- **Updated README** - Added CLI installation and usage instructions
+- **Version bump** - Updated to 1.2.0 across all files
+
+### Improved
+- **User experience** - Interactive menus and prompts
+- **Configuration
 
 ### Added
 - Initial release of Web Research Agent

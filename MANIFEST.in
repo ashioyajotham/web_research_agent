@@ -1,8 +1,31 @@
-
+# Include documentation files
 include README.md
+include QUICKSTART.md
+include CONTRIBUTING.md
+include CONTRIBUTORS.md
+include CHANGELOG.md
 include LICENSE
+
+# Include configuration templates
+include .env.example
+
+# Include example files
+include example_simple.txt
+include tasks.txt
+
+# Include requirements
 include requirements.txt
-recursive-include agent *.py
-recursive-include tools *.py
-recursive-include utils *.py
-recursive-include config *.py
+
+# Exclude unnecessary files
+exclude .gitignore
+exclude demo.py
+exclude check_setup.py
+exclude test_imports.py
+
+# Exclude directories
+recursive-exclude tests *
+recursive-exclude logs *
+recursive-exclude .github *
+recursive-exclude venv *
+recursive-exclude __pycache__ *
+prune docs

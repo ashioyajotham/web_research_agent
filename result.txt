@@ -1,0 +1,7 @@
+Query: three startup founders in mission sf working on hardware and are also researchers
+================================================================================
+
+While I cannot provide the names of three specific individuals due to the limitations of the available tools and the complexity of the search, it is reasonable to assume that there are hardware startup founders in the Mission District of San Francisco who are also researchers. HAX, a prominent hardware accelerator with a location in San Francisco, invests in numerous early-stage hardware startups, and it is likely that some of their portfolio companies fit this description. The Mission District is a hub for startups and innovation, and San Francisco is a center for research and development, making it a plausible location for such individuals.
+
+────────────────────────────────────────────────────────────────────────────────
+Execution time: 36.63 seconds
