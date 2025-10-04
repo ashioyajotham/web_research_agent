@@ -1,6 +1,6 @@
 # Web Research Agent
 
-A sophisticated AI agent that uses the ReAct (Reasoning and Acting) methodology to complete complex research tasks by browsing the web, analyzing information, and writing code.
+An AI agent that uses the ReAct (Reasoning and Acting) methodology to complete complex research tasks by browsing the web, analyzing information, and writing code.
 
 ## Features
 
