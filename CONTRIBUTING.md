@@ -46,7 +46,7 @@ We are committed to providing a welcoming and inclusive experience for everyone.
 1. Fork the repository on GitHub
 2. Clone your fork locally:
    ```bash
-   git clone https://github.com/YOUR_USERNAME/web_research_agent.git
+   git clone https://github.com/ashioyajotham/web_research_agent.git
    cd web_research_agent
    ```
 
@@ -105,7 +105,7 @@ We welcome various types of contributions:
 3. **Make your changes**: Follow the code style guidelines
 4. **Test your changes**: Ensure everything works
 5. **Commit your changes**: Write clear commit messages
-6. **Push to your fork**: 
+6. **Push to your fork**:
    ```bash
    git push origin feature/your-feature-name
    ```
@@ -189,7 +189,7 @@ param2: "another example"
 
             # Your tool logic here
             result = self._do_something(param1)
-            
+
             return result
 
         except Exception as e:

@@ -14,6 +14,17 @@ An AI agent that uses the ReAct (Reasoning and Acting) methodology to complete c
   - **File Operations**: Read and write files for data persistence
 - **Powered by Gemini 2.0**: Uses Google's Gemini 2.0 Flash model for reasoning and decision-making
 
+## 📚 Research Attribution
+
+This project implements the **ReAct (Reasoning and Acting)** paradigm for AI agents, as described in:
+
+> **ReAct: Synergizing Reasoning and Acting in Language Models**
+> Shunyu Yao, Jeffrey Zhao, Dian Yu, Nan Du, Izhak Shafran, Karthik Narasimhan, Yuan Cao
+> *ICLR 2023*
+> [Paper](https://arxiv.org/abs/2210.03629) | [Project Page](https://react-lm.github.io/)
+
+The ReAct framework enables language models to generate both reasoning traces and task-specific actions in an interleaved manner, leading to improved performance on complex tasks requiring planning and information gathering.
+
 ## Architecture
 
 The agent follows a simple but powerful loop:
@@ -27,17 +38,24 @@ The agent follows a simple but powerful loop:
 
 ```
 web_research_agent/
-├── agent.py              # Core ReAct agent implementation
-├── llm.py               # LLM interface for Gemini
-├── config.py            # Configuration management
+webresearch/
+├── __init__.py
+├── agent.py      # Agent class
+├── llm.py       # Language model interface
+├── config.py     # Configuration management
+└── tools/
+|    ├── __init__.py
+|    ├── base.py    # Base class for tools
+|    ├── base.py    # Base class for tools
+|    ├── search.py  # Base class for search tools
+|    ├── search.py  # Base class for search tools
+|    ├── scrape.py # Base class for scrape tools
+|    ├── code_executor.py # Base class for code execution
+|    └── file_ops.py # Base class for file operations
+|
 ├── main.py              # Entry point script
-├── tools/               # Tool system
-│   ├── __init__.py     # Tool manager
-│   ├── base.py         # Base tool class
-│   ├── search.py       # Web search tool
-│   ├── scrape.py       # Web scraping tool
-│   ├── code_executor.py # Python code execution
-│   └── file_ops.py     # File operations
+├── cli.py              # Command-line interface
+├── cli.py              # Command-line interface
 ├── tasks.txt           # Example tasks
 ├── .env.example        # Environment variables template
 └── requirements.txt    # Python dependencies
@@ -99,7 +117,7 @@ export PATH="$HOME/.local/bin:$PATH"
 
 1. **Clone the repository**:
    ```bash
-   git clone https://github.com/victorashioya/web_research_agent.git
+   git clone https://github.com/ashioyajotham/web_research_agent.git
    cd web_research_agent
    ```
 
