@@ -321,54 +321,99 @@ def view_logs():
     logs_dir = Path("logs")
 
     if not logs_dir.exists() or not list(logs_dir.glob("*.log")):
-        print(f"{Fore.YELLOW}No log files found.")
+        if console:
+            console.print("⚠ No log files found.", style="bold yellow")
+        else:
+            print("⚠ No log files found.")
         return
 
     log_files = sorted(
         logs_dir.glob("*.log"), key=lambda x: x.stat().st_mtime, reverse=True
     )
 
-    print(f"{Style.BRIGHT}{Fore.CYAN}Recent Log Files:")
-    for i, log_file in enumerate(log_files[:5], 1):
-        size = log_file.stat().st_size / 1024  # KB
-        mtime = log_file.stat().st_mtime
+    if console:
         from datetime import datetime
 
-        time_str = datetime.fromtimestamp(mtime).strftime("%Y-%m-%d %H:%M:%S")
-        print(
-            f"{Fore.WHITE}{i}. {Fore.GREEN}{log_file.name} {Fore.WHITE}({size:.1f} KB) - {time_str}"
+        console.print(
+            Panel.fit("📋 [bold cyan]Recent Log Files[/bold cyan]", border_style="cyan")
         )
+        console.print()
 
-    print()
-    choice = input(
-        f"{Fore.GREEN}Enter number to view (or press Enter to skip): {Fore.WHITE}"
-    ).strip()
+        table = Table(show_header=True, box=None)
+        table.add_column("#", style="cyan", width=4)
+        table.add_column("Filename", style="green")
+        table.add_column("Size", style="yellow", justify="right")
+        table.add_column("Modified", style="white")
+
+        for i, log_file in enumerate(log_files[:5], 1):
+            size = log_file.stat().st_size / 1024  # KB
+            mtime = log_file.stat().st_mtime
+            time_str = datetime.fromtimestamp(mtime).strftime("%Y-%m-%d %H:%M:%S")
+            table.add_row(str(i), log_file.name, f"{size:.1f} KB", time_str)
+
+        console.print(table)
+        console.print()
+
+        choice = Prompt.ask(
+            "[green]Enter number to view[/green] (or press Enter to skip)", default=""
+        )
+    else:
+        from datetime import datetime
+
+        print("Recent Log Files:")
+        for i, log_file in enumerate(log_files[:5], 1):
+            size = log_file.stat().st_size / 1024  # KB
+            mtime = log_file.stat().st_mtime
+            time_str = datetime.fromtimestamp(mtime).strftime("%Y-%m-%d %H:%M:%S")
+            print(f"{i}. {log_file.name} ({size:.1f} KB) - {time_str}")
+
+        print()
+        choice = input("Enter number to view (or press Enter to skip): ").strip()
 
     if choice.isdigit() and 1 <= int(choice) <= len(log_files[:5]):
         log_file = log_files[int(choice) - 1]
-        print(f"\n{Fore.CYAN}{'=' * 80}")
-        print(f"{Style.BRIGHT}Log: {log_file.name}")
-        print(f"{Fore.CYAN}{'=' * 80}\n")
 
         with open(log_file, "r", encoding="utf-8") as f:
             content = f.read()
-            # Show last 100 lines
             lines = content.split("\n")
-            if len(lines) > 100:
-                print(f"{Fore.YELLOW}[Showing last 100 lines...]\n")
-                lines = lines[-100:]
 
-            for line in lines:
-                if "ERROR" in line:
-                    print(f"{Fore.RED}{line}")
-                elif "WARNING" in line:
-                    print(f"{Fore.YELLOW}{line}")
-                elif "INFO" in line:
-                    print(f"{Fore.WHITE}{line}")
-                else:
+            if console:
+                console.print()
+                console.rule(
+                    f"[bold cyan]Log: {log_file.name}[/bold cyan]", style="cyan"
+                )
+                console.print()
+
+                if len(lines) > 100:
+                    console.print("[yellow][Showing last 100 lines...][/yellow]\n")
+                    lines = lines[-100:]
+
+                for line in lines:
+                    if "ERROR" in line:
+                        console.print(line, style="bold red")
+                    elif "WARNING" in line:
+                        console.print(line, style="bold yellow")
+                    elif "INFO" in line:
+                        console.print(line, style="white")
+                    else:
+                        console.print(line)
+
+                console.print()
+                console.rule(style="cyan")
+                console.print()
+            else:
+                print(f"\n{'=' * 80}")
+                print(f"Log: {log_file.name}")
+                print(f"{'=' * 80}\n")
+
+                if len(lines) > 100:
+                    print("[Showing last 100 lines...]\n")
+                    lines = lines[-100:]
+
+                for line in lines:
                     print(line)
 
-        print(f"\n{Fore.CYAN}{'=' * 80}\n")
+                print(f"\n{'=' * 80}\n")
 
 
 def run_interactive_query():
