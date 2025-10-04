@@ -34,6 +34,9 @@ The agent follows a simple but powerful loop:
 3. **Observation**: The agent receives and processes the result
 4. **Repeat**: The cycle continues until the task is complete
 
+This approach mirrors human problem-solving: we think, act, observe results, and adjust our strategy accordingly.
+
+
 ### Project Structure
 
 ```
@@ -46,8 +49,6 @@ webresearch/
 └── tools/
 |    ├── __init__.py
 |    ├── base.py    # Base class for tools
-|    ├── base.py    # Base class for tools
-|    ├── search.py  # Base class for search tools
 |    ├── search.py  # Base class for search tools
 |    ├── scrape.py # Base class for scrape tools
 |    ├── code_executor.py # Base class for code execution
