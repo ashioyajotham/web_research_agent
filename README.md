@@ -45,37 +45,76 @@ web_research_agent/
 
 ## Installation
 
-1. **Clone or download this repository**
+### From PyPI (Recommended)
 
-2. **Install dependencies**:
+Install directly from PyPI:
+
+```bash
+pip install web-research-agent
+```
+
+Then run the interactive CLI:
+
+```bash
+webresearch
+```
+
+The first time you run it, you'll be prompted to enter your API keys. These will be securely stored in `~/.webresearch/config.env`.
+
+### From Source
+
+1. **Clone the repository**:
    ```bash
-   pip install -r requirements.txt
+   git clone https://github.com/victorashioya/web_research_agent.git
+   cd web_research_agent
    ```
 
-3. **Set up API keys**:
-   - Get a Gemini API key from [Google AI Studio](https://makersuite.google.com/app/apikey)
-   - Get a Serper API key from [Serper.dev](https://serper.dev) (free tier available)
-
-4. **Configure environment variables**:
+2. **Install in development mode**:
    ```bash
-   cp .env.example .env
+   pip install -e .
    ```
-   
-   Edit `.env` and add your API keys:
+
+3. **Run the CLI**:
+   ```bash
+   webresearch
    ```
-   GEMINI_API_KEY=your_gemini_api_key_here
-   SERPER_API_KEY=your_serper_api_key_here
-   ```
+
+### API Keys
+
+You'll need:
+- **Gemini API key**: Get yours at [Google AI Studio](https://makersuite.google.com/app/apikey) (free tier available)
+- **Serper API key**: Get yours at [Serper.dev](https://serper.dev) (free tier: 2,500 searches/month)
+
+The CLI will prompt you for these on first run.
 
 ## Usage
 
-### Basic Usage
+### Interactive CLI (Recommended)
 
-Run the agent on tasks from a file:
+Simply run:
+
+```bash
+webresearch
+```
+
+You'll see a beautiful interface with options to:
+1. **Run a research query** - Ask any research question interactively
+2. **Process tasks from file** - Run multiple tasks from a file
+3. **View recent logs** - Check execution logs
+4. **Reconfigure API keys** - Update your configuration
+5. **Exit** - Close the application
+
+### Command-Line Mode
+
+For batch processing, you can still use the traditional mode:
 
 ```bash
 python main.py tasks.txt
 ```
+
+Options:
+- `-o, --output` - Specify output file (default: results.txt)
+- `-v, --verbose` - Enable detailed logging
 
 This will:
 - Read tasks from `tasks.txt` (one task per line, separated by blank lines)
@@ -148,11 +187,11 @@ class MyNewTool(Tool):
     @property
     def name(self) -> str:
         return "my_tool"
-    
+
     @property
     def description(self) -> str:
         return """Description of what your tool does and its parameters."""
-    
+
     def execute(self, **kwargs) -> str:
         # Your tool logic here
         return "Tool result"
@@ -256,20 +295,7 @@ The codebase emphasizes:
 
 ## Contributing
 
-We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for detailed guidelines on:
-
-- Setting up your development environment
-- Adding new tools and features
-- Code style and documentation standards
-- Testing requirements
-- Pull request process
-
-Quick contribution steps:
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes following our style guide
-4. Test thoroughly
-5. Submit a pull request
+We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for detailed guidelines.
 
 For bug reports and feature requests, please open an issue on GitHub.
 

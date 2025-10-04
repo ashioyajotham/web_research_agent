@@ -85,14 +85,23 @@ def read_tasks(task_file: str) -> List[str]:
         sys.exit(1)
 
 
-def initialize_agent() -> ReActAgent:
+def initialize_agent(verbose: bool = False) -> ReActAgent:
     """
     Initialize the ReAct agent with LLM and tools.
+
+    Args:
+        verbose: If True, show detailed logging output
 
     Returns:
         Configured ReActAgent instance
     """
     logger = logging.getLogger(__name__)
+
+    # Suppress info logs if not verbose
+    if not verbose:
+        logging.getLogger("agent").setLevel(logging.WARNING)
+        logging.getLogger("llm").setLevel(logging.WARNING)
+        logging.getLogger("tools").setLevel(logging.WARNING)
 
     # Validate configuration
     try:
@@ -236,7 +245,7 @@ def main():
         sys.exit(1)
 
     # Initialize agent
-    agent = initialize_agent()
+    agent = initialize_agent(verbose=args.verbose)
 
     # Process each task
     results = []
