@@ -16,8 +16,8 @@ import logging
 from typing import Dict, List, Optional, Any
 from dataclasses import dataclass
 
-from llm import LLMInterface
-from tools import ToolManager
+from .llm import LLMInterface
+from .tools import ToolManager
 
 logger = logging.getLogger(__name__)
 

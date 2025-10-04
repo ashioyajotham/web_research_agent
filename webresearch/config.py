@@ -20,13 +20,17 @@ class Config:
 
         # Agent settings
         self.max_iterations: int = int(os.getenv("MAX_ITERATIONS", "15"))
-        self.max_tool_output_length: int = int(os.getenv("MAX_TOOL_OUTPUT_LENGTH", "5000"))
+        self.max_tool_output_length: int = int(
+            os.getenv("MAX_TOOL_OUTPUT_LENGTH", "5000")
+        )
         self.temperature: float = float(os.getenv("TEMPERATURE", "0.1"))
         self.model_name: str = os.getenv("MODEL_NAME", "gemini-2.0-flash-exp")
 
         # Timeout settings
         self.web_request_timeout: int = int(os.getenv("WEB_REQUEST_TIMEOUT", "30"))
-        self.code_execution_timeout: int = int(os.getenv("CODE_EXECUTION_TIMEOUT", "60"))
+        self.code_execution_timeout: int = int(
+            os.getenv("CODE_EXECUTION_TIMEOUT", "60")
+        )
 
     def validate(self) -> None:
         """Validate that required API keys are present."""
