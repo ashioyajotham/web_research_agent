@@ -3,13 +3,55 @@ Web search tool using Serper.dev API.
 Allows the agent to search Google for information.
 """
 
-import requests
 import json
 import logging
-from typing import Dict, Any, Optional
+import requests
+from datetime import datetime
+from pathlib import Path
+from typing import Any, Dict, Optional
+
 from .base import Tool
 
 logger = logging.getLogger(__name__)
+
+_MONTHLY_LIMIT = 2500
+
+
+def _get_usage_path() -> Path:
+    path = Path.home() / ".webresearch" / "usage.json"
+    path.parent.mkdir(exist_ok=True)
+    return path
+
+
+def get_monthly_usage() -> int:
+    """Return the number of Serper searches made this calendar month."""
+    path = _get_usage_path()
+    if not path.exists():
+        return 0
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+        if data.get("month") == datetime.now().strftime("%Y-%m"):
+            return int(data.get("count", 0))
+    except Exception:
+        pass
+    return 0
+
+
+def _increment_usage() -> int:
+    """Increment the monthly search counter and return the new total."""
+    path = _get_usage_path()
+    current_month = datetime.now().strftime("%Y-%m")
+    try:
+        data = json.loads(path.read_text(encoding="utf-8")) if path.exists() else {}
+    except Exception:
+        data = {}
+
+    if data.get("month") != current_month:
+        data = {"month": current_month, "count": 0}
+
+    data["count"] = data.get("count", 0) + 1
+    path.write_text(json.dumps(data, indent=2), encoding="utf-8")
+    return data["count"]
 
 
 class SearchTool(Tool):
@@ -97,6 +139,10 @@ query: "Epoch AI dataset large-scale models"
 
             response.raise_for_status()
             data = response.json()
+
+            count = _increment_usage()
+            if count >= _MONTHLY_LIMIT * 0.9:
+                logger.warning(f"Serper API usage at {count}/{_MONTHLY_LIMIT} ({count/_MONTHLY_LIMIT*100:.0f}%)")
 
             return self._format_results(data, query)
 

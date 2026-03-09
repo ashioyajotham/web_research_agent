@@ -1,12 +1,12 @@
 """
 Interactive CLI for Web Research Agent.
-Provides a beautiful terminal interface with real-time ReAct step streaming.
+Provides a beautiful terminal interface with real-time ReAct step streaming,
+multi-turn session memory, and query history navigation.
 """
 
 import json
 import logging
 import os
-import random
 import sys
 from datetime import datetime
 from pathlib import Path
@@ -14,15 +14,19 @@ from typing import Any, Dict, List, Optional
 
 from rich.console import Console
 from rich.live import Live
-from rich.markdown import Markdown
 from rich.panel import Panel
 from rich.prompt import Confirm, Prompt
 from rich.table import Table
 from rich.text import Text
 
+try:
+    import questionary
+    _HAS_QUESTIONARY = True
+except ImportError:
+    _HAS_QUESTIONARY = False
+
 console = Console()
 
-# ASCII Art banner
 ASCII_ART = r"""
 ██╗    ██╗███████╗██████╗     ██████╗ ███████╗███████╗███████╗ █████╗ ██████╗  ██████╗██╗  ██╗
 ██║    ██║██╔════╝██╔══██╗    ██╔══██╗██╔════╝██╔════╝██╔════╝██╔══██╗██╔══██╗██╔════╝██║  ██║
@@ -32,28 +36,14 @@ ASCII_ART = r"""
  ╚══╝╚══╝ ╚══════╝╚═════╝     ╚═╝  ╚═╝╚══════╝╚══════╝╚══════╝╚═╝  ╚═╝╚═╝  ╚═╝ ╚═════╝╚═╝  ╚═╝
 """
 
-VERSION = "1.3.0"
+VERSION = "1.4.0"
 TAGLINE = "lock in, anon"
 
-LOADING_MESSAGES = [
-    "Summoning the AI overlords...",
-    "Teaching robots to google...",
-    "Consulting the digital oracle...",
-    "Bribing search engines...",
-    "Downloading the internet...",
-    "Asking ChatGPT's cool cousin...",
-    "Hacking the mainframe...",
-    "Reading the Matrix...",
-    "Brewing digital coffee...",
-    "Waking up the neurons...",
-    "Compiling knowledge...",
-    "Unleashing the agents...",
-    "Charging the flux capacitor...",
-    "Spinning up the hamster wheel...",
-    "Consulting the elders of the internet...",
-]
-
 logging.getLogger().setLevel(logging.WARNING)
+
+# ─── Session memory (persists for the lifetime of this CLI process) ───────────
+from webresearch.memory import ConversationMemory
+_session = ConversationMemory(max_pairs=5)
 
 
 # ─── Banner ──────────────────────────────────────────────────────────────────
@@ -214,35 +204,75 @@ def view_history():
     console.print(Panel.fit("📚 [bold cyan]Query History[/bold cyan]", border_style="cyan"))
     console.print()
 
-    table = Table(show_header=True, border_style="dim")
-    table.add_column("#", style="cyan", width=4)
-    table.add_column("Query", style="white", ratio=3)
-    table.add_column("Steps", style="yellow", width=7, justify="right")
-    table.add_column("Duration", style="dim", width=10, justify="right")
-    table.add_column("Date", style="dim", width=19)
+    shown = history[:15]
 
-    shown = history[:10]
-    for i, entry in enumerate(shown, 1):
-        ts = entry.get("timestamp", "")[:16].replace("T", " ")
-        q = entry["query"]
-        table.add_row(
-            str(i),
-            q[:60] + ("…" if len(q) > 60 else ""),
-            str(entry.get("steps", "?")),
-            f"{entry.get('duration', 0):.1f}s",
-            ts,
+    if _HAS_QUESTIONARY:
+        # Arrow-key navigation
+        choices = []
+        for i, entry in enumerate(shown):
+            ts = entry.get("timestamp", "")[:16].replace("T", " ")
+            q = entry["query"]
+            label = f"[{i+1:2d}] {q[:55]:<55}  {entry.get('steps','?'):>2}st  {entry.get('duration',0):>5.1f}s  {ts}"
+            choices.append(questionary.Choice(title=label, value=i))
+        choices.append(questionary.Choice(title="← Back", value=None))
+
+        idx = questionary.select(
+            "Select a query to re-run (↑↓ to navigate, Enter to select):",
+            choices=choices,
+        ).ask()
+
+        if idx is not None:
+            _run_query(shown[idx]["query"])
+    else:
+        # Fallback: numbered table
+        table = Table(show_header=True, border_style="dim")
+        table.add_column("#", style="cyan", width=4)
+        table.add_column("Query", style="white", ratio=3)
+        table.add_column("Steps", style="yellow", width=7, justify="right")
+        table.add_column("Duration", style="dim", width=10, justify="right")
+        table.add_column("Date", style="dim", width=19)
+
+        for i, entry in enumerate(shown, 1):
+            ts = entry.get("timestamp", "")[:16].replace("T", " ")
+            q = entry["query"]
+            table.add_row(
+                str(i),
+                q[:60] + ("…" if len(q) > 60 else ""),
+                str(entry.get("steps", "?")),
+                f"{entry.get('duration', 0):.1f}s",
+                ts,
+            )
+
+        console.print(table)
+        console.print()
+
+        choice = Prompt.ask(
+            "[green]Enter number to re-run[/green] (or press Enter to go back)", default=""
         )
+        if choice.isdigit() and 1 <= int(choice) <= len(shown):
+            _run_query(shown[int(choice) - 1]["query"])
 
-    console.print(table)
-    console.print()
 
-    choice = Prompt.ask(
-        "[green]Enter number to re-run[/green] (or press Enter to go back)", default=""
-    )
-    if choice.isdigit() and 1 <= int(choice) <= len(shown):
-        entry = shown[int(choice) - 1]
-        console.print(f"\n[cyan]Re-running:[/cyan] {entry['query']}\n")
-        _run_query(entry["query"])
+# ─── Rate-limit display ───────────────────────────────────────────────────────
+
+def _print_usage_banner():
+    """Print Serper API monthly usage after a query completes."""
+    try:
+        from webresearch.tools.search import get_monthly_usage, _MONTHLY_LIMIT
+        count = get_monthly_usage()
+        pct = count / _MONTHLY_LIMIT * 100
+        if pct < 70:
+            style, icon = "dim green", "●"
+        elif pct < 90:
+            style, icon = "bold yellow", "⚠"
+        else:
+            style, icon = "bold red", "⛔"
+        console.print(
+            f"[{style}]{icon} Serper API: {count}/{_MONTHLY_LIMIT} searches this month "
+            f"({pct:.0f}%)[/{style}]"
+        )
+    except Exception:
+        pass
 
 
 # ─── Agent initialization ────────────────────────────────────────────────────
@@ -251,7 +281,9 @@ def initialize_agent():
     """Initialize the ReAct agent. Imports are deferred so env vars are set first."""
     from webresearch.config import Config
     from webresearch.llm import LLMInterface
-    from webresearch.tools import ToolManager, SearchTool, ScrapeTool, CodeExecutorTool, FileOpsTool
+    from webresearch.tools import (
+        ToolManager, SearchTool, ScrapeTool, CodeExecutorTool, FileOpsTool,
+    )
     from webresearch.agent import ReActAgent
 
     cfg = Config()
@@ -279,13 +311,20 @@ def initialize_agent():
 # ─── Core query runner ────────────────────────────────────────────────────────
 
 def _run_query(query: str):
-    """Execute a research query with live step-by-step output."""
+    """Execute a research query with live step-by-step output and session memory."""
     try:
         agent = initialize_agent()
     except Exception as e:
         console.print(f"✗ Error initializing agent: {str(e)}", style="bold red")
         console.print("Tip: Reconfigure API keys with option 5.", style="yellow")
         return
+
+    # Inject previous session context into the task
+    task = _session.build_task_with_memory(query)
+    if len(_session) > 0:
+        console.print(
+            f"[dim]↑ Using {len(_session)} previous Q&A pair(s) as context[/dim]\n"
+        )
 
     start_time = datetime.now()
     step_rows: List[Dict] = []
@@ -323,7 +362,7 @@ def _run_query(query: str):
             })
             live.update(make_step_table(step_rows, f"step {iteration}"))
 
-        answer = agent.run(query, step_callback=step_callback)
+        answer = agent.run(task, step_callback=step_callback)
         live.update(make_step_table(step_rows, "complete ✓"))
 
     duration = (datetime.now() - start_time).total_seconds()
@@ -336,10 +375,14 @@ def _run_query(query: str):
     console.print(Panel(answer, border_style=border, padding=(1, 2)))
     console.print()
     console.print(
-        f"⏱  [yellow]{duration:.2f}s[/yellow]  [dim]│[/dim]  [cyan]{len(step_rows)} steps[/cyan]"
+        f"⏱  [yellow]{duration:.2f}s[/yellow]  [dim]│[/dim]  "
+        f"[cyan]{len(step_rows)} steps[/cyan]"
     )
+    _print_usage_banner()
     console.print()
 
+    # Save to session memory and persistent history
+    _session.add(query, answer)
     save_to_history(query, answer, len(step_rows), duration)
 
     if Confirm.ask("Save result to file?", default=False):
@@ -361,9 +404,20 @@ def show_menu():
     table.add_row("3.", "[cyan]📚 View query history[/cyan]")
     table.add_row("4.", "[blue]📋 View recent logs[/blue]")
     table.add_row("5.", "[magenta]🔧 Reconfigure API keys[/magenta]")
-    table.add_row("6.", "[red]👋 Exit[/red]")
+    table.add_row("6.", "[dim]🧹 Clear session memory[/dim]")
+    table.add_row("7.", "[red]👋 Exit[/red]")
+
+    session_note = ""
+    if len(_session) > 0:
+        session_note = f"\n[dim]Session: {len(_session)} Q&A pair(s) in context[/dim]"
+
     console.print(
-        Panel(table, title="[bold cyan]What would you like to do?[/bold cyan]", border_style="cyan")
+        Panel(
+            table,
+            title="[bold cyan]What would you like to do?[/bold cyan]",
+            subtitle=session_note,
+            border_style="cyan",
+        )
     )
     console.print()
 
@@ -396,7 +450,6 @@ def run_tasks_from_file():
         return
 
     output_file = Prompt.ask("Output file", default="results.txt")
-
     console.print(f"\n[yellow]Processing tasks from:[/yellow] {filepath}")
     console.print(f"[yellow]Results will be saved to:[/yellow] {output_file}\n")
 
@@ -451,6 +504,7 @@ def run_tasks_from_file():
                 f.write(f"Number of steps: {result.get('num_steps', 'N/A')}\n")
 
         console.print(f"[green]✓ All tasks completed! Results saved to {output_file}[/green]\n")
+        _print_usage_banner()
 
     except Exception as e:
         console.print(f"[red]✗ Error: {str(e)}[/red]\n")
@@ -522,7 +576,7 @@ def main():
     while True:
         show_menu()
         choice = Prompt.ask(
-            "[green]❯[/green] Choose an option", choices=["1", "2", "3", "4", "5", "6"]
+            "[green]❯[/green] Choose an option", choices=["1", "2", "3", "4", "5", "6", "7"]
         )
         console.print()
 
@@ -538,6 +592,10 @@ def main():
             config = setup_api_keys()
             apply_config_to_env(config)
         elif choice == "6":
+            _session.clear()
+            console.print("✓ Session memory cleared.", style="bold green")
+            console.print()
+        elif choice == "7":
             console.print(
                 Panel.fit(
                     "👋 [bold cyan]Thanks for using Web Research Agent![/bold cyan]\nStay curious, anon.",

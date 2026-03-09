@@ -1,29 +1,96 @@
 """
-Code execution tool for running Python code safely.
-Allows the agent to write and execute Python scripts for data processing and analysis.
+Code execution tool for running Python code in a sandboxed environment.
+Uses AST analysis to block dangerous operations before execution.
 """
 
+import ast
+import logging
+import os
 import subprocess
 import tempfile
-import os
-import logging
 from typing import Optional
+
 from .base import Tool
 
 logger = logging.getLogger(__name__)
 
+# Modules that can be used to escape the sandbox or access the network/OS
+_BLOCKED_MODULES = frozenset({
+    "subprocess", "socket", "socketserver",
+    "ftplib", "smtplib", "telnetlib", "imaplib", "poplib", "nntplib",
+    "paramiko", "fabric",
+    "ctypes", "cffi",
+    "winreg", "msilib", "msvcrt",
+    "importlib",
+})
+
+# os module attributes that can spawn processes or manipulate the system
+_BLOCKED_OS_ATTRS = frozenset({
+    "system", "popen", "popen2", "popen3", "popen4",
+    "execv", "execve", "execvp", "execvpe", "execlp", "execlpe",
+    "spawnl", "spawnle", "spawnlp", "spawnlpe",
+    "spawnv", "spawnve", "spawnvp", "spawnvpe",
+    "fork", "forkpty",
+    "kill", "killpg", "abort",
+    "putenv", "unsetenv",
+})
+
+# Sensitive environment variable prefixes to strip from the subprocess
+_SENSITIVE_ENV_PREFIXES = (
+    "GEMINI", "SERPER", "OPENAI", "ANTHROPIC", "HUGGING",
+    "AWS", "AZURE", "GCP", "GOOGLE_API",
+)
+
+
+def _check_code_safety(code: str) -> Optional[str]:
+    """
+    Analyse code with AST and return an error string if unsafe, else None.
+    Blocks dangerous module imports and os.* shell-escape calls.
+    """
+    try:
+        tree = ast.parse(code)
+    except SyntaxError as e:
+        return f"Syntax error in code: {e}"
+
+    for node in ast.walk(tree):
+        # Block dangerous top-level imports
+        if isinstance(node, ast.Import):
+            for alias in node.names:
+                top = alias.name.split(".")[0]
+                if top in _BLOCKED_MODULES:
+                    return (
+                        f"Sandbox blocked: cannot import '{alias.name}'. "
+                        f"Network and process modules are not allowed."
+                    )
+
+        elif isinstance(node, ast.ImportFrom):
+            if node.module:
+                top = node.module.split(".")[0]
+                if top in _BLOCKED_MODULES:
+                    return (
+                        f"Sandbox blocked: cannot import from '{node.module}'. "
+                        f"Network and process modules are not allowed."
+                    )
+
+        # Block dangerous os.* attribute access (e.g. os.system, os.fork)
+        elif isinstance(node, ast.Attribute):
+            if (
+                isinstance(node.value, ast.Name)
+                and node.value.id == "os"
+                and node.attr in _BLOCKED_OS_ATTRS
+            ):
+                return (
+                    f"Sandbox blocked: 'os.{node.attr}' is not allowed. "
+                    f"Use os.path and os.listdir for file operations."
+                )
+
+    return None
+
 
 class CodeExecutorTool(Tool):
-    """Tool for executing Python code in a safe environment."""
+    """Tool for executing Python code in a sandboxed environment."""
 
     def __init__(self, timeout: int = 60, max_output_length: int = 10000):
-        """
-        Initialize the code executor tool.
-
-        Args:
-            timeout: Execution timeout in seconds
-            max_output_length: Maximum length of output to return
-        """
         self.timeout = timeout
         self.max_output_length = max_output_length
         super().__init__()
@@ -41,14 +108,12 @@ Parameters:
 
 Returns:
 The output (stdout and stderr) from executing the code.
-If the code produces files, information about those files will be included.
 
 Use this tool when you need to:
 - Process data (CSV, JSON, etc.)
 - Perform calculations or data analysis
 - Parse and transform information
 - Generate formatted output
-- Work with downloaded files or datasets
 - Extract specific information from structured data
 
 Example usage:
@@ -56,13 +121,6 @@ code: '''
 import pandas as pd
 df = pd.read_csv('data.csv')
 print(df.head())
-'''
-
-code: '''
-import json
-with open('data.json', 'r') as f:
-    data = json.load(f)
-print(f"Found {len(data)} items")
 '''
 
 code: '''
@@ -74,75 +132,65 @@ print(f"Change: {change:.2f}%")
 '''
 
 Notes:
-- The code runs in a temporary directory
-- Common libraries (pandas, numpy, requests, etc.) are available
-- Files created during execution are accessible in subsequent code executions
-- The working directory persists across executions within the same task
+- Code runs in an isolated temporary directory
+- Network access and process spawning are blocked for security
+- Common data libraries (pandas, numpy, json, etc.) are available
+- Timeout: 60 seconds
 """
 
     def execute(self, code: str) -> str:
-        """
-        Execute Python code and return the output.
-
-        Args:
-            code: The Python code to execute
-
-        Returns:
-            The output from executing the code
-
-        Raises:
-            Exception: If execution fails
-        """
         if not code or not code.strip():
             return "Error: Code cannot be empty"
 
+        # Safety check before execution
+        safety_error = _check_code_safety(code)
+        if safety_error:
+            logger.warning(f"Code blocked by sandbox: {safety_error}")
+            return f"Sandbox error: {safety_error}"
+
         try:
-            logger.info(f"Executing code (length: {len(code)} chars)")
+            logger.info(f"Executing sandboxed code ({len(code)} chars)")
 
-            # Create a temporary file for the code
-            with tempfile.NamedTemporaryFile(
-                mode="w", suffix=".py", delete=False, encoding="utf-8"
-            ) as f:
-                f.write(code)
-                temp_file = f.name
+            # Build a clean environment — strip sensitive API keys
+            clean_env = {
+                k: v for k, v in os.environ.items()
+                if not any(k.upper().startswith(p) for p in _SENSITIVE_ENV_PREFIXES)
+            }
+            # Keep PATH so Python can find stdlib / site-packages
+            clean_env.setdefault("PATH", os.environ.get("PATH", ""))
 
-            try:
-                # Execute the code
+            with tempfile.TemporaryDirectory() as sandbox_dir:
+                code_file = os.path.join(sandbox_dir, "code.py")
+                with open(code_file, "w", encoding="utf-8") as f:
+                    f.write(code)
+
                 result = subprocess.run(
-                    ["python", temp_file],
+                    ["python", code_file],
                     capture_output=True,
                     text=True,
                     timeout=self.timeout,
-                    cwd=os.getcwd(),  # Use current working directory
+                    cwd=sandbox_dir,   # isolated temp dir, not user cwd
+                    env=clean_env,
                 )
 
-                # Combine stdout and stderr
-                output = ""
-                if result.stdout:
-                    output += "STDOUT:\n" + result.stdout
-                if result.stderr:
-                    if output:
-                        output += "\n\n"
-                    output += "STDERR:\n" + result.stderr
+            output = ""
+            if result.stdout:
+                output += "STDOUT:\n" + result.stdout
+            if result.stderr:
+                if output:
+                    output += "\n\n"
+                output += "STDERR:\n" + result.stderr
 
-                if not output:
-                    output = "Code executed successfully with no output."
+            if not output:
+                output = "Code executed successfully with no output."
 
-                # Add return code if non-zero
-                if result.returncode != 0:
-                    output += f"\n\nReturn code: {result.returncode}"
+            if result.returncode != 0:
+                output += f"\n\nReturn code: {result.returncode}"
 
-                return self._truncate_output(output)
-
-            finally:
-                # Clean up temporary file
-                try:
-                    os.unlink(temp_file)
-                except Exception as e:
-                    logger.warning(f"Failed to delete temporary file: {e}")
+            return self._truncate_output(output)
 
         except subprocess.TimeoutExpired:
-            logger.error(f"Code execution timed out after {self.timeout} seconds")
+            logger.error(f"Code execution timed out after {self.timeout}s")
             return f"Error: Code execution timed out after {self.timeout} seconds"
         except FileNotFoundError:
             logger.error("Python interpreter not found")
@@ -152,18 +200,8 @@ Notes:
             return f"Error: Unexpected error during code execution: {str(e)}"
 
     def _truncate_output(self, output: str) -> str:
-        """
-        Truncate output to maximum length.
-
-        Args:
-            output: The output to truncate
-
-        Returns:
-            Truncated output
-        """
         if len(output) <= self.max_output_length:
             return output
-
         truncated = output[: self.max_output_length]
-        truncated += f"\n\n... [Output truncated. Total length: {len(output)} characters, showing first {self.max_output_length}]"
+        truncated += f"\n\n... [Output truncated. Total length: {len(output)} chars, showing first {self.max_output_length}]"
         return truncated
