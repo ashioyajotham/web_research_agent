@@ -20,7 +20,7 @@ Usage:
 For more information, see: https://github.com/victorashioya/web_research_agent
 """
 
-__version__ = "2.0.0"
+__version__ = "2.0.1"
 __author__ = "Victor Jotham Ashioya"
 __license__ = "MIT"
 
