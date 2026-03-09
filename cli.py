@@ -556,6 +556,10 @@ def run_tasks_from_file():
         console.print(f"✗ File not found: {filepath}", style="bold red")
         return
 
+    if not os.path.isfile(filepath):
+        console.print(f"✗ That path is a directory, not a file: {filepath}", style="bold red")
+        return
+
     output_file = Prompt.ask("Output file", default="results.txt")
     console.print(f"\n[yellow]Processing tasks from:[/yellow] {filepath}")
     console.print(f"[yellow]Results will be saved to:[/yellow] {output_file}\n")
