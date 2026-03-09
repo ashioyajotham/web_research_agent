@@ -118,14 +118,6 @@ def setup_api_keys() -> dict:
         sys.exit(1)
     config["SERPER_API_KEY"] = serper_key
 
-    console.print("\n[bold yellow]3. Optional Settings[/bold yellow] [dim](press Enter for defaults)[/dim]")
-    config["MAX_ITERATIONS"] = Prompt.ask("   [green]Max iterations[/green]", default="15")
-    config["TEMPERATURE"] = Prompt.ask("   [green]Temperature[/green]", default="0.1")
-    config["MAX_TOOL_OUTPUT_LENGTH"] = "5000"
-    config["MODEL_NAME"] = "gemini-2.5-flash"
-    config["WEB_REQUEST_TIMEOUT"] = "30"
-    config["CODE_EXECUTION_TIMEOUT"] = "60"
-
     console.print()
     save_config(config)
     console.print()
@@ -150,11 +142,17 @@ def check_config() -> dict:
             console.print("✓ Using configuration from .env file", style="bold green")
             return config
 
-    config = load_config()
-    if "GEMINI_API_KEY" not in config or "SERPER_API_KEY" not in config:
+    stored = load_config()
+    if "GEMINI_API_KEY" not in stored or "SERPER_API_KEY" not in stored:
         console.print("⚠ Configuration not found or incomplete.\n", style="bold yellow")
-        config = setup_api_keys()
-    return config
+        stored = setup_api_keys()
+    # Only expose API keys from the persisted file — all other settings
+    # come from package defaults in webresearch/config.py so they stay
+    # up-to-date across upgrades without requiring a re-setup.
+    return {
+        "GEMINI_API_KEY": stored["GEMINI_API_KEY"],
+        "SERPER_API_KEY": stored["SERPER_API_KEY"],
+    }
 
 
 def apply_config_to_env(config: dict):
