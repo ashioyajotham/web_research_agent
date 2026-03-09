@@ -1,364 +1,267 @@
 # Web Research Agent
 
-An AI agent that uses the ReAct (Reasoning and Acting) methodology to complete complex research tasks by browsing the web, analyzing information, and writing code.
+[![CI](https://github.com/ashioyajotham/web_research_agent/actions/workflows/ci.yml/badge.svg)](https://github.com/ashioyajotham/web_research_agent/actions/workflows/ci.yml)
+[![PyPI](https://img.shields.io/pypi/v/web-research-agent)](https://pypi.org/project/web-research-agent/)
+[![Python](https://img.shields.io/pypi/pyversions/web-research-agent)](https://pypi.org/project/web-research-agent/)
+
+An AI agent that uses the **ReAct** (Reasoning and Acting) methodology to complete complex research tasks by searching the web, scraping pages, and running code — all visible in real time.
 
 ## Features
 
-- **ReAct Methodology**: Implements the original ReAct paradigm from the paper "ReAct: Synergizing Reasoning and Acting in Language Models"
-- **Task-Agnostic Design**: No hardcoded logic for specific tasks - the agent intelligently adapts to any research question
-- **Extensible Tool System**: Easy-to-extend architecture for adding new capabilities
-- **Multiple Tools**:
-  - **Web Search**: Google search via Serper.dev API
-  - **Web Scraping**: Fetch and parse content from any URL
-  - **Code Execution**: Run Python code for data analysis and processing
-  - **File Operations**: Read and write files for data persistence
-- **Powered by Gemini 2.0**: Uses Google's Gemini 2.0 Flash model for reasoning and decision-making
+- **Real-time ReAct streaming** — watch every Thought → Action → Observation step live in your terminal as the agent works
+- **Standard & Deep Research modes** — single sequential loop, or parallel fan-out across 4 sub-queries for thorough investigations
+- **Session memory** — follow-up queries automatically inherit context from the current session
+- **Playwright browser tool** — headless Chromium fallback for JavaScript-rendered pages
+- **Code execution sandbox** — AST-based pre-check blocks dangerous imports before running user-generated code
+- **Query history** — persistent `~/.webresearch/history.json` with arrow-key navigation and re-run
+- **Rate-limit display** — Serper API monthly usage shown after every query
+- **Prompt injection protection** — scraped content is sanitised before reaching the LLM
+- **Powered by Gemini 2.5 Flash**
 
-## 📚 Research Attribution
+## Research Attribution
 
-This project implements the **ReAct (Reasoning and Acting)** paradigm for AI agents, as described in:
+This project implements the **ReAct** paradigm from:
 
 > **ReAct: Synergizing Reasoning and Acting in Language Models**
-> Shunyu Yao, Jeffrey Zhao, Dian Yu, Nan Du, Izhak Shafran, Karthik Narasimhan, Yuan Cao
-> *ICLR 2023*
-> [Paper](https://arxiv.org/abs/2210.03629) | [Project Page](https://react-lm.github.io/)
-
-The ReAct framework enables language models to generate both reasoning traces and task-specific actions in an interleaved manner, leading to improved performance on complex tasks requiring planning and information gathering.
-
-## Architecture
-
-The agent follows a simple but powerful loop:
-
-1. **Thought**: The agent reasons about the current state and what action to take next
-2. **Action**: The agent selects and executes a tool with specific parameters
-3. **Observation**: The agent receives and processes the result
-4. **Repeat**: The cycle continues until the task is complete
-
-This approach mirrors human problem-solving: we think, act, observe results, and adjust our strategy accordingly.
-
-
-### Project Structure
-
-```
-web_research_agent/
-webresearch/
-├── __init__.py
-├── agent.py      # Agent class
-├── llm.py       # Language model interface
-├── config.py     # Configuration management
-└── tools/
-|    ├── __init__.py
-|    ├── base.py    # Base class for tools
-|    ├── search.py  # Base class for search tools
-|    ├── scrape.py # Base class for scrape tools
-|    ├── code_executor.py # Base class for code execution
-|    └── file_ops.py # Base class for file operations
-|
-├── main.py              # Entry point script
-├── cli.py              # Command-line interface
-├── tasks.txt           # Example tasks
-├── .env.example        # Environment variables template
-└── requirements.txt    # Python dependencies
-```
+> Shunyu Yao, Jeffrey Zhao, Dian Yu, Nan Du, Izhak Shafran, Karthik Narasimhan, Yuan Cao — *ICLR 2023*
+> [Paper](https://arxiv.org/abs/2210.03629) · [Project page](https://react-lm.github.io/)
 
 ## Installation
-
-### From PyPI (Recommended)
-
-Install directly from PyPI:
 
 ```bash
 pip install web-research-agent
 ```
 
-Then run the interactive CLI:
+Optional — Playwright for JS-heavy pages:
 
 ```bash
-webresearch
+pip install "web-research-agent[browser]"
+playwright install chromium
 ```
 
-The first time you run it, you'll be prompted to enter your API keys. These will be securely stored in `~/.webresearch/config.env`.
+### API Keys
 
-#### Windows PATH Issue
+You need two keys (both have free tiers):
 
-If you get `'webresearch' is not recognized` error on Windows, the Scripts folder isn't in your PATH. Here are solutions:
+| Key | Where to get it |
+|-----|----------------|
+| **Gemini API key** | [Google AI Studio](https://makersuite.google.com/app/apikey) |
+| **Serper API key** | [serper.dev](https://serper.dev) — 2,500 searches/month free |
 
-**Quick Fix (Current Session Only)**:
+The CLI prompts for these on first run and stores them in `~/.webresearch/config.env`.
+
+### Windows PATH fix
+
+If `webresearch` is not recognised after `pip install`:
+
 ```powershell
-# Add to PATH temporarily
-$env:Path += ";$env:APPDATA\Python\Python313\Scripts"
-webresearch
-```
-
-**Permanent Fix (Recommended)**:
-1. Open PowerShell as Administrator
-2. Run:
-```powershell
+# Permanent fix
 [Environment]::SetEnvironmentVariable(
     "Path",
     [Environment]::GetEnvironmentVariable("Path", "User") + ";$env:APPDATA\Python\Python313\Scripts",
     "User"
 )
-```
-3. Restart your terminal
-4. Run `webresearch`
-
-**Alternative (No PATH needed)**:
-```bash
-python -m cli
+# Then restart your terminal
 ```
 
-**On Linux/Mac**: Usually works immediately, but if needed:
-```bash
-export PATH="$HOME/.local/bin:$PATH"
-```
+Or run directly without PATH: `python -m cli`
 
-### From Source
-
-1. **Clone the repository**:
-   ```bash
-   git clone https://github.com/ashioyajotham/web_research_agent.git
-   cd web_research_agent
-   ```
-
-2. **Install in development mode**:
-   ```bash
-   pip install -e .
-   ```
-
-3. **Run the CLI**:
-   ```bash
-   webresearch
-   ```
-
-### API Keys
-
-You'll need:
-- **Gemini API key**: Get yours at [Google AI Studio](https://makersuite.google.com/app/apikey) (free tier available)
-- **Serper API key**: Get yours at [Serper.dev](https://serper.dev) (free tier: 2,500 searches/month)
-
-The CLI will prompt you for these on first run.
-
-## Usage
-
-### Interactive CLI (Recommended)
-
-Simply run:
+## Quick start
 
 ```bash
 webresearch
 ```
 
-You'll see a beautiful interface with options to:
-1. **Run a research query** - Ask any research question interactively
-2. **Process tasks from file** - Run multiple tasks from a file
-3. **View recent logs** - Check execution logs
-4. **Reconfigure API keys** - Update your configuration
-5. **Exit** - Close the application
-
-### Command-Line Mode
-
-For batch processing, you can still use the traditional mode:
-
-```bash
-python main.py tasks.txt
-```
-
-Options:
-- `-o, --output` - Specify output file (default: results.txt)
-- `-v, --verbose` - Enable detailed logging
-
-This will:
-- Read tasks from `tasks.txt` (one task per line, separated by blank lines)
-- Process each task using the ReAct agent
-- Save results to `results.txt`
-- Save execution logs to `logs/agent_<timestamp>.log`
-
-### Custom Output File
-
-Specify a custom output file:
-
-```bash
-python main.py tasks.txt -o my_results.txt
-```
-
-### Verbose Logging
-
-Enable detailed debug logging:
-
-```bash
-python main.py tasks.txt -v
-```
-
-### Task File Format
-
-Tasks should be separated by blank lines. Multi-line tasks are supported:
+The interactive menu:
 
 ```
-Find the name of the COO of the organization that mediated secret talks between US and Chinese AI companies in Geneva in 2023.
+  1.  🔍 Run a research query
+  2.  📁 Process tasks from file
+  3.  📚 View query history
+  4.  📋 View recent logs
+  5.  🔧 Reconfigure API keys
+  6.  🧹 Clear session memory
+  7.  👋 Exit
+```
 
-Compile a list of 10 statements made by Joe Biden regarding US-China relations. Each statement must have been made on a separate occasion. Provide a source for each statement.
+Select **1**, type your question, then choose your research mode:
 
-By what percentage did Volkswagen reduce the sum of their Scope 1 and Scope 2 greenhouse gas emissions in 2023 compared to 2021?
+- **Standard** — sequential ReAct loop, up to 15 iterations (~1 min)
+- **Deep Research** — parallel fan-out: 4 sub-queries × 5 iterations each (~3 min, more thorough)
+
+## How it works
+
+### Standard mode (sequential ReAct)
+
+```
+Thought: I need to search for current Bitcoin price
+Action: search   {"query": "Bitcoin price USD 2025"}
+Observation: [search results…]
+
+Thought: I have enough information
+Final Answer: Bitcoin is currently trading at $67,709.
+```
+
+### Deep Research mode (parallel fan-out)
+
+```
+Original question: "What is the state of fusion energy in 2025?"
+
+Sub-query 1: What recent breakthroughs in fusion energy occurred?   ⟳ running
+Sub-query 2: Which companies are leading commercial fusion?          ⟳ running
+Sub-query 3: What is the current timeline for viable fusion power?  ⟳ running
+Sub-query 4: What are the remaining engineering challenges?          ⟳ running
+
+→ All results synthesised into one comprehensive answer
+```
+
+### Session memory
+
+```
+Q1: "Who is the CEO of OpenAI?"          → Sam Altman
+Q2: "What is his background?"            → agent knows "his" = Sam Altman
+Q3: "What companies has he co-founded?"  → agent retains full context
+```
+
+Type option **6** from the menu to reset the session.
+
+## Architecture
+
+```
+webresearch/
+├── agent.py          # Sequential ReAct loop (step_callback for live streaming)
+├── parallel.py       # Parallel fan-out agent (ThreadPoolExecutor)
+├── memory.py         # ConversationMemory for multi-turn sessions
+├── llm.py            # Gemini API interface (retry + backoff)
+├── config.py         # Configuration from env / ~/.webresearch/config.env
+└── tools/
+    ├── base.py            # Abstract Tool class
+    ├── search.py          # Google search via Serper.dev + usage tracking
+    ├── scrape.py          # requests-based HTML scraper + injection sanitizer
+    ├── browser.py         # Playwright headless scraper (scrape_js)
+    ├── code_executor.py   # Python sandbox (AST check + isolated temp dir)
+    └── file_ops.py        # Read / write files
+cli.py                # Interactive terminal UI (rich + questionary)
 ```
 
 ## Configuration
 
-Edit `.env` to customize agent behavior:
+Set these in `.env` or `~/.webresearch/config.env`:
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `MAX_ITERATIONS` | 15 | Maximum reasoning steps before timeout |
-| `MAX_TOOL_OUTPUT_LENGTH` | 5000 | Maximum characters from tool outputs |
-| `TEMPERATURE` | 0.1 | LLM temperature (0.0-1.0, lower = more focused) |
-| `MODEL_NAME` | gemini-2.0-flash-exp | Gemini model to use |
-| `WEB_REQUEST_TIMEOUT` | 30 | Timeout for web requests (seconds) |
-| `CODE_EXECUTION_TIMEOUT` | 60 | Timeout for code execution (seconds) |
+| `GEMINI_API_KEY` | — | Required |
+| `SERPER_API_KEY` | — | Required |
+| `MODEL_NAME` | `gemini-2.5-flash` | Gemini model |
+| `MAX_ITERATIONS` | `15` | ReAct loop cap |
+| `TEMPERATURE` | `0.1` | LLM temperature |
+| `MAX_TOOL_OUTPUT_LENGTH` | `5000` | Chars fed back to LLM per tool call |
+| `WEB_REQUEST_TIMEOUT` | `30` | Scraper timeout (s) |
+| `CODE_EXECUTION_TIMEOUT` | `60` | Code sandbox timeout (s) |
 
-## Example Tasks
+## Batch processing
 
-The agent can handle a variety of research tasks:
+```bash
+webresearch   # choose option 2, enter path to tasks file
+```
 
-1. **Information Gathering**: Compile statements, find specific facts, locate documents
-2. **Data Analysis**: Download datasets, process CSV/JSON files, perform calculations
-3. **Multi-Step Research**: Tasks requiring multiple sources and synthesis
-4. **Verification**: Cross-reference information from multiple sources
+Tasks file format (blank-line separated):
 
-See `tasks.txt` for examples of representative tasks.
+```
+Find the name of the COO of the organization that mediated
+secret talks between US and Chinese AI companies in Geneva in 2023.
 
-## Adding New Tools
+By what percentage did Volkswagen reduce their Scope 1 + Scope 2
+greenhouse gas emissions in 2023 compared to 2021?
+```
 
-The agent is designed to be easily extensible. To add a new tool:
-
-1. **Create a new tool class** in `tools/` inheriting from `Tool`:
+## Programmatic use
 
 ```python
-from tools.base import Tool
+from webresearch import ReActAgent, ParallelResearchAgent
+from webresearch.config import Config
+from webresearch.llm import LLMInterface
+from webresearch.tools import ToolManager, SearchTool, ScrapeTool, CodeExecutorTool, FileOpsTool
 
-class MyNewTool(Tool):
+cfg = Config()
+cfg.validate()
+llm = LLMInterface(api_key=cfg.gemini_api_key, model_name=cfg.model_name)
+
+tools = ToolManager()
+tools.register_tool(SearchTool(cfg.serper_api_key))
+tools.register_tool(ScrapeTool())
+tools.register_tool(CodeExecutorTool())
+tools.register_tool(FileOpsTool())
+
+# Sequential
+agent = ReActAgent(llm=llm, tool_manager=tools)
+answer = agent.run("What is the capital of France?")
+
+# Parallel fan-out
+deep = ParallelResearchAgent(llm=llm, tool_manager=tools)
+answer = deep.run("Explain the state of nuclear fusion energy in 2025")
+```
+
+## Adding a custom tool
+
+```python
+from webresearch.tools.base import Tool
+
+class MyTool(Tool):
     @property
     def name(self) -> str:
         return "my_tool"
 
     @property
     def description(self) -> str:
-        return """Description of what your tool does and its parameters."""
+        return """One-line summary.
 
-    def execute(self, **kwargs) -> str:
-        # Your tool logic here
-        return "Tool result"
+Parameters:
+- param (str, required): what it does
+
+Use this tool when you need to…"""
+
+    def execute(self, param: str) -> str:
+        return f"Result for {param}"
+
+# Register it
+tools.register_tool(MyTool())
 ```
 
-2. **Register the tool** in `main.py`:
+## Security
 
-```python
-tool_manager.register_tool(MyNewTool())
-```
+- **Prompt injection**: 9 regex patterns strip instruction-like content from scraped pages before it reaches the LLM
+- **Code sandbox**: AST pre-check blocks `subprocess`, `socket`, `ctypes`, `os.system/fork/exec`, and 10+ other dangerous calls; code runs in an isolated `TemporaryDirectory` with API keys stripped from the subprocess environment
+- **API keys**: stored in `~/.webresearch/config.env`, never logged
 
-That's it! The agent will automatically discover and use your new tool.
-
-## How It Works
-
-### ReAct Loop
-
-The agent follows this pattern for each iteration:
-
-```
-Thought: I need to search for information about X
-Action: search
-Action Input: {"query": "X"}
-Observation: [Search results appear here]
-
-Thought: Now I need to read the first result
-Action: scrape
-Action Input: {"url": "https://..."}
-Observation: [Page content appears here]
-
-Thought: I have enough information to answer
-Final Answer: [Complete answer with sources]
-```
-
-### Tool Selection
-
-The agent autonomously decides which tools to use based on:
-- The task requirements
-- Current context and previous observations
-- Tool descriptions provided to the LLM
-
-### Error Handling
-
-- Network timeouts and errors are caught and reported
-- Failed tool executions return error messages to the agent
-- Maximum iteration limit prevents infinite loops
-- Best-effort answers provided if task cannot be completed
-
-## Troubleshooting
-
-### Common Issues
-
-**API Key Errors**:
-- Ensure `.env` file exists and contains valid API keys
-- Check that keys are not wrapped in quotes
-
-**Import Errors**:
-- Run `pip install -r requirements.txt` to install all dependencies
-- Ensure you're using Python 3.8 or higher
-
-**Timeout Errors**:
-- Increase timeout values in `.env`
-- Some tasks may require more iterations - adjust `MAX_ITERATIONS`
-
-**Empty Results**:
-- Check logs in `logs/` directory for detailed error information
-- Verify network connectivity for web requests
-
-### Debug Mode
-
-Run with `-v` flag to see detailed execution logs:
+## Development
 
 ```bash
-python main.py tasks.txt -v
+git clone https://github.com/ashioyajotham/web_research_agent.git
+cd web_research_agent
+pip install -e ".[dev]"
+pytest tests/ -v          # 56 tests, no API keys required
 ```
 
-## Performance Tips
-
-1. **Adjust iterations**: Complex tasks may need more than 15 iterations
-2. **Temperature tuning**: Lower temperature (0.0-0.2) for focused research, higher (0.5-0.7) for creative tasks
-3. **Output length**: Increase `MAX_TOOL_OUTPUT_LENGTH` for tasks requiring full document analysis
-4. **Model selection**: Use `gemini-2.0-flash-exp` for speed or `gemini-1.5-pro` for complex reasoning
+CI runs on Python 3.9 · 3.10 · 3.11 · 3.12 for every push and pull request.
 
 ## Limitations
 
-- Web content behind paywalls or login walls cannot be accessed
-- PDF parsing is limited (URLs are noted for manual download)
-- Code execution is sandboxed but runs in the local environment
-- Some websites may block scraping attempts
-- Rate limits apply to API calls (Serper free tier: 2,500 searches/month)
-
-## Code Quality
-
-The codebase emphasizes:
-- **Modularity**: Each component has a single responsibility
-- **Extensibility**: New tools can be added without modifying core logic
-- **Documentation**: Comprehensive docstrings and comments
-- **Error Handling**: Graceful degradation and informative error messages
-- **Logging**: Detailed execution traces for debugging
-- **Type Hints**: Clear interfaces using Python type annotations
+- Paywalled or login-gated content cannot be accessed (even with Playwright)
+- PDF parsing is not supported; URLs are noted for manual download
+- Serper free tier: 2,500 searches/month — complex queries can use 5–8 calls each
+- Parallel mode fires multiple concurrent Gemini requests; heavy use may hit rate limits
 
 ## Contributing
 
-We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for detailed guidelines.
-
-For bug reports and feature requests, please open an issue on GitHub.
+See [CONTRIBUTING.md](CONTRIBUTING.md). Bug reports and feature requests welcome via GitHub Issues.
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-**TL;DR**: You are free to use, modify, and distribute this software, even for commercial purposes, as long as you include the original copyright notice.
+MIT — see [LICENSE](LICENSE).
 
 ## References
 
 - [ReAct: Synergizing Reasoning and Acting in Language Models](https://arxiv.org/abs/2210.03629)
-- [Google Gemini API Documentation](https://ai.google.dev/docs)
-- [Serper.dev API Documentation](https://serper.dev/docs)
+- [Google Gemini API](https://ai.google.dev/docs)
+- [Serper.dev API](https://serper.dev/docs)
