@@ -189,6 +189,23 @@ about the content.
 
             text = "\n".join(cleaned_lines)
 
+            # Detect JS-only pages: large HTML but almost no extracted text
+            _JS_HINTS = [
+                "you need to enable javascript",
+                "please enable javascript",
+                "requires javascript",
+                "loading...",
+                "app is loading",
+            ]
+            if len(text.strip()) < 400 and len(html_content) > 3000:
+                if any(h in text.lower() for h in _JS_HINTS) or len(text.strip()) < 100:
+                    return (
+                        f"Content from: {url}\n{'=' * 80}\n\n"
+                        "[JS-rendered page] This page requires JavaScript to display "
+                        "content. Use the 'scrape_js' tool with this same URL to fetch "
+                        "the fully-rendered version."
+                    )
+
             # Add URL header
             result = f"Content from: {url}\n{'=' * 80}\n\n{text}"
 

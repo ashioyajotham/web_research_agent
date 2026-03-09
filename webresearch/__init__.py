@@ -20,7 +20,7 @@ Usage:
 For more information, see: https://github.com/victorashioya/web_research_agent
 """
 
-__version__ = "1.2.1"
+__version__ = "2.0.0"
 __author__ = "Victor Jotham Ashioya"
 __license__ = "MIT"
 
@@ -28,31 +28,34 @@ __license__ = "MIT"
 from .agent import ReActAgent, Step
 from .config import config, Config
 from .llm import LLMInterface
+from .memory import ConversationMemory
+from .parallel import ParallelResearchAgent
 from .tools import (
     Tool,
     ToolManager,
     SearchTool,
     ScrapeTool,
+    BrowserScrapeTool,
     CodeExecutorTool,
     FileOpsTool,
 )
 
 __all__ = [
-    # Version info
     "__version__",
     "__author__",
     "__license__",
-    # Core components
     "ReActAgent",
+    "ParallelResearchAgent",
     "Step",
     "Config",
     "config",
     "LLMInterface",
-    # Tools
+    "ConversationMemory",
     "Tool",
     "ToolManager",
     "SearchTool",
     "ScrapeTool",
+    "BrowserScrapeTool",
     "CodeExecutorTool",
     "FileOpsTool",
 ]

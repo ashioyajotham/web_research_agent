@@ -7,6 +7,7 @@ from typing import Dict, List, Optional
 from .base import Tool
 from .search import SearchTool
 from .scrape import ScrapeTool
+from .browser import BrowserScrapeTool, playwright_available
 from .code_executor import CodeExecutorTool
 from .file_ops import FileOpsTool
 
@@ -111,6 +112,8 @@ __all__ = [
     "ToolManager",
     "SearchTool",
     "ScrapeTool",
+    "BrowserScrapeTool",
+    "playwright_available",
     "CodeExecutorTool",
     "FileOpsTool",
 ]

@@ -36,7 +36,7 @@ ASCII_ART = r"""
  ╚══╝╚══╝ ╚══════╝╚═════╝     ╚═╝  ╚═╝╚══════╝╚══════╝╚══════╝╚═╝  ╚═╝╚═╝  ╚═╝ ╚═════╝╚═╝  ╚═╝
 """
 
-VERSION = "1.4.0"
+VERSION = "2.0.0"
 TAGLINE = "lock in, anon"
 
 logging.getLogger().setLevel(logging.WARNING)
@@ -277,35 +277,44 @@ def _print_usage_banner():
 
 # ─── Agent initialization ────────────────────────────────────────────────────
 
+def _build_tool_manager(cfg) -> "ToolManager":
+    """Build a ToolManager with all available tools."""
+    from webresearch.tools import (
+        ToolManager, SearchTool, ScrapeTool, BrowserScrapeTool,
+        CodeExecutorTool, FileOpsTool, playwright_available,
+    )
+    tool_manager = ToolManager()
+    tool_manager.register_tool(SearchTool(cfg.serper_api_key))
+    tool_manager.register_tool(ScrapeTool())
+    if playwright_available():
+        tool_manager.register_tool(BrowserScrapeTool())
+    tool_manager.register_tool(CodeExecutorTool())
+    tool_manager.register_tool(FileOpsTool())
+    return tool_manager
+
+
 def initialize_agent():
-    """Initialize the ReAct agent. Imports are deferred so env vars are set first."""
+    """Initialize the sequential ReAct agent."""
     from webresearch.config import Config
     from webresearch.llm import LLMInterface
-    from webresearch.tools import (
-        ToolManager, SearchTool, ScrapeTool, CodeExecutorTool, FileOpsTool,
-    )
     from webresearch.agent import ReActAgent
 
     cfg = Config()
     cfg.validate()
+    llm = LLMInterface(api_key=cfg.gemini_api_key, model_name=cfg.model_name, temperature=cfg.temperature)
+    return ReActAgent(llm=llm, tool_manager=_build_tool_manager(cfg), max_iterations=cfg.max_iterations)
 
-    llm = LLMInterface(
-        api_key=cfg.gemini_api_key,
-        model_name=cfg.model_name,
-        temperature=cfg.temperature,
-    )
 
-    tool_manager = ToolManager()
-    tool_manager.register_tool(SearchTool(cfg.serper_api_key))
-    tool_manager.register_tool(ScrapeTool())
-    tool_manager.register_tool(CodeExecutorTool())
-    tool_manager.register_tool(FileOpsTool())
+def initialize_parallel_agent():
+    """Initialize the parallel fan-out research agent."""
+    from webresearch.config import Config
+    from webresearch.llm import LLMInterface
+    from webresearch.parallel import ParallelResearchAgent
 
-    return ReActAgent(
-        llm=llm,
-        tool_manager=tool_manager,
-        max_iterations=cfg.max_iterations,
-    )
+    cfg = Config()
+    cfg.validate()
+    llm = LLMInterface(api_key=cfg.gemini_api_key, model_name=cfg.model_name, temperature=cfg.temperature)
+    return ParallelResearchAgent(llm=llm, tool_manager=_build_tool_manager(cfg))
 
 
 # ─── Core query runner ────────────────────────────────────────────────────────
@@ -393,6 +402,86 @@ def _run_query(query: str):
         console.print(f"✓ Saved to [cyan]{filename}[/cyan]", style="bold green")
 
 
+# ─── Deep research (parallel fan-out) ────────────────────────────────────────
+
+def _run_deep_research(query: str):
+    """Execute a query via the parallel fan-out agent with a live status board."""
+    try:
+        agent = initialize_parallel_agent()
+    except Exception as e:
+        console.print(f"✗ Error initializing agent: {str(e)}", style="bold red")
+        console.print("Tip: Reconfigure API keys with option 5.", style="yellow")
+        return
+
+    if len(_session) > 0:
+        query = _session.build_task_with_memory(query)
+        console.print(f"[dim]↑ Using {len(_session)} previous Q&A pair(s) as context[/dim]\n")
+
+    start_time = datetime.now()
+    sub_status: Dict[int, Dict] = {}
+
+    def make_status_board() -> Table:
+        t = Table(
+            title="[bold cyan]Deep Research — Parallel Fan-out[/bold cyan]",
+            border_style="cyan",
+            expand=True,
+        )
+        t.add_column("#", style="cyan", width=4, justify="center")
+        t.add_column("Sub-query", style="white", ratio=4)
+        t.add_column("Status", width=14)
+        for idx in sorted(sub_status):
+            s = sub_status[idx]
+            state = s["state"]
+            icons = {"pending": "○ pending", "running": "⟳ running", "done": "✓ done", "error": "✗ error"}
+            styles = {"pending": "dim", "running": "bold cyan", "done": "bold green", "error": "bold red"}
+            t.add_row(
+                str(idx + 1),
+                s.get("question", "…")[:70],
+                f"[{styles[state]}]{icons[state]}[/{styles[state]}]",
+            )
+        return t
+
+    answer: Optional[str] = None
+
+    with Live(make_status_board(), console=console, refresh_per_second=4) as live:
+        def cb(idx: int, state: str, question: Optional[str] = None):
+            if idx not in sub_status:
+                sub_status[idx] = {"question": question or "…", "state": state}
+            else:
+                sub_status[idx]["state"] = state
+                if question:
+                    sub_status[idx]["question"] = question
+            live.update(make_status_board())
+
+        answer = agent.run(query, sub_status_callback=cb)
+
+    duration = (datetime.now() - start_time).total_seconds()
+    n_sub = len(sub_status)
+
+    console.print()
+    console.rule("[bold green]RESULT[/bold green]", style="green")
+    console.print()
+    border = "yellow" if answer.startswith("⚠") else "green"
+    console.print(Panel(answer, border_style=border, padding=(1, 2)))
+    console.print()
+    console.print(
+        f"⏱  [yellow]{duration:.2f}s[/yellow]  [dim]│[/dim]  "
+        f"[cyan]{n_sub} parallel sub-queries[/cyan]"
+    )
+    _print_usage_banner()
+    console.print()
+
+    _session.add(query, answer)
+    save_to_history(query, answer, n_sub, duration)
+
+    if Confirm.ask("Save result to file?", default=False):
+        filename = Prompt.ask("Filename", default="result.txt")
+        with open(filename, "w", encoding="utf-8") as f:
+            f.write(f"Query: {query}\n{'=' * 80}\n\n{answer}\n\n")
+            f.write(f"{'─' * 80}\nExecution time: {duration:.2f}s | Sub-queries: {n_sub}\n")
+        console.print(f"✓ Saved to [cyan]{filename}[/cyan]", style="bold green")
+
+
 # ─── Menu actions ─────────────────────────────────────────────────────────────
 
 def show_menu():
@@ -432,7 +521,27 @@ def run_interactive_query():
     )
     if not query or query.lower() == "back":
         return
-    _run_query(query)
+
+    if _HAS_QUESTIONARY:
+        mode = questionary.select(
+            "Research mode:",
+            choices=[
+                questionary.Choice("Standard  — sequential ReAct loop (fast, ~1 min)", value="standard"),
+                questionary.Choice("Deep      — parallel fan-out: 4 sub-queries × 5 steps (thorough, ~3 min)", value="deep"),
+            ],
+        ).ask()
+        if mode is None:
+            return
+    else:
+        console.print("\n[cyan]Mode:[/cyan] 1=Standard  2=Deep Research")
+        raw = Prompt.ask("[green]❯[/green] Choose mode", choices=["1", "2"], default="1")
+        mode = "standard" if raw == "1" else "deep"
+
+    console.print()
+    if mode == "deep":
+        _run_deep_research(query)
+    else:
+        _run_query(query)
 
 
 def run_tasks_from_file():
