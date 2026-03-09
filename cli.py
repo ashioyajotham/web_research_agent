@@ -122,7 +122,7 @@ def setup_api_keys() -> dict:
     config["MAX_ITERATIONS"] = Prompt.ask("   [green]Max iterations[/green]", default="15")
     config["TEMPERATURE"] = Prompt.ask("   [green]Temperature[/green]", default="0.1")
     config["MAX_TOOL_OUTPUT_LENGTH"] = "5000"
-    config["MODEL_NAME"] = "gemini-2.0-flash-exp"
+    config["MODEL_NAME"] = "gemini-2.5-flash"
     config["WEB_REQUEST_TIMEOUT"] = "30"
     config["CODE_EXECUTION_TIMEOUT"] = "60"
 
@@ -142,7 +142,7 @@ def check_config() -> dict:
             "MAX_ITERATIONS": os.getenv("MAX_ITERATIONS", "15"),
             "TEMPERATURE": os.getenv("TEMPERATURE", "0.1"),
             "MAX_TOOL_OUTPUT_LENGTH": os.getenv("MAX_TOOL_OUTPUT_LENGTH", "5000"),
-            "MODEL_NAME": os.getenv("MODEL_NAME", "gemini-2.0-flash-exp"),
+            "MODEL_NAME": os.getenv("MODEL_NAME", "gemini-2.5-flash"),
             "WEB_REQUEST_TIMEOUT": os.getenv("WEB_REQUEST_TIMEOUT", "30"),
             "CODE_EXECUTION_TIMEOUT": os.getenv("CODE_EXECUTION_TIMEOUT", "60"),
         }

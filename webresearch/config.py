@@ -24,7 +24,7 @@ class Config:
             os.getenv("MAX_TOOL_OUTPUT_LENGTH", "5000")
         )
         self.temperature: float = float(os.getenv("TEMPERATURE", "0.1"))
-        self.model_name: str = os.getenv("MODEL_NAME", "gemini-2.0-flash-exp")
+        self.model_name: str = os.getenv("MODEL_NAME", "gemini-2.5-flash")
 
         # Timeout settings
         self.web_request_timeout: int = int(os.getenv("WEB_REQUEST_TIMEOUT", "30"))
