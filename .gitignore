@@ -41,3 +41,9 @@ data/
 *.log
 agent_memory.db
 logs/
+
+# Output artifacts (not source)
+result.txt
+results.txt
+tasks.txt
+example_simple.txt

@@ -3,12 +3,26 @@ Web scraping tool for fetching and parsing web page content.
 Allows the agent to read and extract information from URLs.
 """
 
+import re
 import requests
 from bs4 import BeautifulSoup
 import html2text
 import logging
 from typing import Optional
 from .base import Tool
+
+# Patterns that indicate prompt injection attempts in scraped content
+_INJECTION_PATTERNS = [
+    r"ignore\s+(?:all\s+)?previous\s+instructions?",
+    r"disregard\s+(?:all\s+)?(?:previous|prior|above)",
+    r"(?:new\s+)?system\s*(?:prompt|instructions?)\s*:",
+    r"you\s+are\s+now\s+(?:a\s+)?(?:different|new|an?\s+)",
+    r"<\s*system\s*>",
+    r"<\s*/?(?:human|assistant|user|prompt)\s*>",
+    r"\[\s*(?:SYSTEM|INST|SYS)\s*\]",
+    r"final\s+answer\s*:\s*(?:ignore|the\s+answer\s+is)",
+    r"action\s+input\s*:\s*\{[^}]{0,50}inject",
+]
 
 logger = logging.getLogger(__name__)
 
@@ -184,6 +198,20 @@ about the content.
             logger.error(f"Error parsing HTML: {str(e)}")
             return f"Error parsing HTML from {url}: {str(e)}"
 
+    def _sanitize_content(self, content: str) -> str:
+        """
+        Strip prompt-injection patterns from scraped content before returning to LLM.
+
+        Args:
+            content: Raw scraped text
+
+        Returns:
+            Sanitized content with injection patterns replaced by [REDACTED]
+        """
+        for pattern in _INJECTION_PATTERNS:
+            content = re.sub(pattern, "[REDACTED]", content, flags=re.IGNORECASE)
+        return content
+
     def _truncate_content(self, content: str) -> str:
         """
         Truncate content to maximum length.
@@ -195,8 +223,8 @@ about the content.
             Truncated content
         """
         if len(content) <= self.max_length:
-            return content
+            return self._sanitize_content(content)
 
         truncated = content[: self.max_length]
         truncated += f"\n\n... [Content truncated. Total length: {len(content)} characters, showing first {self.max_length}]"
-        return truncated
+        return self._sanitize_content(truncated)

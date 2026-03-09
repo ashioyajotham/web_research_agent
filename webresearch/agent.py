@@ -13,7 +13,7 @@ The agent follows a loop:
 
 import re
 import logging
-from typing import Dict, List, Optional, Any
+from typing import Callable, Dict, List, Optional, Any
 from dataclasses import dataclass
 
 from .llm import LLMInterface
@@ -64,12 +64,13 @@ class ReActAgent:
         self.max_tool_output_length = max_tool_output_length
         self.steps: List[Step] = []
 
-    def run(self, task: str) -> str:
+    def run(self, task: str, step_callback: Optional[Callable] = None) -> str:
         """
         Run the agent on a given task.
 
         Args:
             task: The task description
+            step_callback: Optional callable(iteration, step) called after each step
 
         Returns:
             The final answer
@@ -97,6 +98,8 @@ class ReActAgent:
                 if final_answer:
                     logger.info("Agent produced final answer")
                     self.steps.append(step)
+                    if step_callback:
+                        step_callback(iteration + 1, step)
                     return final_answer
 
                 # Execute the action if present
@@ -117,9 +120,13 @@ class ReActAgent:
                     step.observation = "No valid action found. Please provide a thought and then an action."
                     self.steps.append(step)
 
+                if step_callback:
+                    step_callback(iteration + 1, step)
+
             # Max iterations reached
             logger.warning("Max iterations reached without final answer")
-            return self._generate_best_effort_answer(task)
+            best_effort = self._generate_best_effort_answer(task)
+            return f"⚠ Max iterations ({self.max_iterations}) reached — answer may be incomplete.\n\n{best_effort}"
 
         except Exception as e:
             logger.error(f"Error during agent execution: {str(e)}")
@@ -372,7 +379,7 @@ Based on the information gathered in these steps, provide the best possible answ
 
         try:
             response = self.llm.generate(prompt)
-            return f"[Note: Max iterations reached. Best effort answer:]\n\n{response}"
+            return response
         except Exception as e:
             return f"Unable to complete the task within {self.max_iterations} iterations. Last thought: {self.steps[-1].thought if self.steps else 'N/A'}"
 
