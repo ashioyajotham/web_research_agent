@@ -205,6 +205,17 @@ def setup_api_keys() -> dict:
 
     console.print()
 
+    # Warn if fallback keys were added but openai package is not installed
+    has_fallback_keys = any(k in config for k in ("GROQ_API_KEY", "OPENROUTER_API_KEY"))
+    if has_fallback_keys:
+        from webresearch.llm_compat import openai_available
+        if not openai_available():
+            console.print(
+                "[bold yellow]Note:[/bold yellow] Groq/OpenRouter keys saved, but the "
+                "[cyan]openai[/cyan] package is required to use them.\n"
+                "  Install it now: [green]pip install \"web-research-agent[providers]\"[/green]\n"
+            )
+
     # ── Persist ───────────────────────────────────────────────────────────────
     if keyring_available():
         stored_count = 0
@@ -417,6 +428,15 @@ def _build_llm_chain(cfg) -> "ModelFallbackChain":
     )
     gemini.provider_name = f"Gemini ({cfg.model_name})"
     interfaces.append(gemini)
+
+    has_optional_keys = any([cfg.groq_api_key, cfg.openrouter_api_key, cfg.ollama_base_url])
+
+    if not openai_available() and has_optional_keys:
+        console.print(
+            "[bold yellow]Warning:[/bold yellow] Groq/OpenRouter/Ollama API keys are configured "
+            "but the [cyan]openai[/cyan] package is not installed — fallback providers are disabled.\n"
+            "  Fix: [green]pip install \"web-research-agent[providers]\"[/green]",
+        )
 
     if openai_available():
         # Groq fallback

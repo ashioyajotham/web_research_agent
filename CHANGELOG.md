@@ -12,6 +12,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - PDF content extraction
 - Automated evaluation suite
 
+## [2.2.1] - 2026-03-11
+
+### Fixed
+- `_build_llm_chain`: when Groq/OpenRouter/Ollama keys are configured but the `openai` package is not installed, the agent now prints a clear warning and the install command instead of silently running with only Gemini in the chain
+- `setup_api_keys`: same warning printed immediately after entering Groq or OpenRouter keys if `openai` is missing
+
 ## [2.2.0] - 2026-03-11
 
 ### Added
