@@ -92,67 +92,169 @@ def save_config(config: dict):
 
 
 def setup_api_keys() -> dict:
+    from webresearch.credentials import set_credential, keyring_available, get_credential
+
+    storage_method = "system keyring" if keyring_available() else f"~/.webresearch/config.env"
     console.print(
         Panel.fit(
-            "🔧 [bold cyan]First-time Setup[/bold cyan]\nLet's configure your API keys.",
+            "[bold cyan]API Key Setup[/bold cyan]\n"
+            f"Credentials will be stored in: [green]{storage_method}[/green]",
             border_style="cyan",
         )
     )
     console.print()
+
     config = {}
 
-    console.print("[bold yellow]1. Gemini API Key[/bold yellow]")
-    console.print("   Get yours at: https://makersuite.google.com/app/apikey")
-    gemini_key = Prompt.ask("   [green]Enter Gemini API key[/green]").strip()
-    if not gemini_key:
-        console.print("[bold red]✗ Gemini API key is required![/bold red]")
-        sys.exit(1)
-    config["GEMINI_API_KEY"] = gemini_key
+    # ── 1. Gemini (required) ──────────────────────────────────────────────────
+    console.print("[bold yellow]1. Gemini API Key[/bold yellow]  [red](required)[/red]")
+    console.print("   Get yours at: https://aistudio.google.com/app/apikey")
+    existing = get_credential("GEMINI_API_KEY")
+    if existing:
+        console.print(f"   [dim]Current value: {'*' * 8}{existing[-4:]}[/dim]")
+    while True:
+        prompt_suffix = " (Enter to keep existing)" if existing else ""
+        val = Prompt.ask(f"   [green]Enter Gemini API key[/green]{prompt_suffix}", default="").strip()
+        if val:
+            config["GEMINI_API_KEY"] = val
+            break
+        if existing:
+            config["GEMINI_API_KEY"] = existing
+            break
+        console.print("   [bold red]Gemini API key is required and cannot be skipped.[/bold red]")
 
-    console.print("\n[bold yellow]2. Serper API Key[/bold yellow]")
-    console.print("   Get yours at: https://serper.dev")
-    console.print("   [dim](Free tier: 2,500 searches/month)[/dim]")
-    serper_key = Prompt.ask("   [green]Enter Serper API key[/green]").strip()
-    if not serper_key:
-        console.print("[bold red]✗ Serper API key is required![/bold red]")
-        sys.exit(1)
-    config["SERPER_API_KEY"] = serper_key
+    # ── 2. Serper (required) ──────────────────────────────────────────────────
+    console.print("\n[bold yellow]2. Serper API Key[/bold yellow]  [red](required)[/red]")
+    console.print("   Get yours at: https://serper.dev  [dim](free tier: 2,500 searches/month)[/dim]")
+    existing = get_credential("SERPER_API_KEY")
+    if existing:
+        console.print(f"   [dim]Current value: {'*' * 8}{existing[-4:]}[/dim]")
+    while True:
+        prompt_suffix = " (Enter to keep existing)" if existing else ""
+        val = Prompt.ask(f"   [green]Enter Serper API key[/green]{prompt_suffix}", default="").strip()
+        if val:
+            config["SERPER_API_KEY"] = val
+            break
+        if existing:
+            config["SERPER_API_KEY"] = existing
+            break
+        console.print("   [bold red]Serper API key is required and cannot be skipped.[/bold red]")
+
+    # ── 3. Groq (optional) ────────────────────────────────────────────────────
+    console.print("\n[bold yellow]3. Groq API Key[/bold yellow]  [dim](optional — first LLM fallback)[/dim]")
+    console.print("   Get yours at: https://console.groq.com  [dim](free tier available)[/dim]")
+    console.print("   [dim]Activated automatically when Gemini hits rate limits.[/dim]")
+    existing = get_credential("GROQ_API_KEY")
+    if existing:
+        console.print(f"   [dim]Current value: {'*' * 8}{existing[-4:]}  (Enter to keep, 'clear' to remove)[/dim]")
+        val = Prompt.ask("   [green]Enter Groq API key[/green]", default="").strip()
+        if val.lower() == "clear":
+            pass  # don't add to config — will be missing from save
+        elif val:
+            config["GROQ_API_KEY"] = val
+        else:
+            config["GROQ_API_KEY"] = existing
+    else:
+        val = Prompt.ask("   [green]Enter Groq API key[/green] (or Enter to skip)", default="").strip()
+        if val:
+            config["GROQ_API_KEY"] = val
+        else:
+            console.print(
+                "   [dim yellow]Skipped. Without a fallback LLM, Gemini rate limits will halt research.[/dim yellow]"
+            )
+
+    # ── 4. OpenRouter (optional) ──────────────────────────────────────────────
+    console.print("\n[bold yellow]4. OpenRouter API Key[/bold yellow]  [dim](optional — second LLM fallback)[/dim]")
+    console.print("   Get yours at: https://openrouter.ai  [dim](free models available)[/dim]")
+    existing = get_credential("OPENROUTER_API_KEY")
+    if existing:
+        console.print(f"   [dim]Current value: {'*' * 8}{existing[-4:]}  (Enter to keep, 'clear' to remove)[/dim]")
+        val = Prompt.ask("   [green]Enter OpenRouter API key[/green]", default="").strip()
+        if val.lower() == "clear":
+            pass
+        elif val:
+            config["OPENROUTER_API_KEY"] = val
+        else:
+            config["OPENROUTER_API_KEY"] = existing
+    else:
+        val = Prompt.ask("   [green]Enter OpenRouter API key[/green] (or Enter to skip)", default="").strip()
+        if val:
+            config["OPENROUTER_API_KEY"] = val
+        else:
+            console.print("   [dim yellow]Skipped.[/dim yellow]")
+
+    # ── 5. Ollama (optional) ──────────────────────────────────────────────────
+    console.print("\n[bold yellow]5. Ollama Base URL[/bold yellow]  [dim](optional — local LLM fallback)[/dim]")
+    console.print("   Default when Ollama is running locally: http://localhost:11434/v1")
+    existing = get_credential("OLLAMA_BASE_URL")
+    if existing:
+        console.print(f"   [dim]Current value: {existing}  (Enter to keep, 'clear' to remove)[/dim]")
+        val = Prompt.ask("   [green]Enter Ollama base URL[/green]", default="").strip()
+        if val.lower() == "clear":
+            pass
+        elif val:
+            config["OLLAMA_BASE_URL"] = val
+        else:
+            config["OLLAMA_BASE_URL"] = existing
+    else:
+        val = Prompt.ask("   [green]Enter Ollama base URL[/green] (or Enter to skip)", default="").strip()
+        if val:
+            config["OLLAMA_BASE_URL"] = val
+        else:
+            console.print("   [dim yellow]Skipped.[/dim yellow]")
 
     console.print()
-    save_config(config)
+
+    # ── Persist ───────────────────────────────────────────────────────────────
+    if keyring_available():
+        stored_count = 0
+        for key, value in config.items():
+            if set_credential(key, value):
+                stored_count += 1
+        console.print(
+            f"[bold green]Stored {stored_count} credential(s) in system keyring.[/bold green]"
+        )
+    else:
+        # Fallback: plain-text file (only for environments without keyring support)
+        save_config({k: v for k, v in config.items()})
+
     console.print()
     return config
 
 
 def check_config() -> dict:
+    from webresearch.credentials import get_credential, REQUIRED_CREDENTIALS, OPTIONAL_CREDENTIALS
+
+    # Developer override: .env file in working directory takes top priority.
     if os.path.exists(".env"):
         from dotenv import load_dotenv
         load_dotenv()
-        config = {
-            "GEMINI_API_KEY": os.getenv("GEMINI_API_KEY", ""),
-            "SERPER_API_KEY": os.getenv("SERPER_API_KEY", ""),
-            "MAX_ITERATIONS": os.getenv("MAX_ITERATIONS", "15"),
-            "TEMPERATURE": os.getenv("TEMPERATURE", "0.1"),
-            "MAX_TOOL_OUTPUT_LENGTH": os.getenv("MAX_TOOL_OUTPUT_LENGTH", "5000"),
-            "MODEL_NAME": os.getenv("MODEL_NAME", "gemini-2.5-flash"),
-            "WEB_REQUEST_TIMEOUT": os.getenv("WEB_REQUEST_TIMEOUT", "30"),
-            "CODE_EXECUTION_TIMEOUT": os.getenv("CODE_EXECUTION_TIMEOUT", "60"),
-        }
-        if config["GEMINI_API_KEY"] and config["SERPER_API_KEY"]:
-            console.print("✓ Using configuration from .env file", style="bold green")
-            return config
 
+    # Read all credentials (keyring > env var fallback happens inside get_credential).
+    gemini = get_credential("GEMINI_API_KEY")
+    serper = get_credential("SERPER_API_KEY")
+
+    if gemini and serper:
+        config: dict = {"GEMINI_API_KEY": gemini, "SERPER_API_KEY": serper}
+        for key in OPTIONAL_CREDENTIALS:
+            val = get_credential(key)
+            if val:
+                config[key] = val
+        return config
+
+    # Try the legacy plain-text config file (keyring not available path, or
+    # user was on an old version that wrote credentials there).
     stored = load_config()
-    if "GEMINI_API_KEY" not in stored or "SERPER_API_KEY" not in stored:
-        console.print("⚠ Configuration not found or incomplete.\n", style="bold yellow")
-        stored = setup_api_keys()
-    # Only expose API keys from the persisted file — all other settings
-    # come from package defaults in webresearch/config.py so they stay
-    # up-to-date across upgrades without requiring a re-setup.
-    return {
-        "GEMINI_API_KEY": stored["GEMINI_API_KEY"],
-        "SERPER_API_KEY": stored["SERPER_API_KEY"],
-    }
+    if stored.get("GEMINI_API_KEY") and stored.get("SERPER_API_KEY"):
+        config = {"GEMINI_API_KEY": stored["GEMINI_API_KEY"], "SERPER_API_KEY": stored["SERPER_API_KEY"]}
+        for key in OPTIONAL_CREDENTIALS:
+            if stored.get(key):
+                config[key] = stored[key]
+        return config
+
+    # No credentials found anywhere — run first-time interactive setup.
+    console.print("[bold yellow]Configuration not found. Starting setup...[/bold yellow]\n")
+    return setup_api_keys()
 
 
 def apply_config_to_env(config: dict):

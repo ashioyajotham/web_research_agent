@@ -20,7 +20,7 @@ Usage:
 For more information, see: https://github.com/victorashioya/web_research_agent
 """
 
-__version__ = "2.1.0"
+__version__ = "2.2.0"
 __author__ = "Victor Jotham Ashioya"
 __license__ = "MIT"
 
@@ -31,6 +31,7 @@ from .llm import LLMInterface
 from .llm_compat import OpenAICompatibleLLMInterface, openai_available, PROVIDERS
 from .llm_chain import ModelFallbackChain
 from .memory import ConversationMemory
+from .credentials import get_credential, set_credential, keyring_available
 from .parallel import ParallelResearchAgent
 from .tools import (
     Tool,
@@ -57,6 +58,9 @@ __all__ = [
     "openai_available",
     "PROVIDERS",
     "ConversationMemory",
+    "get_credential",
+    "set_credential",
+    "keyring_available",
     "Tool",
     "ToolManager",
     "SearchTool",

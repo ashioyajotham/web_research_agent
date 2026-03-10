@@ -42,7 +42,7 @@ flowchart TD
 
     SQ1 & SQ2 & SQ3 --> SM
 
-    SM -->|Thought| LLM["LLMInterface\nGemini 2.5 Flash"]
+    SM -->|Thought| LLM["ModelFallbackChain\nGemini → Groq → OpenRouter → Ollama"]
     LLM -->|Action + Input| TM["ToolManager"]
 
     TM --> S["search\nSerper.dev"]
@@ -65,7 +65,10 @@ web_research_agent/
 │   ├── parallel.py             # ParallelResearchAgent: LLM decomposition + ThreadPoolExecutor fan-out
 │   ├── memory.py               # ConversationMemory: fixed-capacity FIFO of (query, answer) pairs
 │   ├── llm.py                  # LLMInterface: Gemini API, retry with API-specified backoff
-│   ├── config.py               # Config: env var resolution, validation
+│   ├── llm_compat.py           # OpenAICompatibleLLMInterface: Groq / OpenRouter / DeepSeek / Ollama
+│   ├── llm_chain.py            # ModelFallbackChain: ordered provider list with quota-triggered switching
+│   ├── credentials.py          # Secure credential storage: system keyring with env-var fallback
+│   ├── config.py               # Config: credential resolution, validation, agent settings
 │   └── tools/
 │       ├── base.py             # Abstract Tool (name, description, execute)
 │       ├── search.py           # SearchTool: Serper.dev, monthly usage tracking
@@ -96,6 +99,10 @@ web_research_agent/
 
 **Rate-limit-aware retry.** Gemini 429 responses include a `retry_delay { seconds: N }` field. The LLM interface parses this and waits the specified duration rather than using a fixed exponential backoff that would exhaust retries before the window expires.
 
+**Model fallback chain.** Gemini free-tier quotas (5–20 RPM, 20 req/day for 2.5 Flash) can be reached on long research sessions. Rather than halting, the agent falls back through an ordered chain of providers: Gemini 2.5 Flash → Groq (llama-3.3-70b) → OpenRouter (llama-3.3-70b:free) → Ollama (local). The switch is triggered on any 429 / quota error and announced in the terminal. Each fallback provider is activated only if its credential is configured; the chain degrades gracefully to a single provider if no fallbacks are set.
+
+**Secure credential storage.** API keys are stored in the OS system keyring (Windows Credential Manager, macOS Keychain, Linux libsecret) via the `keyring` library. This prevents plain-text secrets in `~/.webresearch/config.env` on systems where the keyring is available. The fallback to a plain-text file is retained for headless servers and CI environments where no keyring backend is present.
+
 ## Installation
 
 ```bash
@@ -109,14 +116,41 @@ pip install "web-research-agent[browser]"
 playwright install chromium
 ```
 
-### API keys
+Optional — additional LLM providers (Groq, OpenRouter, DeepSeek, Ollama):
 
-| Key | Source |
-|-----|--------|
-| `GEMINI_API_KEY` | [Google AI Studio](https://makersuite.google.com/app/apikey) |
-| `SERPER_API_KEY` | [serper.dev](https://serper.dev) — 2,500 searches/month free tier |
+```bash
+pip install "web-research-agent[providers]"
+```
 
-Keys are entered interactively on first run and stored in `~/.webresearch/config.env`. Only credentials are persisted; all other settings are read from package defaults at runtime so they remain current across upgrades.
+### First-run setup
+
+On the first launch `webresearch` starts an interactive setup that asks for each credential in turn:
+
+```
+1. Gemini API Key        (required)   → aistudio.google.com/app/apikey
+2. Serper API Key        (required)   → serper.dev  (2,500 searches/month free)
+3. Groq API Key          (optional)   → console.groq.com  (free tier)
+4. OpenRouter API Key    (optional)   → openrouter.ai  (free models)
+5. Ollama Base URL       (optional)   → http://localhost:11434/v1
+```
+
+Gemini and Serper cannot be skipped; the agent cannot function without them. The three optional keys activate the fallback LLM chain — without them, a Gemini rate limit will halt the current query.
+
+Credentials are stored in the **OS system keyring** when available (Windows Credential Manager, macOS Keychain, Linux libsecret). On headless systems without a keyring backend they fall back to `~/.webresearch/config.env`. Only credentials are persisted; all other settings are read from package defaults at runtime.
+
+To reconfigure at any time, choose option **5 — Reconfigure API keys** from the main menu.
+
+### API key sources
+
+| Credential | Required | Source |
+|------------|----------|--------|
+| `GEMINI_API_KEY` | Yes | [Google AI Studio](https://aistudio.google.com/app/apikey) |
+| `SERPER_API_KEY` | Yes | [serper.dev](https://serper.dev) — 2,500 searches/month free |
+| `GROQ_API_KEY` | No | [console.groq.com](https://console.groq.com) — free tier |
+| `OPENROUTER_API_KEY` | No | [openrouter.ai](https://openrouter.ai) — free models available |
+| `OLLAMA_BASE_URL` | No | Local Ollama instance, e.g. `http://localhost:11434/v1` |
+
+Keys may also be placed in a `.env` file in the working directory, which takes precedence over both the keyring and the persistent config file (useful for per-project overrides).
 
 ### Windows PATH
 
@@ -210,12 +244,22 @@ tools.register_tool(MyTool())
 
 ## Configuration
 
-All settings default to sensible values. Only `GEMINI_API_KEY` and `SERPER_API_KEY` must be provided. Settings may be placed in a `.env` file in the working directory (takes precedence) or passed as environment variables.
+All settings default to sensible values. Only `GEMINI_API_KEY` and `SERPER_API_KEY` must be provided. Settings may be placed in a `.env` file in the working directory (takes precedence over keyring and config file) or passed as environment variables.
+
+**Credentials** (stored in keyring / config file, or passed via env var / `.env`):
+
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `GEMINI_API_KEY` | Yes | Primary LLM — Gemini 2.5 Flash |
+| `SERPER_API_KEY` | Yes | Web search — Serper.dev |
+| `GROQ_API_KEY` | No | First fallback LLM — Groq (llama-3.3-70b-versatile) |
+| `OPENROUTER_API_KEY` | No | Second fallback LLM — OpenRouter (llama-3.3-70b:free) |
+| `OLLAMA_BASE_URL` | No | Third fallback LLM — local Ollama instance |
+
+**Agent settings** (env var or `.env` only; never persisted so they stay current across upgrades):
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `GEMINI_API_KEY` | — | Required |
-| `SERPER_API_KEY` | — | Required |
 | `MODEL_NAME` | `gemini-2.5-flash` | Gemini model identifier |
 | `MAX_ITERATIONS` | `15` | ReAct loop cap per query |
 | `TEMPERATURE` | `0.1` | Sampling temperature |
@@ -228,7 +272,7 @@ All settings default to sensible values. Only `GEMINI_API_KEY` and `SERPER_API_K
 - Paywalled and login-gated pages are not accessible. The scraper returns a skip message so the agent seeks alternative sources.
 - PDF content is not parsed; the URL is noted in the observation.
 - The Serper free tier allows 2,500 searches per month. Complex queries can consume 5-10 calls each.
-- Parallel mode issues concurrent Gemini requests; free-tier rate limits (5 RPM for Gemini 2.5 Flash) are easily reached on multi-faceted queries. Enable billing on Google AI Studio for higher quota.
+- Parallel mode issues concurrent Gemini requests; free-tier rate limits (5 RPM for Gemini 2.5 Flash) are easily reached on multi-faceted queries. Configure Groq and/or OpenRouter API keys to activate the fallback chain, or enable billing on Google AI Studio for higher quota.
 
 ## Development
 

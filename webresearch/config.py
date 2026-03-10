@@ -10,15 +10,18 @@ from dotenv import load_dotenv
 # Load environment variables from .env file if it exists
 load_dotenv()
 
+from .credentials import get_credential
+
 
 class Config:
     """Configuration class for managing API keys and settings."""
 
     def __init__(self):
-        self.gemini_api_key: Optional[str] = os.getenv("GEMINI_API_KEY")
-        self.serper_api_key: Optional[str] = os.getenv("SERPER_API_KEY")
+        # Credentials — keyring first, then env var fallback
+        self.gemini_api_key: Optional[str] = get_credential("GEMINI_API_KEY")
+        self.serper_api_key: Optional[str] = get_credential("SERPER_API_KEY")
 
-        # Agent settings
+        # Agent settings (env var or package default — never persisted to keyring)
         self.max_iterations: int = int(os.getenv("MAX_ITERATIONS", "15"))
         self.max_tool_output_length: int = int(
             os.getenv("MAX_TOOL_OUTPUT_LENGTH", "5000")
@@ -33,9 +36,9 @@ class Config:
         )
 
         # Fallback provider keys (all optional — chain degrades gracefully)
-        self.groq_api_key: Optional[str] = os.getenv("GROQ_API_KEY")
-        self.openrouter_api_key: Optional[str] = os.getenv("OPENROUTER_API_KEY")
-        self.ollama_base_url: Optional[str] = os.getenv("OLLAMA_BASE_URL")  # e.g. http://localhost:11434/v1
+        self.groq_api_key: Optional[str] = get_credential("GROQ_API_KEY")
+        self.openrouter_api_key: Optional[str] = get_credential("OPENROUTER_API_KEY")
+        self.ollama_base_url: Optional[str] = get_credential("OLLAMA_BASE_URL")
 
     def validate(self) -> None:
         """Validate that required API keys are present."""
