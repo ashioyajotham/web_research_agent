@@ -3,6 +3,7 @@ LLM interface for interacting with Google Gemini models.
 Handles all communication with the Gemini API.
 """
 
+import re
 import google.generativeai as genai
 from typing import List, Dict, Any, Optional
 import time
@@ -68,6 +69,18 @@ class LLMInterface:
 
         logger.info(f"Initialized LLM interface with model: {model_name}")
 
+    @staticmethod
+    def _parse_retry_delay(error: Exception) -> Optional[float]:
+        """Extract retry_delay seconds from a Gemini 429 error message, if present."""
+        match = re.search(r"retry_delay\s*\{\s*seconds:\s*(\d+)", str(error))
+        if match:
+            return float(match.group(1))
+        # Fallback: look for "Please retry in Xs"
+        match = re.search(r"retry in\s+([\d.]+)s", str(error), re.IGNORECASE)
+        if match:
+            return float(match.group(1))
+        return None
+
     def generate(self, prompt: str, retry_count: int = 3) -> str:
         """
         Generate a response from the LLM.
@@ -97,7 +110,13 @@ class LLMInterface:
             except Exception as e:
                 logger.warning(f"Attempt {attempt + 1}/{retry_count} failed: {str(e)}")
                 if attempt < retry_count - 1:
-                    time.sleep(2**attempt)  # Exponential backoff
+                    # Honour the retry_delay from 429 responses; fall back to
+                    # exponential backoff (2, 4, 8 …s) for other errors
+                    delay = self._parse_retry_delay(e)
+                    if delay is None:
+                        delay = 2 ** (attempt + 1)
+                    logger.info(f"Waiting {delay:.0f}s before retry...")
+                    time.sleep(delay)
                 else:
                     raise Exception(
                         f"Failed to generate response after {retry_count} attempts: {str(e)}"
@@ -141,7 +160,11 @@ class LLMInterface:
             except Exception as e:
                 logger.warning(f"Attempt {attempt + 1}/{retry_count} failed: {str(e)}")
                 if attempt < retry_count - 1:
-                    time.sleep(2**attempt)
+                    delay = self._parse_retry_delay(e)
+                    if delay is None:
+                        delay = 2 ** (attempt + 1)
+                    logger.info(f"Waiting {delay:.0f}s before retry...")
+                    time.sleep(delay)
                 else:
                     raise Exception(
                         f"Failed to generate response after {retry_count} attempts: {str(e)}"

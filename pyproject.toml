@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "web-research-agent"
-version = "2.0.5"
+version = "2.0.6"
 description = "An AI agent using ReAct methodology for autonomous web research tasks"
 readme = "README.md"
 requires-python = ">=3.8"
