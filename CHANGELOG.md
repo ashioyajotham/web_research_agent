@@ -8,12 +8,104 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Planned
-- Function calling API integration for more reliable parsing
-- Caching system for search results and web pages
-- Parallel tool execution
-- Memory system for cross-task knowledge persistence
-- PDF parsing support
+- Function calling API integration for more reliable tool-call parsing
+- PDF content extraction
 - Automated evaluation suite
+
+## [2.2.0] - 2026-03-11
+
+### Added
+- `webresearch/credentials.py`: secure credential storage using the OS system keyring (Windows Credential Manager, macOS Keychain, Linux libsecret) via the `keyring` library. Falls back to plain-text `~/.webresearch/config.env` on headless servers and CI environments where no keyring backend is available.
+- Interactive multi-provider setup flow covering all five credentials:
+  - `GEMINI_API_KEY` and `SERPER_API_KEY` — required, loops until provided
+  - `GROQ_API_KEY`, `OPENROUTER_API_KEY`, `OLLAMA_BASE_URL` — optional, skip with rate-limit warning; existing values shown masked and preserved on Enter; type `clear` to remove
+- `keyring>=24.0.0` added to core dependencies
+
+### Changed
+- `Config` now resolves all five credentials through `get_credential()` (keyring → env var) instead of raw `os.getenv()`
+- `check_config()` reads keyring/env first, then the legacy `config.env` file, then prompts first-time setup — upgrading users are not asked to reconfigure
+- README: added design-decision sections for fallback chain and secure credential storage; updated installation instructions, API key table, and configuration reference
+
+## [2.1.0] - 2026-03-11
+
+### Added
+- Model fallback chain (`webresearch/llm_chain.py`): `ModelFallbackChain` wraps an ordered list of LLM interfaces and automatically advances to the next provider on any 429 / quota error, notifying the user in the terminal
+- `webresearch/llm_compat.py`: `OpenAICompatibleLLMInterface` covers any provider that exposes the OpenAI chat-completions API shape — Groq, OpenRouter, DeepSeek, Ollama
+- Default chain order: Gemini 2.5 Flash → Groq (llama-3.3-70b-versatile) → OpenRouter (llama-3.3-70b:free) → Ollama (local)
+- Optional `[providers]` and `[all]` extras in `pyproject.toml` for `openai` and `playwright` packages
+- `GROQ_API_KEY`, `OPENROUTER_API_KEY`, `OLLAMA_BASE_URL` config fields
+
+### Changed
+- `_build_llm_chain()` in `cli.py` constructs the fallback chain from whichever provider keys are configured; prints the active chain on startup
+
+## [2.0.7] - 2026-03-11
+
+### Fixed
+- Version banner in CLI now auto-syncs from the package (`from webresearch import __version__ as VERSION`) instead of a hardcoded string
+
+## [2.0.6] - 2026-03-11
+
+### Fixed
+- Gemini daily quota (`PerDay` limit) now raises immediately with a human-readable message instead of retrying
+- Per-minute 429 responses: retry delay is parsed from the `retry_delay { seconds: N }` proto field and honoured exactly instead of using fixed exponential backoff
+- Friendly quota error messages display the limit type, wait time, and billing link rather than the raw proto error string
+
+## [2.0.5] - 2026-03-11
+
+### Fixed
+- Sandbox: LLM-generated code using triple-quoted strings caused `SyntaxError: unterminated triple-quoted string literal`; tool description now warns against them and the error message includes a fix hint
+- HTTP scraper: 401/403 returns "Skipped (requires login)" with instruction to find an alternative source; 406 returns "Skipped (406 Not Acceptable)"; 429 returns "Skipped (rate limited)" — agent no longer halts on paywalled or blocked URLs
+
+## [2.0.4] - 2026-03-11
+
+### Fixed (red-team hardening — all 12 items)
+- Prompt injection sanitization: scraped observations are filtered through regex patterns before entering the LLM prompt (`ignore all previous instructions`, `Final Answer:`, `Action:`, `Thought:`, `system:`, `[INST]`, etc.)
+- Sliding window prompt: last 8 steps kept in full; earlier steps condensed to one-line summaries to prevent context overflow at high iteration counts
+- Action deduplication cache: repeated identical tool calls return cached observations without consuming API quota
+- `Final Answer` regex: changed to non-greedy with stop boundary to prevent capturing subsequent `Action:` blocks
+- `_format_action_input`: bare `except:` replaced with `except (TypeError, ValueError)`
+- `_parse_action_input_fallback`: returns `{"_raw_input": ..., "_parse_error": ...}` on total failure instead of silent `{}`
+- `_generate_best_effort_answer`: per-step budget scales with `max_tool_output_length // n_steps` instead of hardcoded 1000 chars
+- `run()` errors prefixed `"⚠ Error:"` so CLI renders a red panel instead of a green result panel
+- `Step` dataclass: added `iteration`, `timestamp`, `elapsed_ms` fields
+- `StepCallback` type alias: `Callable[[int, Step], None]`
+- `AgentError` custom exception class
+- `import json` moved to module top level
+
+## [2.0.3] - 2026-03-11
+
+### Fixed
+- Tasks file: `os.path.isfile()` check added before processing; passing a directory path now shows a clear error instead of `PermissionError`
+- `setup_api_keys()` no longer writes `MODEL_NAME`, `MAX_ITERATIONS`, or other settings to `config.env`; only credentials are persisted so they remain current across package upgrades
+
+## [2.0.2] - 2026-03-11
+
+### Fixed
+- Stale `MODEL_NAME` in `~/.webresearch/config.env` from previous installs no longer overrides the package default; `check_config()` now returns only `{GEMINI_API_KEY, SERPER_API_KEY}` from the stored file
+
+## [2.0.1] - 2026-03-10
+
+### Fixed
+- Initial PyPI publish (v2.0.0 tag already existed on the index)
+
+## [2.0.0] - 2026-03-10
+
+### Added
+- Complete rewrite of the agent and CLI
+- `ReActAgent`: Thought-Action-Observation loop with configurable iteration cap and best-effort answer on timeout
+- `ParallelResearchAgent`: LLM-driven decomposition into sub-questions, concurrent execution via `ThreadPoolExecutor`, synthesis pass
+- `ConversationMemory`: fixed-capacity FIFO of (query, answer) pairs injected as context into subsequent queries
+- Rich terminal UI: live `rich.Live` streaming of the ReAct step table, deep-research status board, query history with arrow-key navigation (questionary), session memory display
+- `ModelFallbackChain`, `OpenAICompatibleLLMInterface` (added in 2.1.0 — see above)
+- AST-based code sandbox: blocks dangerous imports and `os.*` calls before code reaches the interpreter; runs in an isolated `TemporaryDirectory` with API keys stripped
+- Prompt injection sanitization, sliding-window prompt, action deduplication (hardened in 2.0.4)
+- `SearchTool` monthly usage tracker with colour-coded usage banner
+- `BrowserScrapeTool` (Playwright) as optional JS-rendering fallback
+- `FileOpsTool` for reading and writing local files
+
+### Changed
+- Package name remains `web-research-agent`; CLI entry point `webresearch`
+- All v1.x tool and agent implementations replaced
 
 ## [1.2.1] - 2025-01-10
 
