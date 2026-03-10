@@ -50,7 +50,10 @@ def _check_code_safety(code: str) -> Optional[str]:
     try:
         tree = ast.parse(code)
     except SyntaxError as e:
-        return f"Syntax error in code: {e}"
+        hint = ""
+        if "triple-quoted" in str(e) or "unterminated" in str(e):
+            hint = " Tip: avoid triple-quoted strings (\"\"\"...\"\"\" or \'\'\'...\'\'\'); use single/double quotes with escaped characters instead."
+        return f"Syntax error in code: {e}{hint}"
 
     for node in ast.walk(tree):
         # Block dangerous top-level imports
@@ -136,6 +139,9 @@ Notes:
 - Network access and process spawning are blocked for security
 - Common data libraries (pandas, numpy, json, etc.) are available
 - Timeout: 60 seconds
+- IMPORTANT: Do NOT use triple-quoted strings (\"\"\"...\"\"\" or \'\'\'...\'\'\'). They cause
+  syntax errors when the content contains quotes. Use single or double quoted
+  strings with escaped characters, or build strings with concatenation instead.
 """
 
     def execute(self, code: str) -> str:

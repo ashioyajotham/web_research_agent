@@ -106,6 +106,27 @@ about the content.
             }
 
             response = requests.get(url, headers=headers, timeout=self.timeout)
+
+            # Surface paywall/auth errors as actionable messages rather than
+            # raising into the generic handler (agent should skip, not retry)
+            if response.status_code in (401, 403):
+                return (
+                    f"Skipped (requires login): {url} returned {response.status_code}. "
+                    "This page is paywalled or requires authentication. "
+                    "Search for a different source covering the same content."
+                )
+            if response.status_code == 406:
+                return (
+                    f"Skipped (406 Not Acceptable): {url}. "
+                    "The server rejected the request format. "
+                    "Search for an alternative source for this content."
+                )
+            if response.status_code == 429:
+                return (
+                    f"Skipped (rate limited): {url} returned 429. "
+                    "Too many requests to this server. Try a different source."
+                )
+
             response.raise_for_status()
 
             # Check content type
