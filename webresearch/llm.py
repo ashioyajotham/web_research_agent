@@ -75,11 +75,33 @@ class LLMInterface:
         match = re.search(r"retry_delay\s*\{\s*seconds:\s*(\d+)", str(error))
         if match:
             return float(match.group(1))
-        # Fallback: look for "Please retry in Xs"
         match = re.search(r"retry in\s+([\d.]+)s", str(error), re.IGNORECASE)
         if match:
             return float(match.group(1))
         return None
+
+    @staticmethod
+    def _is_daily_quota(error: Exception) -> bool:
+        """Return True if the 429 error is a daily (not per-minute) quota exhaustion."""
+        return "PerDay" in str(error)
+
+    def _friendly_quota_message(self, error: Exception) -> str:
+        """Return a human-readable quota error message."""
+        err = str(error)
+        limit_match = re.search(r"quota_value:\s*(\d+)", err)
+        limit = limit_match.group(1) if limit_match else "unknown"
+        if "PerDay" in err:
+            return (
+                f"Daily request quota exhausted for {self.model_name} "
+                f"(free tier limit: {limit} requests/day). "
+                "Try again tomorrow, or enable billing at https://ai.dev/rate-limit to increase your quota."
+            )
+        delay_match = re.search(r"retry_delay\s*\{[^}]*seconds:\s*(\d+)", err)
+        wait = delay_match.group(1) if delay_match else "~60"
+        return (
+            f"Per-minute rate limit hit for {self.model_name} (free tier: {limit} RPM). "
+            f"Waiting {wait}s as requested by API before retry..."
+        )
 
     def generate(self, prompt: str, retry_count: int = 3) -> str:
         """
@@ -108,14 +130,16 @@ class LLMInterface:
                 return response.text
 
             except Exception as e:
+                if self._is_daily_quota(e):
+                    # Daily quota cannot be resolved by waiting — fail immediately
+                    raise Exception(self._friendly_quota_message(e))
+
                 logger.warning(f"Attempt {attempt + 1}/{retry_count} failed: {str(e)}")
                 if attempt < retry_count - 1:
-                    # Honour the retry_delay from 429 responses; fall back to
-                    # exponential backoff (2, 4, 8 …s) for other errors
                     delay = self._parse_retry_delay(e)
                     if delay is None:
                         delay = 2 ** (attempt + 1)
-                    logger.info(f"Waiting {delay:.0f}s before retry...")
+                    logger.info(self._friendly_quota_message(e))
                     time.sleep(delay)
                 else:
                     raise Exception(
@@ -158,12 +182,15 @@ class LLMInterface:
                 return response.text
 
             except Exception as e:
+                if self._is_daily_quota(e):
+                    raise Exception(self._friendly_quota_message(e))
+
                 logger.warning(f"Attempt {attempt + 1}/{retry_count} failed: {str(e)}")
                 if attempt < retry_count - 1:
                     delay = self._parse_retry_delay(e)
                     if delay is None:
                         delay = 2 ** (attempt + 1)
-                    logger.info(f"Waiting {delay:.0f}s before retry...")
+                    logger.info(self._friendly_quota_message(e))
                     time.sleep(delay)
                 else:
                     raise Exception(
