@@ -378,7 +378,7 @@ def _run_query(query: str):
     console.rule("[bold green]RESULT[/bold green]", style="green")
     console.print()
 
-    border = "yellow" if answer.startswith("⚠") else "green"
+    border = "red" if answer.startswith("⚠ Error:") else ("yellow" if answer.startswith("⚠") else "green")
     console.print(Panel(answer, border_style=border, padding=(1, 2)))
     console.print()
     console.print(
@@ -459,7 +459,7 @@ def _run_deep_research(query: str):
     console.print()
     console.rule("[bold green]RESULT[/bold green]", style="green")
     console.print()
-    border = "yellow" if answer.startswith("⚠") else "green"
+    border = "red" if answer.startswith("⚠ Error:") else ("yellow" if answer.startswith("⚠") else "green")
     console.print(Panel(answer, border_style=border, padding=(1, 2)))
     console.print()
     console.print(
