@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "web-research-agent"
-version = "2.0.7"
+version = "2.1.0"
 description = "An AI agent using ReAct methodology for autonomous web research tasks"
 readme = "README.md"
 requires-python = ">=3.8"
@@ -58,14 +58,21 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+providers = [
+    "openai>=1.0.0",
+]
+browser = [
+    "playwright>=1.40.0",
+]
+all = [
+    "openai>=1.0.0",
+    "playwright>=1.40.0",
+]
 dev = [
     "pytest>=7.0.0",
     "black>=22.0.0",
     "flake8>=4.0.0",
     "mypy>=0.950",
-]
-browser = [
-    "playwright>=1.40.0",
 ]
 
 [tool.pytest.ini_options]

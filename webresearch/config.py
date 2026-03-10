@@ -32,6 +32,11 @@ class Config:
             os.getenv("CODE_EXECUTION_TIMEOUT", "60")
         )
 
+        # Fallback provider keys (all optional — chain degrades gracefully)
+        self.groq_api_key: Optional[str] = os.getenv("GROQ_API_KEY")
+        self.openrouter_api_key: Optional[str] = os.getenv("OPENROUTER_API_KEY")
+        self.ollama_base_url: Optional[str] = os.getenv("OLLAMA_BASE_URL")  # e.g. http://localhost:11434/v1
+
     def validate(self) -> None:
         """Validate that required API keys are present."""
         if not self.gemini_api_key:

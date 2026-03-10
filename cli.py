@@ -291,28 +291,108 @@ def _build_tool_manager(cfg) -> "ToolManager":
     return tool_manager
 
 
-def initialize_agent():
-    """Initialize the sequential ReAct agent."""
-    from webresearch.config import Config
+def _build_llm_chain(cfg) -> "ModelFallbackChain":
+    """
+    Build a ModelFallbackChain from the available provider keys in cfg.
+
+    Chain order:
+      1. Gemini 2.5 Flash  (primary — always present)
+      2. Groq / llama-3.3-70b-versatile  (if GROQ_API_KEY set)
+      3. OpenRouter / llama-3.3-70b-instruct:free  (if OPENROUTER_API_KEY set)
+      4. Ollama local  (if OLLAMA_BASE_URL set)
+    """
     from webresearch.llm import LLMInterface
+    from webresearch.llm_compat import OpenAICompatibleLLMInterface, openai_available, PROVIDERS
+    from webresearch.llm_chain import ModelFallbackChain
+
+    interfaces = []
+
+    # Primary: Gemini
+    gemini = LLMInterface(
+        api_key=cfg.gemini_api_key,
+        model_name=cfg.model_name,
+        temperature=cfg.temperature,
+    )
+    gemini.provider_name = f"Gemini ({cfg.model_name})"
+    interfaces.append(gemini)
+
+    if openai_available():
+        # Groq fallback
+        if cfg.groq_api_key:
+            base_url, display, model = PROVIDERS["groq"]
+            interfaces.append(OpenAICompatibleLLMInterface(
+                api_key=cfg.groq_api_key,
+                model_name=model,
+                base_url=base_url,
+                provider_name=f"Groq ({model})",
+                temperature=cfg.temperature,
+            ))
+
+        # OpenRouter fallback
+        if cfg.openrouter_api_key:
+            base_url, display, model = PROVIDERS["openrouter"]
+            interfaces.append(OpenAICompatibleLLMInterface(
+                api_key=cfg.openrouter_api_key,
+                model_name=model,
+                base_url=base_url,
+                provider_name=f"OpenRouter ({model})",
+                temperature=cfg.temperature,
+            ))
+
+        # Ollama fallback
+        if cfg.ollama_base_url:
+            _, _, model = PROVIDERS["ollama"]
+            interfaces.append(OpenAICompatibleLLMInterface(
+                api_key="ollama",
+                model_name=model,
+                base_url=cfg.ollama_base_url,
+                provider_name=f"Ollama ({model})",
+                temperature=cfg.temperature,
+            ))
+
+    def _on_switch(from_name: str, to_name: str):
+        console.print(
+            f"\n[bold yellow]Rate limit reached on {from_name}. "
+            f"Switching to {to_name}...[/bold yellow]\n"
+        )
+
+    chain = ModelFallbackChain(interfaces=interfaces, switch_callback=_on_switch)
+
+    if len(interfaces) > 1:
+        names = " -> ".join(
+            getattr(i, "provider_name", getattr(i, "model_name", "?"))
+            for i in interfaces
+        )
+        console.print(f"[dim]Model chain: {names}[/dim]")
+
+    return chain
+
+
+def initialize_agent():
+    """Initialize the sequential ReAct agent with a model fallback chain."""
+    from webresearch.config import Config
     from webresearch.agent import ReActAgent
 
     cfg = Config()
     cfg.validate()
-    llm = LLMInterface(api_key=cfg.gemini_api_key, model_name=cfg.model_name, temperature=cfg.temperature)
-    return ReActAgent(llm=llm, tool_manager=_build_tool_manager(cfg), max_iterations=cfg.max_iterations)
+    return ReActAgent(
+        llm=_build_llm_chain(cfg),
+        tool_manager=_build_tool_manager(cfg),
+        max_iterations=cfg.max_iterations,
+    )
 
 
 def initialize_parallel_agent():
-    """Initialize the parallel fan-out research agent."""
+    """Initialize the parallel fan-out research agent with a model fallback chain."""
     from webresearch.config import Config
-    from webresearch.llm import LLMInterface
     from webresearch.parallel import ParallelResearchAgent
 
     cfg = Config()
     cfg.validate()
-    llm = LLMInterface(api_key=cfg.gemini_api_key, model_name=cfg.model_name, temperature=cfg.temperature)
-    return ParallelResearchAgent(llm=llm, tool_manager=_build_tool_manager(cfg))
+    return ParallelResearchAgent(
+        llm=_build_llm_chain(cfg),
+        tool_manager=_build_tool_manager(cfg),
+    )
 
 
 # ─── Core query runner ────────────────────────────────────────────────────────

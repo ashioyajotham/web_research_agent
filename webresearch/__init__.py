@@ -20,7 +20,7 @@ Usage:
 For more information, see: https://github.com/victorashioya/web_research_agent
 """
 
-__version__ = "2.0.7"
+__version__ = "2.1.0"
 __author__ = "Victor Jotham Ashioya"
 __license__ = "MIT"
 
@@ -28,6 +28,8 @@ __license__ = "MIT"
 from .agent import ReActAgent, Step
 from .config import config, Config
 from .llm import LLMInterface
+from .llm_compat import OpenAICompatibleLLMInterface, openai_available, PROVIDERS
+from .llm_chain import ModelFallbackChain
 from .memory import ConversationMemory
 from .parallel import ParallelResearchAgent
 from .tools import (
@@ -50,6 +52,10 @@ __all__ = [
     "Config",
     "config",
     "LLMInterface",
+    "OpenAICompatibleLLMInterface",
+    "ModelFallbackChain",
+    "openai_available",
+    "PROVIDERS",
     "ConversationMemory",
     "Tool",
     "ToolManager",
