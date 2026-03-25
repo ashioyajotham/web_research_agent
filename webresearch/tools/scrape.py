@@ -227,6 +227,22 @@ about the content.
                         "the fully-rendered version."
                     )
 
+            # Detect paywall teasers: large HTML but only a thin slice of text
+            # (e.g. Digitimes, Bloomberg, FT — 200 OK with <600 chars of content)
+            _PAYWALL_HINTS = [
+                "subscribe", "subscription", "sign in to read", "sign up to read",
+                "register to read", "continue reading", "unlock this article",
+                "premium content", "members only",
+            ]
+            if len(text.strip()) < 600 and len(html_content) > 5000:
+                text_lower = text.lower()
+                if any(h in text_lower for h in _PAYWALL_HINTS):
+                    return (
+                        f"Skipped (paywall teaser): {url} returned minimal content "
+                        f"({len(text.strip())} chars). "
+                        "This page is likely paywalled. Search for a different source."
+                    )
+
             # Add URL header
             result = f"Content from: {url}\n{'=' * 80}\n\n{text}"
 

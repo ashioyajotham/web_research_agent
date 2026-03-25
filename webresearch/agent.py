@@ -36,8 +36,8 @@ _OBSERVATION_INJECTION_PATTERNS = [
     r"(?i)<\s*/?(?:human|assistant|user|prompt)\s*>",
     r"(?i)\[\s*(?:SYSTEM|INST|SYS)\s*\]",
     r"(?i)final\s+answer\s*:\s*(?:ignore|the\s+answer\s+is)",
-    r"(?i)thought\s*:",
-    r"(?i)action\s*:\s*\w+",
+    # NOTE: "Thought:" and "Action:" patterns removed — too broad, stripped
+    # legitimate content from news articles (e.g. "Action: The company announced...")
 ]
 
 # How many recent steps to include in full; older ones are summarised (issue #11)

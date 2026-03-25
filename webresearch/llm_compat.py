@@ -85,7 +85,7 @@ class OpenAICompatibleLLMInterface:
                     model=self.model_name,
                     messages=[{"role": "user", "content": prompt}],
                     temperature=self.temperature,
-                    max_tokens=8192,
+                    max_tokens=2048,  # ReAct steps are short; 8192 blew the Groq free-tier token/min budget
                 )
                 return response.choices[0].message.content or ""
 
@@ -101,7 +101,7 @@ class OpenAICompatibleLLMInterface:
 
                 if attempt < retry_count - 1:
                     delay = 2 ** (attempt + 1)
-                    logger.info(f"[{self.provider_name}] waiting {delay}s before retry...")
+                    logger.warning(f"[{self.provider_name}] rate-limited — waiting {delay}s (attempt {attempt+1}/{retry_count})")
                     time.sleep(delay)
                 else:
                     raise Exception(

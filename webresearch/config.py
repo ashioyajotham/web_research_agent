@@ -24,7 +24,7 @@ class Config:
         # Agent settings (env var or package default — never persisted to keyring)
         self.max_iterations: int = int(os.getenv("MAX_ITERATIONS", "15"))
         self.max_tool_output_length: int = int(
-            os.getenv("MAX_TOOL_OUTPUT_LENGTH", "5000")
+            os.getenv("MAX_TOOL_OUTPUT_LENGTH", "3000")
         )
         self.temperature: float = float(os.getenv("TEMPERATURE", "0.1"))
         self.model_name: str = os.getenv("MODEL_NAME", "gemini-2.5-flash")
