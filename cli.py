@@ -569,11 +569,11 @@ def view_history():
             )
             for i, e in enumerate(shown)
         ]
-        choices.append(questionary.Choice(title="  back", value=None))
+        choices.append(questionary.Choice(title="  back", value=""))
         selected = questionary.select(
             "re-run a query:", choices=choices
         ).ask()
-        if selected is not None:
+        if selected:  # empty string ("back") and None (Ctrl-C) are both falsy
             _run_query(selected)
     else:
         choice = Prompt.ask(
