@@ -17,7 +17,7 @@ Optional extras:
 ```bash
 pip install "web-research-agent[providers]"  # Groq / OpenRouter fallback via openai package
 pip install "web-research-agent[browser]"    # JS-rendered page scraping via Playwright
-pip install "web-research-agent[all]"        # Everything
+pip install "web-research-agent[all]"        # providers + browser
 ```
 
 Requires Python 3.8+.
@@ -117,7 +117,8 @@ webresearch/
 └── tools/
     ├── base.py        # Tool abstract base class
     ├── search.py      # Serper.dev web search
-    ├── scrape.py      # HTTP + BeautifulSoup text extraction
+    ├── scrape.py      # HTTP + BeautifulSoup; tables → markdown, encoding fix, 5xx retry
+    ├── pdf.py         # pdfplumber PDF extraction with table parsing and page targeting
     ├── browser.py     # Playwright JS-rendered scraping
     ├── code_executor.py  # Sandboxed Python subprocess
     └── file_ops.py    # Read/write for cross-step data persistence
@@ -137,13 +138,30 @@ The chain is thread-safe: a `threading.Lock` guards provider rotation and a `Sem
 
 All tool observations are sanitised before entering the prompt. Patterns like `ignore all previous instructions`, `<system>`, `[INST]`, etc. are replaced with `[FILTERED]`. The scraper applies a second pass on raw HTML output.
 
-### Paywall and JS Detection
+### Scraper Hardening
 
-The scraper detects and short-circuits two common failure modes rather than wasting iterations:
+The scraper handles several failure modes that would otherwise silently waste iterations:
 
+- **HTML tables → markdown**: BeautifulSoup extracts `<table>` elements and converts them to aligned markdown tables before html2text processes the page. Column values and numbers are preserved exactly — critical for emissions data, financial statements, and any structured tabular source.
 - **JS-only pages**: large HTML with <400 chars extracted text → returns a `scrape_js` suggestion
-- **Paywall teasers**: 200 OK with <600 chars + subscribe/sign-in keywords → skips and tells the agent to find another source
+- **Paywall teasers**: 200 OK with <600 chars + subscribe/sign-in keywords → skips and suggests alternatives
+- **Auth redirects**: raw HTML scanned for login form signatures (`<input type="password">`, sign-in prose) even when the page returns 200 with substantial content
+- **5xx retry**: 500/502/503/504 retried twice with 2s/4s backoff before giving up
+- **Encoding**: `apparent_encoding` used when server omits charset or defaults to ISO-8859-1 — fixes mangled characters in EU/government filings
+- **Content selectors**: 30+ CSS selectors covering common CMS and news-site patterns (`.article-body`, `.post-content`, `.entry-content`, `data-component` attributes, etc.) before falling back to full `<body>`
+- **UA rotation**: request headers rotate across a pool of current browser strings per request
 - **HTTP 401/403/406/429**: returned as actionable skip messages, not exceptions
+
+### PDF Extraction
+
+The `pdf_extract` tool downloads and parses PDFs using `pdfplumber`:
+
+- Tables extracted as aligned grids with exact cell values (not OCR text)
+- `pages="12-18"` parameter lets the agent target specific page ranges once it knows the document structure
+- Total page count shown in output header so the agent can navigate large documents
+- Handles login-wall redirects (server returns HTML instead of PDF)
+
+The typical pattern for a sustainability report task: `scrape` the report landing page to find the PDF URL → `pdf_extract` with `pages="all"` to see the table of contents → `pdf_extract` with a targeted range to get the GHG table → `execute_code` to compute the percentage change.
 
 ### Context Window Management
 
@@ -212,7 +230,11 @@ webresearch
 
 ## Known Limitations
 
-**PDF parsing is absent.** URLs pointing to PDFs are noted in observations but the content is not extracted. Tasks requiring numerical retrieval from sustainability reports or academic papers hit a ceiling here.
+**Anti-bot fingerprinting defeats the scraper on major commercial sites.** UA rotation helps against trivial checks but Cloudflare, Akamai, and Datadome fingerprint TLS handshake, header order, and timing — none of which the requests-based scraper controls. Affected sites return a challenge page or silent 403. The `scrape_js` (Playwright) tool passes these more often but is not immune.
+
+**Observation truncation loses context.** At `MAX_TOOL_OUTPUT_LENGTH=3000`, long scraped pages are cut off. Key facts in the truncated portion are permanently lost. A chunking + retrieval approach would address this but adds latency.
+
+**PDF table extraction degrades on scanned/image PDFs.** `pdfplumber` works on text-layer PDFs (the majority of corporate reports). Scanned documents with no text layer return empty pages. There is no OCR fallback.
 
 **Observation truncation loses context.** At `MAX_TOOL_OUTPUT_LENGTH=3000`, long scraped pages are cut off. Key facts in the truncated portion are permanently lost. A chunking + retrieval approach would address this but adds latency.
 
