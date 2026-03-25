@@ -230,17 +230,17 @@ def print_status_bar(config: dict) -> None:
               for k in ("GROQ_API_KEY", "OPENROUTER_API_KEY", "OLLAMA_BASE_URL")
               if config.get(k)]
 
-    dot = "  [dim]·[/dim]  "
+    dot = "  ·  "   # plain text separator; styled dim via Text.append(style=)
     line = Text()
     line.append("  ✓  config loaded", style="green")
-    line.append(dot)
+    line.append(dot, style="dim")
     line.append(model, style="bold cyan")
-    line.append(dot)
+    line.append(dot, style="dim")
     line.append("serper", style="green")
     for e in extras:
-        line.append(dot)
+        line.append(dot, style="dim")
         line.append(e, style="dim")
-    line.append(dot)
+    line.append(dot, style="dim")
     line.append(f"v{VERSION}", style="dim")
 
     console.print(line)

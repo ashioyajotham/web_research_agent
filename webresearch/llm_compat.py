@@ -78,6 +78,20 @@ class OpenAICompatibleLLMInterface:
         self._client = OpenAI(api_key=api_key, base_url=base_url)
         logger.info(f"Initialised {self.provider_name} interface ({model_name})")
 
+    @staticmethod
+    def _parse_retry_after(err_str: str) -> Optional[float]:
+        """Extract retry-after seconds from a 429 error string if present."""
+        import re
+        # Groq embeds: "Please try again in 6.25s"
+        m = re.search(r"try again in\s+([\d.]+)s", err_str, re.IGNORECASE)
+        if m:
+            return float(m.group(1)) + 1.0
+        # Generic "retry after N seconds"
+        m = re.search(r"retry.{0,10}after\s+([\d.]+)\s*s", err_str, re.IGNORECASE)
+        if m:
+            return float(m.group(1)) + 1.0
+        return None
+
     def generate(self, prompt: str, retry_count: int = 3) -> str:
         for attempt in range(retry_count):
             try:
@@ -94,14 +108,16 @@ class OpenAICompatibleLLMInterface:
                 is_quota = "quota" in err.lower() or "rate" in err.lower() or "429" in err
 
                 if not is_quota:
-                    # Non-quota error — propagate immediately
                     raise
 
                 logger.warning(f"[{self.provider_name}] attempt {attempt + 1}/{retry_count} failed: {err[:120]}")
 
                 if attempt < retry_count - 1:
-                    delay = 2 ** (attempt + 1)
-                    logger.warning(f"[{self.provider_name}] rate-limited — waiting {delay}s (attempt {attempt+1}/{retry_count})")
+                    # Honour the server's retry-after hint; fall back to
+                    # exponential backoff but floor at 10s for per-minute limits.
+                    hint = self._parse_retry_after(err)
+                    delay = hint if hint else max(10.0, 2 ** (attempt + 2))
+                    logger.warning(f"[{self.provider_name}] rate-limited — waiting {delay:.0f}s (attempt {attempt+1}/{retry_count})")
                     time.sleep(delay)
                 else:
                     raise Exception(
