@@ -10,6 +10,7 @@ from .scrape import ScrapeTool
 from .browser import BrowserScrapeTool, playwright_available
 from .code_executor import CodeExecutorTool
 from .file_ops import FileOpsTool
+from .pdf import PDFExtractTool, pdf_available
 
 import logging
 
@@ -116,4 +117,6 @@ __all__ = [
     "playwright_available",
     "CodeExecutorTool",
     "FileOpsTool",
+    "PDFExtractTool",
+    "pdf_available",
 ]

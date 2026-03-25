@@ -20,7 +20,7 @@ Usage:
 For more information, see: https://github.com/victorashioya/web_research_agent
 """
 
-__version__ = "2.3.4"
+__version__ = "2.4.0"
 __author__ = "Victor Jotham Ashioya"
 __license__ = "MIT"
 
@@ -41,6 +41,7 @@ from .tools import (
     BrowserScrapeTool,
     CodeExecutorTool,
     FileOpsTool,
+    PDFExtractTool,
 )
 
 __all__ = [
@@ -68,4 +69,5 @@ __all__ = [
     "BrowserScrapeTool",
     "CodeExecutorTool",
     "FileOpsTool",
+    "PDFExtractTool",
 ]

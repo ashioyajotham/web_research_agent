@@ -142,7 +142,11 @@ about the content.
             elif "text/csv" in content_type or url.endswith(".csv"):
                 return f"CSV content from {url}:\n\n{self._truncate_content(response.text)}"
             elif "application/pdf" in content_type or url.endswith(".pdf"):
-                return f"PDF file detected at {url}. Size: {len(response.content)} bytes. You may need to use a specialized tool to read PDF content, or note this URL for the user to download manually."
+                return (
+                    f"PDF detected at {url} ({len(response.content):,} bytes). "
+                    "Use the pdf_extract tool with this URL to read its text and tables. "
+                    "Example: Action: pdf_extract / Action Input: {\"url\": \"" + url + "\"}"
+                )
             else:
                 # Try to parse as HTML anyway
                 return self._parse_html(response.text, url)

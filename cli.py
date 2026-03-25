@@ -88,6 +88,16 @@ PHRASES: Dict[str, List[str]] = {
         "writing to storage",
         "accessing the filesystem",
     ],
+    "pdf_extract": [
+        "cracking open the PDF",
+        "extracting tables from the document",
+        "parsing the report pages",
+        "pulling figures from the filing",
+        "reading the sustainability data",
+        "mining the document structure",
+        "dissecting the annual report",
+        "harvesting numbers from the PDF",
+    ],
     "default": [
         "connecting the dots",
         "reasoning it through",
@@ -602,12 +612,15 @@ def _build_tool_manager(cfg) -> "ToolManager":
     from webresearch.tools import (
         ToolManager, SearchTool, ScrapeTool, BrowserScrapeTool,
         CodeExecutorTool, FileOpsTool, playwright_available,
+        PDFExtractTool, pdf_available,
     )
     tool_manager = ToolManager()
     tool_manager.register_tool(SearchTool(cfg.serper_api_key))
     tool_manager.register_tool(ScrapeTool())
     if playwright_available():
         tool_manager.register_tool(BrowserScrapeTool())
+    if pdf_available():
+        tool_manager.register_tool(PDFExtractTool())
     tool_manager.register_tool(CodeExecutorTool())
     tool_manager.register_tool(FileOpsTool())
     return tool_manager
