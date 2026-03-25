@@ -555,16 +555,16 @@ def view_history():
         choices = [
             questionary.Choice(
                 title=f"  [{i+1:2d}]  {e['query'][:60]}",
-                value=i,
+                value=e["query"],
             )
             for i, e in enumerate(shown)
         ]
         choices.append(questionary.Choice(title="  back", value=None))
-        idx = questionary.select(
+        selected = questionary.select(
             "re-run a query:", choices=choices
         ).ask()
-        if idx is not None:
-            _run_query(shown[idx]["query"])
+        if selected is not None:
+            _run_query(selected)
     else:
         choice = Prompt.ask(
             "[green]❯[/green] enter number to re-run (Enter to go back)", default=""
