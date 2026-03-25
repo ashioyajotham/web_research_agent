@@ -8,6 +8,7 @@ import json
 import logging
 import os
 import sys
+import time
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional
@@ -16,6 +17,7 @@ from rich.console import Console
 from rich.live import Live
 from rich.panel import Panel
 from rich.prompt import Confirm, Prompt
+from rich.rule import Rule
 from rich.table import Table
 from rich.text import Text
 
@@ -37,13 +39,113 @@ ASCII_ART = r"""
 """
 
 from webresearch import __version__ as VERSION
-TAGLINE = "lock in, anon"
+TAGLINE = "stay curious, anon.  the web doesn't answer itself."
 
 logging.getLogger().setLevel(logging.WARNING)
 
 # ─── Session memory (persists for the lifetime of this CLI process) ───────────
 from webresearch.memory import ConversationMemory
 _session = ConversationMemory(max_pairs=5)
+
+
+# ─── Live research panel ─────────────────────────────────────────────────────
+
+_SPINNER_CHARS = ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"]
+_SPINNER_PHRASES = [
+    "speed-reading the internet",
+    "cross-referencing sources",
+    "following the trail",
+    "asking the web nicely",
+    "piecing it together",
+    "sifting through results",
+    "connecting the dots",
+    "chasing citations",
+    "skimming abstracts",
+    "triangulating facts",
+]
+
+
+class ResearchPanel:
+    """Dynamic Rich renderable for live ReAct loop — spinner, elapsed, thought/action."""
+
+    def __init__(self, query: str, max_iterations: int, start_time: float):
+        self.query = query
+        self.max_iterations = max_iterations
+        self.start_time = start_time
+        self.iteration = 0
+        self.current_thought: Optional[str] = None
+        self.current_action: Optional[str] = None
+        self.current_action_input: Optional[Dict] = None
+        self.current_obs_len: int = 0
+        self.done = False
+
+    def update(self, iteration: int, step: Any) -> None:
+        self.iteration = iteration
+        self.current_thought = step.thought
+        self.current_action = step.action
+        self.current_action_input = step.action_input
+        self.current_obs_len = len(step.observation or "")
+
+    def _action_preview(self) -> str:
+        if not self.current_action:
+            return "—"
+        tool = self.current_action
+        inp = self.current_action_input or {}
+        # Show the most meaningful input field
+        preview = (
+            inp.get("url") or inp.get("query") or inp.get("filename")
+            or next(iter(inp.values()), None)
+        )
+        if preview and isinstance(preview, str):
+            short = (preview[:50] + "…") if len(preview) > 50 else preview
+            return f"[bold yellow]{tool}[/bold yellow]  [dim]→[/dim]  {short}"
+        return f"[bold yellow]{tool}[/bold yellow]"
+
+    def __rich__(self) -> Panel:
+        elapsed = time.time() - self.start_time
+        frame = int(elapsed * 10)
+        spin_char = _SPINNER_CHARS[frame % len(_SPINNER_CHARS)]
+        phrase = _SPINNER_PHRASES[(frame // 20) % len(_SPINNER_PHRASES)]
+
+        grid = Table.grid(padding=(0, 1))
+        grid.add_column(style="dim", min_width=11, max_width=11)
+        grid.add_column(style="white", ratio=1)
+
+        q = (self.query[:62] + "…") if len(self.query) > 62 else self.query
+        grid.add_row("query", f"[bold]{q}[/bold]")
+
+        iter_str = f"[bold cyan]{self.iteration}[/bold cyan][dim] / {self.max_iterations}[/dim]"
+        elapsed_str = f"[yellow]{elapsed:.0f}s[/yellow]"
+        grid.add_row("iteration", f"{iter_str}    elapsed  {elapsed_str}")
+        grid.add_row("", "")
+
+        if self.done:
+            grid.add_row(f"[bold green]✓[/bold green]", "[bold green]complete[/bold green]")
+        else:
+            grid.add_row(
+                f"[cyan]{spin_char}[/cyan]",
+                f"[dim italic]{phrase}[/dim italic]",
+            )
+
+        grid.add_row("", "")
+
+        if self.current_thought:
+            t = (self.current_thought[:64] + "…") if len(self.current_thought) > 64 else self.current_thought
+            grid.add_row("thought", f"[white]{t}[/white]")
+
+        grid.add_row("action", self._action_preview())
+
+        if self.current_obs_len:
+            grid.add_row("status", f"[dim]received {self.current_obs_len:,} chars[/dim]")
+        elif self.iteration > 0 and not self.done:
+            grid.add_row("status", f"[dim cyan]running…[/dim cyan]")
+
+        return Panel(
+            grid,
+            title="[dim]─── research in progress[/dim]",
+            border_style="cyan",
+            padding=(0, 1),
+        )
 
 
 # ─── Banner ──────────────────────────────────────────────────────────────────
@@ -54,9 +156,36 @@ def print_banner():
     console.print()
     for i, line in enumerate(lines):
         console.print(line, style=f"bold {colors[i % len(colors)]}")
-    console.print(Text(f"v{VERSION}", style="bold yellow"), justify="center")
-    console.print(Text(TAGLINE, style="italic cyan"), justify="center")
-    console.print("═" * 100, style="bright_blue")
+    console.print(Text(TAGLINE, style="italic dim cyan"), justify="center")
+    console.print()
+
+
+def print_status_bar(config: dict) -> None:
+    """Print a one-line config summary below the banner."""
+    from webresearch.config import Config
+    cfg = Config()
+    model = cfg.model_name
+
+    extras = []
+    if config.get("GROQ_API_KEY"):
+        extras.append("groq")
+    if config.get("OPENROUTER_API_KEY"):
+        extras.append("openrouter")
+    if config.get("OLLAMA_BASE_URL"):
+        extras.append("ollama")
+
+    providers = f"[green]serper[/green]"
+    if extras:
+        providers += "  [dim]·[/dim]  " + "  [dim]·[/dim]  ".join(f"[dim]{e}[/dim]" for e in extras)
+
+    parts = [
+        "[bold green]✓[/bold green]  config loaded",
+        f"[bold cyan]{model}[/bold cyan]",
+        providers,
+        f"[dim]v{VERSION}[/dim]",
+    ]
+    console.print("  [dim]·[/dim]  ".join(parts))
+    console.print(Rule(style="bright_blue"))
     console.print()
 
 
@@ -535,46 +664,25 @@ def _run_query(query: str):
             f"[dim]↑ Using {len(_session)} previous Q&A pair(s) as context[/dim]\n"
         )
 
-    start_time = datetime.now()
-    step_rows: List[Dict] = []
-
-    def make_step_table(rows: List[Dict], status: str = "") -> Table:
-        title = "[bold cyan]ReAct Loop[/bold cyan]"
-        if status:
-            title += f" [dim]{status}[/dim]"
-        t = Table(title=title, border_style="cyan", expand=True, show_lines=False)
-        t.add_column("Step", style="cyan", width=5, justify="center")
-        t.add_column("Thought", style="white", ratio=3)
-        t.add_column("Action", style="yellow", width=22)
-        t.add_column("Obs.", style="dim", width=10, justify="right")
-        for r in rows:
-            t.add_row(
-                str(r["n"]),
-                r["thought"],
-                r["action"],
-                f"{r['obs_len']} ch" if r["obs_len"] else "—",
-            )
-        return t
+    wall_start = time.time()
+    from webresearch.config import Config as _Cfg
+    panel = ResearchPanel(query, _Cfg().max_iterations, wall_start)
+    n_steps = 0
 
     answer: Optional[str] = None
 
-    with Live(make_step_table([], "thinking…"), console=console, refresh_per_second=4) as live:
+    with Live(panel, console=console, refresh_per_second=12) as live:
         def step_callback(iteration: int, step: Any):
-            thought = step.thought
-            if len(thought) > 90:
-                thought = thought[:87] + "…"
-            step_rows.append({
-                "n": iteration,
-                "thought": thought,
-                "action": step.action or "—",
-                "obs_len": len(step.observation or ""),
-            })
-            live.update(make_step_table(step_rows, f"step {iteration}"))
+            nonlocal n_steps
+            n_steps = iteration
+            panel.update(iteration, step)
+            live.update(panel)
 
         answer = agent.run(task, step_callback=step_callback)
-        live.update(make_step_table(step_rows, "complete ✓"))
+        panel.done = True
+        live.update(panel)
 
-    duration = (datetime.now() - start_time).total_seconds()
+    duration = time.time() - wall_start
 
     console.print()
     console.rule("[bold green]RESULT[/bold green]", style="green")
@@ -585,20 +693,20 @@ def _run_query(query: str):
     console.print()
     console.print(
         f"⏱  [yellow]{duration:.2f}s[/yellow]  [dim]│[/dim]  "
-        f"[cyan]{len(step_rows)} steps[/cyan]"
+        f"[cyan]{n_steps} steps[/cyan]"
     )
     _print_usage_banner()
     console.print()
 
     # Save to session memory and persistent history
     _session.add(query, answer)
-    save_to_history(query, answer, len(step_rows), duration)
+    save_to_history(query, answer, n_steps, duration)
 
     if Confirm.ask("Save result to file?", default=False):
         filename = Prompt.ask("Filename", default="result.txt")
         with open(filename, "w", encoding="utf-8") as f:
             f.write(f"Query: {query}\n{'=' * 80}\n\n{answer}\n\n")
-            f.write(f"{'─' * 80}\nExecution time: {duration:.2f}s | Steps: {len(step_rows)}\n")
+            f.write(f"{'─' * 80}\nExecution time: {duration:.2f}s | Steps: {n_steps}\n")
         console.print(f"✓ Saved to [cyan]{filename}[/cyan]", style="bold green")
 
 
@@ -685,63 +793,54 @@ def _run_deep_research(query: str):
 # ─── Menu actions ─────────────────────────────────────────────────────────────
 
 def show_menu():
-    table = Table(show_header=False, box=None, padding=(0, 2))
-    table.add_column(style="cyan bold")
-    table.add_column(style="white")
-    table.add_row("1.", "[green]🔍 Run a research query[/green]")
-    table.add_row("2.", "[yellow]📁 Process tasks from file[/yellow]")
-    table.add_row("3.", "[cyan]📚 View query history[/cyan]")
-    table.add_row("4.", "[blue]📋 View recent logs[/blue]")
-    table.add_row("5.", "[magenta]🔧 Reconfigure API keys[/magenta]")
-    table.add_row("6.", "[dim]🧹 Clear session memory[/dim]")
-    table.add_row("7.", "[red]👋 Exit[/red]")
+    history_count = len(load_history())
 
-    session_note = ""
-    if len(_session) > 0:
-        session_note = f"\n[dim]Session: {len(_session)} Q&A pair(s) in context[/dim]"
+    grid = Table.grid(padding=(0, 2))
+    grid.add_column(style="cyan bold", min_width=5)
+    grid.add_column(style="white", min_width=22)
+    grid.add_column(style="dim")
 
-    console.print(
-        Panel(
-            table,
-            title="[bold cyan]What would you like to do?[/bold cyan]",
-            subtitle=session_note,
-            border_style="cyan",
-        )
-    )
+    grid.add_row("", Rule("[dim]research[/dim]", style="dim"), "")
+    grid.add_row("[1]", "run query",          "ask anything  ·  sources included")
+    grid.add_row("[2]", "run deep research",  "parallel fan-out  ·  4 sub-queries")
+    grid.add_row("[3]", "process task file",  "batch mode")
+    grid.add_row("", "", "")
+    grid.add_row("", Rule("[dim]session[/dim]", style="dim"), "")
+    grid.add_row("[4]", "query history",      f"{history_count} recorded" if history_count else "none yet")
+    grid.add_row("[5]", "execution logs",     "")
+    grid.add_row("", "", "")
+    grid.add_row("", Rule("[dim]system[/dim]", style="dim"), "")
+    grid.add_row("[6]", "reconfigure api keys", "")
+    grid.add_row("[7]", "clear session memory",
+                 f"[dim]{len(_session)} pair(s) in context[/dim]" if len(_session) > 0 else "")
+    grid.add_row("[q]", "exit", "")
+
+    console.print(grid)
     console.print()
 
 
 def run_interactive_query():
-    console.print(
-        Panel.fit("🔍 [bold cyan]Research Query Mode[/bold cyan]", border_style="cyan")
-    )
+    console.print(Rule("[dim]run query[/dim]", style="cyan"))
     console.print()
     query = Prompt.ask(
-        "[green]❯[/green] Enter your research question (or type 'back' to return)"
+        "[green]❯[/green] Research question (or 'back')"
     )
     if not query or query.lower() == "back":
         return
-
-    if _HAS_QUESTIONARY:
-        mode = questionary.select(
-            "Research mode:",
-            choices=[
-                questionary.Choice("Standard  — sequential ReAct loop (fast, ~1 min)", value="standard"),
-                questionary.Choice("Deep      — parallel fan-out: 4 sub-queries × 5 steps (thorough, ~3 min)", value="deep"),
-            ],
-        ).ask()
-        if mode is None:
-            return
-    else:
-        console.print("\n[cyan]Mode:[/cyan] 1=Standard  2=Deep Research")
-        raw = Prompt.ask("[green]❯[/green] Choose mode", choices=["1", "2"], default="1")
-        mode = "standard" if raw == "1" else "deep"
-
     console.print()
-    if mode == "deep":
-        _run_deep_research(query)
-    else:
-        _run_query(query)
+    _run_query(query)
+
+
+def run_interactive_deep_query():
+    console.print(Rule("[dim]run deep research[/dim]", style="cyan"))
+    console.print()
+    query = Prompt.ask(
+        "[green]❯[/green] Research question (or 'back')"
+    )
+    if not query or query.lower() == "back":
+        return
+    console.print()
+    _run_deep_research(query)
 
 
 def run_tasks_from_file():
@@ -883,35 +982,36 @@ def main():
 
     config = check_config()
     apply_config_to_env(config)
-    console.print("✓ Configuration loaded", style="bold green")
-    console.print()
+    print_status_bar(config)
 
     while True:
         show_menu()
         choice = Prompt.ask(
-            "[green]❯[/green] Choose an option", choices=["1", "2", "3", "4", "5", "6", "7"]
+            "[green]❯[/green]", choices=["1", "2", "3", "4", "5", "6", "7", "q"]
         )
         console.print()
 
         if choice == "1":
             run_interactive_query()
         elif choice == "2":
-            run_tasks_from_file()
+            run_interactive_deep_query()
         elif choice == "3":
-            view_history()
+            run_tasks_from_file()
         elif choice == "4":
-            view_logs()
+            view_history()
         elif choice == "5":
+            view_logs()
+        elif choice == "6":
             config = setup_api_keys()
             apply_config_to_env(config)
-        elif choice == "6":
+        elif choice == "7":
             _session.clear()
             console.print("✓ Session memory cleared.", style="bold green")
             console.print()
-        elif choice == "7":
+        elif choice == "q":
             console.print(
                 Panel.fit(
-                    "👋 [bold cyan]Thanks for using Web Research Agent![/bold cyan]\nStay curious, anon.",
+                    "[bold cyan]Thanks for using Web Research Agent![/bold cyan]\nStay curious, anon.",
                     border_style="cyan",
                 )
             )
