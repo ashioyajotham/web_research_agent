@@ -40,6 +40,8 @@ STARTUP_QUIPS = [
     "calibrating the question accelerator",
     "charging up the search antennae",
     "warming up the research reactor",
+    "spinning up the knowledge furnace",
+    "initialising the inquiry subsystems",
 ]
 
 DONE_QUIPS = [
@@ -48,62 +50,67 @@ DONE_QUIPS = [
     "findings assembled",
     "the web has spoken",
     "sources consulted, answer ready",
+    "the trail ends here",
+    "knowledge extracted, intact",
+    "mission accomplished, more or less",
 ]
 
-# Action-keyed phrase pools for the live research panel
+# Action-keyed phrase pools — {topic} is filled at render time with the first
+# three words of the current query, giving "casting nets for volkswagen scope"
+# instead of the generic "casting nets into the internet"
 PHRASES: Dict[str, List[str]] = {
     "search": [
-        "casting nets into the internet",
-        "querying the hive mind",
-        "asking the search oracle",
-        "pinging the information grid",
-        "scouring the index",
-        "letting the crawler loose",
-        "broadcasting the query",
-        "dispatching the search request",
+        "casting nets for {topic}",
+        "asking the oracle about {topic}",
+        "querying the hive mind re: {topic}",
+        "pinging the index for {topic}",
+        "scouring the web for {topic}",
+        "letting the crawler hunt {topic}",
+        "broadcasting: anyone know about {topic}?",
+        "dispatching the query into the void",
     ],
     "scrape": [
-        "speed-reading the internet",
-        "pulling the page apart",
+        "speed-reading a page about {topic}",
+        "pulling that page apart",
         "extracting signal from noise",
         "parsing the markup soup",
-        "skimming the full text",
+        "skimming the full text on {topic}",
         "fetching and filtering",
         "reading between the tags",
         "digesting the page content",
     ],
     "execute_code": [
+        "running the numbers on {topic}",
+        "crunching it in the sandbox",
         "warming up the python",
-        "crunching the numbers",
-        "running the calculation",
-        "executing the snippet",
-        "spinning up the sandbox",
-        "compiling the logic",
         "evaluating the expression",
-        "processing in the interpreter",
+        "spinning up the interpreter",
+        "compiling the logic",
+        "doing the actual maths now",
+        "the calculation is in progress",
     ],
     "file_ops": [
+        "writing the {topic} findings to disk",
         "rifling through the files",
-        "reading from disk",
-        "writing to storage",
-        "accessing the filesystem",
+        "reading from storage",
+        "persisting the data",
     ],
     "pdf_extract": [
-        "cracking open the PDF",
-        "extracting tables from the document",
-        "parsing the report pages",
-        "pulling figures from the filing",
-        "reading the sustainability data",
+        "cracking open the {topic} document",
+        "extracting tables from the filing",
+        "parsing report pages for {topic}",
+        "pulling figures from the PDF",
         "mining the document structure",
+        "harvesting numbers, please hold",
         "dissecting the annual report",
-        "harvesting numbers from the PDF",
+        "reading the sustainability data on {topic}",
     ],
     "default": [
-        "connecting the dots",
+        "connecting the dots on {topic}",
         "reasoning it through",
         "cross-referencing sources",
         "following the trail",
-        "triangulating facts",
+        "triangulating facts about {topic}",
         "piecing it together",
         "chasing citations",
         "skimming abstracts",
@@ -126,11 +133,34 @@ def _spin(elapsed: float) -> str:
     return _SPINNER_CHARS[int(elapsed * 12) % len(_SPINNER_CHARS)]
 
 
-def _phrase(action: Optional[str], elapsed: float) -> str:
+def _phrase(action: Optional[str], elapsed: float, query: str = "") -> str:
     pool = PHRASES.get(action or "default", PHRASES["default"])
-    # rotate through pool every 2.5 s
     idx = int(elapsed / 2.5) % len(pool)
-    return pool[idx]
+    raw = pool[idx]
+    topic = " ".join(query.split()[:3]).lower() if query else "this"
+    try:
+        return raw.format(topic=topic)
+    except (KeyError, IndexError):
+        return raw
+
+
+# ─── Session stats (lifetime of this CLI process) ────────────────────────────
+_session_queries: int = 0
+_session_steps: int = 0
+
+
+def _exit_quip(n_queries: int, total_steps: int) -> str:
+    if n_queries == 0:
+        return "you came, you saw, you didn't ask anything"
+    if n_queries == 1 and total_steps <= 3:
+        return "one question, answered. not bad."
+    if total_steps > 60:
+        return f"{total_steps} steps taken. the web has been thoroughly interrogated."
+    if n_queries >= 5:
+        return f"{n_queries} questions answered. the curiosity engine delivered."
+    if total_steps > 30:
+        return f"{n_queries} queries, {total_steps} steps deep. that's some serious digging."
+    return random.choice(DONE_QUIPS)
 
 
 class ResearchPanel:
@@ -172,7 +202,7 @@ class ResearchPanel:
     def __rich__(self) -> Panel:
         elapsed = time.time() - self.start_time
         spin_char = _spin(elapsed)
-        phrase = _phrase(self.current_action, elapsed)
+        phrase = _phrase(self.current_action, elapsed, self.query)
 
         grid = Table.grid(padding=(0, 1))
         grid.add_column(style="dim", min_width=11, max_width=11)
@@ -784,6 +814,10 @@ def _run_query(query: str):
     border = "red" if answer.startswith("⚠ Error:") else ("yellow" if answer.startswith("⚠") else "green")
     console.print(Panel(answer, border_style=border, padding=(1, 2)))
     console.print()
+    global _session_queries, _session_steps
+    _session_queries += 1
+    _session_steps += n_steps
+
     if not answer.startswith("⚠"):
         console.print(f"  [dim italic]{random.choice(DONE_QUIPS)}[/dim italic]")
     console.print(
@@ -1110,7 +1144,7 @@ def main():
             console.print("✓ Session memory cleared.", style="bold green")
             console.print()
         elif choice == "q":
-            console.print(f"  [dim]{random.choice(DONE_QUIPS)}[/dim]")
+            console.print(f"  [dim]{_exit_quip(_session_queries, _session_steps)}[/dim]")
             console.print()
             sys.exit(0)
 
@@ -1119,5 +1153,5 @@ if __name__ == "__main__":
     try:
         main()
     except KeyboardInterrupt:
-        console.print("\n[bold cyan]Goodbye! 👋[/bold cyan]\n")
+        console.print(f"\n  [dim]{_exit_quip(_session_queries, _session_steps)}[/dim]\n")
         sys.exit(0)
