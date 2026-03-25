@@ -13,6 +13,9 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
+import random
+
+import pyfiglet
 from rich.console import Console
 from rich.live import Live
 from rich.panel import Panel
@@ -29,17 +32,73 @@ except ImportError:
 
 console = Console()
 
-ASCII_ART = r"""
-██╗    ██╗███████╗██████╗     ██████╗ ███████╗███████╗███████╗ █████╗ ██████╗  ██████╗██╗  ██╗
-██║    ██║██╔════╝██╔══██╗    ██╔══██╗██╔════╝██╔════╝██╔════╝██╔══██╗██╔══██╗██╔════╝██║  ██║
-██║ █╗ ██║█████╗  ██████╔╝    ██████╔╝█████╗  ███████╗█████╗  ███████║██████╔╝██║     ███████║
-██║███╗██║██╔══╝  ██╔══██╗    ██╔══██╗██╔══╝  ╚════██║██╔══╝  ██╔══██║██╔══██╗██║     ██╔══██║
-╚███╔███╔╝███████╗██████╔╝    ██║  ██║███████╗███████║███████╗██║  ██║██║  ██║╚██████╗██║  ██║
- ╚══╝╚══╝ ╚══════╝╚═════╝     ╚═╝  ╚═╝╚══════╝╚══════╝╚══════╝╚═╝  ╚═╝╚═╝  ╚═╝ ╚═════╝╚═╝  ╚═╝
-"""
-
 from webresearch import __version__ as VERSION
 TAGLINE = "stay curious, anon.  the web doesn't answer itself."
+
+STARTUP_QUIPS = [
+    "booting the curiosity engine",
+    "calibrating the question accelerator",
+    "charging up the search antennae",
+    "warming up the research reactor",
+]
+
+DONE_QUIPS = [
+    "and there it is",
+    "the answer surfaces",
+    "findings assembled",
+    "the web has spoken",
+    "sources consulted, answer ready",
+]
+
+# Action-keyed phrase pools for the live research panel
+PHRASES: Dict[str, List[str]] = {
+    "search": [
+        "casting nets into the internet",
+        "querying the hive mind",
+        "asking the search oracle",
+        "pinging the information grid",
+        "scouring the index",
+        "letting the crawler loose",
+        "broadcasting the query",
+        "dispatching the search request",
+    ],
+    "scrape": [
+        "speed-reading the internet",
+        "pulling the page apart",
+        "extracting signal from noise",
+        "parsing the markup soup",
+        "skimming the full text",
+        "fetching and filtering",
+        "reading between the tags",
+        "digesting the page content",
+    ],
+    "execute_code": [
+        "warming up the python",
+        "crunching the numbers",
+        "running the calculation",
+        "executing the snippet",
+        "spinning up the sandbox",
+        "compiling the logic",
+        "evaluating the expression",
+        "processing in the interpreter",
+    ],
+    "file_ops": [
+        "rifling through the files",
+        "reading from disk",
+        "writing to storage",
+        "accessing the filesystem",
+    ],
+    "default": [
+        "connecting the dots",
+        "reasoning it through",
+        "cross-referencing sources",
+        "following the trail",
+        "triangulating facts",
+        "piecing it together",
+        "chasing citations",
+        "skimming abstracts",
+    ],
+}
 
 logging.getLogger().setLevel(logging.WARNING)
 
@@ -51,18 +110,17 @@ _session = ConversationMemory(max_pairs=5)
 # ─── Live research panel ─────────────────────────────────────────────────────
 
 _SPINNER_CHARS = ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"]
-_SPINNER_PHRASES = [
-    "speed-reading the internet",
-    "cross-referencing sources",
-    "following the trail",
-    "asking the web nicely",
-    "piecing it together",
-    "sifting through results",
-    "connecting the dots",
-    "chasing citations",
-    "skimming abstracts",
-    "triangulating facts",
-]
+
+
+def _spin(elapsed: float) -> str:
+    return _SPINNER_CHARS[int(elapsed * 12) % len(_SPINNER_CHARS)]
+
+
+def _phrase(action: Optional[str], elapsed: float) -> str:
+    pool = PHRASES.get(action or "default", PHRASES["default"])
+    # rotate through pool every 2.5 s
+    idx = int(elapsed / 2.5) % len(pool)
+    return pool[idx]
 
 
 class ResearchPanel:
@@ -103,9 +161,8 @@ class ResearchPanel:
 
     def __rich__(self) -> Panel:
         elapsed = time.time() - self.start_time
-        frame = int(elapsed * 10)
-        spin_char = _SPINNER_CHARS[frame % len(_SPINNER_CHARS)]
-        phrase = _SPINNER_PHRASES[(frame // 20) % len(_SPINNER_PHRASES)]
+        spin_char = _spin(elapsed)
+        phrase = _phrase(self.current_action, elapsed)
 
         grid = Table.grid(padding=(0, 1))
         grid.add_column(style="dim", min_width=11, max_width=11)
@@ -150,9 +207,13 @@ class ResearchPanel:
 
 # ─── Banner ──────────────────────────────────────────────────────────────────
 
-def print_banner():
-    lines = ASCII_ART.strip().split("\n")
-    colors = ["bright_blue", "blue", "dodger_blue2", "deep_sky_blue1", "blue", "bright_blue"]
+def print_banner() -> None:
+    try:
+        raw = pyfiglet.figlet_format("WEB RESEARCH", font="small_slant")
+    except pyfiglet.FontNotFound:
+        raw = pyfiglet.figlet_format("WEB RESEARCH", font="slant")
+    lines = [l for l in raw.split("\n") if l.strip()]
+    colors = ["bright_blue", "blue", "dodger_blue2", "bright_blue"]
     console.print()
     for i, line in enumerate(lines):
         console.print(line, style=f"bold {colors[i % len(colors)]}")
@@ -161,31 +222,54 @@ def print_banner():
 
 
 def print_status_bar(config: dict) -> None:
-    """Print a one-line config summary below the banner."""
+    """One-line config summary: ✓ config loaded · model · serper · vX.Y.Z"""
     from webresearch.config import Config
-    cfg = Config()
-    model = cfg.model_name
+    model = Config().model_name
 
-    extras = []
-    if config.get("GROQ_API_KEY"):
-        extras.append("groq")
-    if config.get("OPENROUTER_API_KEY"):
-        extras.append("openrouter")
-    if config.get("OLLAMA_BASE_URL"):
-        extras.append("ollama")
+    extras = [k.lower().replace("_api_key", "").replace("_base_url", "")
+              for k in ("GROQ_API_KEY", "OPENROUTER_API_KEY", "OLLAMA_BASE_URL")
+              if config.get(k)]
 
-    providers = f"[green]serper[/green]"
-    if extras:
-        providers += "  [dim]·[/dim]  " + "  [dim]·[/dim]  ".join(f"[dim]{e}[/dim]" for e in extras)
+    dot = "  [dim]·[/dim]  "
+    line = Text()
+    line.append("  ✓  config loaded", style="green")
+    line.append(dot)
+    line.append(model, style="bold cyan")
+    line.append(dot)
+    line.append("serper", style="green")
+    for e in extras:
+        line.append(dot)
+        line.append(e, style="dim")
+    line.append(dot)
+    line.append(f"v{VERSION}", style="dim")
 
-    parts = [
-        "[bold green]✓[/bold green]  config loaded",
-        f"[bold cyan]{model}[/bold cyan]",
-        providers,
-        f"[dim]v{VERSION}[/dim]",
-    ]
-    console.print("  [dim]·[/dim]  ".join(parts))
+    console.print(line)
     console.print(Rule(style="bright_blue"))
+    console.print()
+
+
+def render_startup(model: str) -> None:
+    """Animated boot sequence — shown once at launch after banner."""
+    console.print(f"  [dim]{random.choice(STARTUP_QUIPS)}[/dim]", end="")
+    for _ in range(3):
+        time.sleep(0.18)
+        console.print("[dim].[/dim]", end="")
+    console.print()
+    console.print()
+
+    checks = [
+        ("rich",   "terminal ui"),
+        ("config", "credentials loaded"),
+        ("model",  model),
+        ("serper", "search api"),
+    ]
+    for name, detail in checks:
+        time.sleep(0.07)
+        t = Text()
+        t.append("  ✓  ", style="green")
+        t.append(f"{name:<10}", style="dim")
+        t.append(detail, style="white")
+        console.print(t)
     console.print()
 
 
@@ -438,56 +522,52 @@ def save_to_history(query: str, answer: str, steps: int, duration: float):
 def view_history():
     history = load_history()
     if not history:
-        console.print("No query history yet.", style="bold yellow")
+        console.print("  no query history yet.", style="dim yellow")
         return
 
-    console.print(Panel.fit("📚 [bold cyan]Query History[/bold cyan]", border_style="cyan"))
+    console.print(Rule("[dim]query history[/dim]", style="cyan"))
     console.print()
-
     shown = history[:15]
 
+    table = Table(show_header=True, border_style="dim", show_lines=False)
+    table.add_column("#", style="cyan", width=4, justify="right")
+    table.add_column("query", style="white", no_wrap=True, max_width=54)
+    table.add_column("iter", style="yellow", width=5, justify="right")
+    table.add_column("time", style="dim", width=7, justify="right")
+    table.add_column("date", style="dim", width=16)
+
+    for i, entry in enumerate(shown, 1):
+        ts = entry.get("timestamp", "")[:16].replace("T", " ")
+        q = entry["query"]
+        flag = " [bold yellow]⚠[/bold yellow]" if str(entry.get("answer_preview","")).startswith("⚠") else ""
+        table.add_row(
+            str(i),
+            (q[:53] + "…") if len(q) > 53 else q,
+            str(entry.get("steps", "?")),
+            f"{entry.get('duration', 0):.1f}s",
+            ts + flag,
+        )
+
+    console.print(table)
+    console.print()
+
     if _HAS_QUESTIONARY:
-        # Arrow-key navigation
-        choices = []
-        for i, entry in enumerate(shown):
-            ts = entry.get("timestamp", "")[:16].replace("T", " ")
-            q = entry["query"]
-            label = f"[{i+1:2d}] {q[:55]:<55}  {entry.get('steps','?'):>2}st  {entry.get('duration',0):>5.1f}s  {ts}"
-            choices.append(questionary.Choice(title=label, value=i))
-        choices.append(questionary.Choice(title="← Back", value=None))
-
+        choices = [
+            questionary.Choice(
+                title=f"  [{i+1:2d}]  {e['query'][:60]}",
+                value=i,
+            )
+            for i, e in enumerate(shown)
+        ]
+        choices.append(questionary.Choice(title="  back", value=None))
         idx = questionary.select(
-            "Select a query to re-run (↑↓ to navigate, Enter to select):",
-            choices=choices,
+            "re-run a query:", choices=choices
         ).ask()
-
         if idx is not None:
             _run_query(shown[idx]["query"])
     else:
-        # Fallback: numbered table
-        table = Table(show_header=True, border_style="dim")
-        table.add_column("#", style="cyan", width=4)
-        table.add_column("Query", style="white", ratio=3)
-        table.add_column("Steps", style="yellow", width=7, justify="right")
-        table.add_column("Duration", style="dim", width=10, justify="right")
-        table.add_column("Date", style="dim", width=19)
-
-        for i, entry in enumerate(shown, 1):
-            ts = entry.get("timestamp", "")[:16].replace("T", " ")
-            q = entry["query"]
-            table.add_row(
-                str(i),
-                q[:60] + ("…" if len(q) > 60 else ""),
-                str(entry.get("steps", "?")),
-                f"{entry.get('duration', 0):.1f}s",
-                ts,
-            )
-
-        console.print(table)
-        console.print()
-
         choice = Prompt.ask(
-            "[green]Enter number to re-run[/green] (or press Enter to go back)", default=""
+            "[green]❯[/green] enter number to re-run (Enter to go back)", default=""
         )
         if choice.isdigit() and 1 <= int(choice) <= len(shown):
             _run_query(shown[int(choice) - 1]["query"])
@@ -691,9 +771,10 @@ def _run_query(query: str):
     border = "red" if answer.startswith("⚠ Error:") else ("yellow" if answer.startswith("⚠") else "green")
     console.print(Panel(answer, border_style=border, padding=(1, 2)))
     console.print()
+    if not answer.startswith("⚠"):
+        console.print(f"  [dim italic]{random.choice(DONE_QUIPS)}[/dim italic]")
     console.print(
-        f"⏱  [yellow]{duration:.2f}s[/yellow]  [dim]│[/dim]  "
-        f"[cyan]{n_steps} steps[/cyan]"
+        f"  [dim]⏱  {duration:.1f}s  ·  {n_steps} steps[/dim]"
     )
     _print_usage_banner()
     console.print()
@@ -792,30 +873,34 @@ def _run_deep_research(query: str):
 
 # ─── Menu actions ─────────────────────────────────────────────────────────────
 
+def _mrow(key: str, label: str, desc: str = "") -> None:
+    """Print one menu row — bypasses markup so brackets render literally."""
+    t = Text()
+    t.append(f"  [{key}]", style="bold cyan")
+    t.append(f"  {label:<24}", style="white")
+    if desc:
+        t.append(f"  {desc}", style="dim")
+    console.print(t)
+
+
 def show_menu():
     history_count = len(load_history())
 
-    grid = Table.grid(padding=(0, 2))
-    grid.add_column(style="cyan bold", min_width=5)
-    grid.add_column(style="white", min_width=22)
-    grid.add_column(style="dim")
-
-    grid.add_row("", Rule("[dim]research[/dim]", style="dim"), "")
-    grid.add_row("[1]", "run query",          "ask anything  ·  sources included")
-    grid.add_row("[2]", "run deep research",  "parallel fan-out  ·  4 sub-queries")
-    grid.add_row("[3]", "process task file",  "batch mode")
-    grid.add_row("", "", "")
-    grid.add_row("", Rule("[dim]session[/dim]", style="dim"), "")
-    grid.add_row("[4]", "query history",      f"{history_count} recorded" if history_count else "none yet")
-    grid.add_row("[5]", "execution logs",     "")
-    grid.add_row("", "", "")
-    grid.add_row("", Rule("[dim]system[/dim]", style="dim"), "")
-    grid.add_row("[6]", "reconfigure api keys", "")
-    grid.add_row("[7]", "clear session memory",
-                 f"[dim]{len(_session)} pair(s) in context[/dim]" if len(_session) > 0 else "")
-    grid.add_row("[q]", "exit", "")
-
-    console.print(grid)
+    console.print(Rule("[dim]research[/dim]", style="dim"))
+    _mrow("1", "run query",         "ask anything  ·  sources included")
+    _mrow("2", "run deep research", "parallel fan-out  ·  4 sub-queries")
+    _mrow("3", "process task file", "batch mode")
+    console.print()
+    console.print(Rule("[dim]session[/dim]", style="dim"))
+    _mrow("4", "query history",
+          f"{history_count} recorded" if history_count else "")
+    _mrow("5", "execution logs")
+    console.print()
+    console.print(Rule("[dim]system[/dim]", style="dim"))
+    _mrow("6", "reconfigure api keys")
+    _mrow("7", "clear session memory",
+          f"{len(_session)} pair(s) in context" if len(_session) > 0 else "")
+    _mrow("q", "exit")
     console.print()
 
 
@@ -844,9 +929,7 @@ def run_interactive_deep_query():
 
 
 def run_tasks_from_file():
-    console.print(
-        Panel.fit("📁 [bold cyan]Process Tasks from File[/bold cyan]", border_style="cyan")
-    )
+    console.print(Rule("[dim]process task file[/dim]", style="cyan"))
     console.print()
 
     filepath = Prompt.ask("[green]❯[/green] Path to tasks file (or 'back' to return)")
@@ -930,7 +1013,7 @@ def view_logs():
 
     log_files = sorted(logs_dir.glob("*.log"), key=lambda x: x.stat().st_mtime, reverse=True)
 
-    console.print(Panel.fit("📋 [bold cyan]Recent Log Files[/bold cyan]", border_style="cyan"))
+    console.print(Rule("[dim]execution logs[/dim]", style="cyan"))
     console.print()
 
     table = Table(show_header=True, box=None)
@@ -982,12 +1065,17 @@ def main():
 
     config = check_config()
     apply_config_to_env(config)
+
+    from webresearch.config import Config
+    model = Config().model_name
+    render_startup(model)
     print_status_bar(config)
 
     while True:
         show_menu()
         choice = Prompt.ask(
-            "[green]❯[/green]", choices=["1", "2", "3", "4", "5", "6", "7", "q"]
+            "[green]❯[/green]", choices=["1", "2", "3", "4", "5", "6", "7", "q"],
+            show_choices=False,
         )
         console.print()
 
@@ -1009,12 +1097,8 @@ def main():
             console.print("✓ Session memory cleared.", style="bold green")
             console.print()
         elif choice == "q":
-            console.print(
-                Panel.fit(
-                    "[bold cyan]Thanks for using Web Research Agent![/bold cyan]\nStay curious, anon.",
-                    border_style="cyan",
-                )
-            )
+            console.print(f"  [dim]{random.choice(DONE_QUIPS)}[/dim]")
+            console.print()
             sys.exit(0)
 
 
