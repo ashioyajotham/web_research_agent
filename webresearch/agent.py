@@ -183,7 +183,7 @@ Final Answer: [your complete answer to the task]
 IMPORTANT RULES:
 - Always start with "Thought:" to explain your reasoning
 - Use "Action:" only when you want to use a tool
-- Use "Action Input:" with valid JSON for parameters
+- Use "Action Input:" with valid JSON for parameters — ensure all string values use escaped characters (\\n, \\", etc.) and never contain raw newlines or unescaped backslashes
 - Use "Final Answer:" only when you can fully answer the task
 - Be thorough and verify information from multiple sources when needed
 - For tasks requiring lists or compilations, gather comprehensive information before concluding

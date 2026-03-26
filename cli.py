@@ -1198,6 +1198,10 @@ def view_logs():
 # ─── Main ────────────────────────────────────────────────────────────────────
 
 def main():
+    logging.basicConfig(level=logging.WARNING)
+    logging.getLogger("pypdf").setLevel(logging.ERROR)
+    logging.getLogger("pdfminer").setLevel(logging.ERROR)
+
     print_banner()
 
     config = check_config()
