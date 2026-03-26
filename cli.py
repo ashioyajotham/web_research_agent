@@ -7,6 +7,7 @@ multi-turn session memory, and query history navigation.
 import json
 import logging
 import os
+import re
 import sys
 import time
 from datetime import datetime
@@ -35,68 +36,149 @@ console = Console()
 from webresearch import __version__ as VERSION
 TAGLINE = "stay curious, anon.  the web doesn't answer itself."
 
-STARTUP_QUIPS = [
+STARTUP_QUIPS: List[str] = [
     "booting the curiosity engine",
     "calibrating the question accelerator",
     "charging up the search antennae",
     "warming up the research reactor",
+    "initialising the knowledge pipeline",
+    "loading the mechanistic interpreter (not that kind)",
+    "spinning up the inference coils",
+    "allocating attention heads",
 ]
 
-DONE_QUIPS = [
-    "and there it is",
-    "the answer surfaces",
-    "findings assembled",
-    "the web has spoken",
-    "sources consulted, answer ready",
+_DONE_FALLBACK: List[str] = [
+    "stay curious, anon.",
+    "context window satisfied.",
+    "the inference chain holds.",
+    "no hallucinations detected (probably).",
+    "sources cited, vibes verified.",
+    "attention was well-placed.",
+    "tokenmaxxing complete.",
 ]
 
-# Action-keyed phrase pools for the live research panel
+# Words stripped before extracting the {topic} for phrase interpolation.
+# Includes stopwords, weak verbs, possessives, quantifiers, and content-free
+# nouns so "volkswagen scope" wins over "volkswagen their".
+_SKIP: frozenset = frozenset({
+    "by","what","how","who","when","where","why",
+    "find","get","compile","download","calculate","write",
+    "search","look","make","create","build","extract","give",
+    "list","show","tell","help","check","identify",
+    "a","an","the","for","from","of","in","on","at","to",
+    "and","or","that","this","which","with","about","into",
+    "did","does","do","is","are","was","were","has","have",
+    "had","can","could","would","should","will","please","me",
+    "their","its","his","her","our","your","my","these","those",
+    "many","much","some","any","all","each","every","both",
+    "statements","made","reduce","reduction","amount","total",
+    "number","percentage","percent","sum","value","data",
+    "information","details","names","companies","company",
+    "organizations","organization","person","people","up","set","group",
+})
+
+# Action-keyed phrase pools — {topic} is filled at render time by extract_topic().
+# Keys are matched with `k in action.lower()` so "execute_code" matches "code",
+# "file_ops" matches "file", "scrape_js" and "browser" both match "browser".
 PHRASES: Dict[str, List[str]] = {
     "search": [
-        "casting nets into the internet",
-        "querying the hive mind",
-        "asking the search oracle",
-        "pinging the information grid",
-        "scouring the index",
-        "letting the crawler loose",
-        "broadcasting the query",
-        "dispatching the search request",
+        "casting nets for {topic}",
+        "asking serper about {topic}",
+        "triangulating sources on {topic}",
+        "sending the spiders after {topic}",
+        "hunting down {topic}",
+        "querying the oracle about {topic}",
+        "grounding the retrieval on {topic}",
+        "tokenmaxxing serper for {topic}",
+        "running RAG on {topic} (the manual kind)",
+        "dispatching search spiders (no grad, pure vibe)",
+        "hoping {topic} made it into a search snippet",
+        "praying this page isn't paywalled",
+        "sifting through SEO slop to find the signal",
     ],
     "scrape": [
-        "speed-reading the internet",
-        "pulling the page apart",
-        "extracting signal from noise",
-        "parsing the markup soup",
-        "skimming the full text",
-        "fetching and filtering",
-        "reading between the tags",
-        "digesting the page content",
+        "speed-reading everything on {topic}",
+        "hoovering up text about {topic}",
+        "parsing the digital wallpaper for {topic}",
+        "ingesting {topic} at ludicrous speed",
+        "skimming the web for {topic}",
+        "forward-passing through the DOM for {topic}",
+        "ablating irrelevant paragraphs about {topic}",
+        "extracting signal from the {topic} noise floor",
+        "scraping the knowledge barrel (BeautifulSoup deployed)",
+        "begging the DOM to render something useful",
+        "reading so you don't have to",
+        "hoping {topic} has more than three sentences",
+        "checking if {topic} is hiding behind a login wall",
     ],
-    "execute_code": [
-        "warming up the python",
-        "crunching the numbers",
-        "running the calculation",
-        "executing the snippet",
-        "spinning up the sandbox",
-        "compiling the logic",
-        "evaluating the expression",
-        "processing in the interpreter",
+    "code": [
+        "warming up the python for {topic}",
+        "crunching the {topic} numbers",
+        "running the {topic} analysis",
+        "letting the code cook on {topic}",
+        "executing with prejudice (no gradient required)",
+        "invoking the subprocess (this is not a drill)",
+        "forward pass: python. backward pass: your problem.",
+        "doing actual maths (the model can't)",
+        "sandboxing the chaos",
+        "it runs on my machine, theoretically",
     ],
-    "file_ops": [
-        "rifling through the files",
-        "reading from disk",
-        "writing to storage",
-        "accessing the filesystem",
+    "file": [
+        "rustling through the {topic} papers",
+        "filing {topic} away for later",
+        "reading the {topic} receipts",
+        "committing {topic} to persistent memory (no RLHF involved)",
+        "checkpointing the {topic} findings",
+        "rummaging through the filing cabinet",
+        "the paperwork, as promised",
+    ],
+    "pdf": [
+        "cracking open the {topic} document",
+        "extracting tables from the {topic} filing",
+        "parsing report pages for {topic}",
+        "pulling figures from the PDF",
+        "mining the document structure",
+        "harvesting numbers, please hold",
+        "dissecting the annual report on {topic}",
+        "reading the sustainability data on {topic}",
+    ],
+    "think": [
+        "thinking cap on — it's about {topic}",
+        "connecting the dots on {topic}",
+        "joining up the {topic} threads",
+        "formulating a theory about {topic}",
+        "reasoning through the {topic} noise",
+        "running chain-of-thought on {topic} (faithfully, hopefully)",
+        "probing for {topic} (linear probe, no ground truth)",
+        "attention-heading toward {topic}",
+        "cross-referencing {topic} across activation space",
+        "no hallucinations detected on {topic} (yet)",
+        "the superposition of {topic} answers, collapsing",
+        "neurons firing (metaphorically — this is a transformer)",
+        "the reasoning trace exists. whether it's faithful is another matter.",
+        "weighing the evidence, such as it is",
+    ],
+    "browser": [
+        "launching a headless expedition for {topic}",
+        "firing up playwright for {topic}",
+        "navigating the DOM jungle for {topic}",
+        "javascript rendered. {topic} incoming.",
+        "asking chromium nicely",
+        "bypassing the anti-scraping rituals",
+        "the browser is doing what the scraper couldn't",
     ],
     "default": [
-        "connecting the dots",
-        "reasoning it through",
-        "cross-referencing sources",
-        "following the trail",
-        "triangulating facts",
-        "piecing it together",
-        "chasing citations",
-        "skimming abstracts",
+        "on the case — it's about {topic}",
+        "still digging on {topic}",
+        "getting warmer on {topic}",
+        "following the {topic} threads",
+        "the inference chain is holding (for now)",
+        "no context window overflow yet",
+        "tokenmaxxing the research pipeline",
+        "not done yet",
+        "hold that thought",
+        "stay with me",
+        "this is fine",
     ],
 }
 
@@ -116,11 +198,58 @@ def _spin(elapsed: float) -> str:
     return _SPINNER_CHARS[int(elapsed * 12) % len(_SPINNER_CHARS)]
 
 
-def _phrase(action: Optional[str], elapsed: float) -> str:
-    pool = PHRASES.get(action or "default", PHRASES["default"])
-    # rotate through pool every 2.5 s
-    idx = int(elapsed / 2.5) % len(pool)
-    return pool[idx]
+def extract_topic(query: str) -> str:
+    """Extract 1–2 meaningful words from a query for phrase interpolation.
+
+    Skips stopwords, weak verbs, possessives, quantifiers, and content-free
+    nouns so "volkswagen scope" wins over "volkswagen their percentage".
+    Falls back to "this" for empty input, all-stopwords, or single-char leftovers.
+    """
+    if not query or not query.strip():
+        return "this"
+    words = query.strip().lower().split()
+    meaningful: List[str] = []
+    for w in words:
+        clean = re.sub(r"[^a-z0-9\-]", "", w)
+        if clean and clean not in _SKIP and not clean.isdigit() and len(clean) > 1:
+            meaningful.append(clean)
+        if len(meaningful) == 2:
+            break
+    topic = " ".join(meaningful) if meaningful else "this"
+    return (topic[:25] + "…") if len(topic) > 28 else topic
+
+
+def _phrase(action: Optional[str], elapsed: float, topic: str = "this") -> str:
+    """Pick a rotating phrase keyed to the current tool action."""
+    key = "default"
+    if action:
+        for k in PHRASES:
+            if k in action.lower():
+                key = k
+                break
+    pool = PHRASES[key]
+    raw = pool[int(elapsed / 2.5) % len(pool)]
+    return raw.replace("{topic}", topic)
+
+
+# ─── Session stats (lifetime of this CLI process) ────────────────────────────
+_session_queries: int = 0
+_session_steps: int = 0
+
+
+def _exit_quip(n_queries: int, total_steps: int) -> str:
+    if n_queries == 0:
+        return "you came, you saw, you didn't ask anything."
+    if n_queries == 1 and total_steps <= 3:
+        return "one question, answered. not bad."
+    if total_steps >= 60:
+        return f"{total_steps} steps taken. the web has been thoroughly interrogated."
+    if total_steps >= 30:
+        q_word = "query" if n_queries == 1 else "queries"
+        return f"{n_queries} {q_word}, {total_steps} steps deep. that's some serious digging."
+    if n_queries >= 5:
+        return f"{n_queries} questions answered. the curiosity engine delivered."
+    return random.choice(_DONE_FALLBACK)
 
 
 class ResearchPanel:
@@ -128,6 +257,7 @@ class ResearchPanel:
 
     def __init__(self, query: str, max_iterations: int, start_time: float):
         self.query = query
+        self.topic = extract_topic(query)
         self.max_iterations = max_iterations
         self.start_time = start_time
         self.iteration = 0
@@ -162,7 +292,7 @@ class ResearchPanel:
     def __rich__(self) -> Panel:
         elapsed = time.time() - self.start_time
         spin_char = _spin(elapsed)
-        phrase = _phrase(self.current_action, elapsed)
+        phrase = _phrase(self.current_action, elapsed, self.topic)
 
         grid = Table.grid(padding=(0, 1))
         grid.add_column(style="dim", min_width=11, max_width=11)
@@ -555,16 +685,16 @@ def view_history():
         choices = [
             questionary.Choice(
                 title=f"  [{i+1:2d}]  {e['query'][:60]}",
-                value=i,
+                value=e["query"],
             )
             for i, e in enumerate(shown)
         ]
-        choices.append(questionary.Choice(title="  back", value=None))
-        idx = questionary.select(
+        choices.append(questionary.Choice(title="  back", value=""))
+        selected = questionary.select(
             "re-run a query:", choices=choices
         ).ask()
-        if idx is not None:
-            _run_query(shown[idx]["query"])
+        if selected:  # empty string ("back") and None (Ctrl-C) are both falsy
+            _run_query(selected)
     else:
         choice = Prompt.ask(
             "[green]❯[/green] enter number to re-run (Enter to go back)", default=""
@@ -602,12 +732,15 @@ def _build_tool_manager(cfg) -> "ToolManager":
     from webresearch.tools import (
         ToolManager, SearchTool, ScrapeTool, BrowserScrapeTool,
         CodeExecutorTool, FileOpsTool, playwright_available,
+        PDFExtractTool, pdf_available,
     )
     tool_manager = ToolManager()
     tool_manager.register_tool(SearchTool(cfg.serper_api_key))
     tool_manager.register_tool(ScrapeTool())
     if playwright_available():
         tool_manager.register_tool(BrowserScrapeTool())
+    if pdf_available():
+        tool_manager.register_tool(PDFExtractTool())
     tool_manager.register_tool(CodeExecutorTool())
     tool_manager.register_tool(FileOpsTool())
     return tool_manager
@@ -771,8 +904,12 @@ def _run_query(query: str):
     border = "red" if answer.startswith("⚠ Error:") else ("yellow" if answer.startswith("⚠") else "green")
     console.print(Panel(answer, border_style=border, padding=(1, 2)))
     console.print()
+    global _session_queries, _session_steps
+    _session_queries += 1
+    _session_steps += n_steps
+
     if not answer.startswith("⚠"):
-        console.print(f"  [dim italic]{random.choice(DONE_QUIPS)}[/dim italic]")
+        console.print(f"  [dim italic]{random.choice(_DONE_FALLBACK)}[/dim italic]")
     console.print(
         f"  [dim]⏱  {duration:.1f}s  ·  {n_steps} steps[/dim]"
     )
@@ -1061,6 +1198,10 @@ def view_logs():
 # ─── Main ────────────────────────────────────────────────────────────────────
 
 def main():
+    logging.basicConfig(level=logging.WARNING)
+    logging.getLogger("pypdf").setLevel(logging.ERROR)
+    logging.getLogger("pdfminer").setLevel(logging.ERROR)
+
     print_banner()
 
     config = check_config()
@@ -1097,7 +1238,7 @@ def main():
             console.print("✓ Session memory cleared.", style="bold green")
             console.print()
         elif choice == "q":
-            console.print(f"  [dim]{random.choice(DONE_QUIPS)}[/dim]")
+            console.print(f"  [dim]{_exit_quip(_session_queries, _session_steps)}[/dim]")
             console.print()
             sys.exit(0)
 
@@ -1106,5 +1247,5 @@ if __name__ == "__main__":
     try:
         main()
     except KeyboardInterrupt:
-        console.print("\n[bold cyan]Goodbye! 👋[/bold cyan]\n")
+        console.print(f"\n  [dim]{_exit_quip(_session_queries, _session_steps)}[/dim]\n")
         sys.exit(0)
