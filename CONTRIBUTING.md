@@ -63,15 +63,27 @@ We are committed to providing a welcoming and inclusive experience for everyone.
    source venv/bin/activate  # On Windows: venv\Scripts\activate
    ```
 
-2. **Install dependencies**:
+2. **Install in editable mode with all extras**:
+   ```bash
+   pip install -e ".[providers,browser]"
+   ```
+   Or just core + test dependencies:
    ```bash
    pip install -r requirements.txt
+   pip install pytest
    ```
 
-3. **Set up environment variables**:
+3. **Configure API keys** — the agent uses the OS system keyring (no `.env` file needed). On first run it walks you through setup interactively:
    ```bash
-   cp .env.example .env
-   # Edit .env and add your API keys
+   webresearch
+   # → follow the setup wizard on first launch
+   ```
+   To reconfigure at any time: choose `[6] reconfigure api keys` from the menu.
+
+   For CI or headless environments, set environment variables directly:
+   ```bash
+   export GEMINI_API_KEY=...
+   export SERPER_API_KEY=...
    ```
 
 4. **Verify setup**:
@@ -222,19 +234,23 @@ __all__ = [
 
 ### 3. Register the Tool
 
-Register it in `main.py` in the `initialize_agent()` function:
+Register it in `cli.py` inside `_build_tool_manager()`:
 
 ```python
+# cli.py — _build_tool_manager()
+from webresearch.tools.my_tool import MyTool
 tool_manager.register_tool(MyTool(param1="value"))
 ```
 
 ### 4. Test Your Tool
 
-Create a test task and verify it works:
+Write a unit test in `tests/` (see [Testing Guidelines](#testing-guidelines)), then do a live smoke test via batch mode:
 
 ```bash
-echo "Test task that requires my_tool" > test_my_tool.txt
-python main.py test_my_tool.txt
+# tasks.txt
+Task that requires my_tool to answer correctly.
+
+python main.py tasks.txt
 ```
 
 ### 5. Document Your Tool
@@ -332,52 +348,55 @@ logger.error("Something failed")
 
 ## Testing Guidelines
 
-### Manual Testing
+### Running the Test Suite
 
-1. **Verify setup**:
-   ```bash
-   python check_setup.py
-   ```
+The project uses `pytest`. All tests live in `tests/` and run without API keys — external calls are mocked.
 
-2. **Test with demo**:
-   ```bash
-   python demo.py
-   ```
+```bash
+# Run all tests
+pytest
 
-3. **Test with simple tasks**:
-   ```bash
-   python main.py example_simple.txt
-   ```
+# Run a specific file
+pytest tests/test_parallel.py -v
 
-4. **Test with full task set**:
-   ```bash
-   python main.py tasks.txt
-   ```
-
-### Testing Checklist
-
-Before submitting a pull request:
-
-- [ ] Code runs without errors
-- [ ] All existing functionality still works
-- [ ] New features are documented
-- [ ] Error handling is comprehensive
-- [ ] Logging is appropriate
-- [ ] Type hints are present
-- [ ] Docstrings are complete
-- [ ] No hardcoded values (use config)
-- [ ] No API keys in code
-
-### Creating Test Cases
-
-When adding new features, create a test task:
-
+# Run a specific test
+pytest tests/test_parallel.py::test_decompose_parses_numbered_list -v
 ```
-# test_new_feature.txt
-Task that exercises the new feature.
 
-Another task that tests edge cases.
-```
+No API keys or network access required for the unit tests.
+
+### Test Files
+
+| File | What it covers |
+|------|----------------|
+| `tests/test_agent_parsing.py` | ReAct response parsing, JSON fallback |
+| `tests/test_cli_input.py` | `_read_query` multiline input helper |
+| `tests/test_memory.py` | `ConversationMemory` FIFO, context injection |
+| `tests/test_parallel.py` | Decompose/synthesize/context scoping |
+| `tests/test_sandbox.py` | Code executor AST sandboxing |
+| `tests/test_scraper.py` | Scraper hardening (paywall, 5xx, encoding) |
+| `tests/test_search_usage.py` | Serper monthly usage tracking |
+
+### Writing New Tests
+
+- Use `unittest.mock.MagicMock` for LLM interfaces and tool managers — no real API calls.
+- If your test file imports `cli.py`, stub the display-only deps (`pyfiglet`, `questionary`) at the top before the import:
+  ```python
+  import sys
+  from unittest.mock import MagicMock
+  sys.modules.setdefault("pyfiglet", MagicMock())
+  sys.modules.setdefault("questionary", MagicMock())
+  ```
+- Test the smallest unit that can fail independently. Integration smoke tests belong in a separate `tasks.txt` run, not in the pytest suite.
+
+### Pre-submission Checklist
+
+- [ ] `pytest` passes with no failures
+- [ ] New behaviour has at least one new test
+- [ ] No API keys in code or test fixtures
+- [ ] No hardcoded values — use config or constructor args
+- [ ] Type hints present on new functions
+- [ ] Logging uses `logger.*` not `print()`
 
 ## Pull Request Process
 
@@ -389,15 +408,18 @@ Another task that tests edge cases.
    git rebase upstream/main
    ```
 
-2. **Run verification**:
+2. **Run the test suite**:
    ```bash
-   python check_setup.py
-   python test_imports.py
+   pytest
    ```
 
-3. **Test thoroughly**: Run the agent on various tasks
+3. **Verify the CLI boots cleanly** (optional, requires API keys):
+   ```bash
+   python check_setup.py
+   webresearch
+   ```
 
-4. **Update documentation**: If you changed functionality
+4. **Update documentation**: If you changed user-visible behaviour, update `README.md` and this guide where relevant
 
 ### PR Description Template
 
@@ -421,9 +443,10 @@ Brief description of changes
 Describe how you tested your changes
 
 ## Checklist
+- [ ] `pytest` passes
+- [ ] New behaviour has a test
 - [ ] Code follows style guidelines
 - [ ] Added/updated documentation
-- [ ] Tested thoroughly
 - [ ] No breaking changes (or documented)
 - [ ] Updated CHANGELOG if applicable
 
@@ -515,20 +538,20 @@ Clear description of the issue
 
 When proposing significant changes:
 
-1. **Open an issue first**: Discuss the approach
-2. **Consider impact**: How does it affect existing code?
-3. **Maintain modularity**: Don't create tight coupling
-4. **Follow patterns**: Use existing design patterns
-5. **Document decisions**: Update ARCHITECTURE.md
+1. **Open an issue first**: Discuss the approach before writing code
+2. **Consider impact**: How does it affect the ReAct loop, prompt structure, or tool contracts?
+3. **Maintain modularity**: The agent, LLM, tools, and CLI are deliberately decoupled — avoid introducing tight coupling
+4. **Follow patterns**: New tools extend `Tool`; new LLM providers implement `LLMInterface`; CLI wiring goes in `cli.py`
+5. **Document decisions**: Update README.md and this guide to reflect any user-visible or contributor-visible changes
 
 ## Questions?
 
 If you have questions:
 
-1. **Check documentation**: README, ARCHITECTURE, etc.
+1. **Check documentation**: README.md and this guide cover setup, architecture, and contribution workflow
 2. **Search issues**: Someone may have asked before
-3. **Open an issue**: Ask your question
-4. **Be specific**: Provide context and examples
+3. **Open an issue**: Ask your question with enough context to reproduce or understand the situation
+4. **Be specific**: Provide Python version, OS, and the exact command or code that triggered the problem
 
 ## Recognition
 

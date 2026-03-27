@@ -7,10 +7,97 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Planned
-- Function calling API integration for more reliable tool-call parsing
-- PDF content extraction
-- Automated evaluation suite
+## [2.4.6] - 2026-03-27
+
+### Added
+- `_read_query()` multiline input helper in `cli.py`: first line ending with `:` enters continuation mode; subsequent lines are collected until a blank Enter. Single-line queries are unaffected — they return on the first Enter as before. Fixes silent truncation when pasting multi-criteria research questions.
+- `test_cli_input.py`: 7 unit tests covering single-line passthrough, `back` sentinel, blank input, colon trigger with continuation, EOFError/KeyboardInterrupt handling, and trailing-whitespace colon detection.
+
+### Changed
+- `ParallelResearchAgent.run()` now accepts an optional `context: str = ""` parameter. Context is forwarded to `_synthesize()` only — `_decompose()` always receives the raw task. Prevents prior Q&A pairs from contaminating sub-question generation in deep research mode.
+- `_synthesize()` includes a `SESSION CONTEXT` block in the prompt when context is non-empty, with an instruction to reference it only if directly relevant.
+- `_run_deep_research()` in `cli.py` no longer overwrites the query with memory; passes `_session.get_context()` as the separate `context=` kwarg instead.
+- Phrase rotation interval: `2.5 s → 6.0 s`. Each status phrase now holds for 6 seconds — readable without flickering on fast queries.
+- `test_parallel.py`: 5 new tests covering context isolation in decompose, context presence in synthesize, empty-context omission, run-level clean decompose, and run-level synthesize forwarding.
+
+## [2.4.5] - 2026-03-26
+
+### Fixed
+- Suppressed noisy `pdfplumber` warnings (`Cannot set gray stroke color because /'P0' is an invalid float value`) that were leaking to the terminal during PDF extraction. Redirected the underlying `pdfminer` logger to `WARNING` before parsing and restored it after.
+- Hardened the ReAct prompt: `Action Input` description now explicitly forbids raw newlines and unescaped backslashes inside JSON string values, reducing `Unterminated string` JSON parse failures on multi-line LLM outputs.
+
+## [2.4.4] - 2026-03-25
+
+### Changed
+- Phrase engine overhauled to match the CLAUDE.md spec: action-keyed pools (`search`, `scrape`, `code`, `file`, `pdf`, `think`, `browser`, `default`) each hold 12–14 distinct phrases; `{topic}` interpolation replaced static strings.
+- `_SKIP` stopword set expanded with content-free nouns (`percentage`, `statements`, `reduction`, `companies`, `organization`, etc.) so `extract_topic()` reliably surfaces entity words over filler.
+- Startup quips pool expanded to 8 options.
+
+## [2.4.3] - 2026-03-25
+
+### Added
+- `extract_topic(query)`: extracts 1–2 meaningful words from the query for phrase interpolation, skipping stopwords, weak verbs, possessives, quantifiers, and digits. Falls back to `"this"` for empty or all-stopword input.
+- `_phrase(action, elapsed, topic)`: picks a rotating phrase from the action-keyed pool; phrase advances every 2.5 s of elapsed time.
+- `_exit_quip(n_queries, total_steps)`: session-aware exit message with tiered logic (zero queries, heavy research, high step count, many queries).
+- `_session_queries` and `_session_steps` module-level counters; updated after each query and used by `_exit_quip` on `[q]` exit.
+
+## [2.4.2] - 2026-03-25
+
+### Fixed
+- `view_history()`: `questionary.select()` returned the choice's `title` string (e.g. `"  [1]  ..."`) instead of its `value` (the raw query) when the user picked a history entry, causing a crash on re-run. Fixed by setting `value=e["query"]` on each `questionary.Choice`.
+
+## [2.4.1] - 2026-03-25
+
+### Fixed
+- **Scraper — HTML tables → markdown**: `<table>` elements are now extracted with BeautifulSoup and converted to aligned markdown grids before `html2text` processes the page. Column values and numbers are preserved verbatim — critical for emissions tables, financial statements, and structured regulatory filings.
+- **Scraper — encoding**: switched to `apparent_encoding` (chardet) when the server omits `charset` or defaults to ISO-8859-1, fixing mangled characters in EU government PDFs and older corporate filings.
+- **Scraper — 5xx retry**: 500/502/503/504 responses are retried twice with 2 s / 4 s backoff before returning an error.
+- **Scraper — content selectors**: 30+ CSS selectors covering common CMS patterns (`.article-body`, `.post-content`, `[data-component]`, etc.) tried before falling back to full `<body>`.
+- **Scraper — JS-only detection**: pages with >400 chars raw HTML but <400 chars extracted text now return a `scrape_js` suggestion instead of empty content.
+- **Scraper — paywall teaser**: 200 OK responses with <600 chars + subscribe/sign-in keywords are skipped with an alternative-source suggestion.
+- **Scraper — auth redirect**: raw HTML is scanned for `<input type="password">` and sign-in prose even when the page returns 200 with substantial content.
+- **Scraper — UA rotation**: request headers rotate across a pool of current browser UA strings per request.
+
+## [2.4.0] - 2026-03-25
+
+### Added
+- `PDFExtractTool` (`webresearch/tools/pdf.py`): downloads and parses PDFs via `pdfplumber`. Tables are extracted as aligned grids with exact cell values (not OCR text). `pages="12-18"` parameter lets the agent target specific ranges once it knows the document layout. Total page count shown in output header. Handles login-wall redirects (server returns HTML instead of a PDF). Registered automatically if `pdfplumber` is installed.
+- `pdfplumber>=0.10.0` added to core dependencies in `pyproject.toml`.
+- `pdf_available()` helper in `webresearch/tools/__init__.py` for conditional registration.
+
+## [2.3.4] - 2026-03-25
+
+### Fixed
+- `view_history()` crash on re-run: after selecting a history entry the agent was re-invoked with the raw questionary choice object instead of the query string. Fixed by extracting `.value` before passing to `_run_query()`.
+
+## [2.3.3] - 2026-03-25
+
+### Fixed
+- `ModelFallbackChain`: added `threading.Lock` around provider rotation and a `Semaphore(1)` per provider to serialise concurrent calls to the same endpoint, preventing race conditions during parallel deep research.
+- Status bar markup: menu rows with brackets (e.g. `[dim]`) were being parsed as Rich markup. Switched to `rich.text.Text` with explicit `.append()` calls so brackets always render as literal characters.
+
+## [2.3.2] - 2026-03-25
+
+### Fixed
+- `ModelFallbackChain` retry backoff formula changed to `max(10, 2^(attempt+2))` seconds — prevents hammering free-tier rate limits while still recovering promptly after temporary 429s.
+- Prompt injection sanitization: `Thought:` and `Action:` filter patterns removed from `_OBSERVATION_INJECTION_PATTERNS` — too broad, they were stripping legitimate content from news articles (e.g. `"Action: The company announced..."`).
+- Paywall detection: threshold tightened to 600 chars + explicit subscribe/sign-in keywords to reduce false positives on short but legitimate pages.
+
+## [2.3.1] - 2026-03-25
+
+### Added
+- Full TUI implementation: animated startup boot sequence (`render_startup`), `print_status_bar()` one-line config summary, `_print_usage_banner()` Serper monthly usage display with colour-coded thresholds (green / yellow / red).
+- `_DONE_FALLBACK` quips list displayed after each successful query.
+- Session memory display in menu: `[7] clear session memory · N pair(s) in context`.
+- Query history table with step count, duration, and ⚠ flag for error results; `questionary` arrow-key navigation for history re-run.
+- Deep research status board (`make_status_board`): live `rich.Table` showing per-sub-query state (pending → running → done/error).
+
+## [2.3.0] - 2026-03-25
+
+### Added
+- `ResearchPanel`: `rich.Live`-powered live display for the single-query ReAct loop. Shows query (truncated), iteration counter, elapsed time, spinner, current thought (truncated), action + input preview, and observation byte count. Updates at 12 fps via `step_callback`.
+- `_action_preview()`: formats action name + most meaningful input field (`url`, `query`, `filename`, or first value) into a single readable line.
+- `_spin(elapsed)`: braille spinner cycling at 12 fps from a 10-char sequence.
 
 ## [2.2.1] - 2026-03-11
 

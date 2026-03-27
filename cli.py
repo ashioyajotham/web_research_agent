@@ -228,7 +228,7 @@ def _phrase(action: Optional[str], elapsed: float, topic: str = "this") -> str:
                 key = k
                 break
     pool = PHRASES[key]
-    raw = pool[int(elapsed / 2.5) % len(pool)]
+    raw = pool[int(elapsed / 6.0) % len(pool)]
     return raw.replace("{topic}", topic)
 
 
@@ -939,8 +939,10 @@ def _run_deep_research(query: str):
         console.print("Tip: Reconfigure API keys with option 5.", style="yellow")
         return
 
-    if len(_session) > 0:
-        query = _session.build_task_with_memory(query)
+    # Pass prior context to synthesis only — decomposition always gets the raw
+    # query so unrelated Q&A pairs don't pollute sub-question generation.
+    context = _session.get_context() if len(_session) > 0 else ""
+    if context:
         console.print(f"[dim]↑ Using {len(_session)} previous Q&A pair(s) as context[/dim]\n")
 
     start_time = datetime.now()
@@ -979,7 +981,7 @@ def _run_deep_research(query: str):
                     sub_status[idx]["question"] = question
             live.update(make_status_board())
 
-        answer = agent.run(query, sub_status_callback=cb)
+        answer = agent.run(query, sub_status_callback=cb, context=context)
 
     duration = (datetime.now() - start_time).total_seconds()
     n_sub = len(sub_status)
@@ -1041,12 +1043,40 @@ def show_menu():
     console.print()
 
 
+def _read_query(prompt_text: str) -> str:
+    """
+    Prompt for a research question with automatic multiline support.
+
+    Single-line: type query + Enter — done, same as before.
+    Multi-line:  first line ends with ':' triggers continuation mode;
+                 keep typing lines, then press Enter on a blank line to finish.
+    This handles pasted criteria lists like "Compile companies matching:".
+    """
+    first = Prompt.ask(f"[green]❯[/green] {prompt_text}")
+    if not first or first.lower() == "back":
+        return first or ""
+
+    if not first.rstrip().endswith(":"):
+        return first
+
+    # Continuation mode — consume further lines until blank Enter
+    console.print("[dim]  (continuing — press Enter on a blank line to finish)[/dim]")
+    lines = [first]
+    try:
+        while True:
+            line = input()
+            if not line:
+                break
+            lines.append(line)
+    except (EOFError, KeyboardInterrupt):
+        pass
+    return "\n".join(lines)
+
+
 def run_interactive_query():
     console.print(Rule("[dim]run query[/dim]", style="cyan"))
     console.print()
-    query = Prompt.ask(
-        "[green]❯[/green] Research question (or 'back')"
-    )
+    query = _read_query("Research question (or 'back')")
     if not query or query.lower() == "back":
         return
     console.print()
@@ -1056,9 +1086,7 @@ def run_interactive_query():
 def run_interactive_deep_query():
     console.print(Rule("[dim]run deep research[/dim]", style="cyan"))
     console.print()
-    query = Prompt.ask(
-        "[green]❯[/green] Research question (or 'back')"
-    )
+    query = _read_query("Research question (or 'back')")
     if not query or query.lower() == "back":
         return
     console.print()

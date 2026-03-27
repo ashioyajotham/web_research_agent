@@ -47,6 +47,7 @@ class ParallelResearchAgent:
         self,
         task: str,
         sub_status_callback: Optional[Callable] = None,
+        context: str = "",
     ) -> str:
         """
         Run parallel research on the given task.
@@ -55,13 +56,16 @@ class ParallelResearchAgent:
             task: The research question.
             sub_status_callback: Optional callable(idx, state, question=None).
                 state is one of: 'pending' | 'running' | 'done' | 'error'.
+            context: Optional prior session context string. Passed only to
+                synthesis — decomposition always sees the raw task so prior
+                Q&A pairs don't pollute sub-question generation.
 
         Returns:
             Synthesized final answer.
         """
         logger.info(f"ParallelResearchAgent starting: {task[:80]}")
 
-        # ── 1. Decompose ──────────────────────────────────────────────────────
+        # ── 1. Decompose — raw task only, no session context ──────────────────
         sub_questions = self._decompose(task)
         logger.info(f"Decomposed into {len(sub_questions)} sub-questions")
 
@@ -92,11 +96,11 @@ class ParallelResearchAgent:
                     if sub_status_callback:
                         sub_status_callback(idx, "error")
 
-        # ── 3. Synthesize ─────────────────────────────────────────────────────
+        # ── 3. Synthesize — sub-results + optional prior context ──────────────
         ordered = [results[i] for i in range(len(sub_questions))]
         self._sub_results = ordered
         logger.info("Synthesizing sub-results")
-        return self._synthesize(task, ordered)
+        return self._synthesize(task, ordered, context=context)
 
     # ── Internal helpers ──────────────────────────────────────────────────────
 
@@ -140,15 +144,25 @@ class ParallelResearchAgent:
         )
         return mini_agent.run(question)
 
-    def _synthesize(self, task: str, sub_results: List[Tuple[str, str]]) -> str:
+    def _synthesize(
+        self,
+        task: str,
+        sub_results: List[Tuple[str, str]],
+        context: str = "",
+    ) -> str:
         """Combine all sub-results into a comprehensive final answer."""
         parts = [
             f"You are a research synthesizer. Below are results from "
             f"{len(sub_results)} parallel investigations into different "
             f"aspects of a research question.\n",
             f"ORIGINAL QUESTION: {task}\n",
-            "SUB-INVESTIGATION RESULTS:",
         ]
+        if context:
+            parts.append(
+                f"SESSION CONTEXT (prior research in this session — reference "
+                f"only if directly relevant to the question above):\n{context}\n"
+            )
+        parts.append("SUB-INVESTIGATION RESULTS:")
         for i, (q, a) in enumerate(sub_results, 1):
             preview = a[:1500] + ("…" if len(a) > 1500 else "")
             parts.append(f"\n--- Sub-query {i}: {q} ---\n{preview}")

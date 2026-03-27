@@ -86,6 +86,82 @@ def test_run_calls_synthesize(monkeypatch):
     assert "Comprehensive answer." in result
 
 
+def test_decompose_does_not_see_context():
+    """Context passed to run() must not bleed into _decompose prompts."""
+    agent = make_parallel_agent()
+    captured = []
+    agent.llm.generate.side_effect = lambda p: (captured.append(p), "1. Q1\n2. Q2")[1]
+
+    agent._decompose("What is X?")
+
+    assert len(captured) == 1
+    assert "SESSION CONTEXT" not in captured[0]
+    assert "PREVIOUS RESEARCH" not in captured[0]
+
+
+def test_synthesize_includes_context():
+    """Context is injected into the synthesis prompt when provided."""
+    agent = make_parallel_agent()
+    captured = []
+    agent.llm.generate.side_effect = lambda p: (captured.append(p), "Synthesis.")[1]
+
+    agent._synthesize("My question", [("sub-q", "sub-answer")], context="Prior context here.")
+
+    assert len(captured) == 1
+    assert "Prior context here." in captured[0]
+    assert "SESSION CONTEXT" in captured[0]
+
+
+def test_synthesize_omits_context_block_when_empty():
+    """No SESSION CONTEXT section when context is empty."""
+    agent = make_parallel_agent()
+    captured = []
+    agent.llm.generate.side_effect = lambda p: (captured.append(p), "Synthesis.")[1]
+
+    agent._synthesize("My question", [("sub-q", "sub-answer")])
+
+    assert "SESSION CONTEXT" not in captured[0]
+
+
+def test_run_with_context_keeps_decompose_clean(monkeypatch):
+    """run(context=...) does not contaminate the task seen by _decompose."""
+    agent = make_parallel_agent()
+    decompose_tasks = []
+
+    def tracking_decompose(task):
+        decompose_tasks.append(task)
+        return ["Q1", "Q2"]
+
+    monkeypatch.setattr(agent, "_decompose", tracking_decompose)
+    monkeypatch.setattr(agent, "_research_sub_question", lambda q, idx, cb=None: "ans")
+    agent.llm.generate.return_value = "synthesized"
+
+    agent.run("Clean task", context="Unrelated VW emissions prior context")
+
+    assert len(decompose_tasks) == 1
+    assert decompose_tasks[0] == "Clean task"
+    assert "VW" not in decompose_tasks[0]
+
+
+def test_run_with_context_passes_context_to_synthesize(monkeypatch):
+    """run(context=...) forwards context to _synthesize."""
+    agent = make_parallel_agent()
+    synthesize_kwargs = {}
+
+    original_synthesize = agent._synthesize
+    def tracking_synthesize(task, sub_results, context=""):
+        synthesize_kwargs["context"] = context
+        return "done"
+
+    monkeypatch.setattr(agent, "_decompose", lambda t: ["Q1", "Q2"])
+    monkeypatch.setattr(agent, "_research_sub_question", lambda q, idx, cb=None: "ans")
+    monkeypatch.setattr(agent, "_synthesize", tracking_synthesize)
+
+    agent.run("Some task", context="session context goes here")
+
+    assert synthesize_kwargs.get("context") == "session context goes here"
+
+
 def test_status_callbacks_are_fired(monkeypatch):
     agent = make_parallel_agent()
     agent.llm.generate.return_value = "1. Q1\n2. Q2"

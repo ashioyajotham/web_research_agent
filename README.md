@@ -66,7 +66,20 @@ Menu options:
 | `[7]` | Clear conversation memory |
 | `[q]` | Exit |
 
-The live research panel shows a spinner, elapsed time, and contextual progress phrases keyed to the current tool in use (searching / scraping / running code / writing file).
+The live research panel shows a spinner, elapsed time, and contextual progress phrases keyed to the current tool in use (searching / scraping / running code / writing file). Phrases rotate every 6 seconds so they're readable without flickering.
+
+**Multi-line queries** are supported in both `[1]` and `[2]` modes. End your first line with `:` to enter continuation mode — subsequent lines are collected until you press Enter on a blank line:
+
+```
+❯ Research question: Compile a list of companies matching:
+  (continuing — press Enter on a blank line to finish)
+  - Based in the EU
+  - Revenue > €1B in 2023
+  - Motor vehicle sector
+  [blank line]
+```
+
+Single-line queries work exactly as before — type and press Enter once.
 
 ### Batch Mode
 
@@ -112,8 +125,8 @@ webresearch/
 ├── llm_chain.py       # Model fallback chain with thread-safe provider rotation
 ├── config.py          # Configuration (env vars + keyring)
 ├── credentials.py     # Keyring-backed secure credential storage
-├── memory.py          # Conversation memory (cross-session)
-├── parallel.py        # Parallel deep research (ThreadPoolExecutor)
+├── memory.py          # Conversation memory (within-session Q&A context)
+├── parallel.py        # Parallel deep research: decomposes task → fan-out → synthesize
 └── tools/
     ├── base.py        # Tool abstract base class
     ├── search.py      # Serper.dev web search
@@ -162,6 +175,15 @@ The `pdf_extract` tool downloads and parses PDFs using `pdfplumber`:
 - Handles login-wall redirects (server returns HTML instead of PDF)
 
 The typical pattern for a sustainability report task: `scrape` the report landing page to find the PDF URL → `pdf_extract` with `pages="all"` to see the table of contents → `pdf_extract` with a targeted range to get the GHG table → `execute_code` to compute the percentage change.
+
+### Session Memory
+
+`ConversationMemory` keeps a fixed-capacity FIFO of (query, answer) pairs for the lifetime of the CLI process (up to 5 pairs). Context is injected differently depending on the mode:
+
+- **Single query `[1]`**: prior Q&A pairs are prepended to the task before the ReAct loop starts, so the agent can reference earlier findings directly.
+- **Deep research `[2]`**: prior context is passed only to the final *synthesis* step, never to the sub-question decomposer. This prevents unrelated prior queries from polluting the fan-out questions.
+
+Session memory is cleared with `[7]` or when the process exits.
 
 ### Context Window Management
 
@@ -235,8 +257,6 @@ webresearch
 **Observation truncation loses context.** At `MAX_TOOL_OUTPUT_LENGTH=3000`, long scraped pages are cut off. Key facts in the truncated portion are permanently lost. A chunking + retrieval approach would address this but adds latency.
 
 **PDF table extraction degrades on scanned/image PDFs.** `pdfplumber` works on text-layer PDFs (the majority of corporate reports). Scanned documents with no text layer return empty pages. There is no OCR fallback.
-
-**Observation truncation loses context.** At `MAX_TOOL_OUTPUT_LENGTH=3000`, long scraped pages are cut off. Key facts in the truncated portion are permanently lost. A chunking + retrieval approach would address this but adds latency.
 
 **Synthesis strategy is LLM-selected, not validated.** The model chooses a reasoning strategy (factual lookup, list compilation, structured extraction, open synthesis) inside its own reasoning pass. There is no external classifier validating the selection. Ambiguous tasks sometimes get the wrong strategy.
 
