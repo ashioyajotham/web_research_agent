@@ -269,14 +269,21 @@ return no content, use the scrape_js tool.
                 "loading...",
                 "app is loading",
             ]
-            if len(text.strip()) < 400 and len(html_content) > 3000:
-                if any(h in text.lower() for h in _JS_HINTS) or len(text.strip()) < 100:
-                    return (
-                        f"Content from: {url}\n{'=' * 80}\n\n"
-                        "[JS-rendered page] This page requires JavaScript to display "
-                        "content. Use the 'scrape_js' tool with this same URL to fetch "
-                        "the fully-rendered version."
-                    )
+            text_len = len(text.strip())
+            # Very thin output (< 100 chars) always suggests JS rendering, even if the
+            # HTML shell itself is small (SPAs often return a tiny skeleton + JS bundle).
+            # Moderate thinness (< 400 chars) only triggers when HTML is substantial.
+            is_js_page = (
+                (text_len < 100)
+                or (text_len < 400 and len(html_content) > 3000 and any(h in text.lower() for h in _JS_HINTS))
+            )
+            if is_js_page:
+                return (
+                    f"Content from: {url}\n{'=' * 80}\n\n"
+                    "[JS-rendered page] This page requires JavaScript to display "
+                    "content. Use the 'scrape_js' tool with this same URL to fetch "
+                    "the fully-rendered version."
+                )
 
             # Auth-redirect detection (200 OK but actually a login wall)
             # Check raw HTML for login form signatures regardless of extracted text length

@@ -917,7 +917,9 @@ def _run_query(query: str):
     console.print()
 
     # Save to session memory and persistent history
-    _session.add(query, answer)
+    # Don't persist error or incomplete answers — they'd poison future queries
+    if not answer.startswith("⚠"):
+        _session.add(query, answer)
     save_to_history(query, answer, n_steps, duration)
 
     if Confirm.ask("Save result to file?", default=False):
@@ -999,7 +1001,8 @@ def _run_deep_research(query: str):
     _print_usage_banner()
     console.print()
 
-    _session.add(query, answer)
+    if not answer.startswith("⚠"):
+        _session.add(query, answer)
     save_to_history(query, answer, n_sub, duration)
 
     if Confirm.ask("Save result to file?", default=False):

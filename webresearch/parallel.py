@@ -111,6 +111,10 @@ class ParallelResearchAgent:
             f"{self.max_sub_queries} focused sub-questions that together would "
             f"answer the original question comprehensively.\n\n"
             f"RESEARCH QUESTION: {task}\n\n"
+            f"Each sub-question will be answered by an independent researcher who sees "
+            f"only that sub-question — they cannot see the other sub-questions or their "
+            f"answers. Every sub-question must therefore be fully self-contained and "
+            f"answerable on its own. Cover distinct aspects.\n\n"
             f"Output ONLY a numbered list, one sub-question per line. No preamble.\n"
             f"SUB-QUESTIONS:"
         )
