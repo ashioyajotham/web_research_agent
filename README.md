@@ -185,6 +185,52 @@ The typical pattern for a sustainability report task: `scrape` the report landin
 
 Session memory is cleared with `[7]` or when the process exits.
 
+### Benchmarking
+
+Standard NLP benchmarks (MMLU, HellaSwag, BIG-Bench, GPQA) measure a model's parametric knowledge — what it already knows from pre-training. They test the model in isolation: fixed prompt in, fixed answer out. For an agentic web research system, that tests the wrong thing entirely.
+
+What actually breaks in a research agent is different:
+
+- **Multi-hop reasoning chains**: the agent must find fact A, then use A to find fact B. A wrong answer at hop 1 compounds — the agent searches for the wrong thing at hop 2, finds plausible-sounding results, and hallucinates a confident final answer. Static benchmarks have no tool calls, so they never surface this failure mode.
+- **Hallucination under rate pressure**: when the primary model is rate-limited and the chain falls back to a weaker model mid-run, reasoning quality drops. The weaker model may anchor on a plausible-sounding entity from a previous step rather than continuing to search. This looks like "the model knows the answer" but is actually "the model stopped researching too early".
+- **Context contamination**: session memory from a previous failed query can leak into the next one, steering the agent toward a wrong entity it found earlier. Fixed-prompt benchmarks have no session state, so they never catch this.
+- **Scraping failures**: a JS-rendered page returns 80 chars of content; the agent should detect this and switch to the browser tool. Whether it does that correctly is not a knowledge question — it is a tool-use and observation-interpretation question.
+
+The benchmark in `benchmarks/` addresses these directly. Each case is a real-world multi-hop research question with a known ground-truth answer:
+
+```
+benchmarks/
+├── benchmark.json       # cases: query + expected_contains + expected_not_contains + source
+└── run_benchmark.py     # runner: executes each case, checks answer, reports PASS/FAIL
+```
+
+Evaluation is keyword-based rather than LLM-as-judge: `expected_contains` lists anchor terms that must appear in the answer (e.g. `"shaikh group"`), and `expected_not_contains` lists known hallucinations to reject (e.g. `"world economic forum"`). This is the same approach used by BioASQ, TriviaQA, and Natural Questions — robust to phrasing variation while still catching wrong entities.
+
+```bash
+# Run one case
+python benchmarks/run_benchmark.py --ids geneva-ai-talks-coo
+
+# Run all cases
+python benchmarks/run_benchmark.py
+
+# Save results to a specific file
+python benchmarks/run_benchmark.py --out results/2026-03-29.json
+```
+
+Output:
+```
+[geneva-ai-talks-coo]
+  status:  PASS  (215s)
+  answer:  The Shaikh Group mediated the talks. Their COO is...
+
+[vw-scope-emissions]
+  status:  FAIL
+  missing: ['%']
+  answer:  Volkswagen reduced Scope 1 and Scope 2 emissions...
+```
+
+**Adding a new case**: add an entry to `benchmark.json` with `id`, `query`, `expected_contains`, `expected_not_contains`, `source`, and `notes`. No code changes required. The recommended workflow is: run the query manually in the TUI, verify the answer against the primary source, then record the discriminating anchor terms.
+
 ### Context Window Management
 
 The prompt uses a sliding window: the 8 most recent steps are included in full; earlier steps are condensed to one-line summaries. Tool output is truncated at `MAX_TOOL_OUTPUT_LENGTH` characters before entering the prompt.
@@ -260,7 +306,7 @@ webresearch
 
 **Synthesis strategy is LLM-selected, not validated.** The model chooses a reasoning strategy (factual lookup, list compilation, structured extraction, open synthesis) inside its own reasoning pass. There is no external classifier validating the selection. Ambiguous tasks sometimes get the wrong strategy.
 
-**Free-tier rate limits constrain throughput.** Groq allows ~6,000 tokens/min on the free tier. With `max_tokens=2048`, the first rate limit usually hits around step 3-4 of a 15-step run. The fallback chain and 10s+ backoff floor mitigate this but do not eliminate it.
+**Free-tier rate limits constrain throughput.** Groq allows ~6,000 tokens/min on the free tier. With `max_tokens=4096` per step, the first rate limit typically hits around step 2-3 of a 15-step run. The fallback chain and 10s+ backoff floor mitigate this but do not eliminate it. The `MAX_TOOL_OUTPUT_LENGTH=3000` cap on observations reduces prompt size and partially offsets the increased response budget.
 
 ---
 

@@ -843,6 +843,7 @@ def initialize_agent():
         llm=_build_llm_chain(cfg),
         tool_manager=_build_tool_manager(cfg),
         max_iterations=cfg.max_iterations,
+        max_tool_output_length=cfg.max_tool_output_length,
     )
 
 

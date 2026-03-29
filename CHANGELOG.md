@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.4.8] - 2026-03-29
+
+### Added
+- `benchmarks/benchmark.json`: structured benchmark suite with three real-world multi-hop research cases (Geneva AI talks COO, VW Scope 1+2 emissions reduction, EU automotive GHG companies). Each case carries `expected_contains` anchor terms and `expected_not_contains` known-hallucination guards.
+- `benchmarks/run_benchmark.py`: benchmark runner that executes cases through `initialize_agent()`, checks answers against ground-truth keywords, and reports `PASS`/`FAIL` per case with specifics on missing terms and detected hallucinations. Timestamped JSON results file saved after each run. Supports `--ids` to run a subset and `--out` to redirect the results file.
+
+### Fixed
+- `initialize_agent()` in `cli.py` now passes `max_tool_output_length=cfg.max_tool_output_length` to `ReActAgent`. Previously the agent silently used its constructor default of 5000 chars, ignoring the configured value of 3000 — causing each observation to be up to 1.7× larger than intended and bloating multi-step prompts.
+- Fallback provider `max_tokens` raised from 2048 → 4096 in `llm_compat.py`. On complex multi-hop tasks, 2048 was insufficient for the model to complete a full Thought + Action + Action Input at later iterations when the prompt already carried several thousand tokens of ReAct history. The truncation caused JSON parse failures and premature Final Answers. 4096 restores reasoning headroom without materially increasing Groq token/min consumption given the smaller observation budget from the fix above.
+
+## [2.4.7] - 2026-03-29
+
+### Fixed
+- Session memory no longer saves error or incomplete answers (responses prefixed `⚠`) to `ConversationMemory`. Previously every result — including rate-limit errors and max-iteration failures — was stored and injected as authoritative context into subsequent queries, causing the LLM to anchor on hallucinated facts from failed runs.
+- Deep research sub-question decomposition prompt now requires each sub-question to be fully self-contained, using the framing "an independent researcher who sees only that sub-question". Removes the prior domain-specific examples in favour of a general constraint that applies to any query type. Eliminates forward-reference sub-questions (e.g. "who is the COO of this organization?") that failed because parallel mini-agents share no state.
+- Scrape JS-detection threshold: very thin responses (< 100 chars of extracted text) now always return a `scrape_js` suggestion, regardless of HTML body size. The prior condition required `html_content > 3000` chars, which was not met by SPAs that return a tiny HTML skeleton — causing the agent to silently receive 80–100 chars of useless content instead of being redirected to the browser scraper.
+
 ## [2.4.6] - 2026-03-27
 
 ### Added

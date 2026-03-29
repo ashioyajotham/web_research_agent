@@ -99,7 +99,7 @@ class OpenAICompatibleLLMInterface:
                     model=self.model_name,
                     messages=[{"role": "user", "content": prompt}],
                     temperature=self.temperature,
-                    max_tokens=2048,  # ReAct steps are short; 8192 blew the Groq free-tier token/min budget
+                    max_tokens=4096,  # 2048 truncated complex ReAct reasoning on fallback providers
                 )
                 return response.choices[0].message.content or ""
 
