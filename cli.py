@@ -434,6 +434,72 @@ def save_config(config: dict):
     console.print(f"✓ Configuration saved to {config_path}", style="bold green")
 
 
+def agent_settings():
+    """Interactive sub-screen for toggling LOG_LEVEL and QUIET_FALLBACK."""
+    console.print(Rule("[dim]agent settings[/dim]", style="cyan"))
+    console.print()
+
+    # ── LOG_LEVEL ─────────────────────────────────────────────────────────────
+    current_level = os.environ.get("LOG_LEVEL", "WARNING").upper()
+    console.print("[bold yellow]1. Log level[/bold yellow]")
+    console.print("   Controls how much internal reasoning is printed to the terminal.")
+    console.print(f"   [dim]Current: [cyan]{current_level}[/cyan][/dim]")
+    console.print("   [dim]Options: DEBUG  INFO  WARNING  ERROR[/dim]")
+    val = Prompt.ask("   [green]New log level[/green] (Enter to keep)", default="").strip().upper()
+    if val and val in ("DEBUG", "INFO", "WARNING", "ERROR"):
+        os.environ["LOG_LEVEL"] = val
+        # re-apply immediately so the rest of this session respects it
+        logging.basicConfig(level=getattr(logging, val, logging.WARNING), force=True)
+        console.print(f"   [bold green]Log level set to {val}[/bold green]")
+    elif val:
+        console.print("   [dim yellow]Unrecognised level — keeping current value.[/dim yellow]")
+
+    # ── QUIET_FALLBACK ────────────────────────────────────────────────────────
+    console.print()
+    current_quiet = os.environ.get("QUIET_FALLBACK", "false").lower() == "true"
+    console.print("[bold yellow]2. Quiet fallback[/bold yellow]")
+    console.print("   Suppress the 'Rate limit reached... Switching to...' banner.")
+    console.print(f"   [dim]Current: [cyan]{'on' if current_quiet else 'off'}[/cyan][/dim]")
+    val = Prompt.ask("   [green]Enable quiet fallback?[/green] (y/n, Enter to keep)", default="").strip().lower()
+    if val in ("y", "yes", "true", "1"):
+        os.environ["QUIET_FALLBACK"] = "true"
+        console.print("   [bold green]Quiet fallback enabled.[/bold green]")
+    elif val in ("n", "no", "false", "0"):
+        os.environ["QUIET_FALLBACK"] = "false"
+        console.print("   [bold green]Quiet fallback disabled.[/bold green]")
+
+    console.print()
+    console.print(
+        "[dim]Settings apply for this session. To persist across restarts, add them to your "
+        "[cyan].env[/cyan] file in the project directory.[/dim]"
+    )
+    console.print()
+
+
+def configure() -> dict:
+    """Configuration hub — routes to API key setup or agent settings."""
+    console.print(Rule("[dim]configuration[/dim]", style="cyan"))
+    console.print()
+    t = Text()
+    t.append("  [a]", style="bold cyan"); t.append("  api keys              ", style="white"); t.append("gemini · serper · fallback providers", style="dim")
+    console.print(t)
+    t = Text()
+    t.append("  [b]", style="bold cyan"); t.append("  agent settings        ", style="white"); t.append("log level · quiet fallback", style="dim")
+    console.print(t)
+    t = Text()
+    t.append("  [x]", style="bold cyan"); t.append("  back", style="white")
+    console.print(t)
+    console.print()
+
+    choice = Prompt.ask("[green]❯[/green]", choices=["a", "b", "x"], show_choices=False)
+    console.print()
+    if choice == "a":
+        return setup_api_keys()
+    elif choice == "b":
+        agent_settings()
+    return {}
+
+
 def setup_api_keys() -> dict:
     from webresearch.credentials import set_credential, keyring_available, get_credential
 
@@ -1069,7 +1135,7 @@ def show_menu():
     _mrow("5", "execution logs")
     console.print()
     console.print(Rule("[dim]system[/dim]", style="dim"))
-    _mrow("6", "reconfigure api keys")
+    _mrow("6", "configuration",        "api keys · agent settings")
     _mrow("7", "clear session memory",
           f"{len(_session)} pair(s) in context" if len(_session) > 0 else "")
     _mrow("q", "exit")
@@ -1313,8 +1379,9 @@ def main():
         elif choice == "5":
             view_logs()
         elif choice == "6":
-            config = setup_api_keys()
-            apply_config_to_env(config)
+            result = configure()
+            if result:
+                apply_config_to_env(result)
         elif choice == "7":
             _session.clear()
             console.print("✓ Session memory cleared.", style="bold green")

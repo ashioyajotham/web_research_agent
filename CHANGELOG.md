@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.4.11] - 2026-03-30
+
+### Changed
+- Menu option `[6]` renamed from "reconfigure api keys" to "configuration" and expanded into a sub-menu with two routes: `[a] api keys` (unchanged key setup wizard) and `[b] agent settings` (new interactive screen for `LOG_LEVEL` and `QUIET_FALLBACK`). Settings take effect immediately for the current session; a note directs users to `.env` for persistence across restarts.
+
 ## [2.4.10] - 2026-03-29
 
 ### Added
