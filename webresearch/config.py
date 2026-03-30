@@ -29,6 +29,10 @@ class Config:
         self.temperature: float = float(os.getenv("TEMPERATURE", "0.1"))
         self.model_name: str = os.getenv("MODEL_NAME", "gemini-2.5-flash")
 
+        # Logging / verbosity
+        self.log_level: str = os.getenv("LOG_LEVEL", "WARNING").upper()
+        self.quiet_fallback: bool = os.getenv("QUIET_FALLBACK", "false").lower() == "true"
+
         # Timeout settings
         self.web_request_timeout: int = int(os.getenv("WEB_REQUEST_TIMEOUT", "30"))
         self.code_execution_timeout: int = int(

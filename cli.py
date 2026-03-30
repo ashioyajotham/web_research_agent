@@ -816,10 +816,11 @@ def _build_llm_chain(cfg) -> "ModelFallbackChain":
             ))
 
     def _on_switch(from_name: str, to_name: str):
-        console.print(
-            f"\n[bold yellow]Rate limit reached on {from_name}. "
-            f"Switching to {to_name}...[/bold yellow]\n"
-        )
+        if not cfg.quiet_fallback:
+            console.print(
+                f"\n[bold yellow]Rate limit reached on {from_name}. "
+                f"Switching to {to_name}...[/bold yellow]\n"
+            )
 
     chain = ModelFallbackChain(interfaces=interfaces, switch_callback=_on_switch)
 
@@ -1277,7 +1278,9 @@ def view_logs():
 # ─── Main ────────────────────────────────────────────────────────────────────
 
 def main():
-    logging.basicConfig(level=logging.WARNING)
+    from webresearch.config import Config as _BootCfg
+    _log_level = getattr(logging, _BootCfg().log_level, logging.WARNING)
+    logging.basicConfig(level=_log_level)
     logging.getLogger("pypdf").setLevel(logging.ERROR)
     logging.getLogger("pdfminer").setLevel(logging.ERROR)
 

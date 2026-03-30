@@ -310,6 +310,8 @@ All settings can be overridden with environment variables:
 | `MODEL_NAME` | `gemini-2.5-flash` | Primary model identifier |
 | `WEB_REQUEST_TIMEOUT` | `30` | Seconds before HTTP request timeout |
 | `CODE_EXECUTION_TIMEOUT` | `60` | Seconds before subprocess kill |
+| `LOG_LEVEL` | `WARNING` | Python logging level (`DEBUG`, `INFO`, `WARNING`, `ERROR`). Set to `DEBUG` or `INFO` to see per-step reasoning and tool calls in the terminal. |
+| `QUIET_FALLBACK` | `false` | Set to `true` to suppress the "Rate limit reached… Switching to…" console message when the model fallback chain activates. Useful in scripted or CI contexts where provider churn is expected. |
 
 ---
 

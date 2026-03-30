@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.4.10] - 2026-03-29
+
+### Added
+- Per-run execution trace logging: every query and deep-research run now writes a JSON file to `logs/trace_YYYYMMDD_HHMMSS_mode.json` containing the full Thought → Action → Observation sequence, final answer, duration, and step count. Viewable from the `[5] view logs` menu option, which lists recent runs and lets you step through each trace interactively.
+- `LOG_LEVEL` env var (default `WARNING`): controls the Python logging level. Set to `DEBUG` or `INFO` to print per-step reasoning and tool calls to the terminal — useful for diagnosing multi-hop failures without reading raw JSON trace files.
+- `QUIET_FALLBACK` env var (default `false`): set to `true` to suppress the yellow "Rate limit reached on X. Switching to Y…" banner when the model fallback chain activates. Useful in scripted or CI contexts where provider churn is expected and the message is noise.
+
 ## [2.4.9] - 2026-03-30
 
 ### Added
