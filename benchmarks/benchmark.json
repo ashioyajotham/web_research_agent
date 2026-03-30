@@ -2,7 +2,7 @@
   {
     "id": "geneva-ai-talks-coo",
     "query": "Find the name of the COO of the organization that mediated secret talks between US and Chinese AI companies in Geneva in 2023.",
-    "expected_contains": ["shaikh group"],
+    "expected_contains": ["shaikh group", "yannis pallikaris"],
     "expected_not_contains": ["world economic forum", "wef"],
     "source": "https://fticommunications.com/fti-consulting-news-bytes-12-january-2024/",
     "notes": "Multi-hop: must identify the Shaikh Group as the mediating org, then find their COO. WEF is a known hallucination."

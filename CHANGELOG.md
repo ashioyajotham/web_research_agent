@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.4.9] - 2026-03-30
+
+### Added
+- `ThinkTool` (`webresearch/tools/think.py`): a no-op reasoning tool that gives the agent an explicit planning and verification slot without making any external calls. The agent uses it to plan search strategy on multi-step questions and to verify that an entity found in results genuinely matches the task description before committing to it. Registered first in the tool manager so it appears at the top of the tool list in the prompt.
+
+### Changed
+- ReAct system prompt: two new instructions — (1) for entity-from-description questions, search for the described event first then extract the entity from results rather than assuming a known entity; (2) use the think tool on multi-step questions and to verify entity matches before proceeding. These directly address the failure mode where the agent anchored on WEF/UN due to Geneva's prior weight in training data instead of finding the Shaikh Group.
+- `benchmark.json`: confirmed COO name `yannis pallikaris` added to `expected_contains` for the Geneva AI talks case, verified against source.
+
 ## [2.4.8] - 2026-03-29
 
 ### Added

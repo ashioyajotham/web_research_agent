@@ -186,6 +186,8 @@ IMPORTANT RULES:
 - Use "Action Input:" with valid JSON for parameters — ensure all string values use escaped characters (\\n, \\", etc.) and never contain raw newlines or unescaped backslashes
 - Use "Final Answer:" only when you can fully answer the task
 - Be thorough and verify information from multiple sources when needed
+- For questions that ask you to identify an entity (organization, person, etc.) from a description of what it did, search for the described event or action first — then extract the entity from those results. Do not assume you already know which entity is implied.
+- Use the think tool to plan your approach on multi-step questions and to verify that an entity found in search results genuinely matches the description in the task before proceeding further.
 - For tasks requiring lists or compilations, gather comprehensive information before concluding
 - Always provide sources and citations in your final answer when applicable
 """)

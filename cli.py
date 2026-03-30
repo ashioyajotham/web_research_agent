@@ -732,9 +732,10 @@ def _build_tool_manager(cfg) -> "ToolManager":
     from webresearch.tools import (
         ToolManager, SearchTool, ScrapeTool, BrowserScrapeTool,
         CodeExecutorTool, FileOpsTool, playwright_available,
-        PDFExtractTool, pdf_available,
+        PDFExtractTool, pdf_available, ThinkTool,
     )
     tool_manager = ToolManager()
+    tool_manager.register_tool(ThinkTool())
     tool_manager.register_tool(SearchTool(cfg.serper_api_key))
     tool_manager.register_tool(ScrapeTool())
     if playwright_available():

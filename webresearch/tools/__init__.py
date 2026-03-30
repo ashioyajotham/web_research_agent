@@ -11,6 +11,7 @@ from .browser import BrowserScrapeTool, playwright_available
 from .code_executor import CodeExecutorTool
 from .file_ops import FileOpsTool
 from .pdf import PDFExtractTool, pdf_available
+from .think import ThinkTool
 
 import logging
 
@@ -119,4 +120,5 @@ __all__ = [
     "FileOpsTool",
     "PDFExtractTool",
     "pdf_available",
+    "ThinkTool",
 ]
