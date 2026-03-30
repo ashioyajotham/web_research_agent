@@ -861,6 +861,29 @@ def initialize_parallel_agent():
     )
 
 
+# ─── Execution trace persistence ─────────────────────────────────────────────
+
+def _save_trace(query: str, answer: str, trace: list, duration: float, mode: str = "query") -> None:
+    """Write the full step-by-step execution trace to logs/ as a timestamped JSON file."""
+    try:
+        logs_dir = Path("logs")
+        logs_dir.mkdir(exist_ok=True)
+        ts = datetime.now().strftime("%Y%m%d_%H%M%S")
+        path = logs_dir / f"trace_{ts}_{mode}.json"
+        payload = {
+            "query": query,
+            "answer": answer,
+            "mode": mode,
+            "duration_s": round(duration, 2),
+            "steps": len(trace),
+            "trace": trace,
+        }
+        with open(path, "w", encoding="utf-8") as f:
+            json.dump(payload, f, indent=2, default=str)
+    except Exception:
+        pass  # Trace saving is best-effort — never surface to the user
+
+
 # ─── Core query runner ────────────────────────────────────────────────────────
 
 def _run_query(query: str):
@@ -917,6 +940,9 @@ def _run_query(query: str):
     )
     _print_usage_banner()
     console.print()
+
+    # Save execution trace to logs/ for post-run debugging
+    _save_trace(query, answer, agent.get_execution_trace(), duration)
 
     # Save to session memory and persistent history
     # Don't persist error or incomplete answers — they'd poison future queries
@@ -1003,6 +1029,7 @@ def _run_deep_research(query: str):
     _print_usage_banner()
     console.print()
 
+    _save_trace(query, answer, agent.get_execution_trace(), duration, mode="deep")
     if not answer.startswith("⚠"):
         _session.add(query, answer)
     save_to_history(query, answer, n_sub, duration)
@@ -1177,52 +1204,71 @@ def run_tasks_from_file():
 
 def view_logs():
     logs_dir = Path("logs")
-    if not logs_dir.exists() or not list(logs_dir.glob("*.log")):
-        console.print("⚠ No log files found.", style="bold yellow")
-        return
+    trace_files = sorted(logs_dir.glob("trace_*.json"), key=lambda x: x.stat().st_mtime, reverse=True) if logs_dir.exists() else []
 
-    log_files = sorted(logs_dir.glob("*.log"), key=lambda x: x.stat().st_mtime, reverse=True)
+    if not trace_files:
+        console.print("No execution traces found. Run a query first.", style="bold yellow")
+        return
 
     console.print(Rule("[dim]execution logs[/dim]", style="cyan"))
     console.print()
 
     table = Table(show_header=True, box=None)
     table.add_column("#", style="cyan", width=4)
-    table.add_column("Filename", style="green")
-    table.add_column("Size", style="yellow", justify="right")
-    table.add_column("Modified", style="white")
+    table.add_column("Query", style="white", ratio=3)
+    table.add_column("Steps", style="yellow", justify="right", width=6)
+    table.add_column("Duration", style="yellow", justify="right", width=10)
+    table.add_column("Status", width=8)
+    table.add_column("When", style="dim", width=18)
 
-    for i, log_file in enumerate(log_files[:5], 1):
-        size = log_file.stat().st_size / 1024
-        time_str = datetime.fromtimestamp(log_file.stat().st_mtime).strftime("%Y-%m-%d %H:%M:%S")
-        table.add_row(str(i), log_file.name, f"{size:.1f} KB", time_str)
+    recent = trace_files[:10]
+    for i, tf in enumerate(recent, 1):
+        try:
+            with open(tf, encoding="utf-8") as f:
+                d = json.load(f)
+            status = "[bold red]ERROR[/bold red]" if str(d.get("answer", "")).startswith("⚠") else "[bold green]OK[/bold green]"
+            ts = tf.stem.split("_", 1)[1].rsplit("_", 1)[0]  # trace_YYYYMMDD_HHMMSS_mode → YYYYMMDD_HHMMSS
+            when = datetime.strptime(ts, "%Y%m%d_%H%M%S").strftime("%Y-%m-%d %H:%M")
+            table.add_row(
+                str(i),
+                d.get("query", "")[:60],
+                str(d.get("steps", "?")),
+                f"{d.get('duration_s', 0):.1f}s",
+                status,
+                when,
+            )
+        except Exception:
+            table.add_row(str(i), tf.name, "?", "?", "?", "?")
 
     console.print(table)
     console.print()
 
-    choice = Prompt.ask("[green]Enter number to view[/green] (or press Enter to skip)", default="")
+    choice = Prompt.ask("[green]Enter number to inspect[/green] (or press Enter to skip)", default="")
 
-    if choice.isdigit() and 1 <= int(choice) <= len(log_files[:5]):
-        log_file = log_files[int(choice) - 1]
-        with open(log_file, "r", encoding="utf-8") as f:
-            lines = f.read().split("\n")
+    if choice.isdigit() and 1 <= int(choice) <= len(recent):
+        tf = recent[int(choice) - 1]
+        with open(tf, encoding="utf-8") as f:
+            d = json.load(f)
 
         console.print()
-        console.rule(f"[bold cyan]Log: {log_file.name}[/bold cyan]", style="cyan")
-        console.print()
+        console.rule(f"[bold cyan]{d.get('query', '')[:80]}[/bold cyan]", style="cyan")
+        console.print(f"[dim]Mode: {d.get('mode')}  ·  {d.get('steps')} steps  ·  {d.get('duration_s')}s[/dim]\n")
 
-        if len(lines) > 100:
-            console.print("[yellow][Showing last 100 lines...][/yellow]\n")
-            lines = lines[-100:]
+        for step in d.get("trace", []):
+            console.print(f"[bold cyan]Step {step['step']}[/bold cyan]  [dim]{step.get('elapsed_ms', 0)/1000:.1f}s[/dim]")
+            if step.get("thought"):
+                console.print(f"  [yellow]Thought:[/yellow] {step['thought'][:200]}")
+            if step.get("action"):
+                inp = step.get("action_input") or {}
+                inp_preview = str(list(inp.values())[0])[:80] if inp else ""
+                console.print(f"  [green]Action:[/green]  {step['action']} → {inp_preview}")
+            if step.get("observation"):
+                console.print(f"  [dim]Obs:[/dim]     {step['observation'][:200]}")
+            console.print()
 
-        for line in lines:
-            if "ERROR" in line:
-                console.print(line, style="bold red")
-            elif "WARNING" in line:
-                console.print(line, style="bold yellow")
-            else:
-                console.print(line)
-
+        answer = d.get("answer", "")
+        border = "red" if answer.startswith("⚠") else "green"
+        console.print(Panel(answer[:600] + ("..." if len(answer) > 600 else ""), title="Answer", border_style=border))
         console.print()
         console.rule(style="cyan")
         console.print()
