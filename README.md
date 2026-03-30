@@ -129,6 +129,7 @@ webresearch/
 ├── parallel.py        # Parallel deep research: decomposes task → fan-out → synthesize
 └── tools/
     ├── base.py        # Tool abstract base class
+    ├── think.py       # Reasoning scratchpad — no external call, pure planning/verification
     ├── search.py      # Serper.dev web search
     ├── scrape.py      # HTTP + BeautifulSoup; tables → markdown, encoding fix, 5xx retry
     ├── pdf.py         # pdfplumber PDF extraction with table parsing and page targeting
@@ -136,6 +137,66 @@ webresearch/
     ├── code_executor.py  # Sandboxed Python subprocess
     └── file_ops.py    # Read/write for cross-step data persistence
 ```
+
+### The Think Tool and the ReAct Reasoning Gap
+
+The standard ReAct loop has a structural constraint: every `Thought` must be followed by an `Action` that calls an external tool. There is no way to have a reasoning step that *is* the action — thinking is always a preamble to doing something.
+
+This works well on single-hop lookups. It breaks on multi-hop queries where the agent needs to plan before acting, or where it needs to stop and verify whether an entity found in results actually matches the task description before spending more iterations on it.
+
+**The failure mode without `think`:**
+
+```
+Task: "Find the COO of the organization that mediated secret AI talks in Geneva in 2023"
+
+Step 1  Thought: I'll search for organizations that mediated AI talks in Geneva.
+        Action:  search {"query": "organization mediated US China AI talks Geneva 2023"}
+        Obs:     Results mention WEF, UN Geneva offices, diplomatic bodies...
+
+Step 2  Thought: The World Economic Forum is based in Geneva and hosts AI discussions.
+        Action:  search {"query": "World Economic Forum COO"}
+        Obs:     Sarita Nayyar / Julien Gattoni...
+
+Step 3  Thought: The COO of WEF is [name].
+        Final Answer: [wrong]
+```
+
+The agent never asked: *does WEF actually match "mediated secret talks between US and Chinese AI companies"?* It anchored on the most prominent Geneva organization in the search results and ran with it. By step 2, recovery requires contradicting its own prior reasoning — something the model resists without an explicit prompt to verify.
+
+**With `think`:**
+
+```
+Step 1  Thought: This is a multi-hop question. I need to find the org first, then its COO.
+        Action:  think {"thought": "The question describes a specific event — secret talks
+                  between US and Chinese AI companies — not a general Geneva forum. I should
+                  search for the event itself, not assume WEF or UN."}
+        Obs:     Reasoning recorded.
+
+Step 2  Thought: I'll search for the specific event described.
+        Action:  search {"query": "secret talks US Chinese AI companies Geneva 2023 mediator"}
+        Obs:     Results mention the Shaikh Group...
+
+Step 3  Thought: Before proceeding, I should verify the Shaikh Group actually fits the
+                 description — a private advisory firm that arranged AI company meetings.
+        Action:  think {"thought": "The Shaikh Group is described as a geopolitical advisory
+                  firm that brokered the Geneva meetings. This matches the task: 'mediated
+                  secret talks between US and Chinese AI companies'. Not WEF. Proceed."}
+        Obs:     Reasoning recorded.
+
+Step 4  Action:  search {"query": "Shaikh Group COO"}
+        ...
+        Final Answer: Yannis Pallikaris, COO of the Shaikh Group.
+```
+
+The `think` tool does three things the bare ReAct loop cannot:
+
+1. **Upfront planning** — the agent can spend a step decomposing the query and choosing a search strategy before any API call is made. On a 15-iteration budget, one planning step spent before three wrong searches is cheaper than recovering from three wrong searches.
+
+2. **Entity verification** — the agent can explicitly check whether an entity from search results matches the task description. This is the critical gate that prevents anchoring on a superficially related but wrong entity.
+
+3. **Mid-run reorientation** — if evidence contradicts the current path, the agent can reason about the contradiction and pivot without the reasoning appearing inconsistent in the next `Thought:` prefix.
+
+The tool itself is a no-op: it accepts a `thought` string and returns a neutral confirmation. Its value is entirely in the reasoning trace it forces into the step history, where subsequent `Thought:` steps can reference it.
 
 ### Model Fallback Chain
 
