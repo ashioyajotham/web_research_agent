@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.4.12] - 2026-03-30
+
+### Fixed
+- Timeout errors from fallback providers (Groq, OpenRouter) no longer crash the query. Previously `APITimeoutError` ("Request timed out.") was not matched by `_is_quota_error()` in `llm_chain.py`, so the fallback chain re-raised immediately instead of advancing to the next provider. Added `_is_transient_error()` covering `timed out`, `timeout`, `connection`, `502/503/504` signals — these now trigger the same provider-advance logic as quota errors.
+- `llm_compat.py` `generate()` now retries on timeout errors (with a fixed 5 s delay) in addition to rate-limit errors. Timeouts on free-tier providers are infrastructure hiccups that often resolve on a second attempt within the same provider before escalating to the chain fallback.
+
 ## [2.4.11] - 2026-03-30
 
 ### Changed

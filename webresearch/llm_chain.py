@@ -44,10 +44,30 @@ _QUOTA_SIGNALS = (
     "per-minute rate limit",
 )
 
+# Transient network/infrastructure errors that warrant trying the next provider
+# rather than surfacing as a hard failure.  Timeouts commonly occur when a
+# free-tier provider (Groq, OpenRouter) is slow under a large accumulated prompt.
+_TRANSIENT_SIGNALS = (
+    "timed out",
+    "timeout",
+    "connection",
+    "read timeout",
+    "connect timeout",
+    "service unavailable",
+    "502",
+    "503",
+    "504",
+)
+
 
 def _is_quota_error(exc: Exception) -> bool:
     low = str(exc).lower()
     return any(signal in low for signal in _QUOTA_SIGNALS)
+
+
+def _is_transient_error(exc: Exception) -> bool:
+    low = str(exc).lower()
+    return any(signal in low for signal in _TRANSIENT_SIGNALS)
 
 
 class ModelFallbackChain:
@@ -120,8 +140,10 @@ class ModelFallbackChain:
                 try:
                     return llm.generate(prompt)
                 except Exception as e:
-                    if _is_quota_error(e) and i < len(self.interfaces) - 1:
-                        logger.warning(f"[{name}] quota error, trying next provider: {str(e)[:100]}")
+                    is_fallback = _is_quota_error(e) or _is_transient_error(e)
+                    if is_fallback and i < len(self.interfaces) - 1:
+                        reason = "quota error" if _is_quota_error(e) else "transient error"
+                        logger.warning(f"[{name}] {reason}, trying next provider: {str(e)[:100]}")
                         continue
                     raise
 

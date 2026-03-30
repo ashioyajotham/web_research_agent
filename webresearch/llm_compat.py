@@ -104,22 +104,29 @@ class OpenAICompatibleLLMInterface:
                 return response.choices[0].message.content or ""
 
             except Exception as e:
-                err = str(e)
-                is_quota = "quota" in err.lower() or "rate" in err.lower() or "429" in err
+                err = str(e).lower()
+                is_quota = "quota" in err or "rate" in err or "429" in err
+                is_timeout = "timed out" in err or "timeout" in err
 
-                if not is_quota:
+                if not is_quota and not is_timeout:
                     raise
 
-                logger.warning(f"[{self.provider_name}] attempt {attempt + 1}/{retry_count} failed: {err[:120]}")
+                logger.warning(f"[{self.provider_name}] attempt {attempt + 1}/{retry_count} failed: {str(e)[:120]}")
 
                 if attempt < retry_count - 1:
-                    # Honour the server's retry-after hint; fall back to
-                    # exponential backoff but floor at 10s for per-minute limits.
-                    hint = self._parse_retry_after(err)
-                    delay = hint if hint else max(10.0, 2 ** (attempt + 2))
-                    logger.warning(f"[{self.provider_name}] rate-limited — waiting {delay:.0f}s (attempt {attempt+1}/{retry_count})")
+                    if is_timeout:
+                        # Short fixed delay for timeouts — these are infra hiccups,
+                        # not per-minute bucket exhaustion.
+                        delay = 5.0
+                    else:
+                        # Honour the server's retry-after hint; fall back to
+                        # exponential backoff but floor at 10s for per-minute limits.
+                        hint = self._parse_retry_after(str(e))
+                        delay = hint if hint else max(10.0, 2 ** (attempt + 2))
+                    logger.warning(f"[{self.provider_name}] waiting {delay:.0f}s before retry (attempt {attempt+1}/{retry_count})")
                     time.sleep(delay)
                 else:
+                    label = "timed out" if is_timeout else "rate-limited"
                     raise Exception(
-                        f"[{self.provider_name}] rate-limited after {retry_count} attempts."
+                        f"[{self.provider_name}] {label} after {retry_count} attempts."
                     )
