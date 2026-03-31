@@ -198,6 +198,42 @@ The `think` tool does three things the bare ReAct loop cannot:
 
 The tool itself is a no-op: it accepts a `thought` string and returns a neutral confirmation. Its value is entirely in the reasoning trace it forces into the step history, where subsequent `Thought:` steps can reference it.
 
+### Why the Worked Example in the Prompt Matters
+
+The think tool existed for several versions before it reliably fired. The instruction said:
+
+> "Use the think tool to plan your approach on multi-step questions..."
+
+That is **advisory, conditional language**. The model has to evaluate whether the task is "complex enough" — which is itself the reasoning you wanted it to do. Under token pressure or on tasks that feel familiar, it categorises the query as routine and skips straight to searching.
+
+The fix comes from a well-established technique: **few-shot prompting**.
+
+Few-shot prompting was demonstrated at scale in the original GPT-3 paper ([Brown et al., 2020](https://arxiv.org/abs/2005.14165)): showing the model one or two worked examples of the exact pattern you want reliably outperforms any amount of instructional text describing the same pattern. The model infers format, depth, and decision logic from examples in a way that rules alone don't produce.
+
+The specific numbers for our case come from Anthropic's own study of the think tool on τ-bench ([Anthropic Engineering, 2025](https://www.anthropic.com/engineering/claude-think-tool)):
+
+| Configuration | Performance on τ-bench (airline domain) |
+|---|---|
+| No think tool | 0.332 (baseline) |
+| Think tool, advisory prompt ("use when complex") | 0.404 (+22%) |
+| Think tool, mandatory prompt + worked example | **0.584 (+76%)** |
+
+The worked example in the system prompt — showing the agent exactly how to decompose a task, call think, then verify an entity before proceeding — is the difference between a 22% and a 76% lift over baseline.
+
+This is also consistent with findings across other agent frameworks. AWS Bedrock's production Claude template ([Amazon Bedrock docs](https://docs.aws.amazon.com/bedrock/latest/userguide/advanced-prompts-templates.html)) uses: `"Always output your thoughts within <thinking></thinking> xml tags before and after you invoke a function."` — unconditional, anchored to a structural event (function invocation), not a quality judgement.
+
+**How this is implemented here:**
+
+The system prompt in `webresearch/agent.py` now contains three layers:
+
+1. **Mandatory, unconditional language** — "Your very first action on every task MUST be `think`. You are not permitted to call search, scrape, or any other tool before calling think first."
+
+2. **A worked example** — the exact three-step think → search → think pattern for the kind of multi-hop entity query where the failure mode is most acute.
+
+3. **Parser-level enforcement** — a `_think_called` flag in the agent's `run()` loop. If the model still skips think and calls any other tool first, the observation is replaced with a corrective error message and the actual tool call is not made. The model self-corrects on the next iteration. This converts the prompt rule into a structural feedback loop — the same pattern used in LangChain's output parser for format violations.
+
+The result: think is now a core part of the reasoning loop, not a suggestion.
+
 ### Model Fallback Chain
 
 When a provider hits a quota or rate limit, the agent automatically falls back to the next available provider:
