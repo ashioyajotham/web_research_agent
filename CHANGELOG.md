@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.4.13] - 2026-03-31
+
+### Fixed
+- Execution trace files now write to `~/.webresearch/logs/` (absolute, user-home-relative) instead of `./logs/` (relative to CWD). When `webresearch` is launched from any directory other than the project root, traces were being written to a `logs/` folder in that working directory — meaning `[5] execution logs` would find nothing because it read a different relative path. Both `_save_trace()` and `view_logs()` now use the same `~/.webresearch/logs/` path.
+- `webresearch/__init__.py` version string was stuck at `2.4.6` — it was never updated when `pyproject.toml` was bumped. Status bar now shows the correct version.
+
 ## [2.4.12] - 2026-03-30
 
 ### Fixed

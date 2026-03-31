@@ -933,8 +933,8 @@ def initialize_parallel_agent():
 def _save_trace(query: str, answer: str, trace: list, duration: float, mode: str = "query") -> None:
     """Write the full step-by-step execution trace to logs/ as a timestamped JSON file."""
     try:
-        logs_dir = Path("logs")
-        logs_dir.mkdir(exist_ok=True)
+        logs_dir = Path.home() / ".webresearch" / "logs"
+        logs_dir.mkdir(parents=True, exist_ok=True)
         ts = datetime.now().strftime("%Y%m%d_%H%M%S")
         path = logs_dir / f"trace_{ts}_{mode}.json"
         payload = {
@@ -1270,7 +1270,7 @@ def run_tasks_from_file():
 
 
 def view_logs():
-    logs_dir = Path("logs")
+    logs_dir = Path.home() / ".webresearch" / "logs"
     trace_files = sorted(logs_dir.glob("trace_*.json"), key=lambda x: x.stat().st_mtime, reverse=True) if logs_dir.exists() else []
 
     if not trace_files:
