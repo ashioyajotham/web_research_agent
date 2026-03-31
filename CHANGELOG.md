@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.4.16] - 2026-03-31
+
+### Changed
+- Think enforcement upgraded from run-level (once-and-done) to per-action. Previously `_think_called` was a boolean set to `True` on the first think call and never reset — meaning after step 1, the agent could run 14 consecutive searches with no further think calls. Now `_last_action` tracks the previous action: any non-think tool call is blocked unless the immediately preceding action was `think`. Enforces the `think → search → think → search` pattern throughout the full run, not just at the start.
+- Prompt updated to match: "Every action must be preceded by think. A search or scrape action without a preceding think is not permitted." — adopted from the friend's suggested wording which is more explicit about per-action scope than our previous "first action" framing.
+- Tests: `test_think_before_every_search_not_just_first` verifies mid-run enforcement; `test_think_allows_consecutive_thinks` verifies consecutive think calls are not blocked (12/12 pass).
+
 ## [2.4.15] - 2026-03-31
 
 ### Changed

@@ -102,7 +102,7 @@ class ReActAgent:
         logger.info(f"Starting task: {task[:100]}...")
         self.steps = []
         self._action_cache = {}
-        self._think_called = False  # tracks whether think has been used at least once
+        self._last_action: Optional[str] = None  # enforces think-before-every-action rule
 
         try:
             for iteration in range(self.max_iterations):
@@ -128,20 +128,20 @@ class ReActAgent:
                     step.action = action
                     step.action_input = action_input
 
-                    # Enforce mandatory think-first rule: if the agent tries to call any
-                    # tool other than think before it has used think at least once, block
-                    # the call and return a corrective observation.  This converts the
-                    # prompt rule into a structural feedback loop (LangChain pattern).
-                    if action == "think":
-                        self._think_called = True
-
-                    if not self._think_called and action != "think":
+                    # Enforce think-before-every-action: any non-think tool call must be
+                    # immediately preceded by a think call.  Tracks _last_action so the
+                    # rule fires not just on the first step but throughout the entire run
+                    # (think → search → think → search, never search → search).
+                    if action != "think" and self._last_action != "think":
                         observation = (
-                            "Error: you must use the think tool before calling any other tool. "
-                            "Call think now to plan your approach, then proceed with your action."
+                            "Error: you must call the think tool before calling any other tool. "
+                            "State what you know, what gap remains, and exactly what your next "
+                            "action will do and why — then call that action."
                         )
                     else:
                         observation = self._execute_action(action, action_input)
+
+                    self._last_action = action
 
                     step.observation = observation
                     step.elapsed_ms = (time.time() - t0) * 1000
@@ -205,15 +205,15 @@ IMPORTANT RULES:
 - For tasks requiring lists or compilations, gather comprehensive information before concluding
 - Always provide sources and citations in your final answer when applicable
 
-MANDATORY REASONING — THIS IS NOT OPTIONAL:
-Your very first action on every task MUST be `think`. You are not permitted to call search,
-scrape, or any other tool before calling think first. After receiving search results or any
-significant observation, you MUST call think again before deciding your next action.
+MANDATORY: Before calling any tool (search, scrape, etc.), you must first call the think
+tool. Every action must be preceded by think. A search or scrape action without a preceding
+think is not permitted. Use think to state what you know, what gap remains, and exactly what
+your next action will do and why.
 
 Use think to:
 - Decompose the task: what exactly am I looking for? What intermediate facts do I need first?
-- Identify entities correctly: if the task describes an org/person by what they did, I must
-  find the event first — do NOT assume I already know which entity is implied.
+- Identify entities correctly: if the task describes an org/person by what they did, find the
+  event first — do NOT assume you already know which entity is implied.
 - After search results arrive: does this entity actually match the task description, or am I
   anchoring on a familiar name? Verify explicitly before proceeding.
 - When stuck: why is the current approach failing and what should I try differently?

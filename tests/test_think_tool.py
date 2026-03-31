@@ -133,67 +133,89 @@ def test_think_observation_recorded_in_trace():
 
 # ── 4. System prompt contains the mandatory instruction ───────────────────────
 
-def test_parser_blocks_action_before_think():
-    """If the agent tries to call search before think, it must receive a corrective observation."""
-    responses = [
-        # Step 1: agent skips think and calls search directly
-        'Thought: I will search.\nAction: search\nAction Input: {"query": "something"}',
-        # Step 2: corrected — now calls think
-        'Thought: I will think first.\nAction: think\nAction Input: {"thought": "Plan: search for X."}',
-        # Step 3: final answer
-        'Thought: Done.\nFinal Answer: The answer.',
-    ]
-    tm = ToolManager()
-    tm.register_tool(ThinkTool())
-    # Add a stub search tool so the action name is valid
+def _make_stub_tm():
+    """ToolManager with ThinkTool + a stub SearchTool."""
     from webresearch.tools.base import Tool as BaseTool
     class _StubSearch(BaseTool):
         @property
         def name(self): return "search"
         @property
-        def description(self): return "search stub"
-        def execute(self, query: str) -> str: return "search results"
+        def description(self): return "stub search"
+        def execute(self, query: str) -> str: return "real search results"
+    tm = ToolManager()
+    tm.register_tool(ThinkTool())
     tm.register_tool(_StubSearch())
+    return tm
 
-    agent = ReActAgent(llm=_MockLLM(responses), tool_manager=tm, max_iterations=5)
+
+def test_parser_blocks_search_without_preceding_think():
+    """Search called before think must receive a corrective observation, not execute."""
+    responses = [
+        # Step 1: skips think, calls search directly
+        'Thought: Search now.\nAction: search\nAction Input: {"query": "something"}',
+        # Step 2: corrects — calls think
+        'Thought: Think first.\nAction: think\nAction Input: {"thought": "Plan."}',
+        # Step 3: search now allowed (preceded by think)
+        'Thought: Search.\nAction: search\nAction Input: {"query": "something"}',
+        # Step 4: final answer
+        'Thought: Done.\nFinal Answer: The answer.',
+    ]
+    agent = ReActAgent(llm=_MockLLM(responses), tool_manager=_make_stub_tm(), max_iterations=6)
     result = agent.run("Find something")
 
-    # The corrective observation must appear in the trace
-    step1 = agent.get_execution_trace()[0]
-    assert "think" in step1["observation"].lower(), (
-        "Step 1 observation should be the corrective think-first message"
+    trace = agent.get_execution_trace()
+    assert "think" in trace[0]["observation"].lower(), (
+        "Step 1 should be blocked with corrective message"
     )
-    # The search step should eventually succeed after think is called
     assert result == "The answer."
 
 
-def test_think_called_flag_satisfied_allows_search():
-    """After think is called once, subsequent search actions must execute normally."""
+def test_think_before_every_search_not_just_first():
+    """Per-action enforcement: search without a preceding think must be blocked mid-run too."""
     responses = [
-        'Thought: Think first.\nAction: think\nAction Input: {"thought": "My plan."}',
-        'Thought: Now search.\nAction: search\nAction Input: {"query": "my query"}',
+        # Step 1: think ✓
+        'Thought: Plan.\nAction: think\nAction Input: {"thought": "Plan."}',
+        # Step 2: search ✓ (preceded by think)
+        'Thought: Search.\nAction: search\nAction Input: {"query": "q1"}',
+        # Step 3: search again — NO think between → must be blocked
+        'Thought: Search again.\nAction: search\nAction Input: {"query": "q2"}',
+        # Step 4: think ✓ (corrects)
+        'Thought: Think again.\nAction: think\nAction Input: {"thought": "Verify."}',
+        # Step 5: search ✓ (preceded by think)
+        'Thought: Search.\nAction: search\nAction Input: {"query": "q3"}',
+        # Step 6: final answer
         'Thought: Done.\nFinal Answer: Result.',
     ]
-    tm = ToolManager()
-    tm.register_tool(ThinkTool())
-    from webresearch.tools.base import Tool as BaseTool
-    class _StubSearch(BaseTool):
-        @property
-        def name(self): return "search"
-        @property
-        def description(self): return "stub"
-        def execute(self, query: str) -> str: return "real search results"
-    tm.register_tool(_StubSearch())
+    agent = ReActAgent(llm=_MockLLM(responses), tool_manager=_make_stub_tm(), max_iterations=8)
+    agent.run("Task")
 
-    agent = ReActAgent(llm=_MockLLM(responses), tool_manager=tm, max_iterations=5)
+    trace = agent.get_execution_trace()
+    # Step 3 (index 2) should be blocked — search after search, no think between
+    assert "think" in trace[2]["observation"].lower(), (
+        "Mid-run search without preceding think should be blocked"
+    )
+    # Step 5 (index 4) should execute — preceded by think
+    assert "real search results" in trace[4]["observation"], (
+        "Search preceded by think should execute normally"
+    )
+
+
+def test_think_allows_consecutive_thinks():
+    """Two consecutive think calls must both execute — only non-think actions need a think before them."""
+    responses = [
+        'Thought: Think.\nAction: think\nAction Input: {"thought": "First thought."}',
+        'Thought: Think more.\nAction: think\nAction Input: {"thought": "Second thought."}',
+        'Thought: Search.\nAction: search\nAction Input: {"query": "q"}',
+        'Thought: Done.\nFinal Answer: Answer.',
+    ]
+    agent = ReActAgent(llm=_MockLLM(responses), tool_manager=_make_stub_tm(), max_iterations=6)
     result = agent.run("Task")
 
     trace = agent.get_execution_trace()
-    search_step = next(s for s in trace if s.get("action") == "search")
-    assert "real search results" in search_step["observation"], (
-        "Search should execute normally after think has been called"
-    )
-    assert result == "Result."
+    assert "Reasoning recorded" in trace[0]["observation"]
+    assert "Reasoning recorded" in trace[1]["observation"]
+    assert "real search results" in trace[2]["observation"]
+    assert result == "Answer."
 
 
 def test_system_prompt_contains_think_instruction():
@@ -206,7 +228,9 @@ def test_system_prompt_contains_think_instruction():
     # Mandatory (not advisory) language
     assert "mandatory" in lower, "Prompt missing mandatory think instruction"
     assert "must" in lower, "Prompt missing 'must' enforcement language"
-    # Think is the required first action
-    assert "first action" in lower, "Prompt missing first-action requirement"
+    # Every action must be preceded by think (per-action, not just first)
+    assert "every action" in lower or "preceded by think" in lower, (
+        "Prompt missing per-action think requirement"
+    )
     # Worked example is present so the LLM knows the expected pattern
     assert "worked example" in lower, "Prompt missing worked example"
