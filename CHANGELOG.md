@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.4.15] - 2026-03-31
+
+### Changed
+- `think` is now a mandatory first action, not an optional one. Two-layer enforcement based on Anthropic's τ-bench findings (prompt-only gives 22% lift; prompt + worked example + parser enforcement gives 76%):
+  1. **Prompt rewrite** (`agent.py`): advisory "use the think tool when..." replaced with `MANDATORY REASONING — THIS IS NOT OPTIONAL` block. Unconditional language ("your very first action MUST be think"), explicit trigger events (before first action, after any significant observation), and a worked example showing the exact think → search → think → answer pattern.
+  2. **Parser-level enforcement** (`agent.py` `run()`): `_think_called` flag tracks whether think has been used. If the agent tries to call search or any other tool before calling think, the observation is replaced with a corrective error message ("Error: you must use the think tool before calling any other tool.") — no API call is made. The agent self-corrects on the next iteration.
+- `tests/test_think_tool.py` updated: added `test_parser_blocks_action_before_think` and `test_think_called_flag_satisfied_allows_search` to structurally verify both enforcement layers. All 11 tests pass.
+
 ## [2.4.14] - 2026-03-31
 
 ### Added

@@ -102,6 +102,7 @@ class ReActAgent:
         logger.info(f"Starting task: {task[:100]}...")
         self.steps = []
         self._action_cache = {}
+        self._think_called = False  # tracks whether think has been used at least once
 
         try:
             for iteration in range(self.max_iterations):
@@ -126,7 +127,22 @@ class ReActAgent:
                 if action and action_input is not None:
                     step.action = action
                     step.action_input = action_input
-                    observation = self._execute_action(action, action_input)
+
+                    # Enforce mandatory think-first rule: if the agent tries to call any
+                    # tool other than think before it has used think at least once, block
+                    # the call and return a corrective observation.  This converts the
+                    # prompt rule into a structural feedback loop (LangChain pattern).
+                    if action == "think":
+                        self._think_called = True
+
+                    if not self._think_called and action != "think":
+                        observation = (
+                            "Error: you must use the think tool before calling any other tool. "
+                            "Call think now to plan your approach, then proceed with your action."
+                        )
+                    else:
+                        observation = self._execute_action(action, action_input)
+
                     step.observation = observation
                     step.elapsed_ms = (time.time() - t0) * 1000
                     self.steps.append(step)
@@ -186,10 +202,39 @@ IMPORTANT RULES:
 - Use "Action Input:" with valid JSON for parameters — ensure all string values use escaped characters (\\n, \\", etc.) and never contain raw newlines or unescaped backslashes
 - Use "Final Answer:" only when you can fully answer the task
 - Be thorough and verify information from multiple sources when needed
-- For questions that ask you to identify an entity (organization, person, etc.) from a description of what it did, search for the described event or action first — then extract the entity from those results. Do not assume you already know which entity is implied.
-- Use the think tool to plan your approach on multi-step questions and to verify that an entity found in search results genuinely matches the description in the task before proceeding further.
 - For tasks requiring lists or compilations, gather comprehensive information before concluding
 - Always provide sources and citations in your final answer when applicable
+
+MANDATORY REASONING — THIS IS NOT OPTIONAL:
+Your very first action on every task MUST be `think`. You are not permitted to call search,
+scrape, or any other tool before calling think first. After receiving search results or any
+significant observation, you MUST call think again before deciding your next action.
+
+Use think to:
+- Decompose the task: what exactly am I looking for? What intermediate facts do I need first?
+- Identify entities correctly: if the task describes an org/person by what they did, I must
+  find the event first — do NOT assume I already know which entity is implied.
+- After search results arrive: does this entity actually match the task description, or am I
+  anchoring on a familiar name? Verify explicitly before proceeding.
+- When stuck: why is the current approach failing and what should I try differently?
+
+WORKED EXAMPLE (follow this pattern):
+Task: "Find the COO of the organization that mediated secret US-China AI talks in Geneva in 2023."
+
+Step 1 — think first, always:
+Thought: I need to plan before searching.
+Action: think
+Action Input: {{"thought": "The task asks for the COO of a specific org. I do not know which org — I must find it by searching for the talks themselves first. I must not assume it is WEF, UN, or any Geneva org I already know. Plan: (1) search for the talks to identify the mediating org, (2) verify the org matches the description, (3) then search for their COO."}}
+
+Step 2 — now search:
+Thought: I have a plan. Now search for the talks.
+Action: search
+Action Input: {{"query": "secret US China AI companies talks Geneva 2023 mediator organizer"}}
+
+Step 3 — think before acting on the results:
+Thought: I have results. I need to verify what they say.
+Action: think
+Action Input: {{"thought": "Results mention [X org]. Does [X org] match 'mediated secret talks between US and Chinese AI companies in Geneva 2023'? Check: [evidence from results]. If yes, proceed to find COO. If no, search with different terms."}}
 """)
 
         prompt_parts.append("\n" + self.tool_manager.get_tool_descriptions())
