@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.4.14] - 2026-03-31
+
+### Added
+- `tests/test_think_tool.py`: 9 smoke tests covering the full ThinkTool integration path — tool unit behaviour, ToolManager registration, agent parsing a think action from a mock LLM response, trace capture of think steps and their observations, and presence of the think-tool instruction in the built system prompt.
+
 ## [2.4.13] - 2026-03-31
 
 ### Fixed
