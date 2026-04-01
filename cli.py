@@ -41,7 +41,7 @@ TAGLINE = "stay curious, anon.  the web doesn't answer itself."
 # Single accent colour used for all structural chrome: borders, rules, spinner,
 # menu keys, iteration counter, and interactive prompts.
 # Change this one constant to retheme the entire agent.
-THEME = "cyan"
+THEME = "steel_blue1"
 
 STARTUP_QUIPS: List[str] = [
     "booting the curiosity engine",

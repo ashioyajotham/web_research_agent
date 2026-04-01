@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.4.17] - 2026-04-01
+
+### Added
+- `THEME = "steel_blue1"` constant in `cli.py` — single line to retheme the entire agent. All structural chrome (panel borders, Rule dividers, ASCII banner, menu key brackets, iteration counter, spinner, interactive prompts, status bar model name) now reads from `THEME` instead of hardcoded colour strings.
+- `Spinner("arc")` from Rich replaces the hand-rolled `_SPINNER_CHARS` / `_spin()` implementation. Uses Rich's native arc animation (`◜◠◝◞◡◟`) with correct frame timing and inherits `THEME` as its style. Spinner instance lives on `ResearchPanel` and is rendered via `spinner.render(time.time())` each frame.
+
+### Changed
+- `webresearch/__init__.py` version string is now derived automatically from installed package metadata via `importlib.metadata.version("web-research-agent")`. Bumping `pyproject.toml` is the only step needed going forward — `__init__.py` no longer needs a manual edit on each release.
+- Three-layer spinner word redesign: startup quips restored to original ("booting the curiosity engine", etc.); action pools replaced with themed SPINNER_VERBS (search → Investigating/Spelunking, think → Cogitating/Ruminating, etc.); `default` pool uses the full ~80-verb Claude Code SPINNER_VERBS list; `_DONE_FALLBACK` exit lines refreshed.
+- Phrase rotation changed from time-based (`elapsed / 6.0`) to step-based (iteration index) — one stable verb per step regardless of step duration.
+
 ## [2.4.16] - 2026-03-31
 
 ### Changed

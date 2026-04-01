@@ -20,7 +20,11 @@ Usage:
 For more information, see: https://github.com/victorashioya/web_research_agent
 """
 
-__version__ = "2.4.16"
+try:
+    from importlib.metadata import version as _pkg_version
+    __version__ = _pkg_version("web-research-agent")
+except Exception:
+    __version__ = "dev"
 __author__ = "Victor Jotham Ashioya"
 __license__ = "MIT"
 
