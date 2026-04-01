@@ -1,186 +1,136 @@
-# Quick Start Guide
+# Quickstart
 
-Get up and running with the Web Research Agent in 5 minutes.
+Get from zero to a working research query in under 5 minutes.
 
-## Prerequisites
+---
 
-- Python 3.8 or higher
-- Gemini API key (free from [Google AI Studio](https://makersuite.google.com/app/apikey))
-- Serper API key (free tier from [Serper.dev](https://serper.dev))
+## 1. Install
 
-## Setup Steps
-
-### 1. Install the Package
-
-**From PyPI (Recommended):**
 ```bash
 pip install web-research-agent
 ```
 
-**From Source:**
-```bash
-pip install -r requirements.txt
-```
-
-### 2. Fix PATH (Windows Users)
-
-If you get `'webresearch' is not recognized` error on Windows:
-
-**Quick Fix:**
-```bash
-python -m cli
-```
-
-**Permanent Fix - Run PowerShell as Administrator:**
-```powershell
-.\setup_path.ps1
-```
-
-Or manually:
-```powershell
-[Environment]::SetEnvironmentVariable(
-    "Path",
-    [Environment]::GetEnvironmentVariable("Path", "User") + ";$env:APPDATA\Python\Python313\Scripts",
-    "User"
-)
-```
-
-**Linux/Mac:**
-```bash
-bash setup_path.sh
-```
-
-### 3. Configure API Keys
-
-The CLI will prompt you for API keys on first run, or create a `.env` file:
+Optional extras:
 
 ```bash
-cp .env.example .env
+pip install "web-research-agent[providers]"  # Groq / OpenRouter / DeepSeek fallback
+pip install "web-research-agent[browser]"    # JS-rendered page scraping via Playwright
+pip install "web-research-agent[all]"        # everything
 ```
 
-Edit `.env` and add your API keys:
+Requires Python 3.8+.
 
-```
-GEMINI_API_KEY=your_actual_gemini_api_key
-SERPER_API_KEY=your_actual_serper_api_key
-```
+---
 
-### 4. Verify Setup
+## 2. Get API keys
 
-Run the setup checker:
+Two keys are required, both have a free tier:
 
-```bash
-python check_setup.py
-```
+| Key | Where to get it | Free tier |
+|-----|----------------|-----------|
+| `GEMINI_API_KEY` | [aistudio.google.com/app/apikey](https://aistudio.google.com/app/apikey) | 1,500 req/day |
+| `SERPER_API_KEY` | [serper.dev](https://serper.dev) | 2,500 searches/month |
 
-All checks should pass (✓).
+---
 
-### 5. Run the Agent
+## 3. Run the setup wizard
 
-**Interactive Mode (Recommended):**
 ```bash
 webresearch
 ```
 
-Or if PATH isn't set:
-```bash
-python -m cli
-```
+On first run the interactive menu walks you through entering your keys. They are stored in the system keyring — no `.env` file needed. You only do this once.
 
-**Batch Mode:**
-```bash
-python main.py example_simple.txt
-```
-
-This will answer basic questions and save results to `results.txt`.
-
-### 6. Run Real Tasks
-
-Process the full task set:
+If you prefer environment variables instead:
 
 ```bash
-python main.py tasks.txt
+export GEMINI_API_KEY=your_key_here
+export SERPER_API_KEY=your_key_here
+webresearch
 ```
-
-## Understanding the Output
-
-### Console Output
-- Shows the agent's reasoning process (Thought → Action → Observation)
-- Displays the final answer for each task
-
-### Results File (`results.txt`)
-- Contains all task descriptions
-- Complete answers with sources
-- Execution time and step count
-
-### Log Files (`logs/`)
-- Detailed execution traces
-- Useful for debugging
-- Timestamped for each run
-
-## Example: How the Agent Works
-
-Given the task: "Find the capital of France"
-
-```
-Thought: I need to search for the capital of France
-Action: search
-Action Input: {"query": "capital of France"}
-Observation: [Search results show Paris is the capital]
-
-Thought: I have found the answer from reliable sources
-Final Answer: The capital of France is Paris.
-```
-
-## Common Issues & Solutions
-
-### "GEMINI_API_KEY not set"
-- Check that `.env` file exists
-- Ensure the key doesn't have quotes around it
-- Verify the key is valid from Google AI Studio
-
-### "SERPER_API_KEY not set"
-- Sign up at serper.dev (free tier available)
-- Copy the API key to your `.env` file
-
-### "Module not found" errors
-- Run: `pip install -r requirements.txt`
-- Ensure you're in the correct directory
-
-### Tasks timeout before completion
-- Increase `MAX_ITERATIONS` in `.env` (e.g., 20 or 25)
-- Complex tasks may need more reasoning steps
-
-## Tips for Best Results
-
-1. **Clear Tasks**: Write specific, well-defined tasks
-2. **Be Patient**: Complex research takes time (2-10 minutes per task)
-3. **Check Logs**: If something fails, check `logs/` for details
-4. **Adjust Settings**: Tune `.env` parameters for your needs
-
-## What Can the Agent Do?
-
-✓ Search the web for current information  
-✓ Read and extract content from web pages  
-✓ Download and analyze datasets  
-✓ Perform calculations and data processing  
-✓ Compile information from multiple sources  
-✓ Provide citations and sources  
-
-## Next Steps
-
-- Read the full [README.md](README.md) for detailed documentation
-- Modify `tasks.txt` with your own research questions
-- Add custom tools by following the guide in README.md
-- Experiment with different model settings in `.env`
-
-## Need Help?
-
-1. Run `python check_setup.py` to verify configuration
-2. Check log files in `logs/` directory
-3. Use `-v` flag for verbose output: `python main.py tasks.txt -v`
-4. Review the [README.md](README.md) for troubleshooting
 
 ---
 
-Happy researching! 🔍🤖
+## 4. Ask a question
+
+From the main menu, press **1** (Single query) and type your question:
+
+```
+What were Volkswagen's Scope 1 and Scope 2 emissions in 2023, and by what
+percentage did they change compared to 2019?
+```
+
+The agent will:
+1. **Think** — decompose the task and plan its approach
+2. **Search** — query Google via Serper for relevant sources
+3. **Scrape** — fetch and parse the most promising pages
+4. **Answer** — synthesize findings with source citations
+
+It will not answer from training data alone. If it can't verify something via live search, it says so.
+
+---
+
+## 5. Deep research (parallel mode)
+
+Press **2** (Deep research) for multi-angle queries. The agent decomposes your question into up to 4 sub-questions, researches them in parallel, then synthesizes a comprehensive answer.
+
+Best for: competitive analysis, multi-source fact-checking, topics that span several domains.
+
+---
+
+## 6. Model fallback chain (optional)
+
+If you hit Gemini's free-tier daily limit, add one or more fallback providers. The chain tries them in order:
+
+```bash
+# Fast inference fallback
+export GROQ_API_KEY=your_key_here
+
+# OpenRouter (access to many models)
+export OPENROUTER_API_KEY=your_key_here
+
+# Local model via Ollama
+export OLLAMA_BASE_URL=http://localhost:11434
+```
+
+Or enter them through **option 6 → Configure API keys** in the menu. The active provider is shown in the status bar; a fallback switch is logged when it happens.
+
+---
+
+## 7. Tune behaviour (optional)
+
+All settings can be overridden with environment variables:
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `MODEL_NAME` | `gemini-2.5-flash` | Gemini model to use |
+| `MAX_ITERATIONS` | `15` | Max reasoning steps per query |
+| `SUB_ITERATIONS` | `8` | Max steps per parallel sub-query |
+| `MAX_TOOL_OUTPUT_LENGTH` | `3000` | Max chars per tool observation |
+| `TEMPERATURE` | `0.1` | LLM temperature (lower = more deterministic) |
+| `WEB_REQUEST_TIMEOUT` | `30` | HTTP timeout in seconds |
+
+---
+
+## 8. Playwright for JS-heavy pages (optional)
+
+Some pages require JavaScript to render. If the `scrape` tool returns thin content:
+
+```bash
+pip install playwright
+playwright install chromium
+```
+
+The `scrape_js` tool will then be available automatically.
+
+---
+
+## Common issues
+
+**"GEMINI_API_KEY not found"** — run `webresearch` and use option 6 to enter your key, or `export GEMINI_API_KEY=...` in your shell.
+
+**"Daily request quota exhausted"** — you've hit Gemini's free-tier daily limit. Add a Groq or OpenRouter key as a fallback, or wait until midnight Pacific time when the quota resets.
+
+**Scrape returns empty / JS page message** — install Playwright (step 8 above) and the agent will automatically use `scrape_js` for those pages.
+
+**Windows PATH issues** — if `webresearch` isn't found after install, run `python -m cli` from the project directory, or add the Python Scripts folder to your PATH.
