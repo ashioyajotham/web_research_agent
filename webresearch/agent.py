@@ -203,7 +203,17 @@ IMPORTANT RULES:
 - Use "Final Answer:" only when you can fully answer the task
 - Be thorough and verify information from multiple sources when needed
 - For tasks requiring lists or compilations, gather comprehensive information before concluding
-- Always provide sources and citations in your final answer when applicable
+- Always cite sources (URLs) in your final answer
+
+SEARCH VS SCRAPE — know the difference:
+- search: returns a list of 10 results, each with a title, URL, and a short snippet (~20 words).
+  Snippets are NOT full articles — they are teasers. Use search to discover which pages exist.
+- scrape: fetches the full text of a single URL. Use scrape immediately after search when:
+    * the snippet is too short to answer the question
+    * the URL looks like a primary source (org website, news article, report)
+    * you need to verify a claim that the snippet only hints at
+  Pattern: search → pick the best URL → scrape it → extract the answer.
+  Do NOT keep searching with rephrased queries when a relevant URL is already in your results.
 
 MANDATORY: Before calling any tool (search, scrape, etc.), you must first call the think
 tool. Every action must be preceded by think. A search or scrape action without a preceding
@@ -214,27 +224,36 @@ Use think to:
 - Decompose the task: what exactly am I looking for? What intermediate facts do I need first?
 - Identify entities correctly: if the task describes an org/person by what they did, find the
   event first — do NOT assume you already know which entity is implied.
-- After search results arrive: does this entity actually match the task description, or am I
-  anchoring on a familiar name? Verify explicitly before proceeding.
+- After search results arrive: pick the most promising URL and scrape it — do NOT rephrase
+  the search query just because the snippet is short.
+- After scraping: does the page content answer the question? If yes, form a final answer.
+  If the page was paywalled or empty, pick the next best URL and scrape that.
 - When stuck: why is the current approach failing and what should I try differently?
 
-WORKED EXAMPLE (follow this pattern):
+WORKED EXAMPLE (follow this exact think → search → think → scrape → think → answer pattern):
 Task: "Find the COO of the organization that mediated secret US-China AI talks in Geneva in 2023."
 
-Step 1 — think first, always:
-Thought: I need to plan before searching.
+Step 1 — plan with think:
 Action: think
-Action Input: {{"thought": "The task asks for the COO of a specific org. I do not know which org — I must find it by searching for the talks themselves first. I must not assume it is WEF, UN, or any Geneva org I already know. Plan: (1) search for the talks to identify the mediating org, (2) verify the org matches the description, (3) then search for their COO."}}
+Action Input: {{"thought": "I need to find which org mediated the talks, then find their COO. I don't know the org — I must search for the event first. Plan: (1) search for the talks, (2) identify the org from results, (3) scrape their website or a profile page for COO info."}}
 
-Step 2 — now search:
-Thought: I have a plan. Now search for the talks.
+Step 2 — search:
 Action: search
 Action Input: {{"query": "secret US China AI companies talks Geneva 2023 mediator organizer"}}
 
-Step 3 — think before acting on the results:
-Thought: I have results. I need to verify what they say.
+Step 3 — think about which URL to scrape:
 Action: think
-Action Input: {{"thought": "Results mention [X org]. Does [X org] match 'mediated secret talks between US and Chinese AI companies in Geneva 2023'? Check: [evidence from results]. If yes, proceed to find COO. If no, search with different terms."}}
+Action Input: {{"thought": "Results mention [X org] at URL [u]. The snippet is only 20 words — not enough to confirm the COO. I should scrape [u] to get the full article or their About/Team page."}}
+
+Step 4 — scrape the most promising URL:
+Action: scrape
+Action Input: {{"url": "[u from step 3]"}}
+
+Step 5 — think and answer:
+Action: think
+Action Input: {{"thought": "The scraped page says the COO is [name]. This matches the task description. I have enough to answer."}}
+
+Final Answer: The COO of [org] is [name]. Source: [u]
 """)
 
         prompt_parts.append("\n" + self.tool_manager.get_tool_descriptions())

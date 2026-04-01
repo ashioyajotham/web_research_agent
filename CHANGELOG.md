@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.4.19] - 2026-04-01
+
+### Fixed
+- **Scrape tool was never used in practice** — the system prompt's worked example only showed `think → search → think`, giving the LLM no pattern for when to call `scrape`. The agent would keep rephrasing search queries rather than reading the pages that search already found.
+- Added explicit **SEARCH VS SCRAPE** rule block to the system prompt: explains that `search` returns ~20-word snippets (not full articles) and that `scrape` should be called immediately after `search` when a relevant URL is already in the results.
+- Extended the worked example to a full `think → search → think → scrape → think → Final Answer` pattern so the LLM has a concrete 5-step template to follow.
+- Updated `think` guidance: "After search results arrive: pick the most promising URL and scrape it — do NOT rephrase the search query just because the snippet is short."
+
 ## [2.4.18] - 2026-04-01
 
 ### Added
