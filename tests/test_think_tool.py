@@ -86,11 +86,15 @@ def test_agent_executes_think_action():
         'Thought: I should plan before searching.\n'
         'Action: think\n'
         'Action Input: {"thought": "Search for the event, then extract the entity."}',
-        # Step 2: final answer
+        # Step 2: search (satisfies the research-tool requirement)
+        'Thought: Now search.\n'
+        'Action: search\n'
+        'Action Input: {"query": "the answer"}',
+        # Step 3: final answer (allowed — search was called)
         'Thought: I have reasoned enough.\n'
         'Final Answer: The answer is 42.',
     ]
-    agent = _make_agent(responses)
+    agent = ReActAgent(llm=_MockLLM(responses), tool_manager=_make_stub_tm(), max_iterations=5)
     result = agent.run("What is the answer?")
     assert result == "The answer is 42."
 
@@ -148,56 +152,43 @@ def _make_stub_tm():
     return tm
 
 
-def test_parser_blocks_search_without_preceding_think():
-    """Search called before think must receive a corrective observation, not execute."""
+def test_final_answer_blocked_without_research_tool():
+    """Final Answer attempted without any search/scrape must be intercepted."""
     responses = [
-        # Step 1: skips think, calls search directly
-        'Thought: Search now.\nAction: search\nAction Input: {"query": "something"}',
-        # Step 2: corrects — calls think
-        'Thought: Think first.\nAction: think\nAction Input: {"thought": "Plan."}',
-        # Step 3: search now allowed (preceded by think)
-        'Thought: Search.\nAction: search\nAction Input: {"query": "something"}',
-        # Step 4: final answer
-        'Thought: Done.\nFinal Answer: The answer.',
+        # Step 1: tries to answer from training data (no search)
+        'Thought: I know this.\nFinal Answer: Wrong answer from memory.',
+        # Step 2: corrects — calls search
+        'Thought: Search first.\nAction: search\nAction Input: {"query": "something"}',
+        # Step 3: final answer (now allowed — search was called)
+        'Thought: Done.\nFinal Answer: The verified answer.',
     ]
     agent = ReActAgent(llm=_MockLLM(responses), tool_manager=_make_stub_tm(), max_iterations=6)
     result = agent.run("Find something")
 
     trace = agent.get_execution_trace()
-    assert "think" in trace[0]["observation"].lower(), (
-        "Step 1 should be blocked with corrective message"
+    # Step 1 observation should be the research-tool enforcement message
+    assert "research" in trace[0]["observation"].lower(), (
+        "Final Answer without research tool should be blocked with enforcement message"
     )
-    assert result == "The answer."
+    assert result == "The verified answer."
 
 
-def test_think_before_every_search_not_just_first():
-    """Per-action enforcement: search without a preceding think must be blocked mid-run too."""
+def test_search_without_preceding_think_is_allowed():
+    """Search is allowed without a preceding think — per-action think enforcement was removed."""
     responses = [
-        # Step 1: think ✓
-        'Thought: Plan.\nAction: think\nAction Input: {"thought": "Plan."}',
-        # Step 2: search ✓ (preceded by think)
-        'Thought: Search.\nAction: search\nAction Input: {"query": "q1"}',
-        # Step 3: search again — NO think between → must be blocked
-        'Thought: Search again.\nAction: search\nAction Input: {"query": "q2"}',
-        # Step 4: think ✓ (corrects)
-        'Thought: Think again.\nAction: think\nAction Input: {"thought": "Verify."}',
-        # Step 5: search ✓ (preceded by think)
-        'Thought: Search.\nAction: search\nAction Input: {"query": "q3"}',
-        # Step 6: final answer
-        'Thought: Done.\nFinal Answer: Result.',
+        # Step 1: search directly, no think first — must execute normally
+        'Thought: Search now.\nAction: search\nAction Input: {"query": "something"}',
+        # Step 2: final answer
+        'Thought: Done.\nFinal Answer: The answer.',
     ]
-    agent = ReActAgent(llm=_MockLLM(responses), tool_manager=_make_stub_tm(), max_iterations=8)
-    agent.run("Task")
+    agent = ReActAgent(llm=_MockLLM(responses), tool_manager=_make_stub_tm(), max_iterations=4)
+    result = agent.run("Task")
 
     trace = agent.get_execution_trace()
-    # Step 3 (index 2) should be blocked — search after search, no think between
-    assert "think" in trace[2]["observation"].lower(), (
-        "Mid-run search without preceding think should be blocked"
+    assert "real search results" in trace[0]["observation"], (
+        "Search without preceding think should execute normally"
     )
-    # Step 5 (index 4) should execute — preceded by think
-    assert "real search results" in trace[4]["observation"], (
-        "Search preceded by think should execute normally"
-    )
+    assert result == "The answer."
 
 
 def test_think_allows_consecutive_thinks():
@@ -219,18 +210,16 @@ def test_think_allows_consecutive_thinks():
 
 
 def test_system_prompt_contains_think_instruction():
-    """The built ReAct prompt must contain the mandatory think-first enforcement."""
+    """The built ReAct prompt must contain the decision-point think guidance."""
     tm = ToolManager()
     tm.register_tool(ThinkTool())
     agent = ReActAgent(llm=_MockLLM(["Final Answer: x"]), tool_manager=tm)
     prompt = agent._build_prompt("dummy task")
     lower = prompt.lower()
-    # Mandatory (not advisory) language
-    assert "mandatory" in lower, "Prompt missing mandatory think instruction"
-    assert "must" in lower, "Prompt missing 'must' enforcement language"
-    # Every action must be preceded by think (per-action, not just first)
-    assert "every action" in lower or "preceded by think" in lower, (
-        "Prompt missing per-action think requirement"
-    )
+    # Decision-point model section
+    assert "think tool" in lower, "Prompt missing THINK TOOL section"
+    assert "decision point" in lower, "Prompt missing decision-point guidance"
+    # Research tool enforcement
+    assert "must" in lower, "Prompt missing enforcement language"
     # Worked example is present so the LLM knows the expected pattern
     assert "worked example" in lower, "Prompt missing worked example"
