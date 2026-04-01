@@ -22,6 +22,7 @@ from rich.live import Live
 from rich.panel import Panel
 from rich.prompt import Confirm, Prompt
 from rich.rule import Rule
+from rich.spinner import Spinner
 from rich.table import Table
 from rich.text import Text
 
@@ -35,6 +36,12 @@ console = Console()
 
 from webresearch import __version__ as VERSION
 TAGLINE = "stay curious, anon.  the web doesn't answer itself."
+
+# ─── Theme ───────────────────────────────────────────────────────────────────
+# Single accent colour used for all structural chrome: borders, rules, spinner,
+# menu keys, iteration counter, and interactive prompts.
+# Change this one constant to retheme the entire agent.
+THEME = "cyan"
 
 STARTUP_QUIPS: List[str] = [
     "booting the curiosity engine",
@@ -164,12 +171,6 @@ _session = ConversationMemory(max_pairs=5)
 
 # ─── Live research panel ─────────────────────────────────────────────────────
 
-_SPINNER_CHARS = ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"]
-
-
-def _spin(elapsed: float) -> str:
-    return _SPINNER_CHARS[int(elapsed * 12) % len(_SPINNER_CHARS)]
-
 
 def extract_topic(query: str) -> str:
     """Extract 1–2 meaningful words from a query for phrase interpolation.
@@ -244,6 +245,7 @@ class ResearchPanel:
         self.current_action_input: Optional[Dict] = None
         self.current_obs_len: int = 0
         self.done = False
+        self._spinner = Spinner("arc", style=THEME)
 
     def update(self, iteration: int, step: Any) -> None:
         self.iteration = iteration
@@ -269,7 +271,6 @@ class ResearchPanel:
 
     def __rich__(self) -> Panel:
         elapsed = time.time() - self.start_time
-        spin_char = _spin(elapsed)
         phrase = _phrase(self.current_action, self.iteration, self.topic)
 
         grid = Table.grid(padding=(0, 1))
@@ -279,7 +280,7 @@ class ResearchPanel:
         q = (self.query[:62] + "…") if len(self.query) > 62 else self.query
         grid.add_row("query", f"[bold]{q}[/bold]")
 
-        iter_str = f"[bold cyan]{self.iteration}[/bold cyan][dim] / {self.max_iterations}[/dim]"
+        iter_str = f"[bold {THEME}]{self.iteration}[/bold {THEME}][dim] / {self.max_iterations}[/dim]"
         elapsed_str = f"[yellow]{elapsed:.0f}s[/yellow]"
         grid.add_row("iteration", f"{iter_str}    elapsed  {elapsed_str}")
         grid.add_row("", "")
@@ -287,10 +288,8 @@ class ResearchPanel:
         if self.done:
             grid.add_row(f"[bold green]✓[/bold green]", "[bold green]complete[/bold green]")
         else:
-            grid.add_row(
-                f"[cyan]{spin_char}[/cyan]",
-                f"[dim italic]{phrase}[/dim italic]",
-            )
+            spin_frame = self._spinner.render(time.time())
+            grid.add_row(spin_frame, f"[dim italic]{phrase}[/dim italic]")
 
         grid.add_row("", "")
 
@@ -303,12 +302,12 @@ class ResearchPanel:
         if self.current_obs_len:
             grid.add_row("status", f"[dim]received {self.current_obs_len:,} chars[/dim]")
         elif self.iteration > 0 and not self.done:
-            grid.add_row("status", f"[dim cyan]running…[/dim cyan]")
+            grid.add_row("status", f"[dim {THEME}]running…[/dim {THEME}]")
 
         return Panel(
             grid,
             title="[dim]─── research in progress[/dim]",
-            border_style="cyan",
+            border_style=THEME,
             padding=(0, 1),
         )
 
@@ -321,11 +320,10 @@ def print_banner() -> None:
     except pyfiglet.FontNotFound:
         raw = pyfiglet.figlet_format("WEB RESEARCH", font="slant")
     lines = [l for l in raw.split("\n") if l.strip()]
-    colors = ["bright_blue", "blue", "dodger_blue2", "bright_blue"]
     console.print()
     for i, line in enumerate(lines):
-        console.print(line, style=f"bold {colors[i % len(colors)]}")
-    console.print(Text(TAGLINE, style="italic dim cyan"), justify="center")
+        console.print(line, style=f"bold {THEME}")
+    console.print(Text(TAGLINE, style=f"italic dim {THEME}"), justify="center")
     console.print()
 
 
@@ -342,7 +340,7 @@ def print_status_bar(config: dict) -> None:
     line = Text()
     line.append("  ✓  config loaded", style="green")
     line.append(dot, style="dim")
-    line.append(model, style="bold cyan")
+    line.append(model, style=f"bold {THEME}")
     line.append(dot, style="dim")
     line.append("serper", style="green")
     for e in extras:
@@ -352,7 +350,7 @@ def print_status_bar(config: dict) -> None:
     line.append(f"v{VERSION}", style="dim")
 
     console.print(line)
-    console.print(Rule(style="bright_blue"))
+    console.print(Rule(style=THEME))
     console.print()
 
 
@@ -414,14 +412,14 @@ def save_config(config: dict):
 
 def agent_settings():
     """Interactive sub-screen for toggling LOG_LEVEL and QUIET_FALLBACK."""
-    console.print(Rule("[dim]agent settings[/dim]", style="cyan"))
+    console.print(Rule("[dim]agent settings[/dim]", style=THEME))
     console.print()
 
     # ── LOG_LEVEL ─────────────────────────────────────────────────────────────
     current_level = os.environ.get("LOG_LEVEL", "WARNING").upper()
     console.print("[bold yellow]1. Log level[/bold yellow]")
     console.print("   Controls how much internal reasoning is printed to the terminal.")
-    console.print(f"   [dim]Current: [cyan]{current_level}[/cyan][/dim]")
+    console.print(f"   [dim]Current: [{THEME}]{current_level}[/{THEME}][/dim]")
     console.print("   [dim]Options: DEBUG  INFO  WARNING  ERROR[/dim]")
     val = Prompt.ask("   [green]New log level[/green] (Enter to keep)", default="").strip().upper()
     if val and val in ("DEBUG", "INFO", "WARNING", "ERROR"):
@@ -437,7 +435,7 @@ def agent_settings():
     current_quiet = os.environ.get("QUIET_FALLBACK", "false").lower() == "true"
     console.print("[bold yellow]2. Quiet fallback[/bold yellow]")
     console.print("   Suppress the 'Rate limit reached... Switching to...' banner.")
-    console.print(f"   [dim]Current: [cyan]{'on' if current_quiet else 'off'}[/cyan][/dim]")
+    console.print(f"   [dim]Current: [{THEME}]{'on' if current_quiet else 'off'}[/{THEME}][/dim]")
     val = Prompt.ask("   [green]Enable quiet fallback?[/green] (y/n, Enter to keep)", default="").strip().lower()
     if val in ("y", "yes", "true", "1"):
         os.environ["QUIET_FALLBACK"] = "true"
@@ -448,24 +446,24 @@ def agent_settings():
 
     console.print()
     console.print(
-        "[dim]Settings apply for this session. To persist across restarts, add them to your "
-        "[cyan].env[/cyan] file in the project directory.[/dim]"
+        f"[dim]Settings apply for this session. To persist across restarts, add them to your "
+        f"[{THEME}].env[/{THEME}] file in the project directory.[/dim]"
     )
     console.print()
 
 
 def configure() -> dict:
     """Configuration hub — routes to API key setup or agent settings."""
-    console.print(Rule("[dim]configuration[/dim]", style="cyan"))
+    console.print(Rule("[dim]configuration[/dim]", style=THEME))
     console.print()
     t = Text()
-    t.append("  [a]", style="bold cyan"); t.append("  api keys              ", style="white"); t.append("gemini · serper · fallback providers", style="dim")
+    t.append("  [a]", style=f"bold {THEME}"); t.append("  api keys              ", style="white"); t.append("gemini · serper · fallback providers", style="dim")
     console.print(t)
     t = Text()
-    t.append("  [b]", style="bold cyan"); t.append("  agent settings        ", style="white"); t.append("log level · quiet fallback", style="dim")
+    t.append("  [b]", style=f"bold {THEME}"); t.append("  agent settings        ", style="white"); t.append("log level · quiet fallback", style="dim")
     console.print(t)
     t = Text()
-    t.append("  [x]", style="bold cyan"); t.append("  back", style="white")
+    t.append("  [x]", style=f"bold {THEME}"); t.append("  back", style="white")
     console.print(t)
     console.print()
 
@@ -484,9 +482,9 @@ def setup_api_keys() -> dict:
     storage_method = "system keyring" if keyring_available() else f"~/.webresearch/config.env"
     console.print(
         Panel.fit(
-            "[bold cyan]API Key Setup[/bold cyan]\n"
+            f"[bold {THEME}]API Key Setup[/bold {THEME}]\n"
             f"Credentials will be stored in: [green]{storage_method}[/green]",
-            border_style="cyan",
+            border_style=THEME,
         )
     )
     console.print()
@@ -598,8 +596,8 @@ def setup_api_keys() -> dict:
         from webresearch.llm_compat import openai_available
         if not openai_available():
             console.print(
-                "[bold yellow]Note:[/bold yellow] Groq/OpenRouter keys saved, but the "
-                "[cyan]openai[/cyan] package is required to use them.\n"
+                f"[bold yellow]Note:[/bold yellow] Groq/OpenRouter keys saved, but the "
+                f"[{THEME}]openai[/{THEME}] package is required to use them.\n"
                 "  Install it now: [green]pip install \"web-research-agent[providers]\"[/green]\n"
             )
 
@@ -699,12 +697,12 @@ def view_history():
         console.print("  no query history yet.", style="dim yellow")
         return
 
-    console.print(Rule("[dim]query history[/dim]", style="cyan"))
+    console.print(Rule("[dim]query history[/dim]", style=THEME))
     console.print()
     shown = history[:15]
 
     table = Table(show_header=True, border_style="dim", show_lines=False)
-    table.add_column("#", style="cyan", width=4, justify="right")
+    table.add_column("#", style=THEME, width=4, justify="right")
     table.add_column("query", style="white", no_wrap=True, max_width=54)
     table.add_column("iter", style="yellow", width=5, justify="right")
     table.add_column("time", style="dim", width=7, justify="right")
@@ -821,7 +819,7 @@ def _build_llm_chain(cfg) -> "ModelFallbackChain":
     if not openai_available() and has_optional_keys:
         console.print(
             "[bold yellow]Warning:[/bold yellow] Groq/OpenRouter/Ollama API keys are configured "
-            "but the [cyan]openai[/cyan] package is not installed — fallback providers are disabled.\n"
+            f"but the [{THEME}]openai[/{THEME}] package is not installed — fallback providers are disabled.\n"
             "  Fix: [green]pip install \"web-research-agent[providers]\"[/green]",
         )
 
@@ -1000,7 +998,7 @@ def _run_query(query: str):
         with open(filename, "w", encoding="utf-8") as f:
             f.write(f"Query: {query}\n{'=' * 80}\n\n{answer}\n\n")
             f.write(f"{'─' * 80}\nExecution time: {duration:.2f}s | Steps: {n_steps}\n")
-        console.print(f"✓ Saved to [cyan]{filename}[/cyan]", style="bold green")
+        console.print(f"✓ Saved to [{THEME}]{filename}[/{THEME}]", style="bold green")
 
 
 # ─── Deep research (parallel fan-out) ────────────────────────────────────────
@@ -1025,11 +1023,11 @@ def _run_deep_research(query: str):
 
     def make_status_board() -> Table:
         t = Table(
-            title="[bold cyan]Deep Research — Parallel Fan-out[/bold cyan]",
-            border_style="cyan",
+            title=f"[bold {THEME}]Deep Research — Parallel Fan-out[/bold {THEME}]",
+            border_style=THEME,
             expand=True,
         )
-        t.add_column("#", style="cyan", width=4, justify="center")
+        t.add_column("#", style=THEME, width=4, justify="center")
         t.add_column("Sub-query", style="white", ratio=4)
         t.add_column("Status", width=14)
         for idx in sorted(sub_status):
@@ -1069,7 +1067,7 @@ def _run_deep_research(query: str):
     console.print()
     console.print(
         f"⏱  [yellow]{duration:.2f}s[/yellow]  [dim]│[/dim]  "
-        f"[cyan]{n_sub} parallel sub-queries[/cyan]"
+        f"[{THEME}]{n_sub} parallel sub-queries[/{THEME}]"
     )
     _print_usage_banner()
     console.print()
@@ -1084,7 +1082,7 @@ def _run_deep_research(query: str):
         with open(filename, "w", encoding="utf-8") as f:
             f.write(f"Query: {query}\n{'=' * 80}\n\n{answer}\n\n")
             f.write(f"{'─' * 80}\nExecution time: {duration:.2f}s | Sub-queries: {n_sub}\n")
-        console.print(f"✓ Saved to [cyan]{filename}[/cyan]", style="bold green")
+        console.print(f"✓ Saved to [{THEME}]{filename}[/{THEME}]", style="bold green")
 
 
 # ─── Menu actions ─────────────────────────────────────────────────────────────
@@ -1092,7 +1090,7 @@ def _run_deep_research(query: str):
 def _mrow(key: str, label: str, desc: str = "") -> None:
     """Print one menu row — bypasses markup so brackets render literally."""
     t = Text()
-    t.append(f"  [{key}]", style="bold cyan")
+    t.append(f"  [{key}]", style=f"bold {THEME}")
     t.append(f"  {label:<24}", style="white")
     if desc:
         t.append(f"  {desc}", style="dim")
@@ -1151,7 +1149,7 @@ def _read_query(prompt_text: str) -> str:
 
 
 def run_interactive_query():
-    console.print(Rule("[dim]run query[/dim]", style="cyan"))
+    console.print(Rule("[dim]run query[/dim]", style=THEME))
     console.print()
     query = _read_query("Research question (or 'back')")
     if not query or query.lower() == "back":
@@ -1161,7 +1159,7 @@ def run_interactive_query():
 
 
 def run_interactive_deep_query():
-    console.print(Rule("[dim]run deep research[/dim]", style="cyan"))
+    console.print(Rule("[dim]run deep research[/dim]", style=THEME))
     console.print()
     query = _read_query("Research question (or 'back')")
     if not query or query.lower() == "back":
@@ -1171,7 +1169,7 @@ def run_interactive_deep_query():
 
 
 def run_tasks_from_file():
-    console.print(Rule("[dim]process task file[/dim]", style="cyan"))
+    console.print(Rule("[dim]process task file[/dim]", style=THEME))
     console.print()
 
     filepath = Prompt.ask("[green]❯[/green] Path to tasks file (or 'back' to return)")
@@ -1211,7 +1209,7 @@ def run_tasks_from_file():
         results = []
 
         for i, task in enumerate(tasks, 1):
-            console.print(f"[cyan][Task {i}/{len(tasks)}][/cyan] {task[:60]}…")
+            console.print(f"[{THEME}][Task {i}/{len(tasks)}][/{THEME}] {task[:60]}…")
             start_time = datetime.now()
             try:
                 answer = agent.run(task)
@@ -1255,11 +1253,11 @@ def view_logs():
         console.print("No execution traces found. Run a query first.", style="bold yellow")
         return
 
-    console.print(Rule("[dim]execution logs[/dim]", style="cyan"))
+    console.print(Rule("[dim]execution logs[/dim]", style=THEME))
     console.print()
 
     table = Table(show_header=True, box=None)
-    table.add_column("#", style="cyan", width=4)
+    table.add_column("#", style=THEME, width=4)
     table.add_column("Query", style="white", ratio=3)
     table.add_column("Steps", style="yellow", justify="right", width=6)
     table.add_column("Duration", style="yellow", justify="right", width=10)
@@ -1296,11 +1294,11 @@ def view_logs():
             d = json.load(f)
 
         console.print()
-        console.rule(f"[bold cyan]{d.get('query', '')[:80]}[/bold cyan]", style="cyan")
+        console.rule(f"[bold {THEME}]{d.get('query', '')[:80]}[/bold {THEME}]", style=THEME)
         console.print(f"[dim]Mode: {d.get('mode')}  ·  {d.get('steps')} steps  ·  {d.get('duration_s')}s[/dim]\n")
 
         for step in d.get("trace", []):
-            console.print(f"[bold cyan]Step {step['step']}[/bold cyan]  [dim]{step.get('elapsed_ms', 0)/1000:.1f}s[/dim]")
+            console.print(f"[bold {THEME}]Step {step['step']}[/bold {THEME}]  [dim]{step.get('elapsed_ms', 0)/1000:.1f}s[/dim]")
             if step.get("thought"):
                 console.print(f"  [yellow]Thought:[/yellow] {step['thought'][:200]}")
             if step.get("action"):
@@ -1315,7 +1313,7 @@ def view_logs():
         border = "red" if answer.startswith("⚠") else "green"
         console.print(Panel(answer[:600] + ("..." if len(answer) > 600 else ""), title="Answer", border_style=border))
         console.print()
-        console.rule(style="cyan")
+        console.rule(style=THEME)
         console.print()
 
 
