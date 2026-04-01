@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.4.18] - 2026-04-01
+
+### Added
+- **Editorial pull-quote result display** — replaces the full-border `Panel` with a left-accent block: query is echoed with a `>` prefix, each answer line is prefixed with a bold `▌` bar (green / yellow / red depending on error state), footer shows `Xs · N steps · M/2500 searches` in one dim line. Matches the clean left-border accent style from editorial / pull-quote terminal UIs.
+- **Source citations** — after every query result, up to 8 source URLs are extracted from the execution trace and listed as `[1] https://…`. Scrape action targets are used first (highest confidence); URLs found in search/scrape observations are mined with regex as supplementary sources. Sources block is omitted when no URLs are present (e.g. code-only runs).
+- `_extract_sources(trace)` — new helper that deduplicates URLs across all trace steps.
+- `_print_result_block(query, answer, trace, duration, n_steps)` — new helper that owns the full editorial result layout; both `_run_query` and `_run_deep_research` call it.
+
+### Changed
+- `_run_query` and `_run_deep_research` result sections simplified: `console.rule`, `Panel`, and `_print_usage_banner` calls replaced by a single `_print_result_block(...)` call; search usage now appears inline in the footer instead of as a separate banner line.
+
 ## [2.4.17] - 2026-04-01
 
 ### Added

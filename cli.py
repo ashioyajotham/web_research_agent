@@ -927,6 +927,103 @@ def _save_trace(query: str, answer: str, trace: list, duration: float, mode: str
         pass  # Trace saving is best-effort — never surface to the user
 
 
+# ─── Result display helpers ──────────────────────────────────────────────────
+
+def _extract_sources(trace: list) -> list:
+    """Return deduplicated source URLs from the execution trace.
+
+    Pulls scrape targets directly, then regex-extracts any http(s) URLs
+    that appear in search/scrape observations.
+    """
+    urls: list = []
+    seen: set = set()
+
+    for step in trace:
+        action = step.get("action", "")
+        action_input = step.get("action_input") or {}
+
+        # Direct scrape targets are the most reliable sources
+        if action in ("scrape", "browser_scrape") and "url" in action_input:
+            url = action_input["url"]
+            if url not in seen:
+                seen.add(url)
+                urls.append(url)
+
+        # Mine URLs embedded in search / scrape observations
+        obs = step.get("observation", "")
+        for m in re.finditer(r'https?://[^\s\'"<>)\]]+', obs):
+            url = m.group(0).rstrip(".,;")
+            if url not in seen:
+                seen.add(url)
+                urls.append(url)
+
+    return urls
+
+
+def _print_result_block(
+    query: str,
+    answer: str,
+    trace: list,
+    duration: float,
+    n_steps: int,
+) -> None:
+    """Render the editorial pull-quote result panel.
+
+    Layout mirrors the left-border accent style:
+      > query text (echoed)
+
+      ▌ answer line 1
+      ▌ answer line 2
+      ...
+
+      Sources
+      [1] https://…
+
+      9.7s · 3 steps · 12/2500 searches
+    """
+    console.print()
+
+    # ── Query echo ──────────────────────────────────────────────────────────
+    lines = query.strip().splitlines()
+    for i, ln in enumerate(lines):
+        prefix = f"[{THEME}]>[/{THEME}]" if i == 0 else " "
+        console.print(f"  {prefix} {ln}")
+    console.print()
+
+    # ── Answer with left-border accent ──────────────────────────────────────
+    accent = (
+        "red" if answer.startswith("⚠ Error:")
+        else "yellow" if answer.startswith("⚠")
+        else "green"
+    )
+    for ln in answer.splitlines():
+        t = Text()
+        t.append("▌ ", style=f"bold {accent}")
+        t.append(ln)
+        console.print(t, soft_wrap=True)
+    console.print()
+
+    # ── Source citations ────────────────────────────────────────────────────
+    sources = _extract_sources(trace)
+    if sources:
+        console.print(f"  [dim]Sources[/dim]")
+        for i, url in enumerate(sources[:8], 1):
+            console.print(f"  [dim][{i}] {url}[/dim]")
+        console.print()
+
+    # ── Footer stats ────────────────────────────────────────────────────────
+    step_word = "step" if n_steps == 1 else "steps"
+    stats = [f"{duration:.1f}s", f"{n_steps} {step_word}"]
+    try:
+        from webresearch.tools.search import get_monthly_usage, _MONTHLY_LIMIT
+        count = get_monthly_usage()
+        stats.append(f"{count}/{_MONTHLY_LIMIT} searches")
+    except Exception:
+        pass
+    console.print("  [dim]" + "  ·  ".join(stats) + "[/dim]")
+    console.print()
+
+
 # ─── Core query runner ────────────────────────────────────────────────────────
 
 def _run_query(query: str):
@@ -964,25 +1061,15 @@ def _run_query(query: str):
         live.update(panel)
 
     duration = time.time() - wall_start
-
-    console.print()
-    console.rule("[bold green]RESULT[/bold green]", style="green")
-    console.print()
-
-    border = "red" if answer.startswith("⚠ Error:") else ("yellow" if answer.startswith("⚠") else "green")
-    console.print(Panel(answer, border_style=border, padding=(1, 2)))
-    console.print()
     global _session_queries, _session_steps
     _session_queries += 1
     _session_steps += n_steps
 
+    _print_result_block(query, answer, agent.get_execution_trace(), duration, n_steps)
+
     if not answer.startswith("⚠"):
         console.print(f"  [dim italic]{random.choice(_DONE_FALLBACK)}[/dim italic]")
-    console.print(
-        f"  [dim]⏱  {duration:.1f}s  ·  {n_steps} steps[/dim]"
-    )
-    _print_usage_banner()
-    console.print()
+        console.print()
 
     # Save execution trace to logs/ for post-run debugging
     _save_trace(query, answer, agent.get_execution_trace(), duration)
@@ -1059,18 +1146,7 @@ def _run_deep_research(query: str):
     duration = (datetime.now() - start_time).total_seconds()
     n_sub = len(sub_status)
 
-    console.print()
-    console.rule("[bold green]RESULT[/bold green]", style="green")
-    console.print()
-    border = "red" if answer.startswith("⚠ Error:") else ("yellow" if answer.startswith("⚠") else "green")
-    console.print(Panel(answer, border_style=border, padding=(1, 2)))
-    console.print()
-    console.print(
-        f"⏱  [yellow]{duration:.2f}s[/yellow]  [dim]│[/dim]  "
-        f"[{THEME}]{n_sub} parallel sub-queries[/{THEME}]"
-    )
-    _print_usage_banner()
-    console.print()
+    _print_result_block(query, answer, agent.get_execution_trace(), duration, n_sub)
 
     _save_trace(query, answer, agent.get_execution_trace(), duration, mode="deep")
     if not answer.startswith("⚠"):
