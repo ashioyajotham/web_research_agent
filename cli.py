@@ -37,24 +37,27 @@ from webresearch import __version__ as VERSION
 TAGLINE = "stay curious, anon.  the web doesn't answer itself."
 
 STARTUP_QUIPS: List[str] = [
-    "Bootstrapping...",
-    "Percolating...",
-    "Coalescing...",
-    "Initializing...",
-    "Germinating...",
-    "Crystallizing...",
-    "Orchestrating...",
-    "Reticulating...",
+    "booting the curiosity engine",
+    "calibrating the question accelerator",
+    "charging up the search antennae",
+    "warming up the research reactor",
+    "initialising the knowledge pipeline",
+    "loading the mechanistic interpreter (not that kind)",
+    "spinning up the inference coils",
+    "allocating attention heads",
 ]
 
 _DONE_FALLBACK: List[str] = [
     "stay curious, anon.",
-    "context window satisfied.",
-    "the inference chain holds.",
-    "no hallucinations detected (probably).",
-    "sources cited, vibes verified.",
-    "attention was well-placed.",
-    "tokenmaxxing complete.",
+    "tokens well spent.",
+    "sources cited. vibes: immaculate.",
+    "no hallucinations detected (that we know of).",
+    "the inference chain held.",
+    "knowledge acquired. proceed accordingly.",
+    "attention heads: vindicated.",
+    "the oracle has delivered.",
+    "research complete. touch grass.",
+    "citations attached. conclusions drawn.",
 ]
 
 # Words stripped before extracting the {topic} for phrase interpolation.
@@ -81,133 +84,74 @@ _SKIP: frozenset = frozenset({
 # Keys are matched with `k in action.lower()` so "execute_code" matches "code",
 # "file_ops" matches "file", "scrape_js" and "browser" both match "browser".
 PHRASES: Dict[str, List[str]] = {
+    # Each pool uses the SPINNER_VERBS style — one verb per step, picked by iteration number.
+    # Themed to the action type so the word feels contextually right.
     "search": [
-        "casting nets for {topic}",
-        "asking serper about {topic}",
-        "triangulating sources on {topic}",
-        "sending the spiders after {topic}",
-        "hunting down {topic}",
-        "querying the oracle about {topic}",
-        "grounding the retrieval on {topic}",
-        "tokenmaxxing serper for {topic}",
-        "running RAG on {topic} (the manual kind)",
-        "dispatching search spiders (no grad, pure vibe)",
-        "hoping {topic} made it into a search snippet",
-        "praying this page isn't paywalled",
-        "sifting through SEO slop to find the signal",
+        "Investigating...", "Spelunking...", "Perusing...", "Deciphering...",
+        "Scurrying...", "Foraging...", "Scouring...", "Herding...",
+        "Outpacing...", "Triangulating...", "Rummaging...", "Sifting...",
+        "Pouncing...", "Sniffing...", "Prospecting...", "Hunting...",
     ],
     "scrape": [
-        "speed-reading everything on {topic}",
-        "hoovering up text about {topic}",
-        "parsing the digital wallpaper for {topic}",
-        "ingesting {topic} at ludicrous speed",
-        "skimming the web for {topic}",
-        "forward-passing through the DOM for {topic}",
-        "ablating irrelevant paragraphs about {topic}",
-        "extracting signal from the {topic} noise floor",
-        "scraping the knowledge barrel (BeautifulSoup deployed)",
-        "begging the DOM to render something useful",
-        "reading so you don't have to",
-        "hoping {topic} has more than three sentences",
-        "checking if {topic} is hiding behind a login wall",
+        "Unravelling...", "Dissecting...", "Schlepping...", "Swiping...",
+        "Perusing...", "Hoovering...", "Harvesting...", "Skimming...",
+        "Ingesting...", "Extracting...", "Parsing...", "Devouring...",
+        "Absorbing...", "Distilling...",
     ],
     "code": [
-        "warming up the python for {topic}",
-        "crunching the {topic} numbers",
-        "running the {topic} analysis",
-        "letting the code cook on {topic}",
-        "executing with prejudice (no gradient required)",
-        "invoking the subprocess (this is not a drill)",
-        "forward pass: python. backward pass: your problem.",
-        "doing actual maths (the model can't)",
-        "sandboxing the chaos",
-        "it runs on my machine, theoretically",
+        "Computing...", "Calculating...", "Crunching...", "Processing...",
+        "Synthesizing...", "Integrating...", "Iterating...", "Executing...",
+        "Churning...", "Compiling...", "Quantumizing...", "Transmuting...",
     ],
     "file": [
-        "rustling through the {topic} papers",
-        "filing {topic} away for later",
-        "reading the {topic} receipts",
-        "committing {topic} to persistent memory (no RLHF involved)",
-        "checkpointing the {topic} findings",
-        "rummaging through the filing cabinet",
-        "the paperwork, as promised",
+        "Rustling...", "Checkpointing...", "Archiving...", "Committing...",
+        "Stashing...", "Rummaging...", "Filing...", "Cataloguing...",
     ],
     "pdf": [
-        "cracking open the {topic} document",
-        "extracting tables from the {topic} filing",
-        "parsing report pages for {topic}",
-        "pulling figures from the PDF",
-        "mining the document structure",
-        "harvesting numbers, please hold",
-        "dissecting the annual report on {topic}",
-        "reading the sustainability data on {topic}",
+        "Perusing...", "Dissecting...", "Unravelling...", "Excavating...",
+        "Extracting...", "Harvesting...", "Mining...", "Spelunking...",
     ],
     "think": [
-        "thinking cap on — it's about {topic}",
-        "connecting the dots on {topic}",
-        "joining up the {topic} threads",
-        "formulating a theory about {topic}",
-        "reasoning through the {topic} noise",
-        "running chain-of-thought on {topic} (faithfully, hopefully)",
-        "probing for {topic} (linear probe, no ground truth)",
-        "attention-heading toward {topic}",
-        "cross-referencing {topic} across activation space",
-        "no hallucinations detected on {topic} (yet)",
-        "the superposition of {topic} answers, collapsing",
-        "neurons firing (metaphorically — this is a transformer)",
-        "the reasoning trace exists. whether it's faithful is another matter.",
-        "weighing the evidence, such as it is",
+        "Cogitating...", "Pondering...", "Ruminating...", "Musing...",
+        "Deliberating...", "Reflecting...", "Mulling...", "Philosophising...",
+        "Cerebrating...", "Considering...", "Noticing...", "Noodling...",
+        "Stewing...", "Puzzling...", "Ideating...", "Hypothesizing...",
     ],
     "browser": [
-        "launching a headless expedition for {topic}",
-        "firing up playwright for {topic}",
-        "navigating the DOM jungle for {topic}",
-        "javascript rendered. {topic} incoming.",
-        "asking chromium nicely",
-        "bypassing the anti-scraping rituals",
-        "the browser is doing what the scraper couldn't",
+        "Perambulating...", "Gallivanting...", "Meandering...", "Wandering...",
+        "Navigating...", "Venturing...", "Spelunking...", "Exploring...",
     ],
     "default": [
         "Accomplishing...", "Actioning...", "Actualizing...", "Architecting...",
         "Baking...", "Beaming...", "Beboppin'...", "Befuddling...", "Billowing...",
-        "Blanching...", "Bloviating...", "Boogieing...", "Boondoggling...", "Booping...",
-        "Bootstrapping...", "Brewing...", "Bunning...", "Burrowing...", "Calculating...",
-        "Canoodling...", "Caramelizing...", "Cascading...", "Catapulting...",
-        "Cerebrating...", "Channeling...", "Choreographing...", "Churning...",
-        "Coalescing...", "Cogitating...", "Combobulating...", "Composing...",
-        "Computing...", "Concocting...", "Considering...", "Contorting...",
-        "Convening...", "Crunching...", "Crystallizing...", "Cultivating...",
-        "Deciphering...", "Deliberating...", "Determining...", "Dilly-dallying...",
-        "Discombobulating...", "Doing...", "Doodling...", "Drizzling...",
-        "Effecting...", "Elucidating...", "Embellishing...", "Enchanting...",
-        "Envisioning...", "Fermenting...", "Fiddling...", "Figuring...",
+        "Bloviating...", "Boogieing...", "Boondoggling...", "Booping...",
+        "Bootstrapping...", "Brewing...", "Burrowing...", "Canoodling...",
+        "Caramelizing...", "Cascading...", "Catapulting...", "Channeling...",
+        "Choreographing...", "Coalescing...", "Combobulating...", "Composing...",
+        "Concocting...", "Contorting...", "Convening...", "Crystallizing...",
+        "Cultivating...", "Determining...", "Dilly-dallying...", "Discombobulating...",
+        "Doodling...", "Drizzling...", "Elucidating...", "Embellishing...",
+        "Enchanting...", "Envisioning...", "Fermenting...", "Fiddling...",
         "Finagling...", "Finetuning...", "Flabbergasting...", "Flummoxing...",
-        "Fluttering...", "Forging...", "Forming...", "Frolicking...", "Frosting...",
+        "Fluttering...", "Forging...", "Frolicking...", "Frosting...",
         "Gallivanting...", "Galloping...", "Garnishing...", "Generating...",
         "Gesticulating...", "Germinating...", "Gitifying...", "Grooving...",
-        "Harmonizing...", "Hatching...", "Herding...", "Honking...",
-        "Hullaballooing...", "Hyperspacing...", "Ideating...", "Imagining...",
-        "Improvising...", "Integrating...", "Investigating...", "Iterating...",
-        "Jitterbugging...", "Julienning...", "Kneading...", "Leavening...",
-        "Levitating...", "Lollygagging...", "Manifesting...", "Marinating...",
-        "Meandering...", "Metamorphosing...", "Misting...", "Moonwalking...",
-        "Moseying...", "Mulling...", "Mustering...", "Musing...", "Nebulizing...",
-        "Noodling...", "Noticing...", "Orchestrating...", "Outpacing...",
-        "Perambulating...", "Percolating...", "Perusing...", "Philosophising...",
-        "Photosynthesizing...", "Pollinating...", "Pondering...", "Pontificating...",
-        "Pouncing...", "Precipitating...", "Processing...", "Propagating...",
-        "Puttering...", "Puzzling...", "Quantumizing...", "Razzle-dazzling...",
-        "Razzmatazzing...", "Recombobulating...", "Reflecting...", "Reticulating...",
-        "Ruminating...", "Rustling...", "Sautéing...", "Schlepping...", "Scurrying...",
-        "Seasoning...", "Shenaniganing...", "Shimmying...", "Simmering...",
-        "Skedaddling...", "Sketching...", "Slithering...", "Smooshing...",
-        "Sock-hopping...", "Spelunking...", "Spinning...", "Sprouting...",
-        "Stewing...", "Sublimating...", "Swiping...", "Swirling...", "Synthesizing...",
-        "Tangentializing...", "Thinking...", "Tinkering...", "Tip-toeing...",
-        "Tomfoolering...", "Topsy-turrying...", "Transfiguring...", "Transmuting...",
-        "Twisting...", "Undulating...", "Unfurling...", "Unravelling...", "Vibing...",
-        "Waddling...", "Wandering...", "Warping...", "Whatchamacalliting...",
-        "Whirlpooling...",
+        "Harmonizing...", "Hatching...", "Honking...", "Hullaballooing...",
+        "Hyperspacing...", "Imagining...", "Improvising...", "Jitterbugging...",
+        "Julienning...", "Kneading...", "Leavening...", "Levitating...",
+        "Lollygagging...", "Manifesting...", "Marinating...", "Metamorphosing...",
+        "Misting...", "Moonwalking...", "Moseying...", "Mustering...",
+        "Nebulizing...", "Orchestrating...", "Percolating...", "Photosynthesizing...",
+        "Pollinating...", "Pontificating...", "Precipitating...", "Propagating...",
+        "Puttering...", "Quantumizing...", "Razzle-dazzling...", "Razzmatazzing...",
+        "Recombobulating...", "Reticulating...", "Sautéing...", "Seasoning...",
+        "Shenaniganing...", "Shimmying...", "Simmering...", "Skedaddling...",
+        "Sketching...", "Slithering...", "Smooshing...", "Sock-hopping...",
+        "Spinning...", "Sprouting...", "Sublimating...", "Swirling...",
+        "Tangentializing...", "Tinkering...", "Tip-toeing...", "Tomfoolering...",
+        "Topsy-turrying...", "Transfiguring...", "Twisting...", "Undulating...",
+        "Unfurling...", "Vibing...", "Waddling...", "Warping...",
+        "Whatchamacalliting...", "Whirlpooling...",
     ],
 }
 
@@ -248,8 +192,13 @@ def extract_topic(query: str) -> str:
     return (topic[:25] + "…") if len(topic) > 28 else topic
 
 
-def _phrase(action: Optional[str], elapsed: float, topic: str = "this") -> str:
-    """Pick a rotating phrase keyed to the current tool action."""
+def _phrase(action: Optional[str], step: int, topic: str = "this") -> str:
+    """Pick a phrase keyed to the current tool action and step number.
+
+    One phrase per step — picked by step index, not by elapsed time.
+    This means the phrase stays stable for the entire duration of a step
+    (which can range from 3 s to 30 s) rather than cycling mid-action.
+    """
     key = "default"
     if action:
         for k in PHRASES:
@@ -257,7 +206,7 @@ def _phrase(action: Optional[str], elapsed: float, topic: str = "this") -> str:
                 key = k
                 break
     pool = PHRASES[key]
-    raw = pool[int(elapsed / 6.0) % len(pool)]
+    raw = pool[step % len(pool)]
     return raw.replace("{topic}", topic)
 
 
@@ -321,7 +270,7 @@ class ResearchPanel:
     def __rich__(self) -> Panel:
         elapsed = time.time() - self.start_time
         spin_char = _spin(elapsed)
-        phrase = _phrase(self.current_action, elapsed, self.topic)
+        phrase = _phrase(self.current_action, self.iteration, self.topic)
 
         grid = Table.grid(padding=(0, 1))
         grid.add_column(style="dim", min_width=11, max_width=11)
