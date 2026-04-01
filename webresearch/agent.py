@@ -102,21 +102,39 @@ class ReActAgent:
         logger.info(f"Starting task: {task[:100]}...")
         self.steps = []
         self._action_cache = {}
-        self._last_action: Optional[str] = None  # enforces think-before-every-action rule
 
         try:
             for iteration in range(self.max_iterations):
                 logger.info(f"Iteration {iteration + 1}/{self.max_iterations}")
 
                 prompt = self._build_prompt(task)
+                t0 = time.time()
                 response = self.llm.generate(prompt)
 
                 thought, action, action_input, final_answer = self._parse_response(response)
 
-                t0 = time.time()
                 step = Step(thought=thought, iteration=iteration + 1)
 
                 if final_answer:
+                    # Enforce at least one real research tool call before accepting the answer.
+                    # 'think' is reasoning scaffolding, not a research tool.
+                    _RESEARCH_TOOLS = frozenset({"search", "scrape", "scrape_js", "pdf_extract"})
+                    used_research = any(s.action in _RESEARCH_TOOLS for s in self.steps)
+                    if not used_research:
+                        logger.warning("Agent attempted Final Answer without any research tool use — forcing search.")
+                        step.observation = (
+                            "You provided a Final Answer without calling any research tools. "
+                            "This is not permitted — you are a research agent, not a knowledge base. "
+                            "Your training data may be outdated or wrong. "
+                            "You must call search or scrape at least once before answering. "
+                            "Begin with a think step, then search."
+                        )
+                        step.elapsed_ms = (time.time() - t0) * 1000
+                        self.steps.append(step)
+                        if step_callback:
+                            step_callback(iteration + 1, step)
+                        continue
+
                     logger.info("Agent produced final answer")
                     step.elapsed_ms = (time.time() - t0) * 1000
                     self.steps.append(step)
@@ -128,21 +146,7 @@ class ReActAgent:
                     step.action = action
                     step.action_input = action_input
 
-                    # Enforce think-before-every-action: any non-think tool call must be
-                    # immediately preceded by a think call.  Tracks _last_action so the
-                    # rule fires not just on the first step but throughout the entire run
-                    # (think → search → think → search, never search → search).
-                    if action != "think" and self._last_action != "think":
-                        observation = (
-                            "Error: you must call the think tool before calling any other tool. "
-                            "State what you know, what gap remains, and exactly what your next "
-                            "action will do and why — then call that action."
-                        )
-                    else:
-                        observation = self._execute_action(action, action_input)
-
-                    self._last_action = action
-
+                    observation = self._execute_action(action, action_input)
                     step.observation = observation
                     step.elapsed_ms = (time.time() - t0) * 1000
                     self.steps.append(step)
@@ -204,6 +208,9 @@ IMPORTANT RULES:
 - Be thorough and verify information from multiple sources when needed
 - For tasks requiring lists or compilations, gather comprehensive information before concluding
 - Always cite sources (URLs) in your final answer
+- You must call at least one search or scrape tool before providing a Final Answer.
+  Do NOT answer from your training knowledge alone — you are a research tool, not a
+  knowledge base. If you believe you know the answer, verify it with a search first.
 
 SEARCH VS SCRAPE — know the difference:
 - search: returns a list of 10 results, each with a title, URL, and a short snippet (~20 words).
@@ -215,45 +222,60 @@ SEARCH VS SCRAPE — know the difference:
   Pattern: search → pick the best URL → scrape it → extract the answer.
   Do NOT keep searching with rephrased queries when a relevant URL is already in your results.
 
-MANDATORY: Before calling any tool (search, scrape, etc.), you must first call the think
-tool. Every action must be preceded by think. A search or scrape action without a preceding
-think is not permitted. Use think to state what you know, what gap remains, and exactly what
-your next action will do and why.
+THINK TOOL — when to use it:
+Use think at genuine decision points, not before every action.
+Required at four moments:
 
-Use think to:
-- Decompose the task: what exactly am I looking for? What intermediate facts do I need first?
-- Identify entities correctly: if the task describes an org/person by what they did, find the
-  event first — do NOT assume you already know which entity is implied.
-- After search results arrive: pick the most promising URL and scrape it — do NOT rephrase
-  the search query just because the snippet is short.
-- After scraping: does the page content answer the question? If yes, form a final answer.
-  If the page was paywalled or empty, pick the next best URL and scrape that.
-- When stuck: why is the current approach failing and what should I try differently?
+1. Task start: before your first search. Decompose the task —
+   what exactly are you looking for? What intermediate facts
+   do you need first? Do not assume you know which entity is
+   implied — if the task describes someone by what they did,
+   find the event first.
 
-WORKED EXAMPLE (follow this exact think → search → think → scrape → think → answer pattern):
+2. After search results: before scraping. Read the snippets.
+   Pick the single most promising URL and state why. If no URL
+   looks useful, state why and what different query to try.
+   Do NOT rephrase and re-search just because a snippet is short.
+
+3. After scraping: before deciding next action. Does the page
+   content answer the question? If yes, move to Final Answer.
+   If paywalled or empty, pick the next best URL. If the content
+   is partial, decide whether to scrape another URL or answer
+   with what you have.
+
+4. When stuck: if two consecutive searches returned nothing
+   useful, stop and think about why the approach is failing
+   before trying again.
+
+Do NOT call think between consecutive actions in the same
+phase — for example, do not think between scraping page 1
+and scraping page 2 when you already decided to scrape both.
+Think is for decisions, not narration.
+
+WORKED EXAMPLE:
 Task: "Find the COO of the organization that mediated secret US-China AI talks in Geneva in 2023."
 
-Step 1 — plan with think:
+Step 1 — think (task start, required):
 Action: think
-Action Input: {{"thought": "I need to find which org mediated the talks, then find their COO. I don't know the org — I must search for the event first. Plan: (1) search for the talks, (2) identify the org from results, (3) scrape their website or a profile page for COO info."}}
+Action Input: {"thought": "I need two things: (1) which org mediated the talks — I don't know this, (2) that org's COO. I must find the org first. Plan: search for the Geneva event, identify the org, then scrape their team/about page for COO."}
 
 Step 2 — search:
 Action: search
-Action Input: {{"query": "secret US China AI companies talks Geneva 2023 mediator organizer"}}
+Action Input: {"query": "secret US China AI companies talks Geneva 2023 mediator organizer"}
 
-Step 3 — think about which URL to scrape:
+Step 3 — think (after search results, required):
 Action: think
-Action Input: {{"thought": "Results mention [X org] at URL [u]. The snippet is only 20 words — not enough to confirm the COO. I should scrape [u] to get the full article or their About/Team page."}}
+Action Input: {"thought": "Results mention [Org X] at [URL]. Snippet is 20 words — not enough to confirm COO. Scraping [URL] next."}
 
-Step 4 — scrape the most promising URL:
+Step 4 — scrape:
 Action: scrape
-Action Input: {{"url": "[u from step 3]"}}
+Action Input: {"url": "[URL from step 3]"}
 
-Step 5 — think and answer:
+Step 5 — think (after scrape, required):
 Action: think
-Action Input: {{"thought": "The scraped page says the COO is [name]. This matches the task description. I have enough to answer."}}
+Action Input: {"thought": "Page confirms COO is [Name]. Source is their official team page. Sufficient to answer."}
 
-Final Answer: The COO of [org] is [name]. Source: [u]
+Final Answer: The COO of [Org X] is [Name]. Source: [URL]
 """)
 
         prompt_parts.append("\n" + self.tool_manager.get_tool_descriptions())
@@ -364,7 +386,8 @@ Final Answer: The COO of [org] is [name]. Source: [u]
         for pattern in patterns:
             for match in re.finditer(pattern, action_input_str):
                 key, value = match.groups()
-                params[key] = value
+                if key not in params:
+                    params[key] = value
 
         if not params:
             logger.warning(
@@ -392,8 +415,8 @@ Final Answer: The COO of [org] is [name]. Source: [u]
             cache_key = f"{action}:{hash(str(action_input))}"
 
         if cache_key in self._action_cache:
-            logger.info(f"Cache hit for action '{action}' — skipping duplicate API call")
-            return f"[CACHED RESULT] {self._action_cache[cache_key]}"
+            logger.info(f"Cache hit for action '{action}' — returning cached result")
+            return self._action_cache[cache_key]
 
         try:
             result = self.tool_manager.execute_tool(action, **action_input)

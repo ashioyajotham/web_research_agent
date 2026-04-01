@@ -3,7 +3,8 @@ Conversation memory for multi-turn research sessions.
 Maintains Q&A context across queries within a single CLI session.
 """
 
-from typing import List, Tuple
+from collections import deque
+from typing import Tuple
 
 
 class ConversationMemory:
@@ -16,17 +17,15 @@ class ConversationMemory:
 
     def __init__(self, max_pairs: int = 5):
         self.max_pairs = max_pairs
-        self._pairs: List[Tuple[str, str]] = []  # (query, answer)
+        self._pairs: deque = deque(maxlen=max_pairs)  # (query, answer); O(1) eviction
 
     def add(self, query: str, answer: str) -> None:
         """Record a completed Q&A pair."""
         self._pairs.append((query, answer))
-        if len(self._pairs) > self.max_pairs:
-            self._pairs.pop(0)
 
     def clear(self) -> None:
         """Reset the session memory."""
-        self._pairs = []
+        self._pairs.clear()
 
     def __len__(self) -> int:
         return len(self._pairs)

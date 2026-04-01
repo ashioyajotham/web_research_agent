@@ -22,6 +22,7 @@ so it can be passed directly to ReActAgent or ParallelResearchAgent.
 
 import logging
 import threading
+import time
 from typing import Callable, List, Optional, Union
 
 from .llm import LLMInterface
@@ -92,7 +93,8 @@ class ModelFallbackChain:
         self.interfaces = interfaces
         self.switch_callback = switch_callback
         self._current_index = 0
-        self._lock = threading.Lock()   # guards _current_index across threads
+        self._lock = threading.Lock()   # guards _current_index and _last_switch_time
+        self._last_switch_time: float = 0.0
         # One semaphore per provider index — limits concurrent calls to 1 per
         # provider so parallel sub-agents don't simultaneously hammer the same
         # rate-limited free-tier endpoint.
@@ -114,14 +116,26 @@ class ModelFallbackChain:
         and _current_index mutations are protected by a lock.
         Raises the last exception if all providers are exhausted.
         """
+        # Auto-reset to primary if we fell back previously and enough time has
+        # elapsed — a per-minute Gemini quota recovers in ~60s, so the chain
+        # would otherwise stay on the fallback provider for the entire session.
         with self._lock:
-            start_index = self._current_index
+            if self._current_index > 0 and (time.time() - self._last_switch_time) > 60.0:
+                logger.info("Auto-resetting to primary provider after cooldown.")
+                self._current_index = 0
 
-        for i in range(start_index, len(self.interfaces)):
+        for i in range(len(self.interfaces)):
+            # Re-read current index each iteration so we skip providers that
+            # another thread has already marked as failed (avoids stale start_index
+            # race where thread A cached index=0 but thread B has since advanced to 1).
+            with self._lock:
+                if i < self._current_index:
+                    continue
+
             llm = self.interfaces[i]
             name = getattr(llm, "provider_name", None) or getattr(llm, "model_name", "unknown")
 
-            if i > start_index:
+            if i > 0:
                 prev_name = (
                     getattr(self.interfaces[i - 1], "provider_name", None)
                     or getattr(self.interfaces[i - 1], "model_name", "unknown")
@@ -132,6 +146,7 @@ class ModelFallbackChain:
                         if self.switch_callback:
                             self.switch_callback(prev_name, name)
                         self._current_index = i
+                        self._last_switch_time = time.time()
 
             # Serialise concurrent calls to this provider — free-tier APIs
             # (Groq, OpenRouter) have per-minute limits that parallel threads

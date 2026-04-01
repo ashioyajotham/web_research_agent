@@ -92,11 +92,13 @@ logger = logging.getLogger(__name__)
 class ScrapeTool(Tool):
     """Tool for fetching and parsing web page content."""
 
-    def __init__(self, timeout: int = 30, max_length: int = 10000):
+    def __init__(self, timeout: int = 30, max_length: int = 15000):
         self.timeout = timeout
         self.max_length = max_length
         self.html_converter = html2text.HTML2Text()
-        self.html_converter.ignore_links = False
+        # ignore_links=True strips markdown URL noise ([text](https://...)) that
+        # fills context windows with link strings rather than article content.
+        self.html_converter.ignore_links = True
         self.html_converter.ignore_images = True
         self.html_converter.ignore_emphasis = False
         self.html_converter.body_width = 0
@@ -180,6 +182,8 @@ return no content, use the scrape_js tool.
             "Accept-Encoding": "gzip, deflate, br",
             "Connection": "keep-alive",
             "Upgrade-Insecure-Requests": "1",
+            # Some CDNs / news sites (BBC, Guardian) 403 without a Referer header
+            "Referer": "https://www.google.com/",
         }
 
         last_exc = None

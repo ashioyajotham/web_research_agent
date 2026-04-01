@@ -23,6 +23,7 @@ class Config:
 
         # Agent settings (env var or package default — never persisted to keyring)
         self.max_iterations: int = int(os.getenv("MAX_ITERATIONS", "15"))
+        self.sub_iterations: int = int(os.getenv("SUB_ITERATIONS", "8"))
         self.max_tool_output_length: int = int(
             os.getenv("MAX_TOOL_OUTPUT_LENGTH", "3000")
         )

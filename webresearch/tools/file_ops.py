@@ -5,6 +5,7 @@ Allows the agent to persist information and work with local files.
 
 import os
 import logging
+from pathlib import Path
 from typing import Optional
 from .base import Tool
 
@@ -22,6 +23,9 @@ class FileOpsTool(Tool):
             max_read_length: Maximum length of content to return when reading
         """
         self.max_read_length = max_read_length
+        # All file I/O is constrained to this directory to prevent path traversal.
+        self.safe_root = Path.cwd() / "agent_workspace"
+        self.safe_root.mkdir(exist_ok=True)
         super().__init__()
 
     @property
@@ -81,83 +85,69 @@ Notes:
             return "Error: path cannot be empty"
 
         try:
+            safe_path = self._resolve_safe(path)
+            if safe_path is None:
+                return "Error: path traversal not permitted — all paths must stay within agent_workspace/"
             if operation == "read":
-                return self._read_file(path)
+                return self._read_file(safe_path)
             else:  # write
                 if content is None:
                     return "Error: content parameter is required for write operation"
-                return self._write_file(path, content)
+                return self._write_file(safe_path, content)
 
         except Exception as e:
             logger.error(f"File operation failed: {str(e)}")
             return f"Error: File operation failed: {str(e)}"
 
-    def _read_file(self, path: str) -> str:
+    def _resolve_safe(self, path: str) -> Optional[Path]:
         """
-        Read content from a file.
-
-        Args:
-            path: The file path
-
-        Returns:
-            The file content
+        Resolve path relative to safe_root and return it, or None if traversal detected.
+        Absolute paths are also remapped under safe_root to prevent escaping.
         """
         try:
-            if not os.path.exists(path):
+            resolved = (self.safe_root / Path(path).name if Path(path).is_absolute()
+                        else (self.safe_root / path).resolve())
+            if not str(resolved).startswith(str(self.safe_root.resolve())):
+                logger.warning(f"Path traversal attempt blocked: {path!r}")
+                return None
+            return resolved
+        except Exception:
+            return None
+
+    def _read_file(self, path: Path) -> str:
+        try:
+            if not path.exists():
                 return f"Error: File not found: {path}"
 
-            if not os.path.isfile(path):
+            if not path.is_file():
                 return f"Error: Path is not a file: {path}"
 
-            # Get file size
-            file_size = os.path.getsize(path)
+            file_size = path.stat().st_size
 
-            # Read the file
-            with open(path, "r", encoding="utf-8") as f:
-                content = f.read()
+            content = path.read_text(encoding="utf-8")
 
-            # Truncate if necessary
             if len(content) > self.max_read_length:
                 truncated = content[: self.max_read_length]
                 truncated += f"\n\n... [Content truncated. Total size: {file_size} bytes, showing first {self.max_read_length} characters]"
                 return truncated
 
-            return f"Content of {path}:\n{'=' * 80}\n{content}"
+            return f"Content of {path.name}:\n{'=' * 80}\n{content}"
 
         except UnicodeDecodeError:
-            return (
-                f"Error: File {path} is not a text file or uses an unsupported encoding"
-            )
+            return f"Error: File {path.name} is not a text file or uses an unsupported encoding"
         except PermissionError:
-            return f"Error: Permission denied reading file: {path}"
+            return f"Error: Permission denied reading file: {path.name}"
         except Exception as e:
-            return f"Error reading file {path}: {str(e)}"
+            return f"Error reading file {path.name}: {str(e)}"
 
-    def _write_file(self, path: str, content: str) -> str:
-        """
-        Write content to a file.
-
-        Args:
-            path: The file path
-            content: The content to write
-
-        Returns:
-            Success message
-        """
+    def _write_file(self, path: Path, content: str) -> str:
         try:
-            # Create directory if it doesn't exist
-            directory = os.path.dirname(path)
-            if directory and not os.path.exists(directory):
-                os.makedirs(directory, exist_ok=True)
-
-            # Write the file
-            with open(path, "w", encoding="utf-8") as f:
-                f.write(content)
-
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(content, encoding="utf-8")
             file_size = len(content.encode("utf-8"))
-            return f"Successfully wrote {file_size} bytes to {path}"
+            return f"Successfully wrote {file_size} bytes to agent_workspace/{path.name}"
 
         except PermissionError:
-            return f"Error: Permission denied writing to file: {path}"
+            return f"Error: Permission denied writing to file: {path.name}"
         except Exception as e:
-            return f"Error writing to file {path}: {str(e)}"
+            return f"Error writing to file {path.name}: {str(e)}"

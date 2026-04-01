@@ -87,6 +87,19 @@ def _check_code_safety(code: str) -> Optional[str]:
                     f"Use os.path and os.listdir for file operations."
                 )
 
+        # Block dynamic execution builtins that bypass import scanning.
+        # __import__ skips ast.Import nodes; eval/exec run dynamically
+        # constructed strings that were never parsed by this checker.
+        elif isinstance(node, ast.Call):
+            if (
+                isinstance(node.func, ast.Name)
+                and node.func.id in ("eval", "exec", "__import__", "compile")
+            ):
+                return (
+                    f"Sandbox blocked: '{node.func.id}' is not permitted. "
+                    "Dynamic code execution and import bypasses are not allowed."
+                )
+
     return None
 
 

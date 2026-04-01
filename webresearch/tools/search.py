@@ -5,6 +5,7 @@ Allows the agent to search Google for information.
 
 import json
 import logging
+import threading
 import requests
 from datetime import datetime
 from pathlib import Path
@@ -15,6 +16,7 @@ from .base import Tool
 logger = logging.getLogger(__name__)
 
 _MONTHLY_LIMIT = 2500
+_usage_lock = threading.Lock()  # guards concurrent read-increment-write in parallel mode
 
 
 def _get_usage_path() -> Path:
@@ -38,20 +40,21 @@ def get_monthly_usage() -> int:
 
 
 def _increment_usage() -> int:
-    """Increment the monthly search counter and return the new total."""
-    path = _get_usage_path()
-    current_month = datetime.now().strftime("%Y-%m")
-    try:
-        data = json.loads(path.read_text(encoding="utf-8")) if path.exists() else {}
-    except Exception:
-        data = {}
+    """Increment the monthly search counter and return the new total (thread-safe)."""
+    with _usage_lock:
+        path = _get_usage_path()
+        current_month = datetime.now().strftime("%Y-%m")
+        try:
+            data = json.loads(path.read_text(encoding="utf-8")) if path.exists() else {}
+        except Exception:
+            data = {}
 
-    if data.get("month") != current_month:
-        data = {"month": current_month, "count": 0}
+        if data.get("month") != current_month:
+            data = {"month": current_month, "count": 0}
 
-    data["count"] = data.get("count", 0) + 1
-    path.write_text(json.dumps(data, indent=2), encoding="utf-8")
-    return data["count"]
+        data["count"] = data.get("count", 0) + 1
+        path.write_text(json.dumps(data, indent=2), encoding="utf-8")
+        return data["count"]
 
 
 class SearchTool(Tool):

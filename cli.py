@@ -901,6 +901,7 @@ def initialize_parallel_agent():
     return ParallelResearchAgent(
         llm=_build_llm_chain(cfg),
         tool_manager=_build_tool_manager(cfg),
+        sub_iterations=cfg.sub_iterations,
     )
 
 

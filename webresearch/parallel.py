@@ -33,10 +33,14 @@ class ParallelResearchAgent:
         llm: LLMInterface,
         tool_manager: ToolManager,
         max_sub_queries: int = 4,
-        sub_iterations: int = 5,
+        sub_iterations: int = 8,
         max_workers: int = 3,
     ):
         self.llm = llm
+        # tool_manager is shared across concurrent sub-agent threads.
+        # All registered tools (search, scrape, think, file_ops) are stateless
+        # after __init__ — their instance attributes are read-only config values,
+        # not mutable per-call state — so concurrent access is safe.
         self.tool_manager = tool_manager
         self.max_sub_queries = max_sub_queries
         self.sub_iterations = sub_iterations
@@ -54,8 +58,9 @@ class ParallelResearchAgent:
 
         Args:
             task: The research question.
-            sub_status_callback: Optional callable(idx, state, question=None).
+            sub_status_callback: Optional callable(idx, state, question=None, error=None).
                 state is one of: 'pending' | 'running' | 'done' | 'error'.
+                error is set (str) when state == 'error'.
             context: Optional prior session context string. Passed only to
                 synthesis — decomposition always sees the raw task so prior
                 Q&A pairs don't pollute sub-question generation.
@@ -94,7 +99,7 @@ class ParallelResearchAgent:
                     logger.error(f"Sub-query {idx} failed: {e}")
                     results[idx] = (q, f"Research failed: {e}")
                     if sub_status_callback:
-                        sub_status_callback(idx, "error")
+                        sub_status_callback(idx, "error", error=str(e))
 
         # ── 3. Synthesize — sub-results + optional prior context ──────────────
         ordered = [results[i] for i in range(len(sub_questions))]

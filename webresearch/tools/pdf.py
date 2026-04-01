@@ -234,20 +234,15 @@ table of contents, then call again with a targeted page range.
 
 
 def _clean_text(text: str) -> str:
-    """Remove excessive whitespace and blank lines from extracted text."""
-    lines = []
-    for line in text.split("\n"):
-        line = line.strip()
-        if line:
-            lines.append(line)
-    # Collapse 3+ blank lines to 2
+    """Strip leading/trailing whitespace per line; collapse 3+ blank lines to at most 1."""
     result = []
     blank_count = 0
-    for line in lines:
+    for line in text.split("\n"):
+        line = line.strip()
         if not line:
             blank_count += 1
             if blank_count <= 1:
-                result.append(line)
+                result.append("")
         else:
             blank_count = 0
             result.append(line)

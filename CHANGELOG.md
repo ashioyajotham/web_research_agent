@@ -7,6 +7,38 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.5.0] - 2026-04-01
+
+### Security
+- **Safety settings hardened** (`llm.py`) — all four Gemini harm categories changed from `BLOCK_NONE` to `BLOCK_ONLY_HIGH`. `BLOCK_NONE` on `HARM_CATEGORY_SEXUALLY_EXPLICIT` and `HARM_CATEGORY_HARASSMENT` had no research justification and was a misuse liability. `BLOCK_ONLY_HIGH` allows legitimate research content (geopolitical, news about violence) while blocking obvious abuse vectors.
+- **Sandbox bypass paths closed** (`code_executor.py`) — added `ast.Call` check for `eval`, `exec`, `__import__`, and `compile`. `__import__('subprocess').run(...)` previously bypassed the `ast.Import` scanner; `exec`/`eval` could run dynamically constructed strings that were never parsed by the AST checker. Both are now blocked at the AST level.
+- **Path traversal protection** (`file_ops.py`) — all file I/O is now constrained to `agent_workspace/` inside the working directory. Paths are resolved and checked against `safe_root` before any read or write; `../../.ssh/authorized_keys`-style traversal is rejected and logged.
+
+### Fixed
+- **Hallucination prevention** (`agent.py`) — agent can no longer return a `Final Answer` without having called at least one of `search`, `scrape`, `scrape_js`, or `pdf_extract`. If it attempts to answer from parametric knowledge alone, the response is intercepted, an error observation is injected ("you are a research agent, not a knowledge base"), and the loop continues. Closes the core reliability gap where the agent answered confidently from stale training data with zero API calls made.
+- **`{{` double-brace bug in worked example** (`agent.py`) — the worked example in `_build_prompt` was a plain string (not an f-string), so `{{` rendered as the literal two-character sequence `{{` — invalid JSON. The model imitated this format, causing every worked-example-influenced output to fail `json.loads` and fall through to the fallback parser. Fixed to plain `{` / `}`.
+- **`elapsed_ms` measured the wrong thing** (`agent.py`) — `t0 = time.time()` was set after `llm.generate()` returned, measuring microseconds of parse overhead rather than actual LLM latency. Moved before the `generate()` call.
+- **Fallback parser silent overwrite** (`agent.py`) — all four regex patterns in `_parse_action_input_fallback` ran unconditionally; later (less specific) patterns silently overwrote keys found by earlier (more specific) ones. Added `if key not in params` guard so the first match wins.
+- **`[CACHED RESULT]` prefix unexplained** (`agent.py`) — cached observations were returned as `"[CACHED RESULT] ..."` but the system prompt never explained this prefix. The model had no context for handling it and could be confused. Now returns the raw cached value; cache hit is logged instead.
+- **`_clean_text` dead logic** (`pdf.py`) — blank line collapsing (`blank_count <= 1`) never fired because the preceding loop already filtered all blank lines with `if line:`. Merged into a single pass so 3+ consecutive blank lines are now actually collapsed to 1.
+- **Thread-safe usage counter** (`search.py`) — `_increment_usage()` read-increment-write sequence was unprotected; concurrent sub-agents in parallel mode could race and lose counts. Wrapped in a module-level `threading.Lock()`.
+
+### Changed
+- **Think tool policy redesigned** (`agent.py`) — replaced "MANDATORY: think before every action" with a decision-point model: think is required at task start, after search results arrive, after scraping, and when stuck. Explicit anti-narration rule: "do NOT call think between consecutive actions in the same phase." Removed the code-level enforcement block (`if action != 'think' and _last_action != 'think'`) that was firing on legitimate mid-phase sequences and doubling API costs. Think calls drop from N (one per tool call) to 3–5 per run.
+- **FORMAT and MANDATORY contradiction resolved** (`agent.py`) — the FORMAT section showed `Thought/Action/Action Input` with no mention of think; the MANDATORY section demanded think before everything. A model reading top-to-bottom saw two incompatible schemas. Replaced both with a single coherent THINK TOOL section.
+- **`generate_with_history` removed** (`llm.py`) — dead code (nothing in the codebase called it) with a subtle stateful bug: it sent messages to build chat history but discarded all responses, producing a malformed conversation state in the Gemini chat API.
+- **`[CACHED RESULT]` prefix stripped** from cache hits (`agent.py`) — see Fixed above.
+- **`scrape` links suppressed** (`scrape.py`) — `html2text` `ignore_links` changed from `False` to `True`. Markdown link noise (`[text](https://very-long-url.com)` repeated dozens of times) was filling context windows with URL strings instead of article content.
+- **`Referer` header added** (`scrape.py`) — `"Referer": "https://www.google.com/"` added to all scrape requests. Some CDN configurations and news sites (BBC, Guardian) return 403 without a matching Referer.
+- **`scrape` max_length** increased from 10 000 to 15 000 chars (`scrape.py`) — 10 000 truncated sustainability reports before reaching the relevant data sections; 15 000 reduces this without blowing prompt budgets.
+- **`sub_iterations` default** raised from 5 to 8 (`parallel.py`) — 5 was insufficient for multi-step sub-queries (think → search → think → scrape → think → answer = 6 steps minimum); sub-agents were hitting the cap and falling through to `_generate_best_effort_answer`.
+- **`sub_iterations` configurable** via `SUB_ITERATIONS` env var (`config.py`, `cli.py`).
+- **Parallel sub-agent error surfaced** (`parallel.py`) — `sub_status_callback` now receives `error=str(e)` when state is `"error"`, so the live display can show which sub-query failed and why instead of silently passing `"Research failed: ..."` to the synthesizer.
+- **`llm_chain.py` race condition tightened** — `start_index` was cached before the loop, so a thread that read index=0 could retry an already-failed provider if another thread had advanced `_current_index` to 1 in the interim. Each loop iteration now re-reads `_current_index` and skips stale providers.
+- **Auto-reset to primary provider** (`llm_chain.py`) — the chain previously stayed on whatever fallback provider it switched to for the entire session. Now resets to primary automatically after 60 s, so Gemini recovers after a per-minute limit without requiring a CLI restart.
+- **`ConversationMemory` eviction** (`memory.py`) — `list` + `pop(0)` (O(n)) replaced with `collections.deque(maxlen=max_pairs)` (O(1)) making the bounded-eviction intent explicit.
+- **Tool statelessness documented** (`parallel.py`) — added comment confirming all registered tools (`search`, `scrape`, `think`, `file_ops`) are stateless after `__init__`, justifying the shared `ToolManager` reference across concurrent sub-agent threads.
+
 ## [2.4.19] - 2026-04-01
 
 ### Fixed

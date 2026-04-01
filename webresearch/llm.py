@@ -5,7 +5,7 @@ Handles all communication with the Gemini API.
 
 import re
 import google.generativeai as genai
-from typing import List, Dict, Any, Optional
+from typing import Optional
 import time
 import logging
 
@@ -41,23 +41,25 @@ class LLMInterface:
             "max_output_tokens": 8192,
         }
 
-        # Set safety settings to be permissive for research tasks
+        # BLOCK_ONLY_HIGH allows legitimate research content (geopolitical, news about
+        # violence) while still blocking obvious misuse vectors.  BLOCK_NONE on
+        # SEXUALLY_EXPLICIT and HARASSMENT has no research justification.
         self.safety_settings = [
             {
                 "category": "HARM_CATEGORY_HARASSMENT",
-                "threshold": "BLOCK_NONE",
+                "threshold": "BLOCK_ONLY_HIGH",
             },
             {
                 "category": "HARM_CATEGORY_HATE_SPEECH",
-                "threshold": "BLOCK_NONE",
+                "threshold": "BLOCK_ONLY_HIGH",
             },
             {
                 "category": "HARM_CATEGORY_SEXUALLY_EXPLICIT",
-                "threshold": "BLOCK_NONE",
+                "threshold": "BLOCK_ONLY_HIGH",
             },
             {
                 "category": "HARM_CATEGORY_DANGEROUS_CONTENT",
-                "threshold": "BLOCK_NONE",
+                "threshold": "BLOCK_ONLY_HIGH",
             },
         ]
 
@@ -146,53 +148,3 @@ class LLMInterface:
                         f"Failed to generate response after {retry_count} attempts: {str(e)}"
                     )
 
-    def generate_with_history(
-        self, messages: List[Dict[str, str]], retry_count: int = 3
-    ) -> str:
-        """
-        Generate a response with conversation history.
-
-        Args:
-            messages: List of message dicts with 'role' and 'content' keys
-            retry_count: Number of times to retry on failure
-
-        Returns:
-            The generated text response
-        """
-        # Convert messages to Gemini format
-        chat = self.model.start_chat(history=[])
-
-        # Build the conversation history
-        for msg in messages[:-1]:  # All except the last message
-            if msg["role"] == "user":
-                chat.send_message(msg["content"])
-
-        # Send the final message and get response
-        last_message = messages[-1]["content"]
-
-        for attempt in range(retry_count):
-            try:
-                response = chat.send_message(last_message)
-
-                if not response.text:
-                    if hasattr(response, "prompt_feedback"):
-                        logger.warning(f"Response blocked: {response.prompt_feedback}")
-                    raise ValueError("Empty response from model")
-
-                return response.text
-
-            except Exception as e:
-                if self._is_daily_quota(e):
-                    raise Exception(self._friendly_quota_message(e))
-
-                logger.warning(f"Attempt {attempt + 1}/{retry_count} failed: {str(e)}")
-                if attempt < retry_count - 1:
-                    delay = self._parse_retry_delay(e)
-                    if delay is None:
-                        delay = 2 ** (attempt + 1)
-                    logger.info(self._friendly_quota_message(e))
-                    time.sleep(delay)
-                else:
-                    raise Exception(
-                        f"Failed to generate response after {retry_count} attempts: {str(e)}"
-                    )
