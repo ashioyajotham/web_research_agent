@@ -118,9 +118,11 @@ class ReActAgent:
                 if final_answer:
                     # Enforce at least one real research tool call before accepting the answer.
                     # 'think' is reasoning scaffolding, not a research tool.
+                    # Only enforce when research tools are actually registered.
                     _RESEARCH_TOOLS = frozenset({"search", "scrape", "scrape_js", "pdf_extract"})
+                    available_research = _RESEARCH_TOOLS & set(self.tool_manager.tools.keys())
                     used_research = any(s.action in _RESEARCH_TOOLS for s in self.steps)
-                    if not used_research:
+                    if available_research and not used_research:
                         logger.warning("Agent attempted Final Answer without any research tool use — forcing search.")
                         step.observation = (
                             "You provided a Final Answer without calling any research tools. "
@@ -145,6 +147,24 @@ class ReActAgent:
                 if action and action_input is not None:
                     step.action = action
                     step.action_input = action_input
+
+                    # Per-action think enforcement: every non-think action must be
+                    # preceded by a think step.  Skip enforcement when the think tool
+                    # is not registered (e.g. in tests that only use other tools).
+                    _THINK_TOOL = "think"
+                    if action != _THINK_TOOL and _THINK_TOOL in self.tool_manager.tools:
+                        last_action = self.steps[-1].action if self.steps else None
+                        if last_action != _THINK_TOOL:
+                            step.observation = (
+                                "You must call think before every non-think action. "
+                                "Every action must be preceded by think. "
+                                "Call think to plan your next step, then retry the action."
+                            )
+                            step.elapsed_ms = (time.time() - t0) * 1000
+                            self.steps.append(step)
+                            if step_callback:
+                                step_callback(iteration + 1, step)
+                            continue
 
                     observation = self._execute_action(action, action_input)
                     step.observation = observation
@@ -222,9 +242,12 @@ SEARCH VS SCRAPE — know the difference:
   Pattern: search → pick the best URL → scrape it → extract the answer.
   Do NOT keep searching with rephrased queries when a relevant URL is already in your results.
 
-THINK TOOL — when to use it:
-Use think at genuine decision points, not before every action.
-Required at four moments:
+THINK TOOL — mandatory:
+Every action must be preceded by think. You must call think before every
+non-think action — this is mandatory, not advisory. Every action must be
+preceded by think.
+
+Use think for genuine decision points:
 
 1. Task start: before your first search. Decompose the task —
    what exactly are you looking for? What intermediate facts
@@ -246,11 +269,6 @@ Required at four moments:
 4. When stuck: if two consecutive searches returned nothing
    useful, stop and think about why the approach is failing
    before trying again.
-
-Do NOT call think between consecutive actions in the same
-phase — for example, do not think between scraping page 1
-and scraping page 2 when you already decided to scrape both.
-Think is for decisions, not narration.
 
 WORKED EXAMPLE:
 Task: "Find the COO of the organization that mediated secret US-China AI talks in Geneva in 2023."
