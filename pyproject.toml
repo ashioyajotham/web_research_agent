@@ -91,11 +91,10 @@ Repository = "https://github.com/victorashioya/web_research_agent"
 Changelog = "https://github.com/victorashioya/web_research_agent/blob/main/CHANGELOG.md"
 
 [project.scripts]
-webresearch = "cli:main"
+webresearch = "webresearch.cli:main"
 
 [tool.setuptools]
 packages = ["webresearch", "webresearch.tools"]
-py-modules = ["cli", "main"]
 
 [tool.setuptools.package-data]
 "*" = ["*.txt", "*.md"]
